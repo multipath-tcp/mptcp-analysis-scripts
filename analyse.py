@@ -26,19 +26,19 @@
 # has to be generalized to cope with multiple files
 
 ##################################################
-##                CONSTANTS                     ##
+##                  CONSTANTS                   ##
 ##################################################
 DEF_OUT_DIR = 'traces'
 
 ##################################################
-##                 IMPORTS                      ##
+##                   IMPORTS                    ##
 ##################################################
 import os
 import subprocess
 import sys
 
 ##################################################
-##               PREPROCESSING                  ##
+##                 PREPROCESSING                ##
 ##################################################
 out_dir_exp = os.path.expanduser(DEF_OUT_DIR)
 
