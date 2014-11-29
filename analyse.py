@@ -21,3 +21,33 @@
 # ./analyse.py
 #
 # To install on this machine: gnuplot, gnuplot.py
+
+# TODO the script starts with the assumption that one file is provided, but it
+# has to be generalized to cope with multiple files
+
+##################################################
+##                 IMPORTS                      ##
+##################################################
+import sys
+
+
+
+##################################################
+##               PREPROCESSING                  ##
+##################################################
+
+if len(sys.argv) < 2:
+    print("You have to give at least one argument to run this script")
+    exit(1)
+
+file = sys.argv[1]
+
+# Files from UI tests will be compressed; unzip them
+if file.endswith('.gz'):
+    pass
+elif file.endswith('.pcap'):
+    # Nothing to do, already uncompressed
+    pass
+else:
+    print(file + ": not in a valid format")
+    exit(1)
