@@ -25,6 +25,8 @@
 # TODO the script starts with the assumption that one file is provided, but it
 # has to be generalized to cope with multiple files
 
+# TODO must manage the case where the pcap file is from a TCP connection
+
 ##################################################
 ##                  CONSTANTS                   ##
 ##################################################
@@ -33,6 +35,7 @@ DEF_OUT_DIR = 'traces'
 ##################################################
 ##                   IMPORTS                    ##
 ##################################################
+import glob
 import os
 import subprocess
 import sys
@@ -66,3 +69,19 @@ elif file.endswith('.pcap'):
 else:
     print(file + ": not in a valid format")
     exit(1)
+
+
+##################################################
+##                  MPTCPTRACE                  ##
+##################################################
+
+# If file is a .pcap, use it for mptcptrace
+for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
+    cmd = 'mptcptrace -f ' + pcap_file + ' -s -w 2'
+    if subprocess.call(cmd.split()) != 0:
+        print("Error of mptcptrace with " + pcap_file)
+
+    # The mptcptrace call will generate .csv files to cope with
+    for csv_file in glob.glob('*.pcap'):
+        #TODO
+        pass
