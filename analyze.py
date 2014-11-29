@@ -18,7 +18,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #
-# ./analyse.py
+# ./analyze.py file
 #
 # To install on this machine: gnuplot, gnuplot.py
 
