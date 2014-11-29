@@ -58,8 +58,11 @@ if file.endswith('.gz'):
         print("Error when uncompressing " + file)
     output.close()
 elif file.endswith('.pcap'):
-    # Nothing to do, already uncompressed
-    pass
+    # Move the file to out_dir_exp
+    print("Moving " + file + " to " + out_dir_exp)
+    cmd = 'mv ' + file + " " + out_dir_exp + "/"
+    if subprocess.call(cmd.split()) != 0:
+        print("Error when moving " + file)
 else:
     print(file + ": not in a valid format")
     exit(1)
