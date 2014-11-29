@@ -51,10 +51,12 @@ file = sys.argv[1]
 # Files from UI tests will be compressed; unzip them
 if file.endswith('.gz'):
     print("Uncompressing " + file + " to " + out_dir_exp)
-    #FIXME doesn't work as expected yet
-    cmd = 'gunzip -9 ' + file + ' > ' + out_dir_exp + '/' + file[:-3]
-    if subprocess.call(cmd.split()) != 0:
+    output = open(out_dir_exp + '/' + file[:-3], 'w')
+    cmd = 'gunzip -c -9 ' + file
+    print(cmd)
+    if subprocess.call(cmd.split(), stdout=output) != 0:
         print("Error when uncompressing " + file)
+    output.close()
 elif file.endswith('.pcap'):
     # Nothing to do, already uncompressed
     pass
