@@ -26,15 +26,21 @@
 # has to be generalized to cope with multiple files
 
 ##################################################
+##                CONSTANTS                     ##
+##################################################
+DEF_OUT_DIR = 'traces'
+
+##################################################
 ##                 IMPORTS                      ##
 ##################################################
+import os
+import subprocess
 import sys
-
-
 
 ##################################################
 ##               PREPROCESSING                  ##
 ##################################################
+out_dir_exp = os.path.expanduser(DEF_OUT_DIR)
 
 if len(sys.argv) < 2:
     print("You have to give at least one argument to run this script")
@@ -44,7 +50,11 @@ file = sys.argv[1]
 
 # Files from UI tests will be compressed; unzip them
 if file.endswith('.gz'):
-    pass
+    print("Uncompressing " + file + " to " + out_dir_exp)
+    #FIXME doesn't work as expected yet
+    cmd = 'gunzip -9 ' + file + ' > ' + out_dir_exp + '/' + file[:-3]
+    if subprocess.call(cmd.split()) != 0:
+        print("Error when uncompressing " + file)
 elif file.endswith('.pcap'):
     # Nothing to do, already uncompressed
     pass
