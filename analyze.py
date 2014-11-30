@@ -84,4 +84,17 @@ for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
     # The mptcptrace call will generate .csv files to cope with
     for csv_file in glob.glob('*.pcap'):
         #TODO
-        pass
+        try:
+            data = open(csv_file, 'r+')
+            # FIXME format of a line: time,seq_num,?,?,?,?
+            # First line: get time and set it to 0
+            line = data.readline()
+            split_line = line.split(',')
+            begin_time = float(split_line[0])
+            
+        except IOError e:
+            print('IOError for ' + csv_file + ': skipped')
+            continue
+        except SyntaxError e:
+            print('SyntaxError for ' + csv_file + ': skipped')
+            continue
