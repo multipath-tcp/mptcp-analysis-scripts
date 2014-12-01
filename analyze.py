@@ -82,19 +82,42 @@ for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
         print("Error of mptcptrace with " + pcap_file)
 
     # The mptcptrace call will generate .csv files to cope with
-    for csv_file in glob.glob('*.pcap'):
-        #TODO
+    for csv_file in glob.glob('*.csv'):
         try:
-            data = open(csv_file, 'r+')
-            # FIXME format of a line: time,seq_num,?,?,?,?
-            # First line: get time and set it to 0
-            line = data.readline()
-            split_line = line.split(',')
-            begin_time = float(split_line[0])
-            
-        except IOError e:
+            in_file = open(csv_file)
+            data = in_file.readlines()
+            # Check if there is data in file
+            if not data == []:
+                # Collect begin time and seq num to plot graph starting at 0
+                first_line = data[0]
+                split_line = first_line.split(',')
+                begin_time = float(split_line[0])
+                begin_seq = int(split_line[1])
+
+                try:
+                    graph_filename = os.path.join(os.path.expanduser('graphs'), csv_file)
+                    print(graph_filename)
+                    graph_file = open(graph_filename, 'w')
+                    # Modify lines for that
+                    for line in data:
+                        split_line = line.split(',')
+                        time = float(split_line[0]) - begin_time
+                        seq = int(split_line[1]) - begin_seq
+                        graph_file.write(str(time) + ',' + str(seq) + '\n')
+                    graph_file.close()
+                except IOError as e:
+                    print('IOError for graph file with ' + csv_file + ': stop')
+                    exit(1)
+
+            in_file.close()
+
+        except IOError as e:
             print('IOError for ' + csv_file + ': skipped')
             continue
-        except SyntaxError e:
-            print('SyntaxError for ' + csv_file + ': skipped')
+        except ValueError as e:
+            print('ValueError for ' + csv_file + ': skipped')
             continue
+
+    print('End for file ' + pcap_file)
+
+print('End of analyze')
