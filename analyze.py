@@ -129,7 +129,7 @@ for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
             in_file = open(csv_file)
             data = in_file.readlines()
             # Check if there is data in file
-            if not data:
+            if not data == []:
                 # Collect begin time and seq num to plot graph starting at 0
                 begin_time, begin_seq = get_begin_values(data[0])
                 write_graph_csv(csv_file, begin_time, begin_seq)
@@ -151,9 +151,10 @@ for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
             # If file was generated, the csv is not empty
             data_split = map(lambda x: x.split(','), data)
             data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
+            print(data_plot)
 
-            g.title('A small test')
-            g("set datafile separator ','")
+            g.title(csv_file)
+            g('set data style linespoints')
             g.plot(data_plot)
             raw_input('Please press return to continue...\n')
 
