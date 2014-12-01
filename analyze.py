@@ -91,6 +91,7 @@ else:
 ##################################################
 ##                  MPTCPTRACE                  ##
 ##################################################
+g = Gnuplot.Gnuplot(debug=1)
 
 def write_graph_csv(csv_file, begin_time, begin_seq):
     """ Write in the graphs directory a new csv file containing relative values
@@ -116,7 +117,24 @@ def get_begin_values(first_line):
     split_line = first_line.split(',')
     return float(split_line[0]), int(split_line[1])
 
-g = Gnuplot.Gnuplot(debug=1)
+def create_graph(pcap_file, csv_file):
+    """ Generate pdf for the csv file of the pcap file
+    """
+    in_file = open(csv_file)
+    data = in_file.readlines()
+    # If file was generated, the csv is not empty
+    data_split = map(lambda x: x.split(','), data)
+    data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
+
+    g.title(csv_file)
+    g('set style data linespoints')
+    g.xlabel('Time [s]')
+    g.ylabel('Sequence number')
+    g.plot(data_plot)
+    pdf_filename = os.path.join(graph_dir_exp, csv_file[:-4] + '.pdf')
+    g.hardcopy(filename=pdf_filename, terminal='pdf')
+    g.reset()
+
 # If file is a .pcap, use it for mptcptrace
 for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
     cmd = 'mptcptrace -f ' + pcap_file + ' -s -w 2'
@@ -147,20 +165,7 @@ for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
 
     with cd(graph_dir_exp):
         for csv_file in glob.glob('*.csv'):
-            in_file = open(csv_file)
-            data = in_file.readlines()
-            # If file was generated, the csv is not empty
-            data_split = map(lambda x: x.split(','), data)
-            data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
-
-            g.title(csv_file)
-            g('set style data linespoints')
-            g.xlabel('Time [s]')
-            g.ylabel('Sequence number')
-            g.plot(data_plot)
-            pdf_filename = os.path.join(graph_dir_exp, csv_file[:-4] + '.pdf')
-            g.hardcopy(filename=pdf_filename, terminal='pdf')
-            g.reset()
+            create_graph(pcap_file, csv_file)
             # Remove the csv file
             os.remove(csv_file)
 
