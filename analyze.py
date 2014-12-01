@@ -30,6 +30,7 @@
 ##################################################
 ##                  CONSTANTS                   ##
 ##################################################
+DEF_IN_DIR = 'input'
 DEF_OUT_DIR = 'traces'
 DEF_GRAPH_DIR = 'graphs'
 
@@ -59,6 +60,7 @@ class cd:
 ##################################################
 ##                 PREPROCESSING                ##
 ##################################################
+in_dir_exp = os.path.expanduser(DEF_IN_DIR)
 out_dir_exp = os.path.expanduser(DEF_OUT_DIR)
 graph_dir_exp = os.path.expanduser(DEF_GRAPH_DIR)
 
@@ -68,24 +70,25 @@ if len(sys.argv) < 2:
 
 file = sys.argv[1]
 
-# Files from UI tests will be compressed; unzip them
-if file.endswith('.gz'):
-    print("Uncompressing " + file + " to " + out_dir_exp)
-    output = open(out_dir_exp + '/' + file[:-3], 'w')
-    cmd = 'gunzip -c -9 ' + file
-    print(cmd)
-    if subprocess.call(cmd.split(), stdout=output) != 0:
-        print("Error when uncompressing " + file)
-    output.close()
-elif file.endswith('.pcap'):
-    # Move the file to out_dir_exp
-    print("Moving " + file + " to " + out_dir_exp)
-    cmd = 'mv ' + file + " " + out_dir_exp + "/"
-    if subprocess.call(cmd.split()) != 0:
-        print("Error when moving " + file)
-else:
-    print(file + ": not in a valid format")
-    exit(1)
+for file in os.listdir(os.path.join(os.getcwd(), in_dir_exp)):
+    # Files from UI tests will be compressed; unzip them
+    if file.endswith('.gz'):
+        print("Uncompressing " + file + " to " + out_dir_exp)
+        output = open(out_dir_exp + '/' + file[:-3], 'w')
+        cmd = 'gunzip -k -c -9 ' + file
+        print(cmd)
+        if subprocess.call(cmd.split(), stdout=output) != 0:
+            print("Error when uncompressing " + file)
+        output.close()
+    elif file.endswith('.pcap'):
+        # Move the file to out_dir_exp
+        print("Copying " + file + " to " + out_dir_exp)
+        cmd = 'cp ' + file + " " + out_dir_exp + "/"
+        if subprocess.call(cmd.split()) != 0:
+            print("Error when moving " + file)
+    else:
+        print(file + ": not in a valid format, skipped")
+        continue
 
 
 ##################################################
