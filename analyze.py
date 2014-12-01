@@ -75,6 +75,30 @@ else:
 ##                  MPTCPTRACE                  ##
 ##################################################
 
+def write_graph_csv(csv_file, begin_time, begin_seq):
+    """ Write in the graphs directory a new csv file containing relative values
+        for plotting them
+        Exit the program if an IOError is raised
+    """
+    try:
+        graph_filename = os.path.join(os.path.expanduser('graphs'), csv_file)
+        print(graph_filename)
+        graph_file = open(graph_filename, 'w')
+        # Modify lines for that
+        for line in data:
+            split_line = line.split(',')
+            time = float(split_line[0]) - begin_time
+            seq = int(split_line[1]) - begin_seq
+            graph_file.write(str(time) + ',' + str(seq) + '\n')
+        graph_file.close()
+    except IOError as e:
+        print('IOError for graph file with ' + csv_file + ': stop')
+        exit(1)
+
+def get_begin_values(first_line):
+    split_line = first_line.split(',')
+    return float(split_line[0]), int(split_line[1])
+
 # If file is a .pcap, use it for mptcptrace
 for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
     cmd = 'mptcptrace -f ' + pcap_file + ' -s -w 2'
@@ -89,25 +113,8 @@ for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
             # Check if there is data in file
             if not data == []:
                 # Collect begin time and seq num to plot graph starting at 0
-                first_line = data[0]
-                split_line = first_line.split(',')
-                begin_time = float(split_line[0])
-                begin_seq = int(split_line[1])
-
-                try:
-                    graph_filename = os.path.join(os.path.expanduser('graphs'), csv_file)
-                    print(graph_filename)
-                    graph_file = open(graph_filename, 'w')
-                    # Modify lines for that
-                    for line in data:
-                        split_line = line.split(',')
-                        time = float(split_line[0]) - begin_time
-                        seq = int(split_line[1]) - begin_seq
-                        graph_file.write(str(time) + ',' + str(seq) + '\n')
-                    graph_file.close()
-                except IOError as e:
-                    print('IOError for graph file with ' + csv_file + ': stop')
-                    exit(1)
+                begin_time, begin_seq = get_begin_values(data[0])
+                write_graph_csv(csv_file, begin_time, begin_seq)
 
             in_file.close()
 
