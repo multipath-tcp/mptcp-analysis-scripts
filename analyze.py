@@ -31,6 +31,7 @@
 ##                  CONSTANTS                   ##
 ##################################################
 DEF_OUT_DIR = 'traces'
+DEF_GRAPH_DIR = 'graphs'
 
 ##################################################
 ##                   IMPORTS                    ##
@@ -44,6 +45,7 @@ import sys
 ##                 PREPROCESSING                ##
 ##################################################
 out_dir_exp = os.path.expanduser(DEF_OUT_DIR)
+graph_dir_exp = os.path.expanduser(DEF_GRAPH_DIR)
 
 if len(sys.argv) < 2:
     print("You have to give at least one argument to run this script")
@@ -81,7 +83,7 @@ def write_graph_csv(csv_file, begin_time, begin_seq):
         Exit the program if an IOError is raised
     """
     try:
-        graph_filename = os.path.join(os.path.expanduser('graphs'), csv_file)
+        graph_filename = os.path.join(graph_dir_exp, csv_file)
         print(graph_filename)
         graph_file = open(graph_filename, 'w')
         # Modify lines for that
