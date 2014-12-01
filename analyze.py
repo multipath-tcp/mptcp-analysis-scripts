@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#! /usr/bin/python
 # -*- coding: utf-8 -*-
 #
 #  Copyright 2014 Matthieu Baerts & Quentin De Coninck
@@ -20,7 +20,7 @@
 #
 # ./analyze.py file
 #
-# To install on this machine: gnuplot, gnuplot.py
+# To install on this machine: gnuplot, gnuplot.py, numpy
 
 # TODO the script starts with the assumption that one file is provided, but it
 # has to be generalized to cope with multiple files
@@ -36,7 +36,10 @@ DEF_GRAPH_DIR = 'graphs'
 ##################################################
 ##                   IMPORTS                    ##
 ##################################################
+from numpy import *
+
 import glob
+import Gnuplot
 import os
 import subprocess
 import sys
@@ -129,4 +132,5 @@ for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
 
     print('End for file ' + pcap_file)
 
+g = Gnuplot.Gnuplot(debug=1)
 print('End of analyze')
