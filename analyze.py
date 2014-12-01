@@ -157,8 +157,8 @@ for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
             g('set style data linespoints')
             g.plot(data_plot)
             raw_input('Please press return to continue...\n')
-            pdf_file = 'graphs/' + csv_file[:-4] + '.pdf'
-            g.hardcopy(filename=pdf_file, terminal='pdf')
+            pdf_filename = os.path.join(graph_dir_exp, csv_file[:-4] + '.pdf')
+            g.hardcopy(filename=pdf_filename, terminal='pdf')
 
     print('End for file ' + pcap_file)
 
