@@ -155,6 +155,8 @@ for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
 
             g.title(csv_file)
             g('set style data linespoints')
+            g.xlabel('Time [s]')
+            g.ylabel('Sequence number')
             g.plot(data_plot)
             raw_input('Please press return to continue...\n')
             pdf_filename = os.path.join(graph_dir_exp, csv_file[:-4] + '.pdf')
