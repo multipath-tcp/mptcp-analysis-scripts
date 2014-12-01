@@ -44,6 +44,18 @@ import os
 import subprocess
 import sys
 
+class cd:
+    """Context manager for changing the current working directory"""
+    def __init__(self, newPath):
+        self.newPath = newPath
+
+    def __enter__(self):
+        self.savedPath = os.getcwd()
+        os.chdir(self.newPath)
+
+    def __exit__(self, etype, value, traceback):
+        os.chdir(self.savedPath)
+
 ##################################################
 ##                 PREPROCESSING                ##
 ##################################################
@@ -104,6 +116,7 @@ def get_begin_values(first_line):
     split_line = first_line.split(',')
     return float(split_line[0]), int(split_line[1])
 
+g = Gnuplot.Gnuplot(debug=1)
 # If file is a .pcap, use it for mptcptrace
 for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
     cmd = 'mptcptrace -f ' + pcap_file + ' -s -w 2'
@@ -123,6 +136,7 @@ for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
 
             in_file.close()
 
+
         except IOError as e:
             print('IOError for ' + csv_file + ': skipped')
             continue
@@ -130,7 +144,19 @@ for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
             print('ValueError for ' + csv_file + ': skipped')
             continue
 
+    with cd(graph_dir_exp):
+        for csv_file in glob.glob('*.csv'):
+            in_file = open(csv_file)
+            data = in_file.readlines()
+            # If file was generated, the csv is not empty
+            data_split = map(lambda x: x.split(','), data)
+            data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
+
+            g.title('A small test')
+            g("set datafile separator ','")
+            g.plot(data_plot)
+            raw_input('Please press return to continue...\n')
+
     print('End for file ' + pcap_file)
 
-g = Gnuplot.Gnuplot(debug=1)
 print('End of analyze')
