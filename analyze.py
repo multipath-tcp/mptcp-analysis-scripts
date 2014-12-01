@@ -151,16 +151,15 @@ for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
             # If file was generated, the csv is not empty
             data_split = map(lambda x: x.split(','), data)
             data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
-            print(data_plot)
 
             g.title(csv_file)
             g('set style data linespoints')
             g.xlabel('Time [s]')
             g.ylabel('Sequence number')
             g.plot(data_plot)
-            raw_input('Please press return to continue...\n')
             pdf_filename = os.path.join(graph_dir_exp, csv_file[:-4] + '.pdf')
             g.hardcopy(filename=pdf_filename, terminal='pdf')
+            g.reset()
 
     print('End for file ' + pcap_file)
 
