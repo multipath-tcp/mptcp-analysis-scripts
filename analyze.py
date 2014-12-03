@@ -55,7 +55,7 @@ class cd:
         os.chdir(self.savedPath)
 
 ##################################################
-##                 PREPROCESSING                ##
+##                   ARGUMENTS                  ##
 ##################################################
 
 if len(sys.argv) >= 2:
@@ -76,6 +76,10 @@ else:
 in_dir_exp = os.path.expanduser(in_dir)
 trace_dir_exp = os.path.expanduser(trace_dir)
 graph_dir_exp = os.path.expanduser(graph_dir)
+
+##################################################
+##                 PREPROCESSING                ##
+##################################################
 
 for file in os.listdir(os.path.join(os.getcwd(), in_dir_exp)):
     # Files from UI tests will be compressed; unzip them
