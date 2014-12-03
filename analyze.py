@@ -18,7 +18,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #
-# ./analyze.py file
+# ./analyze.py [input_dir [traces_dir [graphs_dir]]]
 #
 # To install on this machine: gnuplot, gnuplot.py, numpy
 
@@ -31,7 +31,7 @@
 ##                  CONSTANTS                   ##
 ##################################################
 DEF_IN_DIR = 'input'
-DEF_OUT_DIR = 'traces'
+DEF_TRACE_DIR = 'traces'
 DEF_GRAPH_DIR = 'graphs'
 
 ##################################################
@@ -60,21 +60,31 @@ class cd:
 ##################################################
 ##                 PREPROCESSING                ##
 ##################################################
-in_dir_exp = os.path.expanduser(DEF_IN_DIR)
-out_dir_exp = os.path.expanduser(DEF_OUT_DIR)
-graph_dir_exp = os.path.expanduser(DEF_GRAPH_DIR)
 
-if len(sys.argv) < 2:
-    print("You have to give at least one argument to run this script")
-    exit(1)
+if len(sys.argv) >= 2:
+    in_dir = sys.argv[1]
+else:
+    in_dir = DEF_IN_DIR
 
-file = sys.argv[1]
+if len(sys.argv) >= 3:
+    trace_dir = sys.argv[2]
+else:
+    trace_dir = DEF_TRACE_DIR
+
+if len(sys.argv) >= 4:
+    graph_dir = sys.argv[3]
+else:
+    graph_dir = DEF_GRAPH_DIR
+
+in_dir_exp = os.path.expanduser(in_dir)
+trace_dir_exp = os.path.expanduser(trace_dir)
+graph_dir_exp = os.path.expanduser(graph_dir)
 
 for file in os.listdir(os.path.join(os.getcwd(), in_dir_exp)):
     # Files from UI tests will be compressed; unzip them
     if file.endswith('.gz'):
-        print("Uncompressing " + file + " to " + out_dir_exp)
-        output = open(out_dir_exp + '/' + file[:-3], 'w')
+        print("Uncompressing " + file + " to " + trace_dir_exp)
+        output = open(trace_dir_exp + '/' + file[:-3], 'w')
         cmd = 'gunzip -k -c -9 ' + in_dir_exp + '/' + file
         print(cmd)
         if subprocess.call(cmd.split(), stdout=output) != 0:
@@ -82,8 +92,8 @@ for file in os.listdir(os.path.join(os.getcwd(), in_dir_exp)):
         output.close()
     elif file.endswith('.pcap'):
         # Move the file to out_dir_exp
-        print("Copying " + file + " to " + out_dir_exp)
-        cmd = 'cp ' + in_dir_exp + '/' + file + " " + out_dir_exp + "/"
+        print("Copying " + file + " to " + trace_dir_exp)
+        cmd = 'cp ' + in_dir_exp + '/' + file + " " + trace_dir_exp + "/"
         if subprocess.call(cmd.split()) != 0:
             print("Error when moving " + file)
     else:
@@ -135,12 +145,12 @@ def create_graph(pcap_file, csv_file):
     g.ylabel('Sequence number')
     g.plot(data_plot)
     pdf_filename = os.path.join(graph_dir_exp, \
-        pcap_file[len(out_dir_exp)+1:-5] + "_" + csv_file[:-4] + '.pdf')
+        pcap_file[len(trace_dir_exp)+1:-5] + "_" + csv_file[:-4] + '.pdf')
     g.hardcopy(filename=pdf_filename, terminal='pdf')
     g.reset()
 
 # If file is a .pcap, use it for mptcptrace
-for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
+for pcap_file in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
     cmd = 'mptcptrace -f ' + pcap_file + ' -s -w 2'
     if subprocess.call(cmd.split()) != 0:
         print("Error of mptcptrace with " + pcap_file)
