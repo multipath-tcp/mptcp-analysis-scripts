@@ -75,7 +75,7 @@ for file in os.listdir(os.path.join(os.getcwd(), in_dir_exp)):
     if file.endswith('.gz'):
         print("Uncompressing " + file + " to " + out_dir_exp)
         output = open(out_dir_exp + '/' + file[:-3], 'w')
-        cmd = 'gunzip -k -c -9 ' + file
+        cmd = 'gunzip -k -c -9 ' + in_dir_exp + '/' + file
         print(cmd)
         if subprocess.call(cmd.split(), stdout=output) != 0:
             print("Error when uncompressing " + file)
@@ -83,7 +83,7 @@ for file in os.listdir(os.path.join(os.getcwd(), in_dir_exp)):
     elif file.endswith('.pcap'):
         # Move the file to out_dir_exp
         print("Copying " + file + " to " + out_dir_exp)
-        cmd = 'cp ' + file + " " + out_dir_exp + "/"
+        cmd = 'cp ' + in_dir_exp + '/' + file + " " + out_dir_exp + "/"
         if subprocess.call(cmd.split()) != 0:
             print("Error when moving " + file)
     else:
