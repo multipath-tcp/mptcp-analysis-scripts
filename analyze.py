@@ -187,11 +187,18 @@ def process_mptcp_trace(pcap_file):
             # Remove the csv file
             os.remove(csv_file)
 
+def process_tcp_trace(pcap_file):
+    """ Process a tcp pcap file and generate graphs of its connections """
+    pass
+
 # If file is a .pcap, use it for mptcptrace
 for pcap_file in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
     if pcap_file.startswith('mptcp'):
         process_mptcp_trace(pcap_file)
-
+    elif pcap_file.startswith('tcp'):
+        process_tcp_trace(pcap_file)
+    else:
+        print(pcap_file + ": don't know the protocol used; skipped")
 
     print('End for file ' + pcap_file)
     os.remove(pcap_file)
