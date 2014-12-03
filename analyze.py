@@ -22,9 +22,6 @@
 #
 # To install on this machine: gnuplot, gnuplot.py, numpy
 
-# TODO the script starts with the assumption that one file is provided, but it
-# has to be generalized to cope with multiple files
-
 # TODO must manage the case where the pcap file is from a TCP connection
 
 ##################################################
