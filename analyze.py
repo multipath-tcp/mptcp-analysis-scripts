@@ -150,8 +150,8 @@ for pcap_file in glob.glob(os.path.join(out_dir_exp, '*.pcap')):
         try:
             in_file = open(csv_file)
             data = in_file.readlines()
-            # Check if there is data in file
-            if not data == []:
+            # Check if there is data in file (and not only one line of 0s)
+            if not data == [] and len(data) > 1:
                 # Collect begin time and seq num to plot graph starting at 0
                 begin_time, begin_seq = get_begin_values(data[0])
                 write_graph_csv(csv_file, begin_time, begin_seq)
