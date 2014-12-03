@@ -101,7 +101,7 @@ for file in os.listdir(os.path.join(os.getcwd(), in_dir_exp)):
 ##################################################
 ##                  MPTCPTRACE                  ##
 ##################################################
-g = Gnuplot.Gnuplot(debug=1)
+g = Gnuplot.Gnuplot(debug=0)
 
 def write_graph_csv(csv_file, begin_time, begin_seq):
     """ Write in the graphs directory a new csv file containing relative values
@@ -110,7 +110,6 @@ def write_graph_csv(csv_file, begin_time, begin_seq):
     """
     try:
         graph_filename = os.path.join(graph_dir_exp, csv_file)
-        print(graph_filename)
         graph_file = open(graph_filename, 'w')
         # Modify lines for that
         for line in data:
@@ -181,5 +180,6 @@ for pcap_file in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
             os.remove(csv_file)
 
     print('End for file ' + pcap_file)
+    os.remove(pcap_file)
 
 print('End of analyze')
