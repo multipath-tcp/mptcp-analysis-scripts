@@ -137,8 +137,13 @@ def get_begin_values(first_line):
 def create_graph_csv(pcap_file, csv_file):
     """ Generate pdf for the csv file of the pcap file
     """
-    in_file = open(csv_file)
-    data = in_file.readlines()
+    try:
+        in_file = open(csv_file)
+        data = in_file.readlines()
+    except IOError as e:
+        print('IOError for ' + csv_file + ': skipped')
+        return
+        
     # If file was generated, the csv is not empty
     data_split = map(lambda x: x.split(','), data)
     data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
