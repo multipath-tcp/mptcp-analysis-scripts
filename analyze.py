@@ -24,13 +24,7 @@
 
 # TODO must manage the case where the pcap file is from a TCP connection
 # (differency them)
-
-##################################################
-##                  CONSTANTS                   ##
-##################################################
-DEF_IN_DIR = 'input'
-DEF_TRACE_DIR = 'traces'
-DEF_GRAPH_DIR = 'graphs'
+from __future__ import print_function
 
 ##################################################
 ##                   IMPORTS                    ##
@@ -55,6 +49,13 @@ class cd:
 
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
+
+##################################################
+##                  CONSTANTS                   ##
+##################################################
+DEF_IN_DIR = 'input'
+DEF_TRACE_DIR = 'traces'
+DEF_GRAPH_DIR = 'graphs'
 
 ##################################################
 ##                   ARGUMENTS                  ##
