@@ -134,7 +134,8 @@ def create_graph(pcap_file, csv_file):
     g.xlabel('Time [s]')
     g.ylabel('Sequence number')
     g.plot(data_plot)
-    pdf_filename = os.path.join(graph_dir_exp, csv_file[:-4] + '.pdf')
+    pdf_filename = os.path.join(graph_dir_exp, \
+        pcap_file[len(out_dir_exp)+1:-5] + "_" + csv_file[:-4] + '.pdf')
     g.hardcopy(filename=pdf_filename, terminal='pdf')
     g.reset()
 
