@@ -157,7 +157,8 @@ def process_mptcp_trace(pcap_file):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     cmd = 'mptcptrace -f ' + pcap_file + ' -s -w 2'
     if subprocess.call(cmd.split()) != 0:
-        print("Error of mptcptrace with " + pcap_file)
+        print("Error of mptcptrace with " + pcap_file + "; skip process")
+        return
 
     # The mptcptrace call will generate .csv files to cope with
     for csv_file in glob.glob('*.csv'):
@@ -189,7 +190,12 @@ def process_mptcp_trace(pcap_file):
 
 def process_tcp_trace(pcap_file):
     """ Process a tcp pcap file and generate graphs of its connections """
-    pass
+    # -n for quick process (don't resolve host/service names)
+    # -C for color, -S for sequence numbers
+    cmd = 'tcptrace -n -C -S ' + pcap_file
+    if subprocess.call(cmd.split()) != 0:
+        print("Error of tcptrace with " + pcap_file + "; skip process")
+        return
 
 # If file is a .pcap, use it for mptcptrace
 for pcap_file in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
