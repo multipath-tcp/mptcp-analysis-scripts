@@ -20,7 +20,8 @@
 #
 # ./analyze.py [input_dir [traces_dir [graphs_dir]]]
 #
-# To install on this machine: gnuplot, gnuplot.py, numpy
+# To install on this machine: gnuplot, gnuplot.py, numpy, mptcptrace, tcptrace,
+# xpl2gpl
 
 # TODO must manage the case where the pcap file is from a TCP connection
 # (differency them)
@@ -106,7 +107,7 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp
             continue
 
 ##################################################
-##                  MPTCPTRACE                  ##
+##                 (MP)TCPTRACE                 ##
 ##################################################
 g = Gnuplot.Gnuplot(debug=0)
 
@@ -133,7 +134,7 @@ def get_begin_values(first_line):
     split_line = first_line.split(',')
     return float(split_line[0]), int(split_line[1])
 
-def create_graph(pcap_file, csv_file):
+def create_graph_csv(pcap_file, csv_file):
     """ Generate pdf for the csv file of the pcap file
     """
     in_file = open(csv_file)
@@ -152,8 +153,8 @@ def create_graph(pcap_file, csv_file):
     g.hardcopy(filename=pdf_filename, terminal='pdf')
     g.reset()
 
-# If file is a .pcap, use it for mptcptrace
-for pcap_file in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
+def process_mptcp_trace(pcap_file):
+    """ Process a mptcp pcap file and generate graphs of its subflows """
     cmd = 'mptcptrace -f ' + pcap_file + ' -s -w 2'
     if subprocess.call(cmd.split()) != 0:
         print("Error of mptcptrace with " + pcap_file)
@@ -182,9 +183,15 @@ for pcap_file in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
 
     with cd(graph_dir_exp):
         for csv_file in glob.glob('*.csv'):
-            create_graph(pcap_file, csv_file)
+            create_graph_csv(pcap_file, csv_file)
             # Remove the csv file
             os.remove(csv_file)
+
+# If file is a .pcap, use it for mptcptrace
+for pcap_file in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
+    if pcap_file.startswith('mptcp'):
+        process_mptcp_trace(pcap_file)
+
 
     print('End for file ' + pcap_file)
     os.remove(pcap_file)
