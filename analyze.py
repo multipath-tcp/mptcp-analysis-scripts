@@ -143,7 +143,7 @@ def create_graph_csv(pcap_file, csv_file):
     except IOError as e:
         print('IOError for ' + csv_file + ': skipped')
         return
-        
+
     # If file was generated, the csv is not empty
     data_split = map(lambda x: x.split(','), data)
     data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
@@ -205,7 +205,12 @@ def process_tcp_trace(pcap_file):
 
     # The tcptrace call will generate .xpl files to cope with
     for xpl_file in glob.glob('*.xpl'):
-        pass
+        cmd = "xpl2gpl " + xpl_file
+        if subprocess.call(cmd.split()) != 0:
+            print("Error of xpl2gpl with " + xpl_file + "; skip xpl file")
+            continue
+        prefix_file = xpl_file[:-4]
+        
 
 # If file is a .pcap, use it for mptcptrace
 for pcap_file in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
