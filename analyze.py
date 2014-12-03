@@ -23,6 +23,7 @@
 # To install on this machine: gnuplot, gnuplot.py, numpy
 
 # TODO must manage the case where the pcap file is from a TCP connection
+# (differency them)
 
 ##################################################
 ##                  CONSTANTS                   ##
@@ -39,6 +40,7 @@ from numpy import *
 import glob
 import Gnuplot
 import os
+import os.path
 import subprocess
 import sys
 
@@ -81,26 +83,26 @@ graph_dir_exp = os.path.expanduser(graph_dir)
 ##                 PREPROCESSING                ##
 ##################################################
 
-for file in os.listdir(os.path.join(os.getcwd(), in_dir_exp)):
-    # Files from UI tests will be compressed; unzip them
-    if file.endswith('.gz'):
-        print("Uncompressing " + file + " to " + trace_dir_exp)
-        output = open(trace_dir_exp + '/' + file[:-3], 'w')
-        cmd = 'gunzip -k -c -9 ' + in_dir_exp + '/' + file
-        print(cmd)
-        if subprocess.call(cmd.split(), stdout=output) != 0:
-            print("Error when uncompressing " + file)
-        output.close()
-    elif file.endswith('.pcap'):
-        # Move the file to out_dir_exp
-        print("Copying " + file + " to " + trace_dir_exp)
-        cmd = 'cp ' + in_dir_exp + '/' + file + " " + trace_dir_exp + "/"
-        if subprocess.call(cmd.split()) != 0:
-            print("Error when moving " + file)
-    else:
-        print(file + ": not in a valid format, skipped")
-        continue
-
+for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp)):
+    for file in filenames:
+        # Files from UI tests will be compressed; unzip them
+        if file.endswith('.gz'):
+            print("Uncompressing " + file + " to " + trace_dir_exp)
+            output = open(trace_dir_exp + '/' + file[:-3], 'w')
+            cmd = 'gunzip -k -c -9 ' + in_dir_exp + '/' + file
+            print(cmd)
+            if subprocess.call(cmd.split(), stdout=output) != 0:
+                print("Error when uncompressing " + file)
+            output.close()
+        elif file.endswith('.pcap'):
+            # Move the file to out_dir_exp
+            print("Copying " + file + " to " + trace_dir_exp)
+            cmd = 'cp ' + in_dir_exp + '/' + file + " " + trace_dir_exp + "/"
+            if subprocess.call(cmd.split()) != 0:
+                print("Error when moving " + file)
+        else:
+            print(file + ": not in a valid format, skipped")
+            continue
 
 ##################################################
 ##                  MPTCPTRACE                  ##
