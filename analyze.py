@@ -28,6 +28,7 @@ from __future__ import print_function
 ##################################################
 ##                   IMPORTS                    ##
 ##################################################
+
 from numpy import *
 
 import glob
@@ -52,6 +53,7 @@ class cd:
 ##################################################
 ##                  CONSTANTS                   ##
 ##################################################
+
 DEF_IN_DIR = 'input'
 DEF_TRACE_DIR = 'traces'
 DEF_GRAPH_DIR = 'graphs'
@@ -105,8 +107,9 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp
             continue
 
 ##################################################
-##                 (MP)TCPTRACE                 ##
+##                  MPTCPTRACE                  ##
 ##################################################
+
 g = Gnuplot.Gnuplot(debug=0)
 
 def write_graph_csv(csv_file, data, begin_time, begin_seq):
@@ -191,6 +194,10 @@ def process_mptcp_trace(pcap_file):
             # Remove the csv file
             os.remove(csv_file)
 
+##################################################
+##                   TCPTRACE                   ##
+##################################################
+
 def prepare_gpl_file(pcap_file, gpl_filename):
     """ Return a gpl file name of a ready-to-use gpl file or null if an error
         occurs
@@ -205,8 +212,7 @@ def prepare_gpl_file(pcap_file, gpl_filename):
             gpl_file_ok.write(line)
         # Give the pdf filename where the graph will be stored
         pdf_filename = os.path.join(graph_dir_exp, \
-            pcap_file[len(trace_dir_exp)+1:-5] + "_" + gpl_filename[:-4] \
-            + '.pdf')
+            pcap_file[len(trace_dir_exp)+1:-5] + "_" + gpl_filename[:-4] + '.pdf')
         gpl_file_ok.write("set output '" + pdf_filename + "'\n")
         gpl_file_ok.write("set terminal pdf\n")
         # Needed to give again the line with all data (5th line from the end)
@@ -228,7 +234,7 @@ def process_tcp_trace(pcap_file):
     # -n for quick process (don't resolve host/service names)
     # -C for color, -S for sequence numbers
     cmd = "tcptrace --output_dir=" + os.getcwd() + " --output_prefix=" \
-    + pcap_file[:-5] + "_ -n -C -S " + pcap_file
+        + pcap_file[:-5] + "_ -n -C -S " + pcap_file
     if subprocess.call(cmd.split()) != 0:
         print("Error of tcptrace with " + pcap_file + "; skip process")
         return
@@ -255,8 +261,11 @@ def process_tcp_trace(pcap_file):
         os.remove(prefix_file + '.labels')
         os.remove(xpl_file)
 
+##################################################
+##                     MAIN                     ##
+##################################################
 
-# If file is a .pcap, use it for mptcptrace
+# If file is a .pcap, use it for (mp)tcptrace
 for pcap_file in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
     pcap_filename = pcap_file[len(trace_dir_exp)+1:]
     if pcap_filename.startswith('mptcp'):
