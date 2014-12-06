@@ -111,7 +111,7 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp
 ##################################################
 g = Gnuplot.Gnuplot(debug=0)
 
-def write_graph_csv(csv_file, begin_time, begin_seq):
+def write_graph_csv(csv_file, data, begin_time, begin_seq):
     """ Write in the graphs directory a new csv file containing relative values
         for plotting them
         Exit the program if an IOError is raised
@@ -174,7 +174,7 @@ def process_mptcp_trace(pcap_file):
             if not data == [] and len(data) > 1:
                 # Collect begin time and seq num to plot graph starting at 0
                 begin_time, begin_seq = get_begin_values(data[0])
-                write_graph_csv(csv_file, begin_time, begin_seq)
+                write_graph_csv(csv_file, data, begin_time, begin_seq)
 
             in_file.close()
             # Remove the csv file
