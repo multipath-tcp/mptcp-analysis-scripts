@@ -198,7 +198,6 @@ def prepare_gpl_file(pcap_file, gpl_filename):
         occurs
     """
     try:
-        print("Coucou")
         gpl_filename_ok = gpl_filename[:-4] + '_ok.gpl'
         gpl_file = open(gpl_filename, 'r')
         gpl_file_ok = open(gpl_filename_ok, 'w')
