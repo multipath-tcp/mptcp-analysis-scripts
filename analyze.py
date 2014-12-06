@@ -214,9 +214,10 @@ def process_tcp_trace(pcap_file):
 
 # If file is a .pcap, use it for mptcptrace
 for pcap_file in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
-    if pcap_file.startswith('mptcp'):
+    pcap_filename = pcap_file[len(trace_dir_exp)+1:]
+    if pcap_filename.startswith('mptcp'):
         process_mptcp_trace(pcap_file)
-    elif pcap_file.startswith('tcp'):
+    elif pcap_filename.startswith('tcp'):
         process_tcp_trace(pcap_file)
     else:
         print(pcap_file + ": don't know the protocol used; skipped")
