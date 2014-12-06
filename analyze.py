@@ -23,8 +23,6 @@
 # To install on this machine: gnuplot, gnuplot.py, numpy, mptcptrace, tcptrace,
 # xpl2gpl
 
-# TODO must manage the case where the pcap file is from a TCP connection
-# (differency them)
 from __future__ import print_function
 
 ##################################################
@@ -241,8 +239,22 @@ def process_tcp_trace(pcap_file):
         if subprocess.call(cmd.split()) != 0:
             print("Error of xpl2gpl with " + xpl_file + "; skip xpl file")
             continue
-        prefix_file = xpl_file[:-4]
-        
+        prefix_file = xpl_file[len(trace_dir_exp)+1:-4]
+        gpl_filename = prefix_file + '.gpl'
+        gpl_filename_ok = prepare_gpl_file(pcap_file, gpl_filename)
+        if gpl_filename_ok:
+            cmd = "gnuplot " + gpl_filename_ok
+            if subprocess.call(cmd.split()) != 0:
+                print("Error of tcptrace with " + pcap_file + "; skip process")
+                return
+
+        # Delete gpl, xpl and others files generated
+        os.remove(gpl_filename)
+        os.remove(gpl_filename_ok)
+        os.remove(prefix_file + '.datasets')
+        os.remove(prefix_file + '.labels')
+        os.remove(xpl_file)
+
 
 # If file is a .pcap, use it for mptcptrace
 for pcap_file in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
