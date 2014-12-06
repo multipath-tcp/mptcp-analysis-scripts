@@ -193,6 +193,39 @@ def process_mptcp_trace(pcap_file):
             # Remove the csv file
             os.remove(csv_file)
 
+def prepare_gpl_file(pcap_file, gpl_filename):
+    """ Return a gpl file name of a ready-to-use gpl file or null if an error
+        occurs
+    """
+    try:
+        print("Coucou")
+        gpl_filename_ok = gpl_filename[:-4] + '_ok.gpl'
+        gpl_file = open(gpl_filename, 'r')
+        gpl_file_ok = open(gpl_filename_ok, 'w')
+        data = gpl_file.readlines()
+        # Copy everything but the last 4 lines
+        for line in data[:-4]:
+            gpl_file_ok.write(line)
+        # Give the pdf filename where the graph will be stored
+        pdf_filename = os.path.join(graph_dir_exp, \
+            pcap_file[len(trace_dir_exp)+1:-5] + "_" + gpl_filename[:-4] \
+            + '.pdf')
+        gpl_file_ok.write("set output '" + pdf_filename + "'\n")
+        gpl_file_ok.write("set terminal pdf\n")
+        # Needed to give again the line with all data (5th line from the end)
+        gpl_file_ok.write(data[-5])
+        gpl_file_ok.write("set terminal x11\n")
+        gpl_file_ok.write("set output\n")
+        # Better to reset the plot (to avoid potential bugs)
+        gpl_file_ok.write("reset\n")
+        # Don't forget to close files
+        gpl_file.close()
+        gpl_file_ok.close()
+        return gpl_filename_ok
+    except IOError as e:
+        print('IOError for graph file with ' + gpl_filename + ': skip')
+        return None
+
 def process_tcp_trace(pcap_file):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -n for quick process (don't resolve host/service names)
