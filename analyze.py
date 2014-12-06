@@ -197,14 +197,14 @@ def process_tcp_trace(pcap_file):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -n for quick process (don't resolve host/service names)
     # -C for color, -S for sequence numbers
-    cmd = "tcptrace --output_prefix=" + pcap_file[:-5] + " -n -C -S " \
-        + pcap_file
+    cmd = "tcptrace --output_dir=" + os.getcwd() + " --output_prefix=" \
+    + pcap_file[:-5] + "_ -n -C -S " + pcap_file
     if subprocess.call(cmd.split()) != 0:
         print("Error of tcptrace with " + pcap_file + "; skip process")
         return
 
     # The tcptrace call will generate .xpl files to cope with
-    for xpl_file in glob.glob('*.xpl'):
+    for xpl_file in glob.glob(os.path.join(trace_dir_exp, pcap_file[len(trace_dir_exp)+1:-5] + '*.xpl')):
         cmd = "xpl2gpl " + xpl_file
         if subprocess.call(cmd.split()) != 0:
             print("Error of xpl2gpl with " + xpl_file + "; skip xpl file")
