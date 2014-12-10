@@ -231,14 +231,15 @@ def prepare_gpl_file(pcap_file, gpl_filename):
         # Give the pdf filename where the graph will be stored
         pdf_filename = os.path.join(graph_dir_exp, \
             pcap_file[len(trace_dir_exp)+1:-5] + "_" + gpl_filename[:-4] + '.pdf')
-        gpl_file_ok.write("set output '" + pdf_filename + "'\n")
-        gpl_file_ok.write("set terminal pdf\n")
-        # Needed to give again the line with all data (5th line from the end)
-        gpl_file_ok.write(data[-5])
-        gpl_file_ok.write("set terminal x11\n")
-        gpl_file_ok.write("set output\n")
-        # Better to reset the plot (to avoid potential bugs)
-        gpl_file_ok.write("reset\n")
+        to_write = "set output '" + pdf_filename + "'\n" \
+                + "set terminal pdf\n" \
+                # Needed to give again the line with all data (5th line from the end)
+                + data[-5] \
+                + "set terminal x11\n" \
+                + "set output\n" \
+                # Better to reset the plot (to avoid potential bugs)
+                + "reset\n"
+        gpl_file_ok.write(to_write)
         # Don't forget to close files
         gpl_file.close()
         gpl_file_ok.close()
