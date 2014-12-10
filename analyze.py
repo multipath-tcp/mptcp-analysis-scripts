@@ -31,6 +31,7 @@ from __future__ import print_function
 
 from numpy import *
 
+import argparse
 import glob
 import Gnuplot
 import os
@@ -62,18 +63,24 @@ DEF_GRAPH_DIR = 'graphs'
 ##                   ARGUMENTS                  ##
 ##################################################
 
-if len(sys.argv) >= 2:
-    in_dir = sys.argv[1]
+parser = argparse.ArgumentParser(description="Analyze pcap files of TCP or MPTCP connections")
+parser.add_argument("-input", help="input directory of the (possibly compressed) pcap files")
+parser.add_argument("-trace", help="temporary directory that will be used to store uncompressed " \
+                                    + "pcap files")
+parser.add_argument("-graph", help="directory where the graphs of the pcap files will be stored")
+args = parser.parse_args()
+if args.input:
+    in_dir = args.input
 else:
     in_dir = DEF_IN_DIR
 
-if len(sys.argv) >= 3:
-    trace_dir = sys.argv[2]
+if args.trace:
+    trace_dir = args.trace
 else:
     trace_dir = DEF_TRACE_DIR
 
-if len(sys.argv) >= 4:
-    graph_dir = sys.argv[3]
+if args.graph:
+    graph_dir = args.graph
 else:
     graph_dir = DEF_GRAPH_DIR
 
