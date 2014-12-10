@@ -92,6 +92,17 @@ graph_dir_exp = os.path.expanduser(graph_dir)
 ##                 PREPROCESSING                ##
 ##################################################
 
+def check_directory_exists(directory):
+    """ Check if the directory exists, and create it if needed
+        If directory is a file, exit the program
+    """
+    if os.path.exists(directory):
+        if not os.path.isdir(directory):
+            print(directory + " is a file: stop")
+    else:
+        os.makedirs(directory)
+
+check_directory_exists(trace_dir_exp)
 for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp)):
     for file in filenames:
         # Files from UI tests will be compressed; unzip them
@@ -272,6 +283,7 @@ def process_tcp_trace(pcap_file):
 ##                     MAIN                     ##
 ##################################################
 
+check_directory_exists(graph_dir_exp)
 # If file is a .pcap, use it for (mp)tcptrace
 for pcap_file in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
     pcap_filename = pcap_file[len(trace_dir_exp)+1:]
