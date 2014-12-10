@@ -18,7 +18,8 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #
-# ./analyze.py [input_dir [traces_dir [graphs_dir]]]
+# analyze.py [-h] [-input INPUT] [-trace TRACE] [-graph GRAPH] [--pcap PCAP]
+# Details when running analyze.py -h
 #
 # To install on this machine: gnuplot, gnuplot.py, numpy, mptcptrace, tcptrace,
 # xpl2gpl
