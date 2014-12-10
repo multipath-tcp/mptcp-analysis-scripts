@@ -63,26 +63,30 @@ DEF_GRAPH_DIR = 'graphs'
 ##                   ARGUMENTS                  ##
 ##################################################
 
+in_dir = DEF_IN_DIR
+trace_dir = DEF_TRACE_DIR
+graph_dir = DEF_GRAPH_DIR
+pcap_contains = ""
+
 parser = argparse.ArgumentParser(description="Analyze pcap files of TCP or MPTCP connections")
 parser.add_argument("-input", help="input directory of the (possibly compressed) pcap files")
 parser.add_argument("-trace", help="temporary directory that will be used to store uncompressed " \
                                     + "pcap files")
 parser.add_argument("-graph", help="directory where the graphs of the pcap files will be stored")
+parser.add_argument("--pcap", help="analyze only pcap files containing the given string")
 args = parser.parse_args()
+
 if args.input:
     in_dir = args.input
-else:
-    in_dir = DEF_IN_DIR
 
 if args.trace:
     trace_dir = args.trace
-else:
-    trace_dir = DEF_TRACE_DIR
 
 if args.graph:
     graph_dir = args.graph
-else:
-    graph_dir = DEF_GRAPH_DIR
+
+if args.pcap:
+    pcap_contains = args.pcap
 
 in_dir_exp = os.path.expanduser(in_dir)
 trace_dir_exp = os.path.expanduser(trace_dir)
@@ -105,24 +109,25 @@ def check_directory_exists(directory):
 check_directory_exists(trace_dir_exp)
 for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp)):
     for file in filenames:
-        # Files from UI tests will be compressed; unzip them
-        if file.endswith('.gz'):
-            print("Uncompressing " + file + " to " + trace_dir_exp)
-            output = open(trace_dir_exp + '/' + file[:-3], 'w')
-            cmd = 'gunzip -k -c -9 ' + in_dir_exp + '/' + file
-            print(cmd)
-            if subprocess.call(cmd.split(), stdout=output) != 0:
-                print("Error when uncompressing " + file)
-            output.close()
-        elif file.endswith('.pcap'):
-            # Move the file to out_dir_exp
-            print("Copying " + file + " to " + trace_dir_exp)
-            cmd = 'cp ' + in_dir_exp + '/' + file + " " + trace_dir_exp + "/"
-            if subprocess.call(cmd.split()) != 0:
-                print("Error when moving " + file)
-        else:
-            print(file + ": not in a valid format, skipped")
-            continue
+        if pcap_contains in file:
+            # Files from UI tests will be compressed; unzip them
+            if file.endswith('.gz'):
+                print("Uncompressing " + file + " to " + trace_dir_exp)
+                output = open(trace_dir_exp + '/' + file[:-3], 'w')
+                cmd = 'gunzip -k -c -9 ' + in_dir_exp + '/' + file
+                print(cmd)
+                if subprocess.call(cmd.split(), stdout=output) != 0:
+                    print("Error when uncompressing " + file)
+                output.close()
+            elif file.endswith('.pcap'):
+                # Move the file to out_dir_exp
+                print("Copying " + file + " to " + trace_dir_exp)
+                cmd = 'cp ' + in_dir_exp + '/' + file + " " + trace_dir_exp + "/"
+                if subprocess.call(cmd.split()) != 0:
+                    print("Error when moving " + file)
+            else:
+                print(file + ": not in a valid format, skipped")
+                continue
 
 ##################################################
 ##                  MPTCPTRACE                  ##
