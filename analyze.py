@@ -117,9 +117,9 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp
                 print("Uncompressing " + file + " to " + trace_dir_exp)
                 output = open(os.path.join(trace_dir_exp, file[:-3]), 'w')
                 if args.keep:
-                    cmd = 'gunzip -k -c -9 ' + os.path.join(in_dir_exp, file)
+                    cmd = 'gunzip -k -c -9 ' + os.path.join(dirpath, file)
                 else:
-                    cmd = 'gunzip -c -9 ' + os.path.join(in_dir_exp, file)
+                    cmd = 'gunzip -c -9 ' + os.path.join(dirpath, file)
                 print(cmd)
                 if subprocess.call(cmd.split(), stdout=output) != 0:
                     print("Error when uncompressing " + file)
@@ -127,7 +127,7 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp
             elif file.endswith('.pcap'):
                 # Move the file to out_dir_exp
                 print("Copying " + file + " to " + trace_dir_exp)
-                cmd = 'cp ' + os.path.join(in_dir_exp, file) + " " + trace_dir_exp + "/"
+                cmd = 'cp ' + os.path.join(dirpath, file) + " " + trace_dir_exp + "/"
                 if subprocess.call(cmd.split()) != 0:
                     print("Error when moving " + file)
             else:
