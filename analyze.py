@@ -75,6 +75,7 @@ parser.add_argument("-trace", help="temporary directory that will be used to sto
                                     + "pcap files")
 parser.add_argument("-graph", help="directory where the graphs of the pcap files will be stored")
 parser.add_argument("--pcap", help="analyze only pcap files containing the given string")
+parser.add_argument("--keep", help="keep the original file with -k option of gunzip, if it exists")
 args = parser.parse_args()
 
 if args.input:
@@ -115,7 +116,10 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp
             if file.endswith('.gz'):
                 print("Uncompressing " + file + " to " + trace_dir_exp)
                 output = open(trace_dir_exp + '/' + file[:-3], 'w')
-                cmd = 'gunzip -k -c -9 ' + in_dir_exp + '/' + file
+                if args.keep:
+                    cmd = 'gunzip -k -c -9 ' + in_dir_exp + '/' + file
+                else:
+                    cmd = 'gunzip -c -9 ' + in_dir_exp + '/' + file
                 print(cmd)
                 if subprocess.call(cmd.split(), stdout=output) != 0:
                     print("Error when uncompressing " + file)
