@@ -40,8 +40,11 @@ import os.path
 import subprocess
 import sys
 
+
 class cd:
+
     """Context manager for changing the current working directory"""
+
     def __init__(self, newPath):
         self.newPath = newPath
 
@@ -71,8 +74,8 @@ pcap_contains = ""
 
 parser = argparse.ArgumentParser(description="Analyze pcap files of TCP or MPTCP connections")
 parser.add_argument("-input", help="input directory of the (possibly compressed) pcap files")
-parser.add_argument("-trace", help="temporary directory that will be used to store uncompressed " \
-                                    + "pcap files")
+parser.add_argument("-trace", help="temporary directory that will be used to store uncompressed "
+                    + "pcap files")
 parser.add_argument("-graph", help="directory where the graphs of the pcap files will be stored")
 parser.add_argument("--pcap", help="analyze only pcap files containing the given string")
 parser.add_argument("--keep", help="keep the original file with -k option of gunzip, if it exists")
@@ -97,6 +100,7 @@ graph_dir_exp = os.path.expanduser(graph_dir)
 ##################################################
 ##                 PREPROCESSING                ##
 ##################################################
+
 
 def check_directory_exists(directory):
     """ Check if the directory exists, and create it if needed
@@ -140,6 +144,7 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp
 
 g = Gnuplot.Gnuplot(debug=0)
 
+
 def write_graph_csv(csv_file, data, begin_time, begin_seq):
     """ Write in the graphs directory a new csv file containing relative values
         for plotting them
@@ -159,9 +164,11 @@ def write_graph_csv(csv_file, data, begin_time, begin_seq):
         print('IOError for graph file with ' + csv_file + ': stop')
         exit(1)
 
+
 def get_begin_values(first_line):
     split_line = first_line.split(',')
     return float(split_line[0]), int(split_line[1])
+
 
 def create_graph_csv(pcap_file, csv_file):
     """ Generate pdf for the csv file of the pcap file
@@ -182,10 +189,11 @@ def create_graph_csv(pcap_file, csv_file):
     g.xlabel('Time [s]')
     g.ylabel('Sequence number')
     g.plot(data_plot)
-    pdf_filename = os.path.join(graph_dir_exp, \
-        pcap_file[len(trace_dir_exp)+1:-5] + "_" + csv_file[:-4] + '.pdf')
+    pdf_filename = os.path.join(graph_dir_exp,
+                                pcap_file[len(trace_dir_exp) + 1:-5] + "_" + csv_file[:-4] + '.pdf')
     g.hardcopy(filename=pdf_filename, terminal='pdf')
     g.reset()
+
 
 def process_mptcp_trace(pcap_file):
     """ Process a mptcp pcap file and generate graphs of its subflows """
@@ -226,6 +234,7 @@ def process_mptcp_trace(pcap_file):
 ##                   TCPTRACE                   ##
 ##################################################
 
+
 def prepare_gpl_file(pcap_file, gpl_filename):
     """ Return a gpl file name of a ready-to-use gpl file or null if an error
         occurs
@@ -239,17 +248,18 @@ def prepare_gpl_file(pcap_file, gpl_filename):
         for line in data[:-4]:
             gpl_file_ok.write(line)
         # Give the pdf filename where the graph will be stored
-        pdf_filename = os.path.join(graph_dir_exp, \
-            pcap_file[len(trace_dir_exp)+1:-5] + "_" + gpl_filename[:-4] + '.pdf')
+        pdf_filename = os.path.join(graph_dir_exp,
+                                    pcap_file[len(trace_dir_exp) + 1:-5] + "_" + gpl_filename[:-4]
+                                    + '.pdf')
 
         # Needed to give again the line with all data (5th line from the end)
         # Better to reset the plot (to avoid potential bugs)
         to_write = "set output '" + pdf_filename + "'\n" \
-                + "set terminal pdf\n" \
-                + data[-5] \
-                + "set terminal x11\n" \
-                + "set output\n" \
-                + "reset\n"
+            + "set terminal pdf\n" \
+            + data[-5] \
+            + "set terminal x11\n" \
+            + "set output\n" \
+            + "reset\n"
         gpl_file_ok.write(to_write)
         # Don't forget to close files
         gpl_file.close()
@@ -258,6 +268,7 @@ def prepare_gpl_file(pcap_file, gpl_filename):
     except IOError as e:
         print('IOError for graph file with ' + gpl_filename + ': skip')
         return None
+
 
 def process_tcp_trace(pcap_file):
     """ Process a tcp pcap file and generate graphs of its connections """
@@ -270,13 +281,13 @@ def process_tcp_trace(pcap_file):
         return
 
     # The tcptrace call will generate .xpl files to cope with
-    for xpl_file in glob.glob(os.path.join(trace_dir_exp, pcap_file[len(trace_dir_exp)+1:-5] \
-                                                                                        + '*.xpl')):
+    for xpl_file in glob.glob(os.path.join(trace_dir_exp, pcap_file[len(trace_dir_exp) + 1:-5]
+                                           + '*.xpl')):
         cmd = "xpl2gpl " + xpl_file
         if subprocess.call(cmd.split()) != 0:
             print("Error of xpl2gpl with " + xpl_file + "; skip xpl file")
             continue
-        prefix_file = xpl_file[len(trace_dir_exp)+1:-4]
+        prefix_file = xpl_file[len(trace_dir_exp) + 1:-4]
         gpl_filename = prefix_file + '.gpl'
         gpl_filename_ok = prepare_gpl_file(pcap_file, gpl_filename)
         if gpl_filename_ok:
@@ -299,7 +310,7 @@ def process_tcp_trace(pcap_file):
 check_directory_exists(graph_dir_exp)
 # If file is a .pcap, use it for (mp)tcptrace
 for pcap_file in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
-    pcap_filename = pcap_file[len(trace_dir_exp)+1:]
+    pcap_filename = pcap_file[len(trace_dir_exp) + 1:]
     if pcap_filename.startswith('mptcp'):
         process_mptcp_trace(pcap_file)
     elif pcap_filename.startswith('tcp'):
