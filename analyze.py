@@ -257,7 +257,7 @@ def prepare_gpl_file(pcap_file, gpl_filename):
         to_write = "set output '" + pdf_filename + "'\n" \
             + "set terminal pdf\n" \
             + data[-5] \
-            + "set terminal x11\n" \
+            + "set terminal pdf\n" \
             + "set output\n" \
             + "reset\n"
         gpl_file_ok.write(to_write)
