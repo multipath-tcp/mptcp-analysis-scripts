@@ -198,10 +198,15 @@ def create_graph_csv(pcap_file, csv_file):
 def process_mptcp_trace(pcap_file):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     cmd = 'mptcptrace -f ' + pcap_file + ' -s -w 2'
-    if subprocess.call(cmd.split()) != 0:
+    pcap_flow_data = pcap_file[:-5] + '.out'
+    flow_data = open(pcap_flow_data, 'w+')
+    if subprocess.call(cmd.split(), stdout=flow_data) != 0:
         print("Error of mptcptrace with " + pcap_file + "; skip process")
         return
 
+    # Don't forget to close and remove pcap_flow_data
+    flow_data.close()
+    os.remove(pcap_flow_data)
     # The mptcptrace call will generate .csv files to cope with
     for csv_file in glob.glob('*.csv'):
         try:
