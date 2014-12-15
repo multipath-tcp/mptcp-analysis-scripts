@@ -194,6 +194,15 @@ def create_graph_csv(pcap_file, csv_file):
     g.hardcopy(filename=pdf_filename, terminal='pdf')
     g.reset()
 
+def extract_flow_data(out_file):
+    """ Given an (open) file, return a dictionary of as many elements as there are flows """
+    # Return at the beginning of the file
+    out_file.seek(0)
+    data = out_file.readlines()
+    flows = {}
+    for line in data:
+        pass
+
 
 def process_mptcp_trace(pcap_file):
     """ Process a mptcp pcap file and generate graphs of its subflows """
