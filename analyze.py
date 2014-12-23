@@ -290,7 +290,9 @@ def process_tcp_trace(pcap_file):
     # -zxy to plot both axes to 0
     # -y to remove some noise in sequence graphs
     cmd = "tcptrace --output_dir=" + os.getcwd() + " --output_prefix=" \
-        + pcap_file[:-5] + "_ -C -S -T -zxy -y " + pcap_file
+        + pcap_file[:-5] + "_ -C -S -T -zxy -y --noshowzwndprobes --noshowoutorder --noshowrexmit "
+        + "--noshowsacks --noshowzerowindow --noshowurg --noshowdupack3 --noshowzerolensegs "
+        + pcap_file
     if subprocess.call(cmd.split()) != 0:
         print("Error of tcptrace with " + pcap_file + "; skip process")
         return
