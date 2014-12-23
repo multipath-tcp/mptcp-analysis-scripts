@@ -250,7 +250,7 @@ def process_mptcp_trace(pcap_file):
 
 
 def prepare_gpl_file(pcap_file, gpl_filename):
-    """ Return a gpl file name of a ready-to-use gpl file or null if an error
+    """ Return a gpl file name of a ready-to-use gpl file or None if an error
         occurs
     """
     try:
