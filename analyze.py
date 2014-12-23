@@ -78,7 +78,8 @@ parser.add_argument("-trace", help="temporary directory that will be used to sto
                     + "pcap files")
 parser.add_argument("-graph", help="directory where the graphs of the pcap files will be stored")
 parser.add_argument("--pcap", help="analyze only pcap files containing the given string")
-parser.add_argument("--keep", help="keep the original file with -k option of gunzip, if it exists")
+parser.add_argument("--keep", help="keep the original file with -k option of gunzip, if it exists",
+                    action="store_true")
 args = parser.parse_args()
 
 if args.input:
@@ -290,8 +291,8 @@ def process_tcp_trace(pcap_file):
     # -zxy to plot both axes to 0
     # -y to remove some noise in sequence graphs
     cmd = "tcptrace --output_dir=" + os.getcwd() + " --output_prefix=" \
-        + pcap_file[:-5] + "_ -C -S -T -zxy -y --noshowzwndprobes --noshowoutorder --noshowrexmit "
-        + "--noshowsacks --noshowzerowindow --noshowurg --noshowdupack3 --noshowzerolensegs "
+        + pcap_file[:-5] + "_ -C -S -T -zxy -y --noshowzwndprobes --noshowoutorder --noshowrexmit "\
+        + "--noshowsacks --noshowzerowindow --noshowurg --noshowdupack3 --noshowzerolensegs " \
         + pcap_file
     if subprocess.call(cmd.split()) != 0:
         print("Error of tcptrace with " + pcap_file + "; skip process")
