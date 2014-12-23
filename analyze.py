@@ -288,8 +288,9 @@ def process_tcp_trace(pcap_file):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -n for quick process (don't resolve host/service names)
     # -C for color, -S for sequence numbers
+    # -zxy to plot both axes to 0
     cmd = "tcptrace --output_dir=" + os.getcwd() + " --output_prefix=" \
-        + pcap_file[:-5] + "_ -n -C -S " + pcap_file
+        + pcap_file[:-5] + "_ -n -C -S -zxy " + pcap_file
     if subprocess.call(cmd.split()) != 0:
         print("Error of tcptrace with " + pcap_file + "; skip process")
         return
