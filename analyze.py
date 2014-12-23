@@ -286,11 +286,11 @@ def prepare_gpl_file(pcap_file, gpl_filename):
 
 def process_tcp_trace(pcap_file):
     """ Process a tcp pcap file and generate graphs of its connections """
-    # -n for quick process (don't resolve host/service names)
-    # -C for color, -S for sequence numbers
+    # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0
+    # -y to remove some noise in sequence graphs
     cmd = "tcptrace --output_dir=" + os.getcwd() + " --output_prefix=" \
-        + pcap_file[:-5] + "_ -n -C -S -zxy " + pcap_file
+        + pcap_file[:-5] + "_ -C -S -T -zxy -y " + pcap_file
     if subprocess.call(cmd.split()) != 0:
         print("Error of tcptrace with " + pcap_file + "; skip process")
         return
@@ -312,11 +312,18 @@ def process_tcp_trace(pcap_file):
                 return
 
         # Delete gpl, xpl and others files generated
-        os.remove(gpl_filename)
-        os.remove(gpl_filename_ok)
-        os.remove(prefix_file + '.datasets')
-        os.remove(prefix_file + '.labels')
-        os.remove(xpl_file)
+        try:
+            os.remove(gpl_filename)
+            os.remove(gpl_filename_ok)
+            try:
+                os.remove(prefix_file + '.datasets')
+            except OSError as e2:
+                # Throughput graphs have not .datasets file
+                pass
+            os.remove(prefix_file + '.labels')
+            os.remove(xpl_file)
+        except OSError as e:
+            print(str(e) + ": skipped")
 
 ##################################################
 ##                     MAIN                     ##
