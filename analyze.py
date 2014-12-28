@@ -233,11 +233,13 @@ def extract_flow_data(out_file):
             #   Subflow 0 with wscale : 6 0 IPv4 sport 59570 dport 443 saddr
             #                                               37.185.171.74 daddr 194.78.99.114
             words = line.split()
+            sub_flow_id = words[1]
+            connections[current_connection][sub_flow_id] = {}
             index = words.index("sport")
             while index + 1 < len(words):
                 attr = words[index]
                 value = words[index + 1]
-                connections[current_connection][attr] = value
+                connections[current_connection][sub_flow_id][attr] = value
                 index += 2
 
         # Case 3: skip the line (no more current connection)
