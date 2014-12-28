@@ -161,6 +161,7 @@ def clean_loopback_pcap(pcap_fname):
 g = Gnuplot.Gnuplot(debug=0)
 
 
+
 def write_graph_csv(csv_file, data, begin_time, begin_seq):
     """ Write in the graphs directory a new csv file containing relative values
         for plotting them
@@ -210,14 +211,39 @@ def create_graph_csv(pcap_file, csv_file):
     g.hardcopy(filename=pdf_filename, terminal='pdf')
     g.reset()
 
+
 def extract_flow_data(out_file):
     """ Given an (open) file, return a dictionary of as many elements as there are flows """
     # Return at the beginning of the file
     out_file.seek(0)
     data = out_file.readlines()
-    flows = {}
+    connections = {}
+    current_connection = False
     for line in data:
-        pass
+        # Case 1: line start with MPTCP connection
+        if line.startswith("MPTCP connection"):
+            # A typical line: MPTCP connection 0 with id 2
+            words = line.split()
+            current_connection = words[-1]
+            connections[current_connection] = {}
+
+        # Case 2: line for a subflow
+        elif current_connection is not False and line.startswith("\tSubflow"):
+            # A typical line:
+            #   Subflow 0 with wscale : 6 0 IPv4 sport 59570 dport 443 saddr
+            #                                               37.185.171.74 daddr 194.78.99.114
+            words = line.split()
+            index = words.index("sport")
+            while index + 1 < len(words):
+                attr = words[index]
+                value = words[index + 1]
+                connections[current_connection][attr] = value
+                index += 2
+
+        # Case 3: skip the line (no more current connection)
+        else:
+            current_connection = False
+    return connections
 
 
 def process_mptcp_trace(pcap_file):
@@ -229,6 +255,7 @@ def process_mptcp_trace(pcap_file):
         print("Error of mptcptrace with " + pcap_file + "; skip process")
         return
 
+    connections = extract_flow_data(flow_data)
     # Don't forget to close and remove pcap_flow_data
     flow_data.close()
     os.remove(pcap_flow_data)
