@@ -80,6 +80,7 @@ parser.add_argument("-graph", help="directory where the graphs of the pcap files
 parser.add_argument("--pcap", help="analyze only pcap files containing the given string")
 parser.add_argument("--keep", help="keep the original file with -k option of gunzip, if it exists",
                     action="store_true")
+parser.add_argument("--clean", help="remove noisy traffic on lo", action="store_true")
 args = parser.parse_args()
 
 if args.input:
@@ -138,6 +139,20 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp
             else:
                 print(file + ": not in a valid format, skipped")
                 continue
+
+
+def clean_loopback_pcap(pcap_fname):
+    """ Remove noisy traffic (port 1984), see netstat """
+    tmp_pcap = "tmp.pcap"
+    cmd = 'tshark -Y !(tcp.dstport==1984||tcp.srcport==1984) -r ' + pcap_fname \
+            + ' -w ' + tmp_pcap + ' -F pcap'
+    if subprocess.call(cmd.split()) != 0:
+        print("Error in cleaning " + pcap_fname)
+        return
+    cmd = "mv " + tmp_pcap + " " + pcap_fname
+    if subprocess.call(cmd.split()) != 0:
+        print("Error in moving " + tmp_pcap + " to " + pcap_fname)
+
 
 ##################################################
 ##                  MPTCPTRACE                  ##
@@ -336,6 +351,10 @@ check_directory_exists(graph_dir_exp)
 # If file is a .pcap, use it for (mp)tcptrace
 for pcap_file in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
     pcap_filename = pcap_file[len(trace_dir_exp) + 1:]
+    # Cleaning, if needed (in future pcap, tcpdump should do the job)
+    if args.clean:
+        clean_loopback_pcap(pcap_file)
+    # Prefix of the name determine the protocol used
     if pcap_filename.startswith('mptcp'):
         process_mptcp_trace(pcap_file)
     elif pcap_filename.startswith('tcp'):
