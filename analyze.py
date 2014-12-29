@@ -72,15 +72,20 @@ trace_dir = DEF_TRACE_DIR
 graph_dir = DEF_GRAPH_DIR
 pcap_contains = ""
 
-parser = argparse.ArgumentParser(description="Analyze pcap files of TCP or MPTCP connections")
-parser.add_argument("-input", help="input directory of the (possibly compressed) pcap files")
+parser = argparse.ArgumentParser(
+    description="Analyze pcap files of TCP or MPTCP connections")
+parser.add_argument(
+    "-input", help="input directory of the (possibly compressed) pcap files")
 parser.add_argument("-trace", help="temporary directory that will be used to store uncompressed "
                     + "pcap files")
-parser.add_argument("-graph", help="directory where the graphs of the pcap files will be stored")
-parser.add_argument("--pcap", help="analyze only pcap files containing the given string")
+parser.add_argument(
+    "-graph", help="directory where the graphs of the pcap files will be stored")
+parser.add_argument(
+    "--pcap", help="analyze only pcap files containing the given string")
 parser.add_argument("--keep", help="keep the original file with -k option of gunzip, if it exists",
                     action="store_true")
-parser.add_argument("--clean", help="remove noisy traffic on lo", action="store_true")
+parser.add_argument(
+    "--clean", help="remove noisy traffic on lo", action="store_true")
 args = parser.parse_args()
 
 if args.input:
@@ -133,7 +138,8 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp
             elif file.endswith('.pcap'):
                 # Move the file to out_dir_exp
                 print("Copying " + file + " to " + trace_dir_exp)
-                cmd = 'cp ' + os.path.join(dirpath, file) + " " + trace_dir_exp + "/"
+                cmd = 'cp ' + \
+                    os.path.join(dirpath, file) + " " + trace_dir_exp + "/"
                 if subprocess.call(cmd.split()) != 0:
                     print("Error when moving " + file)
             else:
@@ -145,7 +151,7 @@ def clean_loopback_pcap(pcap_fname):
     """ Remove noisy traffic (port 1984), see netstat """
     tmp_pcap = "tmp.pcap"
     cmd = 'tshark -Y !(tcp.dstport==1984||tcp.srcport==1984) -r ' + pcap_fname \
-            + ' -w ' + tmp_pcap + ' -F pcap'
+        + ' -w ' + tmp_pcap + ' -F pcap'
     if subprocess.call(cmd.split()) != 0:
         print("Error in cleaning " + pcap_fname)
         return
@@ -159,7 +165,6 @@ def clean_loopback_pcap(pcap_fname):
 ##################################################
 
 g = Gnuplot.Gnuplot(debug=0)
-
 
 
 def write_graph_csv(csv_file, data, begin_time, begin_seq):
@@ -231,7 +236,7 @@ def extract_flow_data(out_file):
         elif current_connection is not False and line.startswith("\tSubflow"):
             # A typical line:
             #   Subflow 0 with wscale : 6 0 IPv4 sport 59570 dport 443 saddr
-            #                                               37.185.171.74 daddr 194.78.99.114
+            # 37.185.171.74 daddr 194.78.99.114
             words = line.split()
             sub_flow_id = words[1]
             connections[current_connection][sub_flow_id] = {}
@@ -308,7 +313,8 @@ def prepare_gpl_file(pcap_file, gpl_filename):
             gpl_file_ok.write(line)
         # Give the pdf filename where the graph will be stored
         pdf_filename = os.path.join(graph_dir_exp,
-                                    pcap_file[len(trace_dir_exp) + 1:-5] + "_" + gpl_filename[:-4]
+                                    pcap_file[
+                                        len(trace_dir_exp) + 1:-5] + "_" + gpl_filename[:-4]
                                     + '.pdf')
 
         # Needed to give again the line with all data (5th line from the end)
