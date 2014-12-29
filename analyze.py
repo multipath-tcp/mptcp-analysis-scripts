@@ -194,20 +194,30 @@ def get_begin_values(first_line):
 
 def generate_title(csv_file, connections):
     """ Generate the title for a mptcp connection """
-    title = csv_file[:-4]
-
-    # Get the id of the mptcp connection (between last _ and last . in the csv filename)
+    # Get the id of the mptcp connection (between last _ and last . in the csv
+    # filename)
     last_underscore_index = csv_file.rindex("_")
     last_dot_index = csv_file.rindex(".")
-    connection_id = csv_file[last_underscore_index+1:last_dot_index]
+    connection_id = csv_file[last_underscore_index + 1:last_dot_index]
 
-    title += " flows:" + str(len(connections[connection_id])) + " "
+    title = "flows:" + str(len(connections[connection_id])) + " "
+
+    # Get flow type (c2s or s2c); if c2s, correct order, otherwise reverse src
+    # and dst
+    first_underscore_index = csv_file.index("_")
+    reverse = (csv_file[0:first_underscore_index] == "s2c")
 
     # Show all details of the subflows
     for sub_flow_id, data in connections[connection_id].iteritems():
         title += "sf " + sub_flow_id + ": "
-        title += "(" + data['wscalesrc'] + " " + data['wscaledst'] + ") "
-        title += data['saddr'] + ":" + data['sport'] + " -> " + data['daddr'] + ":" + data['dport']
+        if reverse:
+            title += "(" + data['wscaledst'] + " " + data['wscalesrc'] + ") "
+            title += data['daddr'] + ":" + data['dport'] + \
+                " -> " + data['saddr'] + ":" + data['sport']
+        else:
+            title += "(" + data['wscalesrc'] + " " + data['wscaledst'] + ") "
+            title += data['saddr'] + ":" + data['sport'] + \
+                " -> " + data['daddr'] + ":" + data['dport']
         title += " | "
 
     return title
@@ -262,8 +272,10 @@ def extract_flow_data(out_file):
             sub_flow_id = words[1]
             connections[current_connection][sub_flow_id] = {}
             index_wscale = words.index("wscale")
-            connections[current_connection][sub_flow_id]['wscalesrc'] = words[index_wscale + 2]
-            connections[current_connection][sub_flow_id]['wscaledst'] = words[index_wscale + 3]
+            connections[current_connection][sub_flow_id][
+                'wscalesrc'] = words[index_wscale + 2]
+            connections[current_connection][sub_flow_id][
+                'wscaledst'] = words[index_wscale + 3]
             index = words.index("sport")
             while index + 1 < len(words):
                 attr = words[index]
