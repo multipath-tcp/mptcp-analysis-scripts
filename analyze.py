@@ -240,6 +240,9 @@ def extract_flow_data(out_file):
             words = line.split()
             sub_flow_id = words[1]
             connections[current_connection][sub_flow_id] = {}
+            index_wscale = words.index("wscale")
+            connections[current_connection][sub_flow_id]['wscalesrc'] = words[index_wscale + 2]
+            connections[current_connection][sub_flow_id]['wscaledst'] = words[index_wscale + 3]
             index = words.index("sport")
             while index + 1 < len(words):
                 attr = words[index]
