@@ -131,7 +131,6 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp
                     cmd = 'gunzip -k -c -9 ' + os.path.join(dirpath, file)
                 else:
                     cmd = 'gunzip -c -9 ' + os.path.join(dirpath, file)
-                print(cmd)
                 if subprocess.call(cmd.split(), stdout=output) != 0:
                     print("Error when uncompressing " + file)
                 output.close()
