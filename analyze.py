@@ -121,28 +121,28 @@ def check_directory_exists(directory):
 
 check_directory_exists(trace_dir_exp)
 for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp)):
-    for file in filenames:
-        if pcap_contains in file:
+    for fname in filenames:
+        if pcap_contains in fname:
             # Files from UI tests will be compressed; unzip them
-            if file.endswith('.gz'):
-                print("Uncompressing " + file + " to " + trace_dir_exp)
-                output = open(os.path.join(trace_dir_exp, file[:-3]), 'w')
+            if fname.endswith('.gz'):
+                print("Uncompressing " + fname + " to " + trace_dir_exp)
+                output = open(os.path.join(trace_dir_exp, fname[:-3]), 'w')
                 if args.keep:
-                    cmd = 'gunzip -k -c -9 ' + os.path.join(dirpath, file)
+                    cmd = 'gunzip -k -c -9 ' + os.path.join(dirpath, fname)
                 else:
-                    cmd = 'gunzip -c -9 ' + os.path.join(dirpath, file)
+                    cmd = 'gunzip -c -9 ' + os.path.join(dirpath, fname)
                 if subprocess.call(cmd.split(), stdout=output) != 0:
-                    print("Error when uncompressing " + file)
+                    print("Error when uncompressing " + fname)
                 output.close()
-            elif file.endswith('.pcap'):
+            elif fname.endswith('.pcap'):
                 # Move the file to out_dir_exp
-                print("Copying " + file + " to " + trace_dir_exp)
+                print("Copying " + fname + " to " + trace_dir_exp)
                 cmd = 'cp ' + \
-                    os.path.join(dirpath, file) + " " + trace_dir_exp + "/"
+                    os.path.join(dirpath, fname) + " " + trace_dir_exp + "/"
                 if subprocess.call(cmd.split()) != 0:
-                    print("Error when moving " + file)
+                    print("Error when moving " + fname)
             else:
-                print(file + ": not in a valid format, skipped")
+                print(fname + ": not in a valid format, skipped")
                 continue
 
 
@@ -166,14 +166,14 @@ def clean_loopback_pcap(pcap_fname):
 g = Gnuplot.Gnuplot(debug=0)
 
 
-def write_graph_csv(csv_file, data, begin_time, begin_seq):
+def write_graph_csv(csv_fname, data, begin_time, begin_seq):
     """ Write in the graphs directory a new csv file containing relative values
         for plotting them
         Exit the program if an IOError is raised
     """
     try:
-        graph_filename = os.path.join(graph_dir_exp, csv_file)
-        graph_file = open(graph_filename, 'w')
+        graph_fname = os.path.join(graph_dir_exp, csv_fname)
+        graph_file = open(graph_fname, 'w')
         # Modify lines for that
         for line in data:
             split_line = line.split(',')
@@ -182,7 +182,7 @@ def write_graph_csv(csv_file, data, begin_time, begin_seq):
             graph_file.write(str(time) + ',' + str(seq) + '\n')
         graph_file.close()
     except IOError as e:
-        print('IOError for graph file with ' + csv_file + ': stop')
+        print('IOError for graph file with ' + csv_fname + ': stop')
         exit(1)
 
 
@@ -191,20 +191,20 @@ def get_begin_values(first_line):
     return float(split_line[0]), int(split_line[1])
 
 
-def generate_title(csv_file, connections):
+def generate_title(csv_fname, connections):
     """ Generate the title for a mptcp connection """
     # Get the id of the mptcp connection (between last _ and last . in the csv
     # filename)
-    last_underscore_index = csv_file.rindex("_")
-    last_dot_index = csv_file.rindex(".")
-    connection_id = csv_file[last_underscore_index + 1:last_dot_index]
+    last_underscore_index = csv_fname.rindex("_")
+    last_dot_index = csv_fname.rindex(".")
+    connection_id = csv_fname[last_underscore_index + 1:last_dot_index]
 
     title = "flows:" + str(len(connections[connection_id])) + " "
 
     # Get flow type (c2s or s2c); if c2s, correct order, otherwise reverse src
     # and dst
-    first_underscore_index = csv_file.index("_")
-    reverse = (csv_file[0:first_underscore_index] == "s2c")
+    first_underscore_index = csv_fname.index("_")
+    reverse = (csv_fname[0:first_underscore_index] == "s2c")
 
     # Show all details of the subflows
     for sub_flow_id, data in connections[connection_id].iteritems():
@@ -221,28 +221,28 @@ def generate_title(csv_file, connections):
     return title
 
 
-def create_graph_csv(pcap_file, csv_file, connections):
+def create_graph_csv(pcap_fname, csv_fname, connections):
     """ Generate pdf for the csv file of the pcap file
     """
     try:
-        in_file = open(csv_file)
-        data = in_file.readlines()
+        csv_file = open(csv_fname)
+        data = csv_file.readlines()
     except IOError as e:
-        print('IOError for ' + csv_file + ': skipped')
+        print('IOError for ' + csv_fname + ': skipped')
         return
 
     # If file was generated, the csv is not empty
     data_split = map(lambda x: x.split(','), data)
     data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
 
-    g('set title "' + generate_title(csv_file, connections) + '"')
+    g('set title "' + generate_title(csv_fname, connections) + '"')
     g('set style data linespoints')
     g.xlabel('Time [s]')
     g.ylabel('Sequence number')
     g.plot(data_plot)
-    pdf_filename = os.path.join(graph_dir_exp,
-                                pcap_file[len(trace_dir_exp) + 1:-5] + "_" + csv_file[:-4] + '.pdf')
-    g.hardcopy(filename=pdf_filename, terminal='pdf')
+    pdf_fname = os.path.join(graph_dir_exp,
+                             pcap_fname[len(trace_dir_exp) + 1:-5] + "_" + csv_fname[:-4] + '.pdf')
+    g.hardcopy(filename=pdf_fname, terminal='pdf')
     g.reset()
 
 
@@ -287,73 +287,73 @@ def extract_flow_data(out_file):
     return connections
 
 
-def process_mptcp_trace(pcap_file):
+def process_mptcp_trace(pcap_fname):
     """ Process a mptcp pcap file and generate graphs of its subflows """
-    cmd = 'mptcptrace -f ' + pcap_file + ' -s -w 2'
-    pcap_flow_data = pcap_file[:-5] + '.out'
-    flow_data = open(pcap_flow_data, 'w+')
-    if subprocess.call(cmd.split(), stdout=flow_data) != 0:
-        print("Error of mptcptrace with " + pcap_file + "; skip process")
+    cmd = 'mptcptrace -f ' + pcap_fname + ' -s -w 2'
+    pcap_flow_data = pcap_fname[:-5] + '.out'
+    flow_data_file = open(pcap_flow_data, 'w+')
+    if subprocess.call(cmd.split(), stdout=flow_data_file) != 0:
+        print("Error of mptcptrace with " + pcap_fname + "; skip process")
         return
 
-    connections = extract_flow_data(flow_data)
+    connections = extract_flow_data(flow_data_file)
     # Don't forget to close and remove pcap_flow_data
-    flow_data.close()
+    flow_data_file.close()
     os.remove(pcap_flow_data)
     # The mptcptrace call will generate .csv files to cope with
-    for csv_file in glob.glob('*.csv'):
+    for csv_fname in glob.glob('*.csv'):
         try:
-            in_file = open(csv_file)
-            data = in_file.readlines()
+            csv_file = open(csv_fname)
+            data = csv_file.readlines()
             # Check if there is data in file (and not only one line of 0s)
             if not data == [] and len(data) > 1:
                 # Collect begin time and seq num to plot graph starting at 0
                 begin_time, begin_seq = get_begin_values(data[0])
-                write_graph_csv(csv_file, data, begin_time, begin_seq)
+                write_graph_csv(csv_fname, data, begin_time, begin_seq)
 
-            in_file.close()
+            csv_file.close()
             # Remove the csv file
-            os.remove(csv_file)
+            os.remove(csv_fname)
 
         except IOError as e:
-            print('IOError for ' + csv_file + ': skipped')
+            print('IOError for ' + csv_fname + ': skipped')
             continue
         except ValueError as e:
-            print('ValueError for ' + csv_file + ': skipped')
+            print('ValueError for ' + csv_fname + ': skipped')
             continue
 
     with cd(graph_dir_exp):
-        for csv_file in glob.glob('*.csv'):
-            create_graph_csv(pcap_file, csv_file, connections)
+        for csv_fname in glob.glob('*.csv'):
+            create_graph_csv(pcap_fname, csv_fname, connections)
             # Remove the csv file
-            os.remove(csv_file)
+            os.remove(csv_fname)
 
 ##################################################
 ##                   TCPTRACE                   ##
 ##################################################
 
 
-def prepare_gpl_file(pcap_file, gpl_filename):
+def prepare_gpl_file(pcap_fname, gpl_fname):
     """ Return a gpl file name of a ready-to-use gpl file or None if an error
         occurs
     """
     try:
-        gpl_filename_ok = gpl_filename[:-4] + '_ok.gpl'
-        gpl_file = open(gpl_filename, 'r')
-        gpl_file_ok = open(gpl_filename_ok, 'w')
+        gpl_fname_ok = gpl_fname[:-4] + '_ok.gpl'
+        gpl_file = open(gpl_fname, 'r')
+        gpl_file_ok = open(gpl_fname_ok, 'w')
         data = gpl_file.readlines()
         # Copy everything but the last 4 lines
         for line in data[:-4]:
             gpl_file_ok.write(line)
         # Give the pdf filename where the graph will be stored
-        pdf_filename = os.path.join(graph_dir_exp,
-                                    pcap_file[
-                                        len(trace_dir_exp) + 1:-5] + "_" + gpl_filename[:-4]
-                                    + '.pdf')
+        pdf_fname = os.path.join(graph_dir_exp,
+                                 pcap_fname[
+                                     len(trace_dir_exp) + 1:-5] + "_" + gpl_fname[:-4]
+                                 + '.pdf')
 
         # Needed to give again the line with all data (5th line from the end)
         # Better to reset the plot (to avoid potential bugs)
-        to_write = "set output '" + pdf_filename + "'\n" \
+        to_write = "set output '" + pdf_fname + "'\n" \
             + "set terminal pdf\n" \
             + data[-5] \
             + "set terminal pdf\n" \
@@ -363,52 +363,53 @@ def prepare_gpl_file(pcap_file, gpl_filename):
         # Don't forget to close files
         gpl_file.close()
         gpl_file_ok.close()
-        return gpl_filename_ok
+        return gpl_fname_ok
     except IOError as e:
-        print('IOError for graph file with ' + gpl_filename + ': skip')
+        print('IOError for graph file with ' + gpl_fname + ': skip')
         return None
 
 
-def process_tcp_trace(pcap_file):
+def process_tcp_trace(pcap_fname):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0
     # -y to remove some noise in sequence graphs
     cmd = "tcptrace --output_dir=" + os.getcwd() + " --output_prefix=" \
-        + pcap_file[:-5] + "_ -C -S -T -zxy -y --noshowzwndprobes --noshowoutorder --noshowrexmit "\
+        + pcap_fname[:-5] + "_ -C -S -T -zxy -y --noshowzwndprobes --noshowoutorder --noshowrexmit "\
         + "--noshowsacks --noshowzerowindow --noshowurg --noshowdupack3 --noshowzerolensegs " \
-        + pcap_file
+        + pcap_fname
     if subprocess.call(cmd.split()) != 0:
-        print("Error of tcptrace with " + pcap_file + "; skip process")
+        print("Error of tcptrace with " + pcap_fname + "; skip process")
         return
 
     # The tcptrace call will generate .xpl files to cope with
-    for xpl_file in glob.glob(os.path.join(trace_dir_exp, pcap_file[len(trace_dir_exp) + 1:-5]
-                                           + '*.xpl')):
-        cmd = "xpl2gpl " + xpl_file
+    for xpl_fname in glob.glob(os.path.join(trace_dir_exp, pcap_fname[len(trace_dir_exp) + 1:-5]
+                                            + '*.xpl')):
+        cmd = "xpl2gpl " + xpl_fname
         if subprocess.call(cmd.split()) != 0:
-            print("Error of xpl2gpl with " + xpl_file + "; skip xpl file")
+            print("Error of xpl2gpl with " + xpl_fname + "; skip xpl file")
             continue
-        prefix_file = xpl_file[len(trace_dir_exp) + 1:-4]
-        gpl_filename = prefix_file + '.gpl'
-        gpl_filename_ok = prepare_gpl_file(pcap_file, gpl_filename)
-        if gpl_filename_ok:
-            cmd = "gnuplot " + gpl_filename_ok
+        prefix_fname = xpl_fname[len(trace_dir_exp) + 1:-4]
+        gpl_fname = prefix_fname + '.gpl'
+        gpl_fname_ok = prepare_gpl_file(pcap_fname, gpl_fname)
+        if gpl_fname_ok:
+            cmd = "gnuplot " + gpl_fname_ok
             if subprocess.call(cmd.split()) != 0:
-                print("Error of tcptrace with " + pcap_file + "; skip process")
+                print(
+                    "Error of tcptrace with " + pcap_fname + "; skip process")
                 return
 
         # Delete gpl, xpl and others files generated
         try:
-            os.remove(gpl_filename)
-            os.remove(gpl_filename_ok)
+            os.remove(gpl_fname)
+            os.remove(gpl_fname_ok)
             try:
-                os.remove(prefix_file + '.datasets')
+                os.remove(prefix_fname + '.datasets')
             except OSError as e2:
                 # Throughput graphs have not .datasets file
                 pass
-            os.remove(prefix_file + '.labels')
-            os.remove(xpl_file)
+            os.remove(prefix_fname + '.labels')
+            os.remove(xpl_fname)
         except OSError as e:
             print(str(e) + ": skipped")
 
@@ -418,20 +419,20 @@ def process_tcp_trace(pcap_file):
 
 check_directory_exists(graph_dir_exp)
 # If file is a .pcap, use it for (mp)tcptrace
-for pcap_file in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
-    pcap_filename = pcap_file[len(trace_dir_exp) + 1:]
+for pcap_fname in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
+    pcap_filename = pcap_fname[len(trace_dir_exp) + 1:]
     # Cleaning, if needed (in future pcap, tcpdump should do the job)
     if args.clean:
-        clean_loopback_pcap(pcap_file)
+        clean_loopback_pcap(pcap_fname)
     # Prefix of the name determine the protocol used
     if pcap_filename.startswith('mptcp'):
-        process_mptcp_trace(pcap_file)
+        process_mptcp_trace(pcap_fname)
     elif pcap_filename.startswith('tcp'):
-        process_tcp_trace(pcap_file)
+        process_tcp_trace(pcap_fname)
     else:
-        print(pcap_file + ": don't know the protocol used; skipped")
+        print(pcap_fname + ": don't know the protocol used; skipped")
 
-    print('End for file ' + pcap_file)
-    os.remove(pcap_file)
+    print('End for file ' + pcap_fname)
+    os.remove(pcap_fname)
 
 print('End of analyze')
