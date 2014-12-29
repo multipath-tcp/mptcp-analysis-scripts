@@ -192,7 +192,28 @@ def get_begin_values(first_line):
     return float(split_line[0]), int(split_line[1])
 
 
-def create_graph_csv(pcap_file, csv_file):
+def generate_title(csv_file, connections):
+    """ Generate the title for a mptcp connection """
+    title = csv_file[:-4]
+
+    # Get the id of the mptcp connection (between last _ and last . in the csv filename)
+    last_underscore_index = csv_file.rindex("_")
+    last_dot_index = csv_file.rindex(".")
+    connection_id = csv_file[last_underscore_index+1:last_dot_index]
+
+    title += " flows:" + str(len(connections[connection_id])) + " "
+
+    # Show all details of the subflows
+    for sub_flow_id, data in connections[connection_id].iteritems():
+        title += "sf " + sub_flow_id + ": "
+        title += "(" + data['wscalesrc'] + " " + data['wscaledst'] + ") "
+        title += data['saddr'] + ":" + data['sport'] + " -> " + data['daddr'] + ":" + data['dport']
+        title += " | "
+
+    return title
+
+
+def create_graph_csv(pcap_file, csv_file, connections):
     """ Generate pdf for the csv file of the pcap file
     """
     try:
@@ -206,7 +227,7 @@ def create_graph_csv(pcap_file, csv_file):
     data_split = map(lambda x: x.split(','), data)
     data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
 
-    g.title(csv_file)
+    g.title(generate_title(csv_file, connections))
     g('set style data linespoints')
     g.xlabel('Time [s]')
     g.ylabel('Sequence number')
@@ -293,7 +314,7 @@ def process_mptcp_trace(pcap_file):
 
     with cd(graph_dir_exp):
         for csv_file in glob.glob('*.csv'):
-            create_graph_csv(pcap_file, csv_file)
+            create_graph_csv(pcap_file, csv_file, connections)
             # Remove the csv file
             os.remove(csv_file)
 
