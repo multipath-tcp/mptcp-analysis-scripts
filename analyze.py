@@ -208,7 +208,8 @@ def generate_title(csv_file, connections):
 
     # Show all details of the subflows
     for sub_flow_id, data in connections[connection_id].iteritems():
-        title += "sf " + sub_flow_id + ": "
+        # \n must be interpreted as a raw type to works with GnuPlot.py
+        title += r'\n' + "sf: " + sub_flow_id + " "
         if reverse:
             title += "(" + data['wscaledst'] + " " + data['wscalesrc'] + ") "
             title += data['daddr'] + ":" + data['dport'] + \
@@ -217,8 +218,6 @@ def generate_title(csv_file, connections):
             title += "(" + data['wscalesrc'] + " " + data['wscaledst'] + ") "
             title += data['saddr'] + ":" + data['sport'] + \
                 " -> " + data['daddr'] + ":" + data['dport']
-        title += " | "
-
     return title
 
 
@@ -236,7 +235,7 @@ def create_graph_csv(pcap_file, csv_file, connections):
     data_split = map(lambda x: x.split(','), data)
     data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
 
-    g.title(generate_title(csv_file, connections))
+    g('set title "' + generate_title(csv_file, connections) + '"')
     g('set style data linespoints')
     g.xlabel('Time [s]')
     g.ylabel('Sequence number')
