@@ -245,7 +245,7 @@ def interesting_graph(csv_fname, connections):
         if not 127.0.0.1 -> 127.0.0.1
     """
     connection_id = get_connection_id(csv_fname)
-    for sub_flow_id, data in connections[connection_id].iteriterms():
+    for sub_flow_id, data in connections[connection_id].iteritems():
         # Only had the case for IPv4, but what is its equivalent in IPv6?
         if not data['type'] == 'IPv4':
             return True
