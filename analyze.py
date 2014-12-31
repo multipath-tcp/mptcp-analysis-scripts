@@ -59,9 +59,15 @@ class cd:
 ##                  CONSTANTS                   ##
 ##################################################
 
+# The default input directory (with .pcap and .pcap.gz files)
 DEF_IN_DIR = 'input'
+# The default traces directory (kind of temparary directory, where traces
+# will be stored)
 DEF_TRACE_DIR = 'traces'
+# The default graph directory (output directory for graphes)
 DEF_GRAPH_DIR = 'graphs'
+# IPv4 localhost address
+LOCALHOST_IPv4 = '127.0.0.1'
 
 ##################################################
 ##                   ARGUMENTS                  ##
@@ -191,20 +197,32 @@ def get_begin_values(first_line):
     return float(split_line[0]), int(split_line[1])
 
 
-def generate_title(csv_fname, connections):
-    """ Generate the title for a mptcp connection """
-    # Get the id of the mptcp connection (between last _ and last . in the csv
-    # filename)
+def get_connection_id(csv_fname):
+    """ Given the filename of the csv file, return the id of the MPTCP connection
+        The id (returned as str) is assumed to be between last _ and last . in csv_fname
+    """
     last_underscore_index = csv_fname.rindex("_")
     last_dot_index = csv_fname.rindex(".")
-    connection_id = csv_fname[last_underscore_index + 1:last_dot_index]
+    return csv_fname[last_underscore_index + 1:last_dot_index]
 
+
+def is_reverse_connection(csv_fname):
+    """ Given the filename of the csv file, return True is it is a c2s flow or False if it is a s2c
+        one
+        The type is assumed to be before the first _ in csv_fname
+    """
+    first_underscore_index = csv_fname.index("_")
+    return (csv_fname[0:first_underscore_index] == "s2c")
+
+
+def generate_title(csv_fname, connections):
+    """ Generate the title for a mptcp connection """
+
+    connection_id = get_connection_id(csv_fname)
     title = "flows:" + str(len(connections[connection_id])) + " "
 
-    # Get flow type (c2s or s2c); if c2s, correct order, otherwise reverse src
-    # and dst
-    first_underscore_index = csv_fname.index("_")
-    reverse = (csv_fname[0:first_underscore_index] == "s2c")
+    # If not reverse, correct order, otherwise reverse src and dst
+    reverse = is_reverse_connection(csv_fname)
 
     # Show all details of the subflows
     for sub_flow_id, data in connections[connection_id].iteritems():
@@ -221,9 +239,27 @@ def generate_title(csv_fname, connections):
     return title
 
 
+def interesting_graph(csv_fname, connections):
+    """ Return True if the graph is worthy, else False
+        This function assumes that a graph is interesting if it has at least one connection that
+        if not 127.0.0.1 -> 127.0.0.1
+    """
+    connection_id = get_connection_id(csv_fname)
+    for sub_flow_id, data in connections[connection_id].iteriterms():
+        # Only had the case for IPv4, but what is its equivalent in IPv6?
+        if not data['type'] == 'IPv4':
+            return True
+        if not (data['saddr'] == LOCALHOST_IPv4 and data['daddr'] == LOCALHOST_IPv4):
+            return True
+    return False
+
+
 def create_graph_csv(pcap_fname, csv_fname, connections):
     """ Generate pdf for the csv file of the pcap file
     """
+    # First see if useful to show the graph
+    if not interesting_graph(csv_fname, connections):
+        return
     try:
         csv_file = open(csv_fname)
         data = csv_file.readlines()
