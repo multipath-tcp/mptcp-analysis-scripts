@@ -71,6 +71,26 @@ LOCALHOST_IPv4 = '127.0.0.1'
 # Prefix of the Wi-Fi interface IP address
 PREFIX_WIFI_IF = '192.168.'
 
+# Following constants are used to make the code cleaner and more robust (for dictionary)
+RMNET = 'rmnet'
+WIFI = 'wifi'
+# IPv4 or IPv6
+TYPE = 'type'
+# Interface: RMNET or WIFI
+IF = 'interface'
+# Source IP address
+SADDR = 'saddr'
+# Destination IP address
+DADDR = 'daddr'
+# Source port
+SPORT = 'sport'
+# Destination port
+DPORT = 'dport'
+# Window scale for source
+WSCALESRC = 'wscalesrc'
+# Window scale for destination
+WSCALEDST = 'wscaledst'
+
 ##################################################
 ##                   ARGUMENTS                  ##
 ##################################################
