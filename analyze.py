@@ -72,6 +72,7 @@ LOCALHOST_IPv4 = '127.0.0.1'
 PREFIX_WIFI_IF = '192.168.'
 
 # Following constants are used to make the code cleaner and more robust (for dictionary)
+# Those are mainly determined by the output of mptcptrace
 RMNET = 'rmnet'
 WIFI = 'wifi'
 # IPv4 or IPv6
@@ -237,11 +238,11 @@ def extract_flow_data(out_file):
             connections[current_connection][sub_flow_id] = {}
             index_wscale = words.index("wscale")
             connections[current_connection][sub_flow_id][
-                'wscalesrc'] = words[index_wscale + 2]
+                WSCALESRC] = words[index_wscale + 2]
             connections[current_connection][sub_flow_id][
-                'wscaledst'] = words[index_wscale + 3]
+                WSCALEDST] = words[index_wscale + 3]
             connections[current_connection][sub_flow_id][
-                'type'] = words[index_wscale + 4]
+                TYPE] = words[index_wscale + 4]
             index = words.index("sport")
             while index + 1 < len(words):
                 attr = words[index]
@@ -257,10 +258,10 @@ def extract_flow_data(out_file):
 
 def indicates_wifi_or_rmnet(data):
     """ Given data of a mptcp connection subflow, indicates if comes from wifi or rmnet """
-    if data['saddr'].startswith(PREFIX_WIFI_IF) or data['daddr'].startswith(PREFIX_WIFI_IF):
-        data['interface'] = 'wifi'
+    if data[SADDR].startswith(PREFIX_WIFI_IF) or data[DADDR].startswith(PREFIX_WIFI_IF):
+        data[IF] = WIFI
     else:
-        data['interface'] = 'rmnet'
+        data[IF] = RMNET
 
 
 def interesting_graph(csv_fname, connections):
@@ -272,9 +273,9 @@ def interesting_graph(csv_fname, connections):
     connection_id = get_connection_id(csv_fname)
     for sub_flow_id, data in connections[connection_id].iteritems():
         # Only had the case for IPv4, but what is its equivalent in IPv6?
-        if not data['type'] == 'IPv4':
+        if not data[TYPE] == 'IPv4':
             return True
-        if not (data['saddr'] == LOCALHOST_IPv4 and data['daddr'] == LOCALHOST_IPv4):
+        if not (data[SADDR] == LOCALHOST_IPv4 and data[DADDR] == LOCALHOST_IPv4):
             indicates_wifi_or_rmnet(data)
             return True
     return False
@@ -319,15 +320,15 @@ def generate_title(csv_fname, connections):
         # \n must be interpreted as a raw type to works with GnuPlot.py
         title += r'\n' + "sf: " + sub_flow_id + " "
         if reverse:
-            title += "(" + data['wscaledst'] + " " + data['wscalesrc'] + ") "
-            title += data['daddr'] + ":" + data['dport'] + \
-                " -> " + data['saddr'] + ":" + data['sport']
+            title += "(" + data[WSCALEDST] + " " + data[WSCALESRC] + ") "
+            title += data[DADDR] + ":" + data[DPORT] + \
+                " -> " + data[SADDR] + ":" + data[SPORT]
         else:
-            title += "(" + data['wscalesrc'] + " " + data['wscaledst'] + ") "
-            title += data['saddr'] + ":" + data['sport'] + \
-                " -> " + data['daddr'] + ":" + data['dport']
-        if 'interface' in data:
-            title += " [" + data['interface'] + "]"
+            title += "(" + data[WSCALESRC] + " " + data[WSCALEDST] + ") "
+            title += data[SADDR] + ":" + data[SPORT] + \
+                " -> " + data[DADDR] + ":" + data[DPORT]
+        if IF in data:
+            title += " [" + data[IF] + "]"
     return title
 
 
