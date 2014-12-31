@@ -213,8 +213,8 @@ def is_reverse_connection(csv_fname):
     return (csv_fname[0:first_underscore_index] == "s2c")
 
 
-def extract_flow_data(out_file):
-    """ Given an (open) file, return a dictionary of as many elements as there are flows """
+def extract_mptcp_flow_data(out_file):
+    """ Given an (open) file, return a dictionary of as many elements as there are mptcp flows """
     # Return at the beginning of the file
     out_file.seek(0)
     data = out_file.readlines()
@@ -369,7 +369,7 @@ def process_mptcp_trace(pcap_fname):
         print("Error of mptcptrace with " + pcap_fname + "; skip process")
         return
 
-    connections = extract_flow_data(flow_data_file)
+    connections = extract_mptcp_flow_data(flow_data_file)
     # Don't forget to close and remove pcap_flow_data
     flow_data_file.close()
     os.remove(pcap_flow_data)
@@ -405,6 +405,32 @@ def process_mptcp_trace(pcap_fname):
 ##                   TCPTRACE                   ##
 ##################################################
 
+
+def is_number(s):
+    """ Check if the str s is a number """
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
+def extract_tcp_flow_data(out_file):
+    """ Given an (open) file, return a dictionary of as many elements as there are tcp flows """
+    # Return at the beginning of the file
+    out_file.seek(0)
+    data = out_file.readlines()
+    connections = {}
+    for line in data:
+        # Case 1: line start with #; skip it
+        if not line.startswith("#"):
+            info = line.split(',')
+            # Case 2: line is empty or line is the "header line"; skip it
+            if len(info) > 1 and is_number(info[0]):
+                # Case 3: line begin with number --> extract info
+                print(line)
+                #TODO to be continued
+            
 
 def prepare_gpl_file(pcap_fname, gpl_fname):
     """ Return a gpl file name of a ready-to-use gpl file or None if an error
@@ -448,13 +474,22 @@ def process_tcp_trace(pcap_fname):
     # -zxy to plot both axes to 0
     # -n to avoid name resolution
     # -y to remove some noise in sequence graphs
+    # -l for long output
+    # --csv for csv file
     cmd = "tcptrace --output_dir=" + os.getcwd() + " --output_prefix=" \
-        + pcap_fname[:-5] + "_ -C -S -T -zxy -n -y --noshowzwndprobes --noshowoutorder --noshowrexmit "\
+        + pcap_fname[:-5] + "_ -C -S -T -zxy -n -y -l --csv --noshowzwndprobes --noshowoutorder --noshowrexmit "\
         + "--noshowsacks --noshowzerowindow --noshowurg --noshowdupack3 --noshowzerolensegs " \
         + pcap_fname
-    if subprocess.call(cmd.split()) != 0:
+    pcap_flow_data = pcap_fname[:-5] + '.out'
+    flow_data_file = open(pcap_flow_data, 'w+')
+    if subprocess.call(cmd.split(), stdout=flow_data_file) != 0:
         print("Error of tcptrace with " + pcap_fname + "; skip process")
         return
+    connections = extract_tcp_flow_data(flow_data_file)
+
+    # Don't forget to close and remove pcap_flow_data
+    flow_data_file.close()
+    os.remove(pcap_flow_data)
 
     # The tcptrace call will generate .xpl files to cope with
     for xpl_fname in glob.glob(os.path.join(trace_dir_exp, pcap_fname[len(trace_dir_exp) + 1:-5]
