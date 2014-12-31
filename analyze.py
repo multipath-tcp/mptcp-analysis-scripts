@@ -446,9 +446,10 @@ def process_tcp_trace(pcap_fname):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0
+    # -n to avoid name resolution
     # -y to remove some noise in sequence graphs
     cmd = "tcptrace --output_dir=" + os.getcwd() + " --output_prefix=" \
-        + pcap_fname[:-5] + "_ -C -S -T -zxy -y --noshowzwndprobes --noshowoutorder --noshowrexmit "\
+        + pcap_fname[:-5] + "_ -C -S -T -zxy -n -y --noshowzwndprobes --noshowoutorder --noshowrexmit "\
         + "--noshowsacks --noshowzerowindow --noshowurg --noshowdupack3 --noshowzerolensegs " \
         + pcap_fname
     if subprocess.call(cmd.split()) != 0:
