@@ -68,6 +68,8 @@ DEF_TRACE_DIR = 'traces'
 DEF_GRAPH_DIR = 'graphs'
 # IPv4 localhost address
 LOCALHOST_IPv4 = '127.0.0.1'
+# Prefix of the Wi-Fi interface IP address
+PREFIX_WIFI_IF = '192.168.'
 
 ##################################################
 ##                   ARGUMENTS                  ##
@@ -233,34 +235,19 @@ def extract_flow_data(out_file):
     return connections
 
 
-def generate_title(csv_fname, connections):
-    """ Generate the title for a mptcp connection """
-
-    connection_id = get_connection_id(csv_fname)
-    title = "flows:" + str(len(connections[connection_id])) + " "
-
-    # If not reverse, correct order, otherwise reverse src and dst
-    reverse = is_reverse_connection(csv_fname)
-
-    # Show all details of the subflows
-    for sub_flow_id, data in connections[connection_id].iteritems():
-        # \n must be interpreted as a raw type to works with GnuPlot.py
-        title += r'\n' + "sf: " + sub_flow_id + " "
-        if reverse:
-            title += "(" + data['wscaledst'] + " " + data['wscalesrc'] + ") "
-            title += data['daddr'] + ":" + data['dport'] + \
-                " -> " + data['saddr'] + ":" + data['sport']
-        else:
-            title += "(" + data['wscalesrc'] + " " + data['wscaledst'] + ") "
-            title += data['saddr'] + ":" + data['sport'] + \
-                " -> " + data['daddr'] + ":" + data['dport']
-    return title
+def indicates_wifi_or_rmnet(data):
+    """ Given data of a mptcp connection subflow, indicates if comes from wifi or rmnet """
+    if data['saddr'].startswith(PREFIX_WIFI_IF) or data['daddr'].startswith(PREFIX_WIFI_IF):
+        data['interface'] = 'wifi'
+    else:
+        data['interface'] = 'rmnet'
 
 
 def interesting_graph(csv_fname, connections):
     """ Return True if the graph is worthy, else False
         This function assumes that a graph is interesting if it has at least one connection that
         if not 127.0.0.1 -> 127.0.0.1
+        Note that is the graph is interesting and IPv4, indicates if the traffic is Wi-Fi or rmnet
     """
     connection_id = get_connection_id(csv_fname)
     for sub_flow_id, data in connections[connection_id].iteritems():
@@ -268,6 +255,7 @@ def interesting_graph(csv_fname, connections):
         if not data['type'] == 'IPv4':
             return True
         if not (data['saddr'] == LOCALHOST_IPv4 and data['daddr'] == LOCALHOST_IPv4):
+            indicates_wifi_or_rmnet(data)
             return True
     return False
 
@@ -295,6 +283,32 @@ def write_graph_csv(csv_fname, data, begin_time, begin_seq):
     except IOError as e:
         print('IOError for graph file with ' + csv_fname + ': stop')
         exit(1)
+
+
+def generate_title(csv_fname, connections):
+    """ Generate the title for a mptcp connection """
+
+    connection_id = get_connection_id(csv_fname)
+    title = "flows:" + str(len(connections[connection_id])) + " "
+
+    # If not reverse, correct order, otherwise reverse src and dst
+    reverse = is_reverse_connection(csv_fname)
+
+    # Show all details of the subflows
+    for sub_flow_id, data in connections[connection_id].iteritems():
+        # \n must be interpreted as a raw type to works with GnuPlot.py
+        title += r'\n' + "sf: " + sub_flow_id + " "
+        if reverse:
+            title += "(" + data['wscaledst'] + " " + data['wscalesrc'] + ") "
+            title += data['daddr'] + ":" + data['dport'] + \
+                " -> " + data['saddr'] + ":" + data['sport']
+        else:
+            title += "(" + data['wscalesrc'] + " " + data['wscaledst'] + ") "
+            title += data['saddr'] + ":" + data['sport'] + \
+                " -> " + data['daddr'] + ":" + data['dport']
+        if 'interface' in data:
+            title += " [" + data['interface'] + "]"
+    return title
 
 
 def create_graph_csv(pcap_fname, csv_fname, connections):
