@@ -172,31 +172,6 @@ def clean_loopback_pcap(pcap_fname):
 g = Gnuplot.Gnuplot(debug=0)
 
 
-def write_graph_csv(csv_fname, data, begin_time, begin_seq):
-    """ Write in the graphs directory a new csv file containing relative values
-        for plotting them
-        Exit the program if an IOError is raised
-    """
-    try:
-        graph_fname = os.path.join(graph_dir_exp, csv_fname)
-        graph_file = open(graph_fname, 'w')
-        # Modify lines for that
-        for line in data:
-            split_line = line.split(',')
-            time = float(split_line[0]) - begin_time
-            seq = int(split_line[1]) - begin_seq
-            graph_file.write(str(time) + ',' + str(seq) + '\n')
-        graph_file.close()
-    except IOError as e:
-        print('IOError for graph file with ' + csv_fname + ': stop')
-        exit(1)
-
-
-def get_begin_values(first_line):
-    split_line = first_line.split(',')
-    return float(split_line[0]), int(split_line[1])
-
-
 def get_connection_id(csv_fname):
     """ Given the filename of the csv file, return the id of the MPTCP connection
         The id (returned as str) is assumed to be between last _ and last . in csv_fname
@@ -213,73 +188,6 @@ def is_reverse_connection(csv_fname):
     """
     first_underscore_index = csv_fname.index("_")
     return (csv_fname[0:first_underscore_index] == "s2c")
-
-
-def generate_title(csv_fname, connections):
-    """ Generate the title for a mptcp connection """
-
-    connection_id = get_connection_id(csv_fname)
-    title = "flows:" + str(len(connections[connection_id])) + " "
-
-    # If not reverse, correct order, otherwise reverse src and dst
-    reverse = is_reverse_connection(csv_fname)
-
-    # Show all details of the subflows
-    for sub_flow_id, data in connections[connection_id].iteritems():
-        # \n must be interpreted as a raw type to works with GnuPlot.py
-        title += r'\n' + "sf: " + sub_flow_id + " "
-        if reverse:
-            title += "(" + data['wscaledst'] + " " + data['wscalesrc'] + ") "
-            title += data['daddr'] + ":" + data['dport'] + \
-                " -> " + data['saddr'] + ":" + data['sport']
-        else:
-            title += "(" + data['wscalesrc'] + " " + data['wscaledst'] + ") "
-            title += data['saddr'] + ":" + data['sport'] + \
-                " -> " + data['daddr'] + ":" + data['dport']
-    return title
-
-
-def interesting_graph(csv_fname, connections):
-    """ Return True if the graph is worthy, else False
-        This function assumes that a graph is interesting if it has at least one connection that
-        if not 127.0.0.1 -> 127.0.0.1
-    """
-    connection_id = get_connection_id(csv_fname)
-    for sub_flow_id, data in connections[connection_id].iteritems():
-        # Only had the case for IPv4, but what is its equivalent in IPv6?
-        if not data['type'] == 'IPv4':
-            return True
-        if not (data['saddr'] == LOCALHOST_IPv4 and data['daddr'] == LOCALHOST_IPv4):
-            return True
-    return False
-
-
-def create_graph_csv(pcap_fname, csv_fname, connections):
-    """ Generate pdf for the csv file of the pcap file
-    """
-    # First see if useful to show the graph
-    if not interesting_graph(csv_fname, connections):
-        return
-    try:
-        csv_file = open(csv_fname)
-        data = csv_file.readlines()
-    except IOError as e:
-        print('IOError for ' + csv_fname + ': skipped')
-        return
-
-    # If file was generated, the csv is not empty
-    data_split = map(lambda x: x.split(','), data)
-    data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
-
-    g('set title "' + generate_title(csv_fname, connections) + '"')
-    g('set style data linespoints')
-    g.xlabel('Time [s]')
-    g.ylabel('Sequence number')
-    g.plot(data_plot)
-    pdf_fname = os.path.join(graph_dir_exp,
-                             pcap_fname[len(trace_dir_exp) + 1:-5] + "_" + csv_fname[:-4] + '.pdf')
-    g.hardcopy(filename=pdf_fname, terminal='pdf')
-    g.reset()
 
 
 def extract_flow_data(out_file):
@@ -323,6 +231,98 @@ def extract_flow_data(out_file):
         else:
             current_connection = False
     return connections
+
+
+def generate_title(csv_fname, connections):
+    """ Generate the title for a mptcp connection """
+
+    connection_id = get_connection_id(csv_fname)
+    title = "flows:" + str(len(connections[connection_id])) + " "
+
+    # If not reverse, correct order, otherwise reverse src and dst
+    reverse = is_reverse_connection(csv_fname)
+
+    # Show all details of the subflows
+    for sub_flow_id, data in connections[connection_id].iteritems():
+        # \n must be interpreted as a raw type to works with GnuPlot.py
+        title += r'\n' + "sf: " + sub_flow_id + " "
+        if reverse:
+            title += "(" + data['wscaledst'] + " " + data['wscalesrc'] + ") "
+            title += data['daddr'] + ":" + data['dport'] + \
+                " -> " + data['saddr'] + ":" + data['sport']
+        else:
+            title += "(" + data['wscalesrc'] + " " + data['wscaledst'] + ") "
+            title += data['saddr'] + ":" + data['sport'] + \
+                " -> " + data['daddr'] + ":" + data['dport']
+    return title
+
+
+def interesting_graph(csv_fname, connections):
+    """ Return True if the graph is worthy, else False
+        This function assumes that a graph is interesting if it has at least one connection that
+        if not 127.0.0.1 -> 127.0.0.1
+    """
+    connection_id = get_connection_id(csv_fname)
+    for sub_flow_id, data in connections[connection_id].iteritems():
+        # Only had the case for IPv4, but what is its equivalent in IPv6?
+        if not data['type'] == 'IPv4':
+            return True
+        if not (data['saddr'] == LOCALHOST_IPv4 and data['daddr'] == LOCALHOST_IPv4):
+            return True
+    return False
+
+
+def get_begin_values(first_line):
+    split_line = first_line.split(',')
+    return float(split_line[0]), int(split_line[1])
+
+
+def write_graph_csv(csv_fname, data, begin_time, begin_seq):
+    """ Write in the graphs directory a new csv file containing relative values
+        for plotting them
+        Exit the program if an IOError is raised
+    """
+    try:
+        graph_fname = os.path.join(graph_dir_exp, csv_fname)
+        graph_file = open(graph_fname, 'w')
+        # Modify lines for that
+        for line in data:
+            split_line = line.split(',')
+            time = float(split_line[0]) - begin_time
+            seq = int(split_line[1]) - begin_seq
+            graph_file.write(str(time) + ',' + str(seq) + '\n')
+        graph_file.close()
+    except IOError as e:
+        print('IOError for graph file with ' + csv_fname + ': stop')
+        exit(1)
+
+
+def create_graph_csv(pcap_fname, csv_fname, connections):
+    """ Generate pdf for the csv file of the pcap file
+    """
+    # First see if useful to show the graph
+    if not interesting_graph(csv_fname, connections):
+        return
+    try:
+        csv_file = open(csv_fname)
+        data = csv_file.readlines()
+    except IOError as e:
+        print('IOError for ' + csv_fname + ': skipped')
+        return
+
+    # If file was generated, the csv is not empty
+    data_split = map(lambda x: x.split(','), data)
+    data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
+
+    g('set title "' + generate_title(csv_fname, connections) + '"')
+    g('set style data linespoints')
+    g.xlabel('Time [s]')
+    g.ylabel('Sequence number')
+    g.plot(data_plot)
+    pdf_fname = os.path.join(graph_dir_exp,
+                             pcap_fname[len(trace_dir_exp) + 1:-5] + "_" + csv_fname[:-4] + '.pdf')
+    g.hardcopy(filename=pdf_fname, terminal='pdf')
+    g.reset()
 
 
 def process_mptcp_trace(pcap_fname):
