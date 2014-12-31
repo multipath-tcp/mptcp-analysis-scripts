@@ -274,6 +274,8 @@ def extract_flow_data(out_file):
                 'wscalesrc'] = words[index_wscale + 2]
             connections[current_connection][sub_flow_id][
                 'wscaledst'] = words[index_wscale + 3]
+            connections[current_connection][sub_flow_id][
+                'type'] = words[index_wscale + 4]
             index = words.index("sport")
             while index + 1 < len(words):
                 attr = words[index]
