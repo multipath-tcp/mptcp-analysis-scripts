@@ -428,9 +428,12 @@ def extract_tcp_flow_data(out_file):
             # Case 2: line is empty or line is the "header line"; skip it
             if len(info) > 1 and is_number(info[0]):
                 # Case 3: line begin with number --> extract info
-                print(line)
+                # The replacement of whitespaces by nothing prevents possible bugs if we use
+                # additional information from tcptrace
+                l = line.replace(" ", "")
+                print(l)
                 #TODO to be continued
-            
+
 
 def prepare_gpl_file(pcap_fname, gpl_fname):
     """ Return a gpl file name of a ready-to-use gpl file or None if an error
