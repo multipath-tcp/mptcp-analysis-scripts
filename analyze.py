@@ -266,8 +266,8 @@ def indicates_wifi_or_rmnet(data):
         data[IF] = RMNET
 
 
-def interesting_graph(csv_fname, connections):
-    """ Return True if the graph is worthy, else False
+def interesting_mptcp_graph(csv_fname, connections):
+    """ Return True if the MPTCP graph is worthy, else False
         This function assumes that a graph is interesting if it has at least one connection that
         if not 127.0.0.1 -> 127.0.0.1
         Note that is the graph is interesting and IPv4, indicates if the traffic is Wi-Fi or rmnet
@@ -338,7 +338,7 @@ def create_graph_csv(pcap_fname, csv_fname, connections):
     """ Generate pdf for the csv file of the pcap file
     """
     # First see if useful to show the graph
-    if not interesting_graph(csv_fname, connections):
+    if not interesting_mptcp_graph(csv_fname, connections):
         return
     try:
         csv_file = open(csv_fname)
@@ -483,6 +483,20 @@ def extract_tcp_flow_data(out_file):
     return connections
 
 
+def interesting_tcp_graph(flow_name, connections):
+    """ Return True if the MPTCP graph is worthy, else False
+        This function assumes that a graph is interesting if it has at least one connection that
+        if not 127.0.0.1 -> 127.0.0.1
+        Note that is the graph is interesting and IPv4, indicates if the traffic is Wi-Fi or rmnet
+    """
+    if not connections[flow_name][TYPE] == 'IPv4':
+        return True
+    if not (connections[flow_name][SADDR] == LOCALHOST_IPv4 and
+                                connections[flow_name][DADDR] == LOCALHOST_IPv4):
+        indicates_wifi_or_rmnet(connections[flow_name])
+        return True
+    return False
+
 
 def prepare_gpl_file(pcap_fname, gpl_fname):
     """ Return a gpl file name of a ready-to-use gpl file or None if an error
@@ -567,30 +581,35 @@ def process_tcp_trace(pcap_fname):
     # The tcptrace call will generate .xpl files to cope with
     for xpl_fname in glob.glob(os.path.join(trace_dir_exp, pcap_fname[len(trace_dir_exp) + 1:-5]
                                             + '*.xpl')):
-        cmd = "xpl2gpl " + xpl_fname
-        if subprocess.call(cmd.split()) != 0:
-            print("Error of xpl2gpl with " + xpl_fname + "; skip xpl file")
-            continue
-        prefix_fname = xpl_fname[len(trace_dir_exp) + 1:-4]
-        gpl_fname = prefix_fname + '.gpl'
-        gpl_fname_ok = prepare_gpl_file(pcap_fname, gpl_fname)
-        if gpl_fname_ok:
-            cmd = "gnuplot " + gpl_fname_ok
+        flow_name = get_flow_name(xpl_fname)
+        if interesting_tcp_graph(flow_name, connections):
+            cmd = "xpl2gpl " + xpl_fname
             if subprocess.call(cmd.split()) != 0:
-                print(
-                    "Error of tcptrace with " + pcap_fname + "; skip process")
-                return
+                print("Error of xpl2gpl with " + xpl_fname + "; skip xpl file")
+                continue
+            prefix_fname = xpl_fname[len(trace_dir_exp) + 1:-4]
+            gpl_fname = prefix_fname + '.gpl'
+            gpl_fname_ok = prepare_gpl_file(pcap_fname, gpl_fname)
+            if gpl_fname_ok:
+                cmd = "gnuplot " + gpl_fname_ok
+                if subprocess.call(cmd.split()) != 0:
+                    print(
+                        "Error of tcptrace with " + pcap_fname + "; skip process")
+                    return
 
-        # Delete gpl, xpl and others files generated
-        try:
-            os.remove(gpl_fname)
-            os.remove(gpl_fname_ok)
+            # Delete gpl, xpl and others files generated
             try:
-                os.remove(prefix_fname + '.datasets')
-            except OSError as e2:
-                # Throughput graphs have not .datasets file
-                pass
-            os.remove(prefix_fname + '.labels')
+                os.remove(gpl_fname)
+                os.remove(gpl_fname_ok)
+                try:
+                    os.remove(prefix_fname + '.datasets')
+                except OSError as e2:
+                    # Throughput graphs have not .datasets file
+                    pass
+                os.remove(prefix_fname + '.labels')
+            except OSError as e:
+                print(str(e) + ": skipped")
+        try:
             os.remove(xpl_fname)
         except OSError as e:
             print(str(e) + ": skipped")
