@@ -415,6 +415,16 @@ def is_number(s):
         return False
 
 
+def detect_ipv4(data):
+    """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
+    saddr = data[SADDR]
+    daddr = data[DADDR]
+    num_saddr = saddr.split('.')
+    num_daddr = daddr.split('.')
+    if len(num_saddr) == 4 and len(num_daddr) == 4:
+        data[TYPE] = 'IPv4'
+
+
 def extract_tcp_flow_data(out_file):
     """ Given an (open) file, return a dictionary of as many elements as there are tcp flows """
     # Return at the beginning of the file
@@ -431,8 +441,18 @@ def extract_tcp_flow_data(out_file):
             # Case 2: line is empty or line is the "header line"; skip it
             if len(info) > 1 and is_number(info[0]):
                 # Case 3: line begin with number --> extract info
-                print(line)
-                #TODO to be continued
+                #TODO should work with a2b,... instead of a number
+                nb_conn = info[0]
+                connections[nb_conn] = {}
+                connections[nb_conn][SADDR] = info[1]
+                connections[nb_conn][DADDR] = info[2]
+                connections[nb_conn][SPORT] = info[3]
+                connections[nb_conn][DPORT] = info[4]
+                detect_ipv4(connections[nb_conn])
+                #TODO maybe extract more information
+
+    return connections
+
 
 
 def prepare_gpl_file(pcap_fname, gpl_fname):
