@@ -202,7 +202,8 @@ def clean_loopback_pcap(pcap_fname):
 
 def save_connections(pcap_fname, connections):
     """ Using the name pcap_fname, save the statistics about connections """
-    stat_fname = os.path.join(stat_dir_exp, pcap_fname[len(trace_dir_exp) + 1:-5])
+    stat_fname = os.path.join(
+        stat_dir_exp, pcap_fname[len(trace_dir_exp) + 1:-5])
     try:
         stat_file = open(stat_fname, 'w')
         pickle.dump(connections, stat_file)
@@ -462,10 +463,10 @@ def convert_number_to_name(nb_conn):
         mod_nb = nb_conn % (SIZE_LAT_ALPH / 2)
         div_nb = nb_conn / (SIZE_LAT_ALPH / 2)
         prefix = get_prefix_name(div_nb - 1)
-        return prefix + convert_number_to_letter(2*mod_nb) + '2' + prefix \
-                + convert_number_to_letter(2*mod_nb + 1)
+        return prefix + convert_number_to_letter(2 * mod_nb) + '2' + prefix \
+            + convert_number_to_letter(2 * mod_nb + 1)
     else:
-        return convert_number_to_letter(2*nb_conn) + '2' + convert_number_to_letter(2*nb_conn + 1)
+        return convert_number_to_letter(2 * nb_conn) + '2' + convert_number_to_letter(2 * nb_conn + 1)
 
 
 def detect_ipv4(data):
@@ -502,7 +503,7 @@ def extract_tcp_flow_data(out_file):
                 connections[conn][SPORT] = info[3]
                 connections[conn][DPORT] = info[4]
                 detect_ipv4(connections[conn])
-                #TODO maybe extract more information
+                # TODO maybe extract more information
 
     return connections
 
@@ -516,7 +517,7 @@ def interesting_tcp_graph(flow_name, connections):
     if not connections[flow_name][TYPE] == 'IPv4':
         return True
     if not (connections[flow_name][SADDR] == LOCALHOST_IPv4 and
-                                connections[flow_name][DADDR] == LOCALHOST_IPv4):
+            connections[flow_name][DADDR] == LOCALHOST_IPv4):
         indicates_wifi_or_rmnet(connections[flow_name])
         return True
     return False
@@ -563,16 +564,16 @@ def get_flow_name(xpl_fname):
     # Basic information is contained between the two last '_'
     last_us_index = xpl_fname.rindex("_")
     nearly_last_us_index = xpl_fname.rindex("_", 0, last_us_index)
-    flow_name = xpl_fname[nearly_last_us_index+1:last_us_index]
+    flow_name = xpl_fname[nearly_last_us_index + 1:last_us_index]
 
     # Need to check if we need to reverse the flow name
     two_index = flow_name.index("2")
-    left_letter = flow_name[two_index-1]
+    left_letter = flow_name[two_index - 1]
     right_letter = flow_name[-1]
     if right_letter < left_letter:
         # Swap those two characters
         chars = list(flow_name)
-        chars[two_index-1] = right_letter
+        chars[two_index - 1] = right_letter
         chars[-1] = left_letter
         return ''.join(chars)
     else:
