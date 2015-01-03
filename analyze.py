@@ -530,7 +530,7 @@ def get_flow_name(xpl_fname):
     # Need to check if we need to reverse the flow name
     two_index = flow_name.index("2")
     left_letter = flow_name[two_index-1]
-    right_letter = flow_name[:-1]
+    right_letter = flow_name[-1]
     if right_letter < left_letter:
         # Swap those two characters
         chars = list(flow_name)
