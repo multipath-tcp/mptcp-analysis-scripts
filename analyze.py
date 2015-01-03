@@ -66,6 +66,8 @@ DEF_IN_DIR = 'input'
 DEF_TRACE_DIR = 'traces'
 # The default graph directory (output directory for graphes)
 DEF_GRAPH_DIR = 'graphs'
+# The default stat directory
+DEF_STAT_DIR = 'stats'
 # IPv4 localhost address
 LOCALHOST_IPv4 = '127.0.0.1'
 # Prefix of the Wi-Fi interface IP address
@@ -101,6 +103,7 @@ WSCALEDST = 'wscaledst'
 in_dir = DEF_IN_DIR
 trace_dir = DEF_TRACE_DIR
 graph_dir = DEF_GRAPH_DIR
+stat_dir = DEF_STAT_DIR
 pcap_contains = ""
 
 parser = argparse.ArgumentParser(
@@ -111,6 +114,8 @@ parser.add_argument("-trace", help="temporary directory that will be used to sto
                     + "pcap files")
 parser.add_argument(
     "-graph", help="directory where the graphs of the pcap files will be stored")
+parser.add_argument(
+    "-stat", help="directory where the stats of the pcap files will be stored")
 parser.add_argument(
     "--pcap", help="analyze only pcap files containing the given string")
 parser.add_argument("--keep", help="keep the original file with -k option of gunzip, if it exists",
@@ -128,12 +133,16 @@ if args.trace:
 if args.graph:
     graph_dir = args.graph
 
+if args.stat:
+    stat_dir = args.stat
+
 if args.pcap:
     pcap_contains = args.pcap
 
 in_dir_exp = os.path.expanduser(in_dir)
 trace_dir_exp = os.path.expanduser(trace_dir)
 graph_dir_exp = os.path.expanduser(graph_dir)
+stat_dir_exp = os.path.expanduser(stat_dir)
 
 ##################################################
 ##                 PREPROCESSING                ##
