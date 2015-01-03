@@ -51,3 +51,32 @@ if args.stat:
     stat_dir = args.stat
 
 stat_dir_exp = os.path.expanduser(stat_dir)
+
+##################################################
+##                 GET THE DATA                 ##
+##################################################
+
+#TODO write common functions in a separate file, to avoid code duplication
+def check_directory_exists(directory):
+    """ Check if the directory exists, and create it if needed
+        If directory is a file, exit the program
+    """
+    if os.path.exists(directory):
+        if not os.path.isdir(directory):
+            print(directory + " is a file: stop")
+    else:
+        os.makedirs(directory)
+
+check_directory_exists(stat_dir_exp)
+connections = {}
+for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), stat_dir_exp)):
+    for fname in filenames:
+        try:
+            stat_file = open(os.path.join(dirpath, fname), 'r')
+            connections[fname] = pickle.load(stat_file)
+            stat_file.close()
+        except IOError as e:
+            print(str(e) + ': skip stat file ' + fname)
+
+print(connections)
+print("End of summary")
