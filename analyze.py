@@ -419,8 +419,11 @@ def extract_tcp_flow_data(out_file):
     """ Given an (open) file, return a dictionary of as many elements as there are tcp flows """
     # Return at the beginning of the file
     out_file.seek(0)
-    data = out_file.readlines()
+    raw_data = out_file.readlines()
     connections = {}
+    # The replacement of whitespaces by nothing prevents possible bugs if we use
+    # additional information from tcptrace
+    data = map(lambda x: x.replace(" ", ""), raw_data)
     for line in data:
         # Case 1: line start with #; skip it
         if not line.startswith("#"):
@@ -428,10 +431,7 @@ def extract_tcp_flow_data(out_file):
             # Case 2: line is empty or line is the "header line"; skip it
             if len(info) > 1 and is_number(info[0]):
                 # Case 3: line begin with number --> extract info
-                # The replacement of whitespaces by nothing prevents possible bugs if we use
-                # additional information from tcptrace
-                l = line.replace(" ", "")
-                print(l)
+                print(line)
                 #TODO to be continued
 
 
