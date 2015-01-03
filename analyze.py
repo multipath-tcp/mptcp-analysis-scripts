@@ -70,6 +70,8 @@ DEF_GRAPH_DIR = 'graphs'
 LOCALHOST_IPv4 = '127.0.0.1'
 # Prefix of the Wi-Fi interface IP address
 PREFIX_WIFI_IF = '192.168.'
+# Size of Latin alphabet
+SIZE_LAT_ALPH = 26
 
 # Following constants are used to make the code cleaner and more robust (for dictionary)
 # Those are mainly determined by the output of mptcptrace
@@ -415,6 +417,33 @@ def is_number(s):
         return False
 
 
+def convert_number_to_letter(nb_conn):
+    """ Given an integer, return the (nb_conn)th letter of the alphabet (zero-based index) """
+    return chr(ord('a') + nb_conn)
+
+
+def get_prefix_name(nb_conn):
+    """ Given an integer, return the (nb_conn)th prefix, based on the alphabet (zero-based index)"""
+    if nb_conn >= SIZE_LAT_ALPH:
+        mod_nb = nb_conn % SIZE_LAT_ALPH
+        div_nb = nb_conn / SIZE_LAT_ALPH
+        return get_prefix_name(div_nb - 1) + convert_number_to_letter(mod_nb)
+    else:
+        return convert_number_to_letter(nb_conn)
+
+
+def convert_number_to_name(nb_conn):
+    """ Given an integer, return a name of type 'a2b', 'aa2ab',... """
+    if nb_conn >= (SIZE_LAT_ALPH / 2):
+        mod_nb = nb_conn % (SIZE_LAT_ALPH / 2)
+        div_nb = nb_conn / (SIZE_LAT_ALPH / 2)
+        prefix = get_prefix_name(div_nb - 1)
+        return prefix + convert_number_to_letter(2*mod_nb) + '2' + prefix \
+                + convert_number_to_letter(2*mod_nb + 1)
+    else:
+        return convert_number_to_letter(2*nb_conn) + '2' + convert_number_to_letter(2*nb_conn + 1)
+
+
 def detect_ipv4(data):
     """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
     saddr = data[SADDR]
@@ -441,14 +470,14 @@ def extract_tcp_flow_data(out_file):
             # Case 2: line is empty or line is the "header line"; skip it
             if len(info) > 1 and is_number(info[0]):
                 # Case 3: line begin with number --> extract info
-                #TODO should work with a2b,... instead of a number
                 nb_conn = info[0]
-                connections[nb_conn] = {}
-                connections[nb_conn][SADDR] = info[1]
-                connections[nb_conn][DADDR] = info[2]
-                connections[nb_conn][SPORT] = info[3]
-                connections[nb_conn][DPORT] = info[4]
-                detect_ipv4(connections[nb_conn])
+                conn = convert_number_to_name(int(info[0]) - 1)
+                connections[conn] = {}
+                connections[conn][SADDR] = info[1]
+                connections[conn][DADDR] = info[2]
+                connections[conn][SPORT] = info[3]
+                connections[conn][DPORT] = info[4]
+                detect_ipv4(connections[conn])
                 #TODO maybe extract more information
 
     return connections
