@@ -1,7 +1,7 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 #
-#  Copyright 2014 Matthieu Baerts & Quentin De Coninck
+#  Copyright 2014-2015 Matthieu Baerts & Quentin De Coninck
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
