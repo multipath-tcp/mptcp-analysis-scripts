@@ -520,6 +520,27 @@ def prepare_gpl_file(pcap_fname, gpl_fname):
         return None
 
 
+def get_flow_name(xpl_fname):
+    """ Return the flow name in the form 'a2b' (and not 'b2a') """
+    # Basic information is contained between the two last '_'
+    last_us_index = xpl_fname.rindex("_")
+    nearly_last_us_index = xpl_fname.rindex("_", 0, last_us_index)
+    flow_name = xpl_fname[nearly_last_us_index+1:last_us_index]
+
+    # Need to check if we need to reverse the flow name
+    two_index = flow_name.index("2")
+    left_letter = flow_name[two_index-1]
+    right_letter = flow_name[:-1]
+    if right_letter < left_letter:
+        # Swap those two characters
+        chars = list(flow_name)
+        chars[two_index-1] = right_letter
+        chars[-1] = left_letter
+        return ''.join(chars)
+    else:
+        return flow_name
+
+
 def process_tcp_trace(pcap_fname):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
