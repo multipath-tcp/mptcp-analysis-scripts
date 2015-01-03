@@ -37,6 +37,7 @@ import glob
 import Gnuplot
 import os
 import os.path
+import pickle
 import subprocess
 import sys
 
@@ -198,6 +199,16 @@ def clean_loopback_pcap(pcap_fname):
     if subprocess.call(cmd.split()) != 0:
         print("Error in moving " + tmp_pcap + " to " + pcap_fname)
 
+
+def save_connections(pcap_fname, connections):
+    """ Using the name pcap_fname, save the statistics about connections """
+    stat_fname = os.path.join(stat_dir_exp, pcap_fname[len(trace_dir_exp) + 1:-5])
+    try:
+        stat_file = open(stat_fname, 'w')
+        pickle.dump(connections, stat_file)
+        stat_file.close()
+    except IOError as e:
+        print(str(e) + ': no stat file for ' + pcap_fname)
 
 ##################################################
 ##                  MPTCPTRACE                  ##
@@ -384,6 +395,7 @@ def process_mptcp_trace(pcap_fname):
     # Don't forget to close and remove pcap_flow_data
     flow_data_file.close()
     os.remove(pcap_flow_data)
+
     # The mptcptrace call will generate .csv files to cope with
     for csv_fname in glob.glob('*.csv'):
         try:
@@ -411,6 +423,9 @@ def process_mptcp_trace(pcap_fname):
             create_graph_csv(pcap_fname, csv_fname, connections)
             # Remove the csv file
             os.remove(csv_fname)
+
+    # Save connections info
+    save_connections(pcap_fname, connections)
 
 ##################################################
 ##                   TCPTRACE                   ##
@@ -623,11 +638,15 @@ def process_tcp_trace(pcap_fname):
         except OSError as e:
             print(str(e) + ": skipped")
 
+    # Save connections info
+    save_connections(pcap_fname, connections)
+
 ##################################################
 ##                     MAIN                     ##
 ##################################################
 
 check_directory_exists(graph_dir_exp)
+check_directory_exists(stat_dir_exp)
 # If file is a .pcap, use it for (mp)tcptrace
 for pcap_fname in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
     pcap_filename = pcap_fname[len(trace_dir_exp) + 1:]
