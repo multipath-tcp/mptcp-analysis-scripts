@@ -11,6 +11,7 @@ If you want to use this script, make sure you have the following dependencies:
   * [gnuplot](http://www.gnuplot.info/)
   * [Gnuplot.py](http://gnuplot-py.sourceforge.net/)
   * [mptcptrace](https://bitbucket.org/bhesmans/mptcptrace)
+  * [matplotlib](http://matplotlib.org/)
   * [numpy](https://pypi.python.org/pypi/numpy/)
   * [tcptrace](http://www.tcptrace.org/)
   * [tshark](https://www.wireshark.org/docs/man-pages/tshark.html)
@@ -25,3 +26,11 @@ To launch it, in a terminal, if you have your traces to analyze in an `input` fo
 To have more detailed information on how to use it, you can show the help by typing
 
 `./analyze -h`
+
+Once this first analysis done, you can agglomerate the different statistics obtained (by default in the `stats` folder) by typing
+
+`./summary`
+
+Again, to have more details about the possibilities of this script, please type
+
+`./summary -h`
