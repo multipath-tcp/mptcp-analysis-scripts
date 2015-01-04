@@ -25,6 +25,32 @@ from __future__ import print_function
 
 import os
 
+
+##################################################
+##               COMMON CONSTANTS               ##
+##################################################
+
+# Following constants are used to make the code cleaner and more robust (for dictionary)
+# Those are mainly determined by the output of mptcptrace
+RMNET = 'rmnet'
+WIFI = 'wifi'
+# IPv4 or IPv6
+TYPE = 'type'
+# Interface: RMNET or WIFI
+IF = 'interface'
+# Source IP address
+SADDR = 'saddr'
+# Destination IP address
+DADDR = 'daddr'
+# Source port
+SPORT = 'sport'
+# Destination port
+DPORT = 'dport'
+# Window scale for source
+WSCALESRC = 'wscalesrc'
+# Window scale for destination
+WSCALEDST = 'wscaledst'
+
 ##################################################
 ##               COMMON FUNCTIONS               ##
 ##################################################
