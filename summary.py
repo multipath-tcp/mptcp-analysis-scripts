@@ -17,6 +17,8 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
+#
+#  To install on this machine: matplotlib, numpy
 
 from __future__ import print_function
 
@@ -24,9 +26,12 @@ from __future__ import print_function
 ##                   IMPORTS                    ##
 ##################################################
 
-from common import check_directory_exists
+from common import *
 
 import argparse
+import Gnuplot
+import matplotlib.pyplot as plt
+import numpy as np
 import os
 import os.path
 import pickle
@@ -76,5 +81,60 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), stat_dir_e
             except IOError as e:
                 print(str(e) + ': skip stat file ' + fname)
 
-print(connections)
+##################################################
+##               PLOTTING RESULTS               ##
+##################################################
+
+
+def count_interesting_connections(data):
+    """ Return the number of interesting connections in data """
+    count = 0
+    for k, v in data.iteritems():
+        if isinstance(v, dict):
+            # Check for the dict v
+            count += count_interesting_connections(v)
+        else:
+            # Check the key k
+            if k == IF:
+                count += 1
+    return count
+
+
+N = len(connections)
+ind = np.arange(N)
+counts = []
+int_counts = []
+labels = []
+width = 0.35       # the width of the bars
+fig, ax = plt.subplots()
+
+# So far, simply count the number of connections
+for fname, data in connections.iteritems():
+    labels.append(fname)
+    counts.append(len(data))
+    int_counts.append(count_interesting_connections(data))
+
+tot_count = ax.bar(ind, counts, width, color='b')
+int_count = ax.bar(ind+width, int_counts, width, color='g')
+
+# add some text for labels, title and axes ticks
+ax.set_ylabel('Counts')
+ax.set_title('Counts of total and interesting connections')
+ax.set_xticks(ind+width)
+ax.set_xticklabels(labels)
+
+ax.legend((tot_count[0], int_count[0]),('Total', 'Interesting'))
+
+def autolabel(rects):
+    # attach some text labels
+    for rect in rects:
+        height = rect.get_height()
+        ax.text(rect.get_x()+rect.get_width()/2., 1.05*height, '%d'%int(height),
+                ha='center', va='bottom')
+
+autolabel(tot_count)
+autolabel(int_count)
+
+plt.show()
+
 print("End of summary")
