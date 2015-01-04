@@ -30,6 +30,7 @@ from __future__ import print_function
 ##                   IMPORTS                    ##
 ##################################################
 
+from common import check_directory_exists
 from numpy import *
 
 import argparse
@@ -148,17 +149,6 @@ stat_dir_exp = os.path.expanduser(stat_dir)
 ##################################################
 ##                 PREPROCESSING                ##
 ##################################################
-
-
-def check_directory_exists(directory):
-    """ Check if the directory exists, and create it if needed
-        If directory is a file, exit the program
-    """
-    if os.path.exists(directory):
-        if not os.path.isdir(directory):
-            print(directory + " is a file: stop")
-    else:
-        os.makedirs(directory)
 
 check_directory_exists(trace_dir_exp)
 for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp)):
