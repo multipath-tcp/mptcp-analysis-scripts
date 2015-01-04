@@ -24,6 +24,8 @@ from __future__ import print_function
 ##                   IMPORTS                    ##
 ##################################################
 
+from common import check_directory_exists
+
 import argparse
 import os
 import os.path
@@ -55,17 +57,6 @@ stat_dir_exp = os.path.expanduser(stat_dir)
 ##################################################
 ##                 GET THE DATA                 ##
 ##################################################
-
-#TODO write common functions in a separate file, to avoid code duplication
-def check_directory_exists(directory):
-    """ Check if the directory exists, and create it if needed
-        If directory is a file, exit the program
-    """
-    if os.path.exists(directory):
-        if not os.path.isdir(directory):
-            print(directory + " is a file: stop")
-    else:
-        os.makedirs(directory)
 
 check_directory_exists(stat_dir_exp)
 connections = {}
