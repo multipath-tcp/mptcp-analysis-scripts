@@ -30,7 +30,7 @@ from __future__ import print_function
 ##                   IMPORTS                    ##
 ##################################################
 
-from common import check_directory_exists
+from common import *
 from numpy import *
 
 import argparse
@@ -76,27 +76,6 @@ LOCALHOST_IPv4 = '127.0.0.1'
 PREFIX_WIFI_IF = '192.168.'
 # Size of Latin alphabet
 SIZE_LAT_ALPH = 26
-
-# Following constants are used to make the code cleaner and more robust (for dictionary)
-# Those are mainly determined by the output of mptcptrace
-RMNET = 'rmnet'
-WIFI = 'wifi'
-# IPv4 or IPv6
-TYPE = 'type'
-# Interface: RMNET or WIFI
-IF = 'interface'
-# Source IP address
-SADDR = 'saddr'
-# Destination IP address
-DADDR = 'daddr'
-# Source port
-SPORT = 'sport'
-# Destination port
-DPORT = 'dport'
-# Window scale for source
-WSCALESRC = 'wscalesrc'
-# Window scale for destination
-WSCALEDST = 'wscaledst'
 
 ##################################################
 ##                   ARGUMENTS                  ##
