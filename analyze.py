@@ -549,6 +549,30 @@ def get_flow_name(xpl_fname):
         return flow_name
 
 
+def process_tcptrace_cmd(cmd):
+    """ Launch the command cmd given in argument, and return a dictionary containing information
+        about connections of the pcap file analyzed
+        Options -l and --csv should be set
+    """
+    pcap_flow_data = pcap_fname[:-5] + '.out'
+    flow_data_file = open(pcap_flow_data, 'w+')
+    if subprocess.call(cmd.split(), stdout=flow_data_file) != 0:
+        print("Error of tcptrace with " + pcap_fname + "; skip process")
+        return
+    connections = extract_tcp_flow_data(flow_data_file)
+
+    # Don't forget to close and remove pcap_flow_data
+    flow_data_file.close()
+    os.remove(pcap_flow_data)
+    return connections
+
+
+def correct_tcp_trace(pcap_fname):
+    """ Make the link between two unidirectional connections that form one bidirectional one """
+    cmd = "tcptrace -l --csv " + pcap_fname
+    connections = process_tcptrace_cmd(cmd)
+
+
 def process_tcp_trace(pcap_fname):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
@@ -561,16 +585,7 @@ def process_tcp_trace(pcap_fname):
         + pcap_fname[:-5] + "_ -C -S -T -zxy -n -y -l --csv --noshowzwndprobes --noshowoutorder --noshowrexmit "\
         + "--noshowsacks --noshowzerowindow --noshowurg --noshowdupack3 --noshowzerolensegs " \
         + pcap_fname
-    pcap_flow_data = pcap_fname[:-5] + '.out'
-    flow_data_file = open(pcap_flow_data, 'w+')
-    if subprocess.call(cmd.split(), stdout=flow_data_file) != 0:
-        print("Error of tcptrace with " + pcap_fname + "; skip process")
-        return
-    connections = extract_tcp_flow_data(flow_data_file)
-
-    # Don't forget to close and remove pcap_flow_data
-    flow_data_file.close()
-    os.remove(pcap_flow_data)
+    connections = process_tcptrace_cmd(cmd)
 
     # The tcptrace call will generate .xpl files to cope with
     for xpl_fname in glob.glob(os.path.join(trace_dir_exp, pcap_fname[len(trace_dir_exp) + 1:-5]
