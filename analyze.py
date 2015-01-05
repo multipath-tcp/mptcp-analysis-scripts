@@ -72,6 +72,8 @@ DEF_GRAPH_DIR = 'graphs'
 DEF_STAT_DIR = 'stats'
 # IPv4 localhost address
 LOCALHOST_IPv4 = '127.0.0.1'
+# Port number of RedSocks
+PORT_RSOCKS = '8123'
 # Prefix of the Wi-Fi interface IP address
 PREFIX_WIFI_IF = '192.168.'
 # Size of Latin alphabet
@@ -567,11 +569,30 @@ def process_tcptrace_cmd(cmd):
     return connections
 
 
+def get_connection_data_with_ip_port(connections, ip, port, dst=True):
+    """ Get data for connection with destination IP ip and port port in connections
+        If no connection found, return None
+        Support for dst=False will be provided if needed
+    """
+    for conn, data in connections.iteritems():
+        if data[DADDR] == ip and data[DPORT] == port:
+            return data
+
+    # If reach this, no matching connection found
+    return None
+
+
 def correct_tcp_trace(pcap_fname):
     """ Make the link between two unidirectional connections that form one bidirectional one """
     cmd = "tcptrace -l --csv " + pcap_fname
     connections = process_tcptrace_cmd(cmd)
 
+    # Create the remaining_file
+    remain_pcap_fname = pcap_fname[:-5] + "_rem.pcap"
+    num = 0
+    for conn, data in connections.iteritems():
+        if data[DADDR] == LOCALHOST_IPv4 and data[DPORT] == PORT_RSOCKS:
+            other_data = get_connection_data_with_ip_port(data[SADDR], data[SPORT])
 
 def process_tcp_trace(pcap_fname):
     """ Process a tcp pcap file and generate graphs of its connections """
