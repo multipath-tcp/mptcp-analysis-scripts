@@ -354,9 +354,10 @@ def create_graph_csv(pcap_fname, csv_fname, connections):
     g.reset()
 
 
-def process_mptcp_trace(pcap_fname):
-    """ Process a mptcp pcap file and generate graphs of its subflows """
-    cmd = 'mptcptrace -f ' + pcap_fname + ' -s -w 2'
+def process_mptcptrace_cmd(cmd):
+    """ Launch the command cmd given in argument, and return a dictionary containing information
+        about connections of the pcap file analyzed
+    """
     pcap_flow_data = pcap_fname[:-5] + '.out'
     flow_data_file = open(pcap_flow_data, 'w+')
     if subprocess.call(cmd.split(), stdout=flow_data_file) != 0:
@@ -367,6 +368,13 @@ def process_mptcp_trace(pcap_fname):
     # Don't forget to close and remove pcap_flow_data
     flow_data_file.close()
     os.remove(pcap_flow_data)
+    return connections
+
+
+def process_mptcp_trace(pcap_fname):
+    """ Process a mptcp pcap file and generate graphs of its subflows """
+    cmd = 'mptcptrace -f ' + pcap_fname + ' -s -w 2'
+    connections = process_mptcptrace_cmd(cmd)
 
     # The mptcptrace call will generate .csv files to cope with
     for csv_fname in glob.glob('*.csv'):
