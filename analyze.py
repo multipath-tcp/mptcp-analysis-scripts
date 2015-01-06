@@ -22,7 +22,7 @@
 # Details when running analyze.py -h
 #
 # To install on this machine: gnuplot, gnuplot.py, numpy, mptcptrace, tcptrace,
-# xpl2gpl, tshark
+# xpl2gpl, tshark, tcprewrite
 
 from __future__ import print_function
 
