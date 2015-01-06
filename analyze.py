@@ -183,7 +183,30 @@ def save_connections(pcap_fname, connections):
         print(str(e) + ': no stat file for ' + pcap_fname)
 
 
-def split_and_replace(remain_pcap_fname, data, other_data, num):
+def get_connection_data_with_ip_port_tcp(connections, ip, port, dst=True):
+    """ Get data for TCP connection with destination IP ip and port port in connections
+        If no connection found, return None
+        Support for dst=False will be provided if needed
+    """
+    for conn, data in connections.iteritems():
+        if data[DADDR] == ip and data[DPORT] == port:
+            return data
+
+    # If reach this, no matching connection found
+    return None
+
+
+def copy_remain_pcap_file(pcap_fname):
+    """ Given a pcap filename, return the filename of a copy, used for correction of traces """
+    remain_pcap_fname = pcap_fname[:-5] + "__rem.pcap"
+    cmd = 'cp ' + pcap_fname + " " + remain_pcap_fname
+    if subprocess.call(cmd.split()) != 0:
+        print("Error when copying " + pcap_fname + ": skip tcp correction")
+        return None
+    return remain_pcap_fname
+
+
+def split_and_replace(pcap_fname, remain_pcap_fname, data, other_data, num):
     """ Split remain_pcap_fname and replace DADDR and DPORT of data by SADDR and DADDR of other_data
         num will be the numerotation of the splitted file
     """
@@ -191,20 +214,24 @@ def split_and_replace(remain_pcap_fname, data, other_data, num):
     condition = '(tcp.srcport==' + \
         data[SPORT] + ')or(tcp.dstport==' + data[SPORT] + ')'
     tmp_split_fname = pcap_fname[:-5] + "__tmp.pcap"
-    cmd = "tshark -r " + remain_pcap_fname + " -Y '" + \
-        condition + "' -w " + split_fname
+    cmd = "tshark -r " + remain_pcap_fname + " -Y " + \
+        condition + " -w " + tmp_split_fname
     if subprocess.call(cmd.split()) != 0:
         print(
             "Error when tshark port " + data[SPORT] + ": skip tcp correction")
-        return
+        return -1
     tmp_remain_fname = pcap_fname[:-5] + "__tmprem.pcap"
-    cmd = "tshark -r " + remain_pcap_fname + " -Y '" + \
-        "!(" + condition + ")" + "' -w " + tmp_remain_fname
+    cmd = "tshark -r " + remain_pcap_fname + " -Y " + \
+        "!(" + condition + ")" + " -w " + tmp_remain_fname
     if subprocess.call(cmd.split()) != 0:
         print(
             "Error when tshark port !" + data[SPORT] + ": skip tcp correction")
-        return
+        return -1
     cmd = "mv " + tmp_remain_fname + " " + remain_pcap_fname
+    if subprocess.call(cmd.split()) != 0:
+        print(
+            "Error when moving " + tmp_remain_fname + " to " + remain_pcap_fname +  ": skip tcp correction")
+        return -1
 
     # Replace meaningless IP and port with the "real" values
     split_fname = pcap_fname[:-5] + "__" + str(num) + ".pcap"
@@ -213,29 +240,11 @@ def split_and_replace(remain_pcap_fname, data, other_data, num):
     if subprocess.call(cmd.split()) != 0:
         print(
             "Error with tcprewrite " + data[SPORT] + ": skip tcp correction")
-        return
-    num += 1
+        return -1
     os.remove(tmp_split_fname)
+    return 0
 
 
-def correct_trace(pcap_fname, connections):
-    """ Make the link between two unidirectional connections that form one bidirectional one """
-    # Create the remaining_file
-    remain_pcap_fname = pcap_fname[:-5] + "__rem.pcap"
-    cmd = 'cp ' + pcap_fname + " " + remain_pcap_fname
-    if subprocess.call(cmd.split()) != 0:
-        print("Error when copying " + pcap_fname + ": skip tcp correction")
-        return
-
-    num = 0
-    for conn, data in connections.iteritems():
-        if data[DADDR] == LOCALHOST_IPv4 and data[DPORT] == PORT_RSOCKS:
-            other_data = get_connection_data_with_ip_port(
-                data[SADDR], data[SPORT])
-            if other_data:
-                split_and_replace(remain_pcap_fname, data, other_data, num)
-
-    # Merge small pcap files into a unique one
 def merge_and_clean_sub_pcap(pcap_fname):
     """ Merge pcap files with name beginning with pcap_fname followed by two underscores and delete
         them
@@ -439,13 +448,6 @@ def process_mptcptrace_cmd(cmd):
     flow_data_file.close()
     os.remove(pcap_flow_data)
     return connections
-
-
-def correct_mptcp_trace(pcap_fname):
-    """ Make the link between two unidirectional connections that form one bidirectional one """
-    cmd = "mptcptrace -f " + pcap_fname
-    connections = process_mptcptrace_cmd(cmd)
-    correct_trace(pcap_fname, connections)
 
 
 def process_mptcp_trace(pcap_fname):
@@ -654,24 +656,29 @@ def process_tcptrace_cmd(cmd):
     return connections
 
 
-def get_connection_data_with_ip_port(connections, ip, port, dst=True):
-    """ Get data for connection with destination IP ip and port port in connections
-        If no connection found, return None
-        Support for dst=False will be provided if needed
+def correct_trace(pcap_fname):
+    """ Make the link between two unidirectional connections that form one bidirectional one
+        Do this also for mptcp, because mptcptrace will not be able to find all conversations
     """
-    for conn, data in connections.iteritems():
-        if data[DADDR] == ip and data[DPORT] == port:
-            return data
-
-    # If reach this, no matching connection found
-    return None
-
-
-def correct_tcp_trace(pcap_fname):
-    """ Make the link between two unidirectional connections that form one bidirectional one """
-    cmd = "tcptrace -l --csv " + pcap_fname
+    cmd = "tcptrace -n -l --csv " + pcap_fname
     connections = process_tcptrace_cmd(cmd)
-    correct_trace(pcap_fname, connections)
+    # Create the remaining_file
+    remain_pcap_fname = copy_remain_pcap_file(pcap_fname)
+    if not remain_pcap_fname:
+        return
+
+    num = 0
+    for conn, data in connections.iteritems():
+        if data[DADDR] == LOCALHOST_IPv4 and data[DPORT] == PORT_RSOCKS:
+            other_data = get_connection_data_with_ip_port_tcp(
+                connections, data[SADDR], data[SPORT])
+            if other_data:
+                if split_and_replace(pcap_fname, remain_pcap_fname, data, other_data, num) != 0:
+                    print("Stop correcting trace " + pcap_fname)
+                    return
+        num += 1
+        print("Corrected: " + str(num) + "/" + str(len(connections)))
+
     # Merge small pcap files into a unique one
     merge_and_clean_sub_pcap(pcap_fname)
 
@@ -743,10 +750,10 @@ for pcap_fname in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
         clean_loopback_pcap(pcap_fname)
     # Prefix of the name determine the protocol used
     if pcap_filename.startswith('mptcp'):
-        correct_mptcp_trace(pcap_fname)
+        correct_trace(pcap_fname)
         process_mptcp_trace(pcap_fname)
     elif pcap_filename.startswith('tcp'):
-        correct_tcp_trace(pcap_fname)
+        correct_trace(pcap_fname)
         process_tcp_trace(pcap_fname)
     else:
         print(pcap_fname + ": don't know the protocol used; skipped")
