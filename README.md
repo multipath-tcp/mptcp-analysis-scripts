@@ -13,8 +13,8 @@ If you want to use this script, make sure you have the following dependencies:
   * [mptcptrace](https://bitbucket.org/bhesmans/mptcptrace)
   * [matplotlib](http://matplotlib.org/)
   * [numpy](https://pypi.python.org/pypi/numpy/)
-  * [tcptrace](http://www.tcptrace.org/)
   * [tcpreplay](http://tcpreplay.appneta.com/wiki/installation.html#downloads)
+  * [tcptrace](http://www.tcptrace.org/)
   * [tshark](https://www.wireshark.org/docs/man-pages/tshark.html)
   * [xpl2gpl](http://www.tcptrace.org/xpl2gpl/)
 
