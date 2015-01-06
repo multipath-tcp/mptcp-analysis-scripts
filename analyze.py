@@ -344,14 +344,15 @@ def interesting_mptcp_graph(csv_fname, connections):
         Note that is the graph is interesting and IPv4, indicates if the traffic is Wi-Fi or rmnet
     """
     connection_id = get_connection_id(csv_fname)
+    interesting = False
     for sub_flow_id, data in connections[connection_id].iteritems():
         # Only had the case for IPv4, but what is its equivalent in IPv6?
         if not data[TYPE] == 'IPv4':
-            return True
+            interesting = True
         if not (data[SADDR] == LOCALHOST_IPv4 and data[DADDR] == LOCALHOST_IPv4):
             indicates_wifi_or_rmnet(data)
-            return True
-    return False
+            interesting = True
+    return interesting
 
 
 def get_begin_values(first_line):
