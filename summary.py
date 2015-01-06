@@ -89,33 +89,42 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), stat_dir_e
 def count_interesting_connections(data):
     """ Return the number of interesting connections in data """
     count = 0
+    tot = 0
     for k, v in data.iteritems():
         if isinstance(v, dict):
             # Check for the dict v
-            count += count_interesting_connections(v)
+            int_tot, int_count = count_interesting_connections(v)
+            tot += int_tot
+            count += int_count
         else:
             # Check the key k
             if k == IF:
                 count += 1
-    return count
+            if k == DADDR:
+                tot += 1
+    return tot, count
 
 
 N = len(connections)
 ind = np.arange(N)
 counts = []
+flo_counts = []
 int_counts = []
 labels = []
-width = 0.35       # the width of the bars
+width = 0.30       # the width of the bars
 fig, ax = plt.subplots()
 
 # So far, simply count the number of connections
 for fname, data in connections.iteritems():
     labels.append(fname)
     counts.append(len(data))
-    int_counts.append(count_interesting_connections(data))
+    tot_flow, int_flow = count_interesting_connections(data)
+    flo_counts.append(tot_flow)
+    int_counts.append(int_flow)
 
 tot_count = ax.bar(ind, counts, width, color='b')
-int_count = ax.bar(ind+width, int_counts, width, color='g')
+flo_count = ax.bar(ind+width, flo_counts, width, color='g')
+int_count = ax.bar(ind+2*width, int_counts, width, color='r')
 
 # add some text for labels, title and axes ticks
 ax.set_ylabel('Counts')
@@ -123,7 +132,7 @@ ax.set_title('Counts of total and interesting connections')
 ax.set_xticks(ind+width)
 ax.set_xticklabels(labels)
 
-ax.legend((tot_count[0], int_count[0]),('Total', 'Interesting'))
+ax.legend((tot_count[0], flo_count[0], int_count[0]),('Total Connections', 'Total Flows', 'Interesting Flows'))
 
 def autolabel(rects):
     # attach some text labels
@@ -133,8 +142,8 @@ def autolabel(rects):
                 ha='center', va='bottom')
 
 autolabel(tot_count)
+autolabel(flo_count)
 autolabel(int_count)
 
 plt.show()
-
 print("End of summary")
