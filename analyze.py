@@ -432,7 +432,7 @@ def correct_mptcp_trace(pcap_fname):
     """ Make the link between two unidirectional connections that form one bidirectional one """
     cmd = "mptcptrace -f " + pcap_fname
     connections = process_mptcptrace_cmd(cmd)
-    correct_trace(pcap_file, connections)
+    correct_trace(pcap_fname, connections)
 
 
 def process_mptcp_trace(pcap_fname):
