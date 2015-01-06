@@ -639,7 +639,7 @@ def get_flow_name(xpl_fname):
 def process_tcptrace_cmd(cmd):
     """ Launch the command cmd given in argument, and return a dictionary containing information
         about connections of the pcap file analyzed
-        Options -l and --csv should be set
+        Options -n, -l and --csv should be set
     """
     pcap_flow_data = pcap_fname[:-5] + '.out'
     flow_data_file = open(pcap_flow_data, 'w+')
