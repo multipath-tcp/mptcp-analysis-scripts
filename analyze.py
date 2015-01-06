@@ -236,6 +236,10 @@ def correct_trace(pcap_fname, connections):
                 split_and_replace(remain_pcap_fname, data, other_data, num)
 
     # Merge small pcap files into a unique one
+def merge_and_clean_sub_pcap(pcap_fname):
+    """ Merge pcap files with name beginning with pcap_fname followed by two underscores and delete
+        them
+    """
     to_merge = ""
     for subpcap_fname in glob.glob(pcap_fname[:-5] + '__*.pcap'):
         to_merge += " " + subpcap_fname
@@ -245,6 +249,8 @@ def correct_trace(pcap_fname, connections):
         print(
             "Error with mergecap " + pcap_fname + ": skip tcp correction")
         return
+    for subpcap_fname in glob.glob(pcap_fname[:-5] + '__*.pcap'):
+        os.remove(subpcap_fname)
 
 ##################################################
 ##                  MPTCPTRACE                  ##
@@ -666,6 +672,8 @@ def correct_tcp_trace(pcap_fname):
     cmd = "tcptrace -l --csv " + pcap_fname
     connections = process_tcptrace_cmd(cmd)
     correct_trace(pcap_fname, connections)
+    # Merge small pcap files into a unique one
+    merge_and_clean_sub_pcap(pcap_fname)
 
 
 def process_tcp_trace(pcap_fname):
