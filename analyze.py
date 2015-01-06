@@ -183,6 +183,41 @@ def save_connections(pcap_fname, connections):
         print(str(e) + ': no stat file for ' + pcap_fname)
 
 
+def split_and_replace(remain_pcap_fname, data, other_data, num):
+    """ Split remain_pcap_fname and replace DADDR and DPORT of data by SADDR and DADDR of other_data
+        num will be the numerotation of the splitted file
+    """
+    # Split on the port criterion
+    condition = '(tcp.srcport==' + \
+        data[SPORT] + ')or(tcp.dstport==' + data[SPORT] + ')'
+    tmp_split_fname = pcap_fname[:-5] + "__tmp.pcap"
+    cmd = "tshark -r " + remain_pcap_fname + " -Y '" + \
+        condition + "' -w " + split_fname
+    if subprocess.call(cmd.split()) != 0:
+        print(
+            "Error when tshark port " + data[SPORT] + ": skip tcp correction")
+        return
+    tmp_remain_fname = pcap_fname[:-5] + "__tmprem.pcap"
+    cmd = "tshark -r " + remain_pcap_fname + " -Y '" + \
+        "!(" + condition + ")" + "' -w " + tmp_remain_fname
+    if subprocess.call(cmd.split()) != 0:
+        print(
+            "Error when tshark port !" + data[SPORT] + ": skip tcp correction")
+        return
+    cmd = "mv " + tmp_remain_fname + " " + remain_pcap_fname
+
+    # Replace meaningless IP and port with the "real" values
+    split_fname = pcap_fname[:-5] + "__" + str(num) + ".pcap"
+    cmd = "tcprewrite --portmap=" + data[DPORT] + ":" + other_data[SPORT] + " --pnat=" + data[
+        DADDR] + ":" + other_data[SADDR] + " --infile=" + tmp_split_fname + " --outfile=" + split_fname
+    if subprocess.call(cmd.split()) != 0:
+        print(
+            "Error with tcprewrite " + data[SPORT] + ": skip tcp correction")
+        return
+    num += 1
+    os.remove(tmp_split_fname)
+
+
 def correct_trace(pcap_fname, connections):
     """ Make the link between two unidirectional connections that form one bidirectional one """
     # Create the remaining_file
@@ -198,35 +233,7 @@ def correct_trace(pcap_fname, connections):
             other_data = get_connection_data_with_ip_port(
                 data[SADDR], data[SPORT])
             if other_data:
-                # Split on the port criterion
-                condition = '(tcp.srcport==' + \
-                    data[SPORT] + ')or(tcp.dstport==' + data[SPORT] + ')'
-                tmp_split_fname = pcap_fname[:-5] + "__tmp.pcap"
-                cmd = "tshark -r " + remain_pcap_fname + " -Y '" + \
-                    condition + "' -w " + split_fname
-                if subprocess.call(cmd.split()) != 0:
-                    print(
-                        "Error when tshark port " + data[SPORT] + ": skip tcp correction")
-                    return
-                tmp_remain_fname = pcap_fname[:-5] + "__tmprem.pcap"
-                cmd = "tshark -r " + remain_pcap_fname + " -Y '" + \
-                    "!(" + condition + ")" + "' -w " + tmp_remain_fname
-                if subprocess.call(cmd.split()) != 0:
-                    print(
-                        "Error when tshark port !" + data[SPORT] + ": skip tcp correction")
-                    return
-                cmd = "mv " + tmp_remain_fname + " " + remain_pcap_fname
-
-                # Replace meaningless IP and port with the "real" values
-                split_fname = pcap_fname[:-5] + "__" + str(num) + ".pcap"
-                cmd = "tcprewrite --portmap=" + data[DPORT] + ":" + other_data[SPORT] + " --pnat=" + data[
-                    DADDR] + ":" + other_data[SADDR] + " --infile=" + tmp_split_fname + " --outfile=" + split_fname
-                if subprocess.call(cmd.split()) != 0:
-                    print(
-                        "Error with tcprewrite " + data[SPORT] + ": skip tcp correction")
-                    return
-                num += 1
-                os.remove(tmp_split_fname)
+                split_and_replace(remain_pcap_fname, data, other_data, num)
 
     # Merge small pcap files into a unique one
     to_merge = ""
