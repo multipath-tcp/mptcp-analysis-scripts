@@ -44,6 +44,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import traceback
 
 
 class cd:
@@ -792,6 +793,7 @@ def thread_launch(thread_id, clean):
         try:
             launch_analyze_pcap(pcap_fname, clean)
         except:
+            print(traceback.format_exc())
             print('Error when analyzing ' + pcap_fname + ': skip')
     print("Thread " + str(thread_id) + ": End")
 
