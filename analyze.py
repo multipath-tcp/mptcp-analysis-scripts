@@ -795,6 +795,7 @@ pcap_list = glob.glob(os.path.join(trace_dir_exp, '*.pcap'))
 pcap_list.reverse() # we will use pop: use the natural order
 
 threads = []
+nb_threads = min(nb_threads, len(pcap_list))
 if nb_threads > 1:
     # Launch new thread
     for thread_id in range(nb_threads):
