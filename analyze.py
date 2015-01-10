@@ -39,8 +39,10 @@ import Gnuplot
 import os
 import os.path
 import pickle
+import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 
 
@@ -371,13 +373,13 @@ def get_begin_values(first_line):
     return float(split_line[0]), int(split_line[1])
 
 
-def write_graph_csv(csv_fname, data, begin_time, begin_seq):
+def write_graph_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq):
     """ Write in the graphs directory a new csv file containing relative values
         for plotting them
         Exit the program if an IOError is raised
     """
     try:
-        graph_fname = os.path.join(graph_dir_exp, csv_fname)
+        graph_fname = os.path.join(csv_graph_tmp_dir, csv_fname)
         graph_file = open(graph_fname, 'w')
         # Modify lines for that
         for line in data:
@@ -464,39 +466,48 @@ def process_mptcptrace_cmd(cmd, pcap_fname):
 
 def process_mptcp_trace(pcap_fname):
     """ Process a mptcp pcap file and generate graphs of its subflows """
-    cmd = 'mptcptrace -f ' + pcap_fname + ' -s -w 2'
-    connections = process_mptcptrace_cmd(cmd, pcap_fname)
+    csv_tmp_dir = tempfile.mkdtemp(dir=os.getcwd())
+    with cd(csv_tmp_dir):
+        cmd = 'mptcptrace -f ' + pcap_fname + ' -s -w 2'
+        connections = process_mptcptrace_cmd(cmd, pcap_fname)
 
-    # The mptcptrace call will generate .csv files to cope with
-    for csv_fname in glob.glob('*.csv'):
-        try:
-            csv_file = open(csv_fname)
-            data = csv_file.readlines()
-            # Check if there is data in file (and not only one line of 0s)
-            if not data == [] and len(data) > 1:
-                # Collect begin time and seq num to plot graph starting at 0
-                begin_time, begin_seq = get_begin_values(data[0])
-                write_graph_csv(csv_fname, data, begin_time, begin_seq)
-
-            csv_file.close()
-            # Remove the csv file
-            os.remove(csv_fname)
-
-        except IOError as e:
-            print('IOError for ' + csv_fname + ': skipped')
-            continue
-        except ValueError as e:
-            print('ValueError for ' + csv_fname + ': skipped')
-            continue
-
-    with cd(graph_dir_exp):
+        csv_graph_tmp_dir = tempfile.mkdtemp(dir=graph_dir_exp)
+        # The mptcptrace call will generate .csv files to cope with
         for csv_fname in glob.glob('*.csv'):
-            create_graph_csv(pcap_fname, csv_fname, connections)
-            # Remove the csv file
-            os.remove(csv_fname)
+            try:
+                csv_file = open(csv_fname)
+                data = csv_file.readlines()
+                # Check if there is data in file (and not only one line of 0s)
+                if not data == [] and len(data) > 1:
+                    # Collect begin time and seq num to plot graph starting at 0
+                    begin_time, begin_seq = get_begin_values(data[0])
 
-    # Save connections info
-    save_connections(pcap_fname, connections)
+                    write_graph_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq)
+
+                csv_file.close()
+                # Remove the csv file
+                os.remove(csv_fname)
+
+            except IOError as e:
+                print('IOError for ' + csv_fname + ': skipped')
+                continue
+            except ValueError as e:
+                print('ValueError for ' + csv_fname + ': skipped')
+                continue
+
+        with cd(csv_graph_tmp_dir):
+            for csv_fname in glob.glob('*.csv'):
+                create_graph_csv(pcap_fname, csv_fname, connections)
+                # Remove the csv file
+                os.remove(csv_fname)
+
+        # Save connections info
+        save_connections(pcap_fname, connections)
+
+        # Remove temp dirs
+        shutil.rmtree(csv_graph_tmp_dir)
+
+    shutil.rmtree(csv_tmp_dir)
 
 ##################################################
 ##                   TCPTRACE                   ##
