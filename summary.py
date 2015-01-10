@@ -55,6 +55,8 @@ parser.add_argument(
     "-stat", help="directory where the stat files are stored")
 parser.add_argument(
     "-app", help="application results to summarize")
+parser.add_argument(
+    "agg", help="aggregate data, in format START,STOP")
 args = parser.parse_args()
 
 if args.stat:
@@ -62,6 +64,21 @@ if args.stat:
 
 if args.app:
     app_name = args.app
+
+split_agg = args.agg.split(',')
+
+if not len(split_agg) == 2 or not is_number(split_agg[0]) or not is_number(split_agg[1]):
+    print("The aggregation argument is not well formatted")
+    parser.print_help()
+    exit(1)
+
+start_time = split_agg[0]
+stop_time = split_agg[1]
+
+if int(start_time) > int(stop_time):
+    print("The start time is posterior to the stop time")
+    parser.print_help()
+    exit(2)
 
 stat_dir_exp = os.path.expanduser(stat_dir)
 
