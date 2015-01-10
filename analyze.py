@@ -39,8 +39,12 @@ import Gnuplot
 import os
 import os.path
 import pickle
+import shutil
 import subprocess
 import sys
+import tempfile
+import threading
+import traceback
 
 
 class cd:
@@ -70,6 +74,8 @@ DEF_TRACE_DIR = 'traces'
 DEF_GRAPH_DIR = 'graphs'
 # The default stat directory
 DEF_STAT_DIR = 'stats'
+# The default number of threads
+DEF_NB_THREADS = 1
 # IPv4 localhost address
 LOCALHOST_IPv4 = '127.0.0.1'
 # Port number of RedSocks
@@ -96,13 +102,14 @@ parser.add_argument("-s",
     "--stat", help="directory where the stats of the pcap files will be stored", default=DEF_STAT_DIR)
 parser.add_argument("-p",
     "--pcap", help="analyze only pcap files containing the given string", default="")
+parser.add_argument("-j",
+    "--threads", type=int, help="process the analyse separated threads", default=DEF_NB_THREADS)
 parser.add_argument("-k",
     "--keep", help="keep the original file with -k option of gunzip, if it exists",
                     action="store_true")
 parser.add_argument("-c",
     "--clean", help="remove noisy traffic on lo", action="store_true")
 args = parser.parse_args()
-
 
 in_dir_exp = os.path.expanduser(args.input)
 trace_dir_exp = os.path.expanduser(args.trace)
@@ -342,13 +349,13 @@ def get_begin_values(first_line):
     return float(split_line[0]), int(split_line[1])
 
 
-def write_graph_csv(csv_fname, data, begin_time, begin_seq):
+def write_graph_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq):
     """ Write in the graphs directory a new csv file containing relative values
         for plotting them
         Exit the program if an IOError is raised
     """
     try:
-        graph_fname = os.path.join(graph_dir_exp, csv_fname)
+        graph_fname = os.path.join(csv_graph_tmp_dir, csv_fname)
         graph_file = open(graph_fname, 'w')
         # Modify lines for that
         for line in data:
@@ -416,7 +423,7 @@ def create_graph_csv(pcap_fname, csv_fname, connections):
     g.reset()
 
 
-def process_mptcptrace_cmd(cmd):
+def process_mptcptrace_cmd(cmd, pcap_fname):
     """ Launch the command cmd given in argument, and return a dictionary containing information
         about connections of the pcap file analyzed
     """
@@ -435,39 +442,48 @@ def process_mptcptrace_cmd(cmd):
 
 def process_mptcp_trace(pcap_fname):
     """ Process a mptcp pcap file and generate graphs of its subflows """
-    cmd = 'mptcptrace -f ' + pcap_fname + ' -s -w 2'
-    connections = process_mptcptrace_cmd(cmd)
+    csv_tmp_dir = tempfile.mkdtemp(dir=os.getcwd())
+    with cd(csv_tmp_dir):
+        cmd = 'mptcptrace -f ' + pcap_fname + ' -s -w 2'
+        connections = process_mptcptrace_cmd(cmd, pcap_fname)
 
-    # The mptcptrace call will generate .csv files to cope with
-    for csv_fname in glob.glob('*.csv'):
-        try:
-            csv_file = open(csv_fname)
-            data = csv_file.readlines()
-            # Check if there is data in file (and not only one line of 0s)
-            if not data == [] and len(data) > 1:
-                # Collect begin time and seq num to plot graph starting at 0
-                begin_time, begin_seq = get_begin_values(data[0])
-                write_graph_csv(csv_fname, data, begin_time, begin_seq)
-
-            csv_file.close()
-            # Remove the csv file
-            os.remove(csv_fname)
-
-        except IOError as e:
-            print('IOError for ' + csv_fname + ': skipped')
-            continue
-        except ValueError as e:
-            print('ValueError for ' + csv_fname + ': skipped')
-            continue
-
-    with cd(graph_dir_exp):
+        csv_graph_tmp_dir = tempfile.mkdtemp(dir=graph_dir_exp)
+        # The mptcptrace call will generate .csv files to cope with
         for csv_fname in glob.glob('*.csv'):
-            create_graph_csv(pcap_fname, csv_fname, connections)
-            # Remove the csv file
-            os.remove(csv_fname)
+            try:
+                csv_file = open(csv_fname)
+                data = csv_file.readlines()
+                # Check if there is data in file (and not only one line of 0s)
+                if not data == [] and len(data) > 1:
+                    # Collect begin time and seq num to plot graph starting at 0
+                    begin_time, begin_seq = get_begin_values(data[0])
 
-    # Save connections info
-    save_connections(pcap_fname, connections)
+                    write_graph_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq)
+
+                csv_file.close()
+                # Remove the csv file
+                os.remove(csv_fname)
+
+            except IOError as e:
+                print('IOError for ' + csv_fname + ': skipped')
+                continue
+            except ValueError as e:
+                print('ValueError for ' + csv_fname + ': skipped')
+                continue
+
+        with cd(csv_graph_tmp_dir):
+            for csv_fname in glob.glob('*.csv'):
+                create_graph_csv(pcap_fname, csv_fname, connections)
+                # Remove the csv file
+                os.remove(csv_fname)
+
+        # Save connections info
+        save_connections(pcap_fname, connections)
+
+        # Remove temp dirs
+        shutil.rmtree(csv_graph_tmp_dir)
+
+    shutil.rmtree(csv_tmp_dir)
 
 ##################################################
 ##                   TCPTRACE                   ##
@@ -612,7 +628,7 @@ def get_flow_name(xpl_fname):
         return flow_name
 
 
-def process_tcptrace_cmd(cmd):
+def process_tcptrace_cmd(cmd, pcap_fname):
     """ Launch the command cmd given in argument, and return a dictionary containing information
         about connections of the pcap file analyzed
         Options -n, -l and --csv should be set
@@ -635,7 +651,7 @@ def correct_trace(pcap_fname):
         Do this also for mptcp, because mptcptrace will not be able to find all conversations
     """
     cmd = "tcptrace -n -l --csv " + pcap_fname
-    connections = process_tcptrace_cmd(cmd)
+    connections = process_tcptrace_cmd(cmd, pcap_fname)
     # Create the remaining_file
     remain_pcap_fname = copy_remain_pcap_file(pcap_fname)
     if not remain_pcap_fname:
@@ -651,7 +667,7 @@ def correct_trace(pcap_fname):
                     print("Stop correcting trace " + pcap_fname)
                     return
         num += 1
-        print("Corrected: " + str(num) + "/" + str(len(connections)))
+        print(os.path.basename(pcap_fname) + ": Corrected: " + str(num) + "/" + str(len(connections)))
 
     # Merge small pcap files into a unique one
     merge_and_clean_sub_pcap(pcap_fname)
@@ -711,16 +727,13 @@ def process_tcp_trace(pcap_fname):
     save_connections(pcap_fname, connections)
 
 ##################################################
-##                     MAIN                     ##
+##                   THREADS                    ##
 ##################################################
 
-check_directory_exists(graph_dir_exp)
-check_directory_exists(stat_dir_exp)
-# If file is a .pcap, use it for (mp)tcptrace
-for pcap_fname in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
-    pcap_filename = pcap_fname[len(trace_dir_exp) + 1:]
+def launch_analyze_pcap(pcap_fname, clean):
+    pcap_filename = os.path.basename(pcap_fname)
     # Cleaning, if needed (in future pcap, tcpdump should do the job)
-    if args.clean:
+    if clean:
         clean_loopback_pcap(pcap_fname)
     # Prefix of the name determine the protocol used
     if pcap_filename.startswith('mptcp'):
@@ -734,5 +747,45 @@ for pcap_fname in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
 
     print('End for file ' + pcap_fname)
     os.remove(pcap_fname)
+
+def thread_launch(thread_id, clean):
+    global pcap_list
+    while True:
+        try:
+            pcap_fname = pcap_list.pop()
+        except IndexError: # no more thread
+            break
+        print("Thread " + str(thread_id) + ": Analyze: " + pcap_fname)
+        try:
+            launch_analyze_pcap(pcap_fname, clean)
+        except:
+            print(traceback.format_exc())
+            print('Error when analyzing ' + pcap_fname + ': skip')
+    print("Thread " + str(thread_id) + ": End")
+
+##################################################
+##                     MAIN                     ##
+##################################################
+
+check_directory_exists(graph_dir_exp)
+check_directory_exists(stat_dir_exp)
+# If file is a .pcap, use it for (mp)tcptrace
+pcap_list = glob.glob(os.path.join(trace_dir_exp, '*.pcap'))
+pcap_list.reverse() # we will use pop: use the natural order
+
+threads = []
+args.threads = min(args.threads, len(pcap_list))
+if args.threads > 1:
+    # Launch new thread
+    for thread_id in range(args.threads):
+        thread = threading.Thread(target=thread_launch, args=(thread_id, args.clean))
+        thread.start()
+        threads.append(thread)
+    # Wait
+    for thread in threads:
+        thread.join()
+else:
+    thread_launch(0, args.clean)
+
 
 print('End of analyze')
