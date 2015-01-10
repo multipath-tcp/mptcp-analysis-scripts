@@ -91,19 +91,21 @@ pcap_contains = ""
 
 parser = argparse.ArgumentParser(
     description="Analyze pcap files of TCP or MPTCP connections")
-parser.add_argument(
-    "-input", help="input directory of the (possibly compressed) pcap files")
-parser.add_argument("-trace", help="temporary directory that will be used to store uncompressed "
+parser.add_argument("-i",
+    "--input", help="input directory of the (possibly compressed) pcap files")
+parser.add_argument("-t",
+    "--trace", help="temporary directory that will be used to store uncompressed "
                     + "pcap files")
-parser.add_argument(
-    "-graph", help="directory where the graphs of the pcap files will be stored")
-parser.add_argument(
-    "-stat", help="directory where the stats of the pcap files will be stored")
-parser.add_argument(
+parser.add_argument("-g",
+    "--graph", help="directory where the graphs of the pcap files will be stored")
+parser.add_argument("-s",
+    "--stat", help="directory where the stats of the pcap files will be stored")
+parser.add_argument("-p",
     "--pcap", help="analyze only pcap files containing the given string")
-parser.add_argument("--keep", help="keep the original file with -k option of gunzip, if it exists",
+parser.add_argument("-k",
+    "--keep", help="keep the original file with -k option of gunzip, if it exists",
                     action="store_true")
-parser.add_argument(
+parser.add_argument("-c",
     "--clean", help="remove noisy traffic on lo", action="store_true")
 args = parser.parse_args()
 
