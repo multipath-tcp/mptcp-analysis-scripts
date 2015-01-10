@@ -685,7 +685,7 @@ def process_tcp_trace(pcap_fname):
             gpl_fname_ok = prepare_gpl_file(pcap_fname, gpl_fname)
             if gpl_fname_ok:
                 cmd = "gnuplot " + gpl_fname_ok
-                if subprocess.call(cmd.split()) != 0:
+                if subprocess.call(cmd.split(), stdout=subprocess.DEVNULL) != 0:
                     print(
                         "Error of tcptrace with " + pcap_fname + "; skip process")
                     return
