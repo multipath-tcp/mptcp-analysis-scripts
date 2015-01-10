@@ -63,3 +63,12 @@ def check_directory_exists(directory):
             print(directory + " is a file: stop")
     else:
         os.makedirs(directory)
+
+
+def is_number(s):
+    """ Check if the str s is a number """
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
