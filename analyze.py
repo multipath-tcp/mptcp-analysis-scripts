@@ -41,6 +41,7 @@ import os.path
 import pickle
 import subprocess
 import sys
+import threading
 
 
 class cd:
@@ -70,6 +71,8 @@ DEF_TRACE_DIR = 'traces'
 DEF_GRAPH_DIR = 'graphs'
 # The default stat directory
 DEF_STAT_DIR = 'stats'
+# The default number of threads
+DEF_NB_THREADS = 1
 # IPv4 localhost address
 LOCALHOST_IPv4 = '127.0.0.1'
 # Port number of RedSocks
@@ -88,6 +91,7 @@ trace_dir = DEF_TRACE_DIR
 graph_dir = DEF_GRAPH_DIR
 stat_dir = DEF_STAT_DIR
 pcap_contains = ""
+nb_threads = DEF_NB_THREADS
 
 parser = argparse.ArgumentParser(
     description="Analyze pcap files of TCP or MPTCP connections")
@@ -102,6 +106,8 @@ parser.add_argument("-s",
     "--stat", help="directory where the stats of the pcap files will be stored")
 parser.add_argument("-p",
     "--pcap", help="analyze only pcap files containing the given string")
+parser.add_argument("-j",
+    "--threads", type=int, help="process the analyse separated threads")
 parser.add_argument("-k",
     "--keep", help="keep the original file with -k option of gunzip, if it exists",
                     action="store_true")
@@ -123,6 +129,9 @@ if args.stat:
 
 if args.pcap:
     pcap_contains = args.pcap
+
+if args.threads:
+    nb_threads = args.threads
 
 in_dir_exp = os.path.expanduser(in_dir)
 trace_dir_exp = os.path.expanduser(trace_dir)
@@ -680,7 +689,7 @@ def correct_trace(pcap_fname):
                     print("Stop correcting trace " + pcap_fname)
                     return
         num += 1
-        print("Corrected: " + str(num) + "/" + str(len(connections)))
+        print(os.path.basename(pcap_fname) + ": Corrected: " + str(num) + "/" + str(len(connections)))
 
     # Merge small pcap files into a unique one
     merge_and_clean_sub_pcap(pcap_fname)
@@ -740,16 +749,13 @@ def process_tcp_trace(pcap_fname):
     save_connections(pcap_fname, connections)
 
 ##################################################
-##                     MAIN                     ##
+##                   THREADS                    ##
 ##################################################
 
-check_directory_exists(graph_dir_exp)
-check_directory_exists(stat_dir_exp)
-# If file is a .pcap, use it for (mp)tcptrace
-for pcap_fname in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
-    pcap_filename = pcap_fname[len(trace_dir_exp) + 1:]
+def launch_analyze_pcap(pcap_fname, clean):
+    pcap_filename = os.path.basename(pcap_fname)
     # Cleaning, if needed (in future pcap, tcpdump should do the job)
-    if args.clean:
+    if clean:
         clean_loopback_pcap(pcap_fname)
     # Prefix of the name determine the protocol used
     if pcap_filename.startswith('mptcp'):
@@ -763,5 +769,43 @@ for pcap_fname in glob.glob(os.path.join(trace_dir_exp, '*.pcap')):
 
     print('End for file ' + pcap_fname)
     os.remove(pcap_fname)
+
+def thread_launch(thread_id, clean):
+    global pcap_list
+    while True:
+        try:
+            pcap_fname = pcap_list.pop()
+        except IndexError: # no more thread
+            break
+        print("Thread " + str(thread_id) + ": Analyze: " + pcap_fname)
+        try:
+            launch_analyze_pcap(pcap_fname, clean)
+        except:
+            print('Error when analyzing ' + pcap_fname + ': skip')
+    print("Thread " + str(thread_id) + ": End")
+
+##################################################
+##                     MAIN                     ##
+##################################################
+
+check_directory_exists(graph_dir_exp)
+check_directory_exists(stat_dir_exp)
+# If file is a .pcap, use it for (mp)tcptrace
+pcap_list = glob.glob(os.path.join(trace_dir_exp, '*.pcap'))
+pcap_list.reverse() # we will use pop: use the natural order
+
+threads = []
+if nb_threads > 1:
+    # Launch new thread
+    for thread_id in range(nb_threads):
+        thread = threading.Thread(target=thread_launch, args=(thread_id, args.clean))
+        thread.start()
+        threads.append(thread)
+    # Wait
+    for thread in threads:
+        thread.join()
+else:
+    thread_launch(0, args.clean)
+
 
 print('End of analyze')
