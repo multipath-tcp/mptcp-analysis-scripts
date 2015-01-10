@@ -492,15 +492,6 @@ def process_mptcp_trace(pcap_fname):
 ##################################################
 
 
-def is_number(s):
-    """ Check if the str s is a number """
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
-
-
 def convert_number_to_letter(nb_conn):
     """ Given an integer, return the (nb_conn)th letter of the alphabet (zero-based index) """
     return chr(ord('a') + nb_conn)
