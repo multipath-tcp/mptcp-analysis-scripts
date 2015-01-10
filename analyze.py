@@ -89,28 +89,21 @@ SIZE_LAT_ALPH = 26
 ##                   ARGUMENTS                  ##
 ##################################################
 
-in_dir = DEF_IN_DIR
-trace_dir = DEF_TRACE_DIR
-graph_dir = DEF_GRAPH_DIR
-stat_dir = DEF_STAT_DIR
-pcap_contains = ""
-nb_threads = DEF_NB_THREADS
-
 parser = argparse.ArgumentParser(
     description="Analyze pcap files of TCP or MPTCP connections")
 parser.add_argument("-i",
-    "--input", help="input directory of the (possibly compressed) pcap files")
+    "--input", help="input directory of the (possibly compressed) pcap files", default=DEF_IN_DIR)
 parser.add_argument("-t",
     "--trace", help="temporary directory that will be used to store uncompressed "
-                    + "pcap files")
+                    + "pcap files", default=DEF_TRACE_DIR)
 parser.add_argument("-g",
-    "--graph", help="directory where the graphs of the pcap files will be stored")
+    "--graph", help="directory where the graphs of the pcap files will be stored", default=DEF_GRAPH_DIR)
 parser.add_argument("-s",
-    "--stat", help="directory where the stats of the pcap files will be stored")
+    "--stat", help="directory where the stats of the pcap files will be stored", default=DEF_STAT_DIR)
 parser.add_argument("-p",
-    "--pcap", help="analyze only pcap files containing the given string")
+    "--pcap", help="analyze only pcap files containing the given string", default="")
 parser.add_argument("-j",
-    "--threads", type=int, help="process the analyse separated threads")
+    "--threads", type=int, help="process the analyse separated threads", default=DEF_NB_THREADS)
 parser.add_argument("-k",
     "--keep", help="keep the original file with -k option of gunzip, if it exists",
                     action="store_true")
@@ -118,28 +111,10 @@ parser.add_argument("-c",
     "--clean", help="remove noisy traffic on lo", action="store_true")
 args = parser.parse_args()
 
-if args.input:
-    in_dir = args.input
-
-if args.trace:
-    trace_dir = args.trace
-
-if args.graph:
-    graph_dir = args.graph
-
-if args.stat:
-    stat_dir = args.stat
-
-if args.pcap:
-    pcap_contains = args.pcap
-
-if args.threads:
-    nb_threads = args.threads
-
-in_dir_exp = os.path.expanduser(in_dir)
-trace_dir_exp = os.path.expanduser(trace_dir)
-graph_dir_exp = os.path.expanduser(graph_dir)
-stat_dir_exp = os.path.expanduser(stat_dir)
+in_dir_exp = os.path.expanduser(args.input)
+trace_dir_exp = os.path.expanduser(args.trace)
+graph_dir_exp = os.path.expanduser(args.graph)
+stat_dir_exp = os.path.expanduser(args.stat)
 
 ##################################################
 ##                 PREPROCESSING                ##
@@ -148,7 +123,7 @@ stat_dir_exp = os.path.expanduser(stat_dir)
 check_directory_exists(trace_dir_exp)
 for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp)):
     for fname in filenames:
-        if pcap_contains in fname:
+        if args.pcap in fname:
             # Files from UI tests will be compressed; unzip them
             if fname.endswith('.gz'):
                 print("Uncompressing " + fname + " to " + trace_dir_exp)
@@ -515,15 +490,6 @@ def process_mptcp_trace(pcap_fname):
 ##################################################
 
 
-def is_number(s):
-    """ Check if the str s is a number """
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
-
-
 def convert_number_to_letter(nb_conn):
     """ Given an integer, return the (nb_conn)th letter of the alphabet (zero-based index) """
     return chr(ord('a') + nb_conn)
@@ -808,10 +774,10 @@ pcap_list = glob.glob(os.path.join(trace_dir_exp, '*.pcap'))
 pcap_list.reverse() # we will use pop: use the natural order
 
 threads = []
-nb_threads = min(nb_threads, len(pcap_list))
-if nb_threads > 1:
+args.threads = min(args.threads, len(pcap_list))
+if args.threads > 1:
     # Launch new thread
-    for thread_id in range(nb_threads):
+    for thread_id in range(args.threads):
         thread = threading.Thread(target=thread_launch, args=(thread_id, args.clean))
         thread.start()
         threads.append(thread)
