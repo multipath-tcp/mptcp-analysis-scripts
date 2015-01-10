@@ -445,7 +445,7 @@ def create_graph_csv(pcap_fname, csv_fname, connections):
     g.reset()
 
 
-def process_mptcptrace_cmd(cmd):
+def process_mptcptrace_cmd(cmd, pcap_fname):
     """ Launch the command cmd given in argument, and return a dictionary containing information
         about connections of the pcap file analyzed
     """
@@ -465,7 +465,7 @@ def process_mptcptrace_cmd(cmd):
 def process_mptcp_trace(pcap_fname):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     cmd = 'mptcptrace -f ' + pcap_fname + ' -s -w 2'
-    connections = process_mptcptrace_cmd(cmd)
+    connections = process_mptcptrace_cmd(cmd, pcap_fname)
 
     # The mptcptrace call will generate .csv files to cope with
     for csv_fname in glob.glob('*.csv'):
@@ -650,7 +650,7 @@ def get_flow_name(xpl_fname):
         return flow_name
 
 
-def process_tcptrace_cmd(cmd):
+def process_tcptrace_cmd(cmd, pcap_fname):
     """ Launch the command cmd given in argument, and return a dictionary containing information
         about connections of the pcap file analyzed
         Options -n, -l and --csv should be set
@@ -673,7 +673,7 @@ def correct_trace(pcap_fname):
         Do this also for mptcp, because mptcptrace will not be able to find all conversations
     """
     cmd = "tcptrace -n -l --csv " + pcap_fname
-    connections = process_tcptrace_cmd(cmd)
+    connections = process_tcptrace_cmd(cmd, pcap_fname)
     # Create the remaining_file
     remain_pcap_fname = copy_remain_pcap_file(pcap_fname)
     if not remain_pcap_fname:
