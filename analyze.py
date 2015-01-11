@@ -717,7 +717,7 @@ def process_tcp_trace(pcap_fname):
     connections = process_tcptrace_cmd(cmd, pcap_fname)
 
     # The tcptrace call will generate .xpl files to cope with
-    for xpl_fname in glob.glob(pcap_fname[:-5] + '*.xpl'):
+    for xpl_fname in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_fname[:-5]) + '*.xpl')):
         flow_name = get_flow_name(xpl_fname)
         if interesting_tcp_graph(flow_name, connections):
             cmd = ['xpl2gpl', xpl_fname]
