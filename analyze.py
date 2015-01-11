@@ -149,7 +149,7 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp
                 print("Copying " + fname + " to " + trace_dir_exp, file=print_out)
                 cmd = 'cp ' + \
                     os.path.join(dirpath, fname) + " " + trace_dir_exp + "/"
-                if subprocess.call(cmd.split()) != 0:
+                if subprocess.call(cmd.split(), stdout=print_out) != 0:
                     print("Error when moving " + fname, file=sys.stderr)
             else:
                 print(fname + ": not in a valid format, skipped", file=sys.stderr)
@@ -161,11 +161,11 @@ def clean_loopback_pcap(pcap_fname):
     tmp_pcap = "tmp.pcap"
     cmd = 'tshark -Y !(tcp.dstport==1984||tcp.srcport==1984) -r ' + pcap_fname \
         + ' -w ' + tmp_pcap + ' -F pcap'
-    if subprocess.call(cmd.split()) != 0:
+    if subprocess.call(cmd.split(), stdout=print_out) != 0:
         print("Error in cleaning " + pcap_fname, file=sys.stderr)
         return
     cmd = "mv " + tmp_pcap + " " + pcap_fname
-    if subprocess.call(cmd.split()) != 0:
+    if subprocess.call(cmd.split(), stdout=print_out) != 0:
         print("Error in moving " + tmp_pcap + " to " + pcap_fname, file=sys.stderr)
 
 
@@ -198,7 +198,7 @@ def copy_remain_pcap_file(pcap_fname):
     """ Given a pcap filename, return the filename of a copy, used for correction of traces """
     remain_pcap_fname = pcap_fname[:-5] + "__rem.pcap"
     cmd = 'cp ' + pcap_fname + " " + remain_pcap_fname
-    if subprocess.call(cmd.split()) != 0:
+    if subprocess.call(cmd.split(), stdout=print_out) != 0:
         print("Error when copying " + pcap_fname + ": skip tcp correction", file=sys.stderr)
         return None
     return remain_pcap_fname
@@ -214,19 +214,19 @@ def split_and_replace(pcap_fname, remain_pcap_fname, data, other_data, num):
     tmp_split_fname = pcap_fname[:-5] + "__tmp.pcap"
     cmd = "tshark -r " + remain_pcap_fname + " -Y " + \
         condition + " -w " + tmp_split_fname
-    if subprocess.call(cmd.split()) != 0:
+    if subprocess.call(cmd.split(), stdout=print_out) != 0:
         print(
             "Error when tshark port " + data[SPORT] + ": skip tcp correction", file=sys.stderr)
         return -1
     tmp_remain_fname = pcap_fname[:-5] + "__tmprem.pcap"
     cmd = "tshark -r " + remain_pcap_fname + " -Y " + \
         "!(" + condition + ")" + " -w " + tmp_remain_fname
-    if subprocess.call(cmd.split()) != 0:
+    if subprocess.call(cmd.split(), stdout=print_out) != 0:
         print(
             "Error when tshark port !" + data[SPORT] + ": skip tcp correction", file=sys.stderr)
         return -1
     cmd = "mv " + tmp_remain_fname + " " + remain_pcap_fname
-    if subprocess.call(cmd.split()) != 0:
+    if subprocess.call(cmd.split(), stdout=print_out) != 0:
         print(
             "Error when moving " + tmp_remain_fname + " to " + remain_pcap_fname +  ": skip tcp correction", file=sys.stderr)
         return -1
@@ -235,7 +235,7 @@ def split_and_replace(pcap_fname, remain_pcap_fname, data, other_data, num):
     split_fname = pcap_fname[:-5] + "__" + str(num) + ".pcap"
     cmd = "tcprewrite --portmap=" + data[DPORT] + ":" + other_data[SPORT] + " --pnat=" + data[
         DADDR] + ":" + other_data[SADDR] + " --infile=" + tmp_split_fname + " --outfile=" + split_fname
-    if subprocess.call(cmd.split()) != 0:
+    if subprocess.call(cmd.split(), stdout=print_out) != 0:
         print(
             "Error with tcprewrite " + data[SPORT] + ": skip tcp correction", file=sys.stderr)
         return -1
@@ -252,7 +252,7 @@ def merge_and_clean_sub_pcap(pcap_fname):
         to_merge += " " + subpcap_fname
 
     cmd = "mergecap -w " + pcap_fname + " " + to_merge
-    if subprocess.call(cmd.split()) != 0:
+    if subprocess.call(cmd.split(), stdout=print_out) != 0:
         print(
             "Error with mergecap " + pcap_fname + ": skip tcp correction", file=sys.stderr)
         return
@@ -704,7 +704,7 @@ def process_tcp_trace(pcap_fname):
         flow_name = get_flow_name(xpl_fname)
         if interesting_tcp_graph(flow_name, connections):
             cmd = "xpl2gpl " + xpl_fname
-            if subprocess.call(cmd.split()) != 0:
+            if subprocess.call(cmd.split(), stdout=print_out) != 0:
                 print("Error of xpl2gpl with " + xpl_fname + "; skip xpl file", file=sys.stderr)
                 continue
             prefix_fname = xpl_fname[len(trace_dir_exp) + 1:-4]
