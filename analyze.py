@@ -129,6 +129,7 @@ else:
 ##                 PREPROCESSING                ##
 ##################################################
 
+pcap_list = []
 check_directory_exists(trace_dir_exp)
 for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp)):
     for fname in filenames:
@@ -136,12 +137,15 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp
             # Files from UI tests will be compressed; unzip them
             if fname.endswith('.gz'):
                 print("Uncompressing " + fname + " to " + trace_dir_exp, file=print_out)
-                output = open(os.path.join(trace_dir_exp, fname[:-3]), 'w')
+                output_file = os.path.join(trace_dir_exp, fname[:-3])
+                output = open(output_file, 'w')
                 cmd = ['gunzip', '-c', '-9', os.path.join(dirpath, fname)]
                 if args.keep:
                     cmd.insert(1, '-k')
                 if subprocess.call(cmd, stdout=output) != 0:
                     print("Error when uncompressing " + fname, file=sys.stderr)
+                else:
+                    pcap_list.append(output_file)
                 output.close()
             elif fname.endswith('.pcap'):
                 # Move the file to out_dir_exp
@@ -150,6 +154,8 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp
                 cmd = ['cp', os.path.join(dirpath, fname), output_file]
                 if subprocess.call(cmd, stdout=print_out) != 0:
                     print("Error when moving " + fname, file=sys.stderr)
+                else:
+                    pcap_list.append(output_file)
             else:
                 print(fname + ": not in a valid format, skipped", file=sys.stderr)
                 continue
@@ -785,7 +791,6 @@ def thread_launch(thread_id, clean):
 check_directory_exists(graph_dir_exp)
 check_directory_exists(stat_dir_exp)
 # If file is a .pcap, use it for (mp)tcptrace
-pcap_list = glob.glob(os.path.join(trace_dir_exp, '*.pcap'))
 pcap_list.reverse() # we will use pop: use the natural order
 
 threads = []
