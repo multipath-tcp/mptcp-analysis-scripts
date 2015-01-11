@@ -106,7 +106,7 @@ parser.add_argument("-p",
     "--pcap", help="analyze only pcap files containing the given string", default="")
 parser.add_argument("-j",
     "--threads", type=int, help="process the analyse separated threads", default=DEF_NB_THREADS)
-parser.add_argument("-l"
+parser.add_argument("-l",
     "--stderr", help="log to stderr", action="store_true")
 parser.add_argument("-k",
     "--keep", help="keep the original file with -k option of gunzip, if it exists",
