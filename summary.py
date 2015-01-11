@@ -116,8 +116,10 @@ def count_interesting_connections(data):
             count += int_count
         else:
             # Check the key k
+            # An interesting flow has an IF field
             if k == IF:
                 count += 1
+            # All flows have a DADDR field
             if k == DADDR:
                 tot += 1
     return tot, count
