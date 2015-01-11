@@ -257,7 +257,6 @@ def merge_and_clean_sub_pcap(pcap_fname):
 ##################################################
 
 Gnuplot.GnuplotOpts.default_term = 'pdf'
-g = Gnuplot.Gnuplot(debug=0)
 
 
 def get_connection_id(csv_fname):
@@ -415,6 +414,7 @@ def create_graph_csv(pcap_fname, csv_fname, connections):
     data_split = map(lambda x: x.split(','), data)
     data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
 
+    g = Gnuplot.Gnuplot(debug=0)
     g('set title "' + generate_title(csv_fname, connections) + '"')
     g('set style data linespoints')
     g.xlabel('Time [s]')
