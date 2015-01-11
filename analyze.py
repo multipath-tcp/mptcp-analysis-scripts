@@ -177,7 +177,7 @@ def clean_loopback_pcap(pcap_fname):
 def save_connections(pcap_fname, connections):
     """ Using the name pcap_fname, save the statistics about connections """
     stat_fname = os.path.join(
-        stat_dir_exp, pcap_fname[len(trace_dir_exp) + 1:-5])
+        stat_dir_exp, os.path.basename(pcap_fname)[:-5])
     try:
         stat_file = open(stat_fname, 'w')
         pickle.dump(connections, stat_file)
@@ -431,7 +431,7 @@ def create_graph_csv(pcap_fname, csv_fname, connections):
     g.ylabel('Sequence number')
     g.plot(data_plot)
     pdf_fname = os.path.join(graph_dir_exp,
-                             pcap_fname[len(trace_dir_exp) + 1:-5] + "_" + csv_fname[:-4] + '.pdf')
+                             os.path.basename(pcap_fname)[:-5] + "_" + csv_fname[:-4] + '.pdf')
     g.hardcopy(filename=pdf_fname, terminal='pdf')
     g.reset()
 
@@ -599,8 +599,8 @@ def prepare_gpl_file(pcap_fname, gpl_fname):
             gpl_file_ok.write(line)
         # Give the pdf filename where the graph will be stored
         pdf_fname = os.path.join(graph_dir_exp,
-                                 pcap_fname[
-                                     len(trace_dir_exp) + 1:-5] + "_" + gpl_fname[:-4]
+                                 os.path.basename(pcap_fname)[:-5]
+                                 + "_" + gpl_fname[:-4]
                                  + '.pdf')
 
         # Needed to give again the line with all data (5th line from the end)
@@ -702,15 +702,14 @@ def process_tcp_trace(pcap_fname):
     connections = process_tcptrace_cmd(cmd, pcap_fname)
 
     # The tcptrace call will generate .xpl files to cope with
-    for xpl_fname in glob.glob(os.path.join(trace_dir_exp, pcap_fname[len(trace_dir_exp) + 1:-5]
-                                            + '*.xpl')):
+    for xpl_fname in glob.glob(pcap_fname[:-5] + '*.xpl'):
         flow_name = get_flow_name(xpl_fname)
         if interesting_tcp_graph(flow_name, connections):
             cmd = ['xpl2gpl', xpl_fname]
             if subprocess.call(cmd, stdout=print_out) != 0:
                 print("Error of xpl2gpl with " + xpl_fname + "; skip xpl file", file=sys.stderr)
                 continue
-            prefix_fname = xpl_fname[len(trace_dir_exp) + 1:-4]
+            prefix_fname = os.path.basename(xpl_fname)[:-4]
             gpl_fname = prefix_fname + '.gpl'
             gpl_fname_ok = prepare_gpl_file(pcap_fname, gpl_fname)
             if gpl_fname_ok:
