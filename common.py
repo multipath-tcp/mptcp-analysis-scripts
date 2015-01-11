@@ -24,6 +24,9 @@ from __future__ import print_function
 ##################################################
 
 import os
+import Gnuplot
+
+Gnuplot.GnuplotOpts.default_term = 'pdf'
 
 
 ##################################################

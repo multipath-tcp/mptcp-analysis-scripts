@@ -268,8 +268,6 @@ def merge_and_clean_sub_pcap(pcap_fname):
 ##                  MPTCPTRACE                  ##
 ##################################################
 
-Gnuplot.GnuplotOpts.default_term = 'pdf'
-
 
 def get_connection_id(csv_fname):
     """ Given the filename of the csv file, return the id of the MPTCP connection
