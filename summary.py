@@ -143,9 +143,7 @@ for fname, data in connections.iteritems():
 # At the end, convert Python arrays to numpy arrays (easier for mean and std)
 for cond, elements in aggl_res.iteritems():
     for label, array in elements.iteritems():
-        array = np.array(array)
-        print(array.mean())
-        print(array.std())
+        elements[label] = np.array(array)
 
 print(aggl_res)
 
