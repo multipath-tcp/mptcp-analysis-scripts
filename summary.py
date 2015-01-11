@@ -148,26 +148,31 @@ for cond, elements in aggl_res.iteritems():
 print(aggl_res)
 
 
-N = len(connections)
+N = len(aggl_res)
 ind = np.arange(N)
-counts = []
-flo_counts = []
-int_counts = []
 labels = []
+conn_mean = []
+conn_std = []
+flow_mean = []
+flow_std = []
+int_mean = []
+int_std = []
 width = 0.30       # the width of the bars
 fig, ax = plt.subplots()
 
 # So far, simply count the number of connections
-for fname, data in connections.iteritems():
-    labels.append(fname)
-    counts.append(len(data))
-    tot_flow, int_flow = count_interesting_connections(data)
-    flo_counts.append(tot_flow)
-    int_counts.append(int_flow)
+for cond, elements in aggl_res.iteritems():
+    labels.append(cond)
+    conn_mean.append(elements[tot_lbl].mean())
+    conn_std.append(elements[tot_lbl].std())
+    flow_mean.append(elements[tot_flw_lbl].mean())
+    flow_std.append(elements[tot_flw_lbl].std())
+    int_mean.append(elements[tot_int_lbl].mean())
+    int_std.append(elements[tot_int_lbl].std())
 
-tot_count = ax.bar(ind, counts, width, color='b')
-flo_count = ax.bar(ind + width, flo_counts, width, color='g')
-int_count = ax.bar(ind + 2 * width, int_counts, width, color='r')
+tot_count = ax.bar(ind, conn_mean, width, color='b', yerr=conn_std)
+flo_count = ax.bar(ind + width, flow_mean, width, color='g', yerr=flow_std)
+int_count = ax.bar(ind + 2 * width, int_mean, width, color='r', yerr=int_std)
 
 # add some text for labels, title and axes ticks
 ax.set_ylabel('Counts')
@@ -176,7 +181,7 @@ ax.set_xticks(ind + width)
 ax.set_xticklabels(labels)
 
 ax.legend((tot_count[0], flo_count[0], int_count[0]),
-          ('Total Connections', 'Total Flows', 'Interesting Flows'))
+          (tot_lbl, tot_flw_lbl, tot_int_lbl))
 
 
 def autolabel(rects):
