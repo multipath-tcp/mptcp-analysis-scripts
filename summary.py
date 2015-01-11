@@ -54,7 +54,7 @@ parser.add_argument("-s",
 parser.add_argument("-a",
                     "--app", help="application results to summarize", default="")
 parser.add_argument(
-    "agg", help="aggregate data, in format START,STOP")
+    "time", help="aggregate data in specified time, in format START,STOP")
 
 args = parser.parse_args()
 
