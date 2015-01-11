@@ -58,7 +58,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-split_agg = args.agg.split(',')
+split_agg = args.time.split(',')
 
 if not len(split_agg) == 2 or not is_number(split_agg[0]) or not is_number(split_agg[1]):
     print("The aggregation argument is not well formatted", file=sys.stderr)
