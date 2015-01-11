@@ -708,10 +708,12 @@ def process_tcp_trace(pcap_fname):
     # -y to remove some noise in sequence graphs
     # -l for long output
     # --csv for csv file
-    cmd = "tcptrace --output_dir=" + os.getcwd() + " --output_prefix=" \
-        + pcap_fname[:-5] + "_ -C -S -T -zxy -n -y -l --csv --noshowzwndprobes --noshowoutorder --noshowrexmit "\
-        + "--noshowsacks --noshowzerowindow --noshowurg --noshowdupack3 --noshowzerolensegs " \
-        + pcap_fname
+    cmd = ['tcptrace', '--output_dir=' + os.getcwd(),
+        '--output_prefix=' + os.path.basename(pcap_fname[:-5]) + '_', '-C', '-S', '-T', '-zxy',
+        '-n', '-y', '-l', '--csv', '--noshowzwndprobes', '--noshowoutorder', '--noshowrexmit',
+        '--noshowsacks', '--noshowzerowindow', '--noshowurg', '--noshowdupack3',
+        '--noshowzerolensegs', pcap_fname]
+
     connections = process_tcptrace_cmd(cmd, pcap_fname)
 
     # The tcptrace call will generate .xpl files to cope with
