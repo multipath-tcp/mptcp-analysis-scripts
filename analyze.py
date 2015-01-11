@@ -113,6 +113,12 @@ parser.add_argument("-k",
                     action="store_true")
 parser.add_argument("-c",
     "--clean", help="remove noisy traffic on lo", action="store_true")
+parser.add_argument("-C",
+    "--not-correct", help="do not correct traces, implies no preprocessing", action="store_true")
+parser.add_argument("-G",
+    "--not-graph", help="do not produce graphes and keep corrected traces, implies -P", action="store_true")
+parser.add_argument("-P",
+    "--not-purge", help="do not remove corrected traces", action="store_true")
 args = parser.parse_args()
 
 in_dir_exp = os.path.abspath(os.path.expanduser(args.input))
@@ -136,26 +142,32 @@ for dirpath, dirnames, filenames in os.walk(in_dir_exp):
         if args.pcap in fname:
             # Files from UI tests will be compressed; unzip them
             if fname.endswith('.gz'):
-                print("Uncompressing " + fname + " to " + trace_dir_exp, file=print_out)
                 output_file = os.path.join(trace_dir_exp, fname[:-3])
-                output = open(output_file, 'w')
-                cmd = ['gunzip', '-c', '-9', os.path.join(dirpath, fname)]
-                if args.keep:
-                    cmd.insert(1, '-k')
-                if subprocess.call(cmd, stdout=output) != 0:
-                    print("Error when uncompressing " + fname, file=sys.stderr)
-                else:
+                if args.not_correct:
                     pcap_list.append(output_file)
-                output.close()
+                else:
+                    print("Uncompressing " + fname + " to " + trace_dir_exp, file=print_out)
+                    output = open(output_file, 'w')
+                    cmd = ['gunzip', '-c', '-9', os.path.join(dirpath, fname)]
+                    if args.keep:
+                        cmd.insert(1, '-k')
+                    if subprocess.call(cmd, stdout=output) != 0:
+                        print("Error when uncompressing " + fname, file=sys.stderr)
+                    else:
+                        pcap_list.append(output_file)
+                    output.close()
             elif fname.endswith('.pcap'):
-                # Move the file to out_dir_exp
-                print("Copying " + fname + " to " + trace_dir_exp, file=print_out)
                 output_file = os.path.join(trace_dir_exp, fname)
-                cmd = ['cp', os.path.join(dirpath, fname), output_file]
-                if subprocess.call(cmd, stdout=print_out) != 0:
-                    print("Error when moving " + fname, file=sys.stderr)
-                else:
+                if args.not_correct:
                     pcap_list.append(output_file)
+                else:
+                    # Move the file to out_dir_exp
+                    print("Copying " + fname + " to " + trace_dir_exp, file=print_out)
+                    cmd = ['cp', os.path.join(dirpath, fname), output_file]
+                    if subprocess.call(cmd, stdout=print_out) != 0:
+                        print("Error when moving " + fname, file=sys.stderr)
+                    else:
+                        pcap_list.append(output_file)
             else:
                 print(fname + ": not in a valid format, skipped", file=sys.stderr)
                 continue
@@ -745,28 +757,33 @@ def process_tcp_trace(pcap_fname):
 ##                   THREADS                    ##
 ##################################################
 
-def launch_analyze_pcap(pcap_fname, clean):
+def launch_analyze_pcap(pcap_fname, clean, correct, graph, purge):
     pcap_filename = os.path.basename(pcap_fname)
     # Cleaning, if needed (in future pcap, tcpdump should do the job)
     if clean:
         clean_loopback_pcap(pcap_fname)
     # Prefix of the name determine the protocol used
     if pcap_filename.startswith('mptcp'):
-        correct_trace(pcap_fname)
+        if correct:
+            correct_trace(pcap_fname)
         # we need to change dir, do that in a new process
-        p = Process(target=process_mptcp_trace, args=(pcap_fname,))
-        p.start()
-        p.join()
+        if graph:
+            p = Process(target=process_mptcp_trace, args=(pcap_fname,))
+            p.start()
+            p.join()
     elif pcap_filename.startswith('tcp'):
-        correct_trace(pcap_fname)
-        process_tcp_trace(pcap_fname)
+        if correct:
+            correct_trace(pcap_fname)
+        if graph:
+            process_tcp_trace(pcap_fname)
     else:
         print(pcap_fname + ": don't know the protocol used; skipped", file=sys.stderr)
 
     print('End for file ' + pcap_fname, file=print_out)
-    os.remove(pcap_fname)
+    if purge and graph: # if we just want to correct traces, do not remove them
+        os.remove(pcap_fname)
 
-def thread_launch(thread_id, clean):
+def thread_launch(thread_id, clean, correct, graph, purge):
     global pcap_list
     while True:
         try:
@@ -775,7 +792,7 @@ def thread_launch(thread_id, clean):
             break
         print("Thread " + str(thread_id) + ": Analyze: " + pcap_fname, file=print_out)
         try:
-            launch_analyze_pcap(pcap_fname, clean)
+            launch_analyze_pcap(pcap_fname, clean, correct, graph, purge)
         except:
             print(traceback.format_exc(), file=sys.stderr)
             print('Error when analyzing ' + pcap_fname + ': skip', file=sys.stderr)
@@ -795,7 +812,8 @@ args.threads = min(args.threads, len(pcap_list))
 if args.threads > 1:
     # Launch new thread
     for thread_id in range(args.threads):
-        thread = threading.Thread(target=thread_launch, args=(thread_id, args.clean))
+        thread = threading.Thread(target=thread_launch,
+            args=(thread_id, not args.not_correct, not args.not_graph, not args.not_purge))
         thread.start()
         threads.append(thread)
     # Wait
