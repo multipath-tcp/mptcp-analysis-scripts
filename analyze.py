@@ -256,6 +256,7 @@ def merge_and_clean_sub_pcap(pcap_fname):
 ##                  MPTCPTRACE                  ##
 ##################################################
 
+Gnuplot.GnuplotOpts.default_term = 'pdf'
 g = Gnuplot.Gnuplot(debug=0)
 
 
