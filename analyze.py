@@ -813,7 +813,8 @@ if args.threads > 1:
     # Launch new thread
     for thread_id in range(args.threads):
         thread = threading.Thread(target=thread_launch,
-            args=(thread_id, not args.not_correct, not args.not_graph, not args.not_purge))
+            args=(thread_id, args.clean,
+                  not args.not_correct, not args.not_graph, not args.not_purge))
         thread.start()
         threads.append(thread)
     # Wait
