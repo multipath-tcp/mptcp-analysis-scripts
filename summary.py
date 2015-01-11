@@ -103,23 +103,6 @@ def get_experiment_condition(fname):
     end_index = fname[:dash_index].rindex("_")
     return fname[:app_index] + fname[app_index + len(args.app) + 1:end_index]
 
-aggl_res = {}
-tot_lbl = 'Total Connections'
-tot_flw_lbl = 'Total Flows'
-tot_int_lbl = 'Interesting Flows'
-
-# Need to agglomerate same tests
-for fname, data in connections.iteritems():
-    condition = get_experiment_condition(fname)
-    tot_flow, tot_int = count_interesting_connections(data)
-    if condition in aggl_res:
-        aggl_res[condition] = {
-            tot_lbl: [len(data)], tot_flw_lbl: [tot_flow], tot_int_lbl: [tot_int]}
-    else:
-        aggl_res[condition][tot_lbl] += [len(data)]
-        aggl_res[condition][tot_flw_lbl] += [tot_flow]
-        aggl_res[condition][tot_int_lbl] += [tot_int]
-
 
 def count_interesting_connections(data):
     """ Return the number of interesting connections in data """
@@ -138,6 +121,33 @@ def count_interesting_connections(data):
             if k == DADDR:
                 tot += 1
     return tot, count
+
+
+aggl_res = {}
+tot_lbl = 'Total Connections'
+tot_flw_lbl = 'Total Flows'
+tot_int_lbl = 'Interesting Flows'
+
+# Need to agglomerate same tests
+for fname, data in connections.iteritems():
+    condition = get_experiment_condition(fname)
+    tot_flow, tot_int = count_interesting_connections(data)
+    if condition in aggl_res:
+        aggl_res[condition][tot_lbl] += [len(data)]
+        aggl_res[condition][tot_flw_lbl] += [tot_flow]
+        aggl_res[condition][tot_int_lbl] += [tot_int]
+    else:
+        aggl_res[condition] = {
+            tot_lbl: [len(data)], tot_flw_lbl: [tot_flow], tot_int_lbl: [tot_int]}
+
+# At the end, convert Python arrays to numpy arrays (easier for mean and std)
+for cond, elements in aggl_res.iteritems():
+    for label, array in elements.iteritems():
+        array = np.array(array)
+        print(array.mean())
+        print(array.std())
+
+print(aggl_res)
 
 
 N = len(connections)
