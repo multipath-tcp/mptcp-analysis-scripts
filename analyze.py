@@ -242,7 +242,7 @@ def split_and_replace(pcap_fname, remain_pcap_fname, data, other_data, num):
             "Error when tshark port !" + data[SPORT] + ": skip tcp correction", file=sys.stderr)
         return -1
     cmd = ['mv', tmp_remain_fname, remain_pcap_fname]
-    if subprocess.call(cmd.split(), stdout=print_out) != 0:
+    if subprocess.call(cmd, stdout=print_out) != 0:
         print(
             "Error when moving " + tmp_remain_fname + " to " + remain_pcap_fname +  ": skip tcp correction", file=sys.stderr)
         return -1
