@@ -822,7 +822,7 @@ if args.threads > 1:
     for thread in threads:
         thread.join()
 else:
-    thread_launch(0, args.clean)
+    thread_launch(0, args.clean, not args.not_correct, not args.not_graph, not args.not_purge)
 
 
 print('End of analyze', file=print_out)
