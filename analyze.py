@@ -113,10 +113,10 @@ parser.add_argument("-c",
     "--clean", help="remove noisy traffic on lo", action="store_true")
 args = parser.parse_args()
 
-in_dir_exp = os.path.expanduser(args.input)
-trace_dir_exp = os.path.expanduser(args.trace)
-graph_dir_exp = os.path.expanduser(args.graph)
-stat_dir_exp = os.path.expanduser(args.stat)
+in_dir_exp = os.path.abspath(os.path.expanduser(args.input))
+trace_dir_exp = os.path.abspath(os.path.expanduser(args.trace))
+graph_dir_exp = os.path.abspath(os.path.expanduser(args.graph))
+stat_dir_exp = os.path.abspath(os.path.expanduser(args.stat))
 
 ##################################################
 ##                 PREPROCESSING                ##
