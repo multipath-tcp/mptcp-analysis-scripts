@@ -685,7 +685,7 @@ def process_tcp_trace(pcap_fname):
         + pcap_fname[:-5] + "_ -C -S -T -zxy -n -y -l --csv --noshowzwndprobes --noshowoutorder --noshowrexmit "\
         + "--noshowsacks --noshowzerowindow --noshowurg --noshowdupack3 --noshowzerolensegs " \
         + pcap_fname
-    connections = process_tcptrace_cmd(cmd)
+    connections = process_tcptrace_cmd(cmd, pcap_fname)
 
     # The tcptrace call will generate .xpl files to cope with
     for xpl_fname in glob.glob(os.path.join(trace_dir_exp, pcap_fname[len(trace_dir_exp) + 1:-5]
@@ -700,11 +700,13 @@ def process_tcp_trace(pcap_fname):
             gpl_fname = prefix_fname + '.gpl'
             gpl_fname_ok = prepare_gpl_file(pcap_fname, gpl_fname)
             if gpl_fname_ok:
+                devnull = open(os.devnull, 'w')
                 cmd = "gnuplot " + gpl_fname_ok
-                if subprocess.call(cmd.split(), stdout=subprocess.DEVNULL) != 0:
+                if subprocess.call(cmd.split(), stdout=devnull) != 0:
                     print(
                         "Error of tcptrace with " + pcap_fname + "; skip process")
                     return
+                devnull.close()
 
             # Delete gpl, xpl and others files generated
             try:
