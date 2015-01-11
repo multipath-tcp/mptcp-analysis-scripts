@@ -106,6 +106,8 @@ parser.add_argument("-p",
     "--pcap", help="analyze only pcap files containing the given string", default="")
 parser.add_argument("-j",
     "--threads", type=int, help="process the analyse separated threads", default=DEF_NB_THREADS)
+parser.add_argument("-l"
+    "--stderr", help="log to stderr", action="store_true")
 parser.add_argument("-k",
     "--keep", help="keep the original file with -k option of gunzip, if it exists",
                     action="store_true")
@@ -118,6 +120,11 @@ trace_dir_exp = os.path.abspath(os.path.expanduser(args.trace))
 graph_dir_exp = os.path.abspath(os.path.expanduser(args.graph))
 stat_dir_exp = os.path.abspath(os.path.expanduser(args.stat))
 
+if args.stderr:
+    print_out = sys.stderr
+else:
+    print_out = sys.stdout
+
 ##################################################
 ##                 PREPROCESSING                ##
 ##################################################
@@ -128,24 +135,24 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp
         if args.pcap in fname:
             # Files from UI tests will be compressed; unzip them
             if fname.endswith('.gz'):
-                print("Uncompressing " + fname + " to " + trace_dir_exp)
+                print("Uncompressing " + fname + " to " + trace_dir_exp, file=print_out)
                 output = open(os.path.join(trace_dir_exp, fname[:-3]), 'w')
                 if args.keep:
                     cmd = 'gunzip -k -c -9 ' + os.path.join(dirpath, fname)
                 else:
                     cmd = 'gunzip -c -9 ' + os.path.join(dirpath, fname)
                 if subprocess.call(cmd.split(), stdout=output) != 0:
-                    print("Error when uncompressing " + fname)
+                    print("Error when uncompressing " + fname, file=sys.stderr)
                 output.close()
             elif fname.endswith('.pcap'):
                 # Move the file to out_dir_exp
-                print("Copying " + fname + " to " + trace_dir_exp)
+                print("Copying " + fname + " to " + trace_dir_exp, file=print_out)
                 cmd = 'cp ' + \
                     os.path.join(dirpath, fname) + " " + trace_dir_exp + "/"
                 if subprocess.call(cmd.split()) != 0:
-                    print("Error when moving " + fname)
+                    print("Error when moving " + fname, file=sys.stderr)
             else:
-                print(fname + ": not in a valid format, skipped")
+                print(fname + ": not in a valid format, skipped", file=sys.stderr)
                 continue
 
 
@@ -155,11 +162,11 @@ def clean_loopback_pcap(pcap_fname):
     cmd = 'tshark -Y !(tcp.dstport==1984||tcp.srcport==1984) -r ' + pcap_fname \
         + ' -w ' + tmp_pcap + ' -F pcap'
     if subprocess.call(cmd.split()) != 0:
-        print("Error in cleaning " + pcap_fname)
+        print("Error in cleaning " + pcap_fname, file=sys.stderr)
         return
     cmd = "mv " + tmp_pcap + " " + pcap_fname
     if subprocess.call(cmd.split()) != 0:
-        print("Error in moving " + tmp_pcap + " to " + pcap_fname)
+        print("Error in moving " + tmp_pcap + " to " + pcap_fname, file=sys.stderr)
 
 
 def save_connections(pcap_fname, connections):
@@ -171,7 +178,7 @@ def save_connections(pcap_fname, connections):
         pickle.dump(connections, stat_file)
         stat_file.close()
     except IOError as e:
-        print(str(e) + ': no stat file for ' + pcap_fname)
+        print(str(e) + ': no stat file for ' + pcap_fname, file=sys.stderr)
 
 
 def get_connection_data_with_ip_port_tcp(connections, ip, port, dst=True):
@@ -192,7 +199,7 @@ def copy_remain_pcap_file(pcap_fname):
     remain_pcap_fname = pcap_fname[:-5] + "__rem.pcap"
     cmd = 'cp ' + pcap_fname + " " + remain_pcap_fname
     if subprocess.call(cmd.split()) != 0:
-        print("Error when copying " + pcap_fname + ": skip tcp correction")
+        print("Error when copying " + pcap_fname + ": skip tcp correction", file=sys.stderr)
         return None
     return remain_pcap_fname
 
@@ -209,19 +216,19 @@ def split_and_replace(pcap_fname, remain_pcap_fname, data, other_data, num):
         condition + " -w " + tmp_split_fname
     if subprocess.call(cmd.split()) != 0:
         print(
-            "Error when tshark port " + data[SPORT] + ": skip tcp correction")
+            "Error when tshark port " + data[SPORT] + ": skip tcp correction", file=sys.stderr)
         return -1
     tmp_remain_fname = pcap_fname[:-5] + "__tmprem.pcap"
     cmd = "tshark -r " + remain_pcap_fname + " -Y " + \
         "!(" + condition + ")" + " -w " + tmp_remain_fname
     if subprocess.call(cmd.split()) != 0:
         print(
-            "Error when tshark port !" + data[SPORT] + ": skip tcp correction")
+            "Error when tshark port !" + data[SPORT] + ": skip tcp correction", file=sys.stderr)
         return -1
     cmd = "mv " + tmp_remain_fname + " " + remain_pcap_fname
     if subprocess.call(cmd.split()) != 0:
         print(
-            "Error when moving " + tmp_remain_fname + " to " + remain_pcap_fname +  ": skip tcp correction")
+            "Error when moving " + tmp_remain_fname + " to " + remain_pcap_fname +  ": skip tcp correction", file=sys.stderr)
         return -1
 
     # Replace meaningless IP and port with the "real" values
@@ -230,7 +237,7 @@ def split_and_replace(pcap_fname, remain_pcap_fname, data, other_data, num):
         DADDR] + ":" + other_data[SADDR] + " --infile=" + tmp_split_fname + " --outfile=" + split_fname
     if subprocess.call(cmd.split()) != 0:
         print(
-            "Error with tcprewrite " + data[SPORT] + ": skip tcp correction")
+            "Error with tcprewrite " + data[SPORT] + ": skip tcp correction", file=sys.stderr)
         return -1
     os.remove(tmp_split_fname)
     return 0
@@ -247,7 +254,7 @@ def merge_and_clean_sub_pcap(pcap_fname):
     cmd = "mergecap -w " + pcap_fname + " " + to_merge
     if subprocess.call(cmd.split()) != 0:
         print(
-            "Error with mergecap " + pcap_fname + ": skip tcp correction")
+            "Error with mergecap " + pcap_fname + ": skip tcp correction", file=sys.stderr)
         return
     for subpcap_fname in glob.glob(pcap_fname[:-5] + '__*.pcap'):
         os.remove(subpcap_fname)
@@ -367,7 +374,7 @@ def write_graph_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq):
             graph_file.write(str(time) + ',' + str(seq) + '\n')
         graph_file.close()
     except IOError as e:
-        print('IOError for graph file with ' + csv_fname + ': stop')
+        print('IOError for graph file with ' + csv_fname + ': stop', file=sys.stderr)
         exit(1)
 
 
@@ -407,7 +414,7 @@ def create_graph_csv(pcap_fname, csv_fname, connections):
         csv_file = open(csv_fname)
         data = csv_file.readlines()
     except IOError as e:
-        print('IOError for ' + csv_fname + ': skipped')
+        print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
         return
 
     # If file was generated, the csv is not empty
@@ -433,7 +440,7 @@ def process_mptcptrace_cmd(cmd, pcap_fname):
     pcap_flow_data = pcap_fname[:-5] + '.out'
     flow_data_file = open(pcap_flow_data, 'w+')
     if subprocess.call(cmd.split(), stdout=flow_data_file) != 0:
-        print("Error of mptcptrace with " + pcap_fname + "; skip process")
+        print("Error of mptcptrace with " + pcap_fname + "; skip process", file=sys.stderr)
         return
 
     connections = extract_mptcp_flow_data(flow_data_file)
@@ -469,10 +476,10 @@ def process_mptcp_trace(pcap_fname):
                 os.remove(csv_fname)
 
             except IOError as e:
-                print('IOError for ' + csv_fname + ': skipped')
+                print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
                 continue
             except ValueError as e:
-                print('ValueError for ' + csv_fname + ': skipped')
+                print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
                 continue
 
         with cd(csv_graph_tmp_dir):
@@ -607,7 +614,7 @@ def prepare_gpl_file(pcap_fname, gpl_fname):
         gpl_file_ok.close()
         return gpl_fname_ok
     except IOError as e:
-        print('IOError for graph file with ' + gpl_fname + ': skip')
+        print('IOError for graph file with ' + gpl_fname + ': skip', file=sys.stderr)
         return None
 
 
@@ -640,7 +647,7 @@ def process_tcptrace_cmd(cmd, pcap_fname):
     pcap_flow_data = pcap_fname[:-5] + '.out'
     flow_data_file = open(pcap_flow_data, 'w+')
     if subprocess.call(cmd.split(), stdout=flow_data_file) != 0:
-        print("Error of tcptrace with " + pcap_fname + "; skip process")
+        print("Error of tcptrace with " + pcap_fname + "; skip process", file=sys.stderr)
         return
     connections = extract_tcp_flow_data(flow_data_file)
 
@@ -668,10 +675,10 @@ def correct_trace(pcap_fname):
                 connections, data[SADDR], data[SPORT])
             if other_data:
                 if split_and_replace(pcap_fname, remain_pcap_fname, data, other_data, num) != 0:
-                    print("Stop correcting trace " + pcap_fname)
+                    print("Stop correcting trace " + pcap_fname, file=print_out)
                     return
         num += 1
-        print(os.path.basename(pcap_fname) + ": Corrected: " + str(num) + "/" + str(len(connections)))
+        print(os.path.basename(pcap_fname) + ": Corrected: " + str(num) + "/" + str(len(connections)), file=print_out)
 
     # Merge small pcap files into a unique one
     merge_and_clean_sub_pcap(pcap_fname)
@@ -698,7 +705,7 @@ def process_tcp_trace(pcap_fname):
         if interesting_tcp_graph(flow_name, connections):
             cmd = "xpl2gpl " + xpl_fname
             if subprocess.call(cmd.split()) != 0:
-                print("Error of xpl2gpl with " + xpl_fname + "; skip xpl file")
+                print("Error of xpl2gpl with " + xpl_fname + "; skip xpl file", file=sys.stderr)
                 continue
             prefix_fname = xpl_fname[len(trace_dir_exp) + 1:-4]
             gpl_fname = prefix_fname + '.gpl'
@@ -708,7 +715,7 @@ def process_tcp_trace(pcap_fname):
                 cmd = "gnuplot " + gpl_fname_ok
                 if subprocess.call(cmd.split(), stdout=devnull) != 0:
                     print(
-                        "Error of tcptrace with " + pcap_fname + "; skip process")
+                        "Error of tcptrace with " + pcap_fname + "; skip process", file=sys.stderr)
                     return
                 devnull.close()
 
@@ -723,11 +730,11 @@ def process_tcp_trace(pcap_fname):
                     pass
                 os.remove(prefix_fname + '.labels')
             except OSError as e:
-                print(str(e) + ": skipped")
+                print(str(e) + ": skipped", file=sys.stderr)
         try:
             os.remove(xpl_fname)
         except OSError as e:
-            print(str(e) + ": skipped")
+            print(str(e) + ": skipped", file=sys.stderr)
 
     # Save connections info
     save_connections(pcap_fname, connections)
@@ -752,9 +759,9 @@ def launch_analyze_pcap(pcap_fname, clean):
         correct_trace(pcap_fname)
         process_tcp_trace(pcap_fname)
     else:
-        print(pcap_fname + ": don't know the protocol used; skipped")
+        print(pcap_fname + ": don't know the protocol used; skipped", file=sys.stderr)
 
-    print('End for file ' + pcap_fname)
+    print('End for file ' + pcap_fname, file=print_out)
     os.remove(pcap_fname)
 
 def thread_launch(thread_id, clean):
@@ -764,13 +771,13 @@ def thread_launch(thread_id, clean):
             pcap_fname = pcap_list.pop()
         except IndexError: # no more thread
             break
-        print("Thread " + str(thread_id) + ": Analyze: " + pcap_fname)
+        print("Thread " + str(thread_id) + ": Analyze: " + pcap_fname, file=print_out)
         try:
             launch_analyze_pcap(pcap_fname, clean)
         except:
-            print(traceback.format_exc())
-            print('Error when analyzing ' + pcap_fname + ': skip')
-    print("Thread " + str(thread_id) + ": End")
+            print(traceback.format_exc(), file=sys.stderr)
+            print('Error when analyzing ' + pcap_fname + ': skip', file=sys.stderr)
+    print("Thread " + str(thread_id) + ": End", file=print_out)
 
 ##################################################
 ##                     MAIN                     ##
@@ -797,4 +804,4 @@ else:
     thread_launch(0, args.clean)
 
 
-print('End of analyze')
+print('End of analyze', file=print_out)

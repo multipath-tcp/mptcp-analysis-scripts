@@ -61,7 +61,7 @@ args = parser.parse_args()
 split_agg = args.agg.split(',')
 
 if not len(split_agg) == 2 or not is_number(split_agg[0]) or not is_number(split_agg[1]):
-    print("The aggregation argument is not well formatted")
+    print("The aggregation argument is not well formatted", file=sys.stderr)
     parser.print_help()
     exit(1)
 
@@ -69,7 +69,7 @@ start_time = split_agg[0]
 stop_time = split_agg[1]
 
 if int(start_time) > int(stop_time):
-    print("The start time is posterior to the stop time")
+    print("The start time is posterior to the stop time", file=sys.stderr)
     parser.print_help()
     exit(2)
 
@@ -89,7 +89,7 @@ for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), stat_dir_e
                 connections[fname] = pickle.load(stat_file)
                 stat_file.close()
             except IOError as e:
-                print(str(e) + ': skip stat file ' + fname)
+                print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
 
 ##################################################
 ##               PLOTTING RESULTS               ##
