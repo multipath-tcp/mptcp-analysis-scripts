@@ -172,9 +172,9 @@ for cond, elements in aggl_res.iteritems():
     int_mean.append(elements[tot_int_lbl].mean())
     int_std.append(elements[tot_int_lbl].std())
 
-tot_count = ax.bar(ind, conn_mean, width, color='b', yerr=conn_std)
-flo_count = ax.bar(ind + width, flow_mean, width, color='g', yerr=flow_std)
-int_count = ax.bar(ind + 2 * width, int_mean, width, color='r', yerr=int_std)
+tot_count = ax.bar(ind, conn_mean, width, color='b', yerr=conn_std, ecolor='g')
+flo_count = ax.bar(ind + width, flow_mean, width, color='g', yerr=flow_std, ecolor='r')
+int_count = ax.bar(ind + 2 * width, int_mean, width, color='r', yerr=int_std, ecolor='b')
 
 # add some text for labels, title and axes ticks
 ax.set_ylabel('Counts')
