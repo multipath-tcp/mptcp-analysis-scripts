@@ -46,6 +46,8 @@ import tempfile
 import threading
 import traceback
 
+from multiprocessing import Process
+
 
 class cd:
 
@@ -440,6 +442,7 @@ def process_mptcptrace_cmd(cmd, pcap_fname):
     return connections
 
 
+# We can't change dir per thread, we should use processes
 def process_mptcp_trace(pcap_fname):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     csv_tmp_dir = tempfile.mkdtemp(dir=os.getcwd())
@@ -740,7 +743,10 @@ def launch_analyze_pcap(pcap_fname, clean):
     # Prefix of the name determine the protocol used
     if pcap_filename.startswith('mptcp'):
         correct_trace(pcap_fname)
-        process_mptcp_trace(pcap_fname)
+        # we need to change dir, do that in a new process
+        p = Process(target=process_mptcp_trace, args=(pcap_fname,))
+        p.start()
+        p.join()
     elif pcap_filename.startswith('tcp'):
         correct_trace(pcap_fname)
         process_tcp_trace(pcap_fname)
