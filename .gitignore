@@ -1,7 +1,13 @@
 *.pyc
+
+# MPTCP
 file_stats.csv
 mptcptrace.log
 mptcptrace_info
+
+# Generated
+graphs/
 stats/
+traces/
 tmp.pcap
 
