@@ -73,7 +73,7 @@ if int(start_time) > int(stop_time):
     parser.print_help()
     exit(2)
 
-stat_dir_exp = os.path.expanduser(args.stat)
+stat_dir_exp = os.path.abspath(os.path.expanduser(args.stat))
 
 ##################################################
 ##                 GET THE DATA                 ##
@@ -81,7 +81,7 @@ stat_dir_exp = os.path.expanduser(args.stat)
 
 check_directory_exists(stat_dir_exp)
 connections = {}
-for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), stat_dir_exp)):
+for dirpath, dirnames, filenames in os.walk(stat_dir_exp):
     for fname in filenames:
         if args.app in fname:
             try:

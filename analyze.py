@@ -131,7 +131,7 @@ else:
 
 pcap_list = []
 check_directory_exists(trace_dir_exp)
-for dirpath, dirnames, filenames in os.walk(os.path.join(os.getcwd(), in_dir_exp)):
+for dirpath, dirnames, filenames in os.walk(in_dir_exp):
     for fname in filenames:
         if args.pcap in fname:
             # Files from UI tests will be compressed; unzip them
