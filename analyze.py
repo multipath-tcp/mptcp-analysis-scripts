@@ -176,7 +176,7 @@ for dirpath, dirnames, filenames in os.walk(in_dir_exp):
 def clean_loopback_pcap(pcap_fname):
     """ Remove noisy traffic (port 1984), see netstat """
     tmp_pcap = "tmp.pcap"
-    cmd = ['tshark', '-Y', '!(tcp.dstport==1984||tcp.srcport==1984)', '-r',
+    cmd = ['tshark', '-Y', '!(tcp.dstport==1984||tcp.srcport==1984)&&!((ip.src==127.0.0.1)&&(ip.dst==127.0.0.1))', '-r',
            pcap_fname, '-w', tmp_pcap, '-F', 'pcap']
     if subprocess.call(cmd, stdout=print_out) != 0:
         print("Error in cleaning " + pcap_fname, file=sys.stderr)
