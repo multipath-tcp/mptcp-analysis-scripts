@@ -476,6 +476,26 @@ def process_mptcp_trace(pcap_fname):
 
         csv_graph_tmp_dir = tempfile.mkdtemp(dir=graph_dir_exp)
         # The mptcptrace call will generate .csv files to cope with
+
+        # First see all csv files, to detect the relative 0 of all connections
+        relative_start = float("inf")
+        for csv_fname in glob.glob('*.csv'):
+            try:
+                csv_file = open(csv_fname)
+                data = csv_file.readlines()
+                if not data == [] and len(data) > 1:
+                    begin_time, begin_seq = get_begin_values(data[0])
+                    if begin_time < relative_start and not begin_time == 0.0:
+                        relative_start = begin_time
+                csv_file.close()
+            except IOError as e:
+                print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
+                continue
+            except ValueError as e:
+                print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
+                continue
+
+        # Then really process csv files
         for csv_fname in glob.glob('*.csv'):
             try:
                 csv_file = open(csv_fname)
@@ -485,7 +505,7 @@ def process_mptcp_trace(pcap_fname):
                     # Collect begin time and seq num to plot graph starting at 0
                     begin_time, begin_seq = get_begin_values(data[0])
 
-                    write_graph_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq)
+                    write_graph_csv(csv_graph_tmp_dir, csv_fname, data, relative_start, begin_seq)
 
                 csv_file.close()
                 # Remove the csv file
