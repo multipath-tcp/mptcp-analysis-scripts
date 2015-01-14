@@ -53,6 +53,8 @@ DPORT = 'dport'
 WSCALESRC = 'wscalesrc'
 # Window scale for destination
 WSCALEDST = 'wscaledst'
+# Duration of a connection
+DURATION = 'duration'
 
 ##################################################
 ##               COMMON FUNCTIONS               ##
