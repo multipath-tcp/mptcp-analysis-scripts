@@ -55,6 +55,10 @@ WSCALESRC = 'wscalesrc'
 WSCALEDST = 'wscaledst'
 # Duration of a connection
 DURATION = 'duration'
+# Number of packets from source to destination
+PACKS_S2D = 'packets_source2destination'
+# Number of packets from destination to source
+PACKS_D2S = 'packets_destination2source'
 
 ##################################################
 ##               COMMON FUNCTIONS               ##
