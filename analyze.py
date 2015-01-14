@@ -90,6 +90,8 @@ SIZE_LAT_ALPH = 26
 MPTCP_SEQ_FNAME = '_seq_'
 # mptcptrace file identifier in csv filename for subflow number informations
 MPTCP_SF_FNAME = '_sf_'
+# mptcptrace stats files prefix in csv filename of a subflow
+MPTCP_STATS_PREFIX = 'stats_'
 
 ##################################################
 ##                   ARGUMENTS                  ##
@@ -479,16 +481,53 @@ def process_mptcp_trace(pcap_fname):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     csv_tmp_dir = tempfile.mkdtemp(dir=os.getcwd())
     with cd(csv_tmp_dir):
-        cmd = ['mptcptrace', '-f', pcap_fname, '-s', '-w', '2']
+        # If segmentation faults, remove the -S option
+        cmd = ['mptcptrace', '-f', pcap_fname, '-s', '-S', '-w', '2']
         connections = process_mptcptrace_cmd(cmd, pcap_fname)
 
         csv_graph_tmp_dir = tempfile.mkdtemp(dir=graph_dir_exp)
         # The mptcptrace call will generate .csv files to cope with
 
         # First see all csv files, to detect the relative 0 of all connections
+        # Also, compute the duration and number of bytes of the MPTCP connection
         relative_start = float("inf")
         for csv_fname in glob.glob('*.csv'):
-            if MPTCP_SEQ_FNAME in csv_fname:
+            if csv_fname.startswith(MPTCP_STATS_PREFIX):
+                try:
+                    csv_file = open(csv_fname)
+                    # Or reuse conn_id from the stats file
+                    conn_id = get_connection_id(csv_fname)
+                    data = csv_file.readlines()
+                    first_seqs = None
+                    last_acks = None
+                    con_time = None
+                    for line in data:
+                        if 'firstSeq' in line:
+                            first_seqs = line.split(';')[-2:]
+                        elif 'lastAck' in line:
+                            last_acks = line.split(';')[-2:]
+                        elif 'conTime' in line:
+                            # Only takes one of the values, because they are the same
+                            con_time = line.split(';')[-1]
+
+                    if first_seqs and last_acks:
+                        connections[conn_id][BYTES_S2D] = int(last_acks[1]) - int(first_seqs[0])
+                        connections[conn_id][BYTES_D2S] = int(last_acks[0]) - int(first_seqs[1])
+                    if con_time:
+                        connections[conn_id][DURATION] = float(con_time)
+
+
+                    csv_file.close()
+                    # Remove now stats files
+                    os.remove(csv_fname)
+                except IOError as e:
+                    print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
+                    continue
+                except ValueError as e:
+                    print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
+                    continue
+
+            elif MPTCP_SEQ_FNAME in csv_fname:
                 try:
                     csv_file = open(csv_fname)
                     data = csv_file.readlines()
