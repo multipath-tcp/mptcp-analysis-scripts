@@ -404,7 +404,7 @@ def generate_title(csv_fname, connections):
     """ Generate the title for a mptcp connection """
 
     connection_id = get_connection_id(csv_fname)
-    title = "flows:" + str(len(connections[connection_id])) + " "
+    title = "flows:" + str(count_mptcp_subflows(connections[connection_id])) + " "
 
     # If not reverse, correct order, otherwise reverse src and dst
     reverse = is_reverse_connection(csv_fname)
