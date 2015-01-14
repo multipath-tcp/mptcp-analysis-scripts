@@ -59,6 +59,10 @@ DURATION = 'duration'
 PACKS_S2D = 'packets_source2destination'
 # Number of packets from destination to source
 PACKS_D2S = 'packets_destination2source'
+# Number of bytes from source to destination
+BYTES_S2D = 'bytes_source2destination'
+# Number of bytes from destination to source
+BYTES_D2S = 'bytes_destination2source'
 
 ##################################################
 ##               COMMON FUNCTIONS               ##
