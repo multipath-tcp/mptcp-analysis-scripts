@@ -465,7 +465,7 @@ def process_mptcptrace_cmd(cmd, pcap_fname):
     flow_data_file = open(pcap_flow_data, 'w+')
     if subprocess.call(cmd, stdout=flow_data_file) != 0:
         print("Error of mptcptrace with " + pcap_fname + "; skip process", file=sys.stderr)
-        return
+        exit(1)
 
     connections = extract_mptcp_flow_data(flow_data_file)
     # Don't forget to close and remove pcap_flow_data
