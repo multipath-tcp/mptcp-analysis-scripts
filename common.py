@@ -85,3 +85,13 @@ def is_number(s):
         return True
     except ValueError:
         return False
+
+def count_mptcp_subflows(data):
+    """ Count the number of subflows of a MPTCP connection """
+    count = 0
+    for key, value in data.iteritems():
+        # There could have "pure" data in the connection
+        if isinstance(value, dict):
+            count += 1
+
+    return count
