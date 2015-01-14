@@ -618,6 +618,9 @@ def extract_tcp_flow_data(out_file):
                 connections[conn][DURATION] = compute_duration(info)
                 connections[conn][PACKS_S2D] = int(info[7])
                 connections[conn][PACKS_D2S] = int(info[8])
+                # Note that this count is about unique_data_bytes
+                connections[conn][BYTES_S2D] = int(info[21])
+                connections[conn][BYTES_D2S] = int(info[22])
                 # TODO maybe extract more information
 
     return connections
