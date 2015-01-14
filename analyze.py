@@ -616,6 +616,8 @@ def extract_tcp_flow_data(out_file):
                 connections[conn][DPORT] = info[4]
                 detect_ipv4(connections[conn])
                 connections[conn][DURATION] = compute_duration(info)
+                connections[conn][PACKS_S2D] = int(info[7])
+                connections[conn][PACKS_D2S] = int(info[8])
                 # TODO maybe extract more information
 
     return connections
