@@ -364,12 +364,14 @@ def interesting_mptcp_graph(csv_fname, connections):
     connection_id = get_connection_id(csv_fname)
     interesting = False
     for sub_flow_id, data in connections[connection_id].iteritems():
-        # Only had the case for IPv4, but what is its equivalent in IPv6?
-        if not data[TYPE] == 'IPv4':
-            interesting = True
-        if not (data[SADDR] == LOCALHOST_IPv4 and data[DADDR] == LOCALHOST_IPv4):
-            indicates_wifi_or_rmnet(data)
-            interesting = True
+        # There could have "pure" data in the connection
+        if isinstance(data, dict):
+            # Only had the case for IPv4, but what is its equivalent in IPv6?
+            if not data[TYPE] == 'IPv4':
+                interesting = True
+            if not (data[SADDR] == LOCALHOST_IPv4 and data[DADDR] == LOCALHOST_IPv4):
+                indicates_wifi_or_rmnet(data)
+                interesting = True
     return interesting
 
 
@@ -409,18 +411,20 @@ def generate_title(csv_fname, connections):
 
     # Show all details of the subflows
     for sub_flow_id, data in connections[connection_id].iteritems():
-        # \n must be interpreted as a raw type to works with GnuPlot.py
-        title += r'\n' + "sf: " + sub_flow_id + " "
-        if reverse:
-            title += "(" + data[WSCALEDST] + " " + data[WSCALESRC] + ") "
-            title += data[DADDR] + ":" + data[DPORT] + \
-                " -> " + data[SADDR] + ":" + data[SPORT]
-        else:
-            title += "(" + data[WSCALESRC] + " " + data[WSCALEDST] + ") "
-            title += data[SADDR] + ":" + data[SPORT] + \
-                " -> " + data[DADDR] + ":" + data[DPORT]
-        if IF in data:
-            title += " [" + data[IF] + "]"
+        # There could have "pure" data in the connection
+        if isinstance(data, dict):
+            # \n must be interpreted as a raw type to works with GnuPlot.py
+            title += r'\n' + "sf: " + sub_flow_id + " "
+            if reverse:
+                title += "(" + data[WSCALEDST] + " " + data[WSCALESRC] + ") "
+                title += data[DADDR] + ":" + data[DPORT] + \
+                    " -> " + data[SADDR] + ":" + data[SPORT]
+            else:
+                title += "(" + data[WSCALESRC] + " " + data[WSCALEDST] + ") "
+                title += data[SADDR] + ":" + data[SPORT] + \
+                    " -> " + data[DADDR] + ":" + data[DPORT]
+            if IF in data:
+                title += " [" + data[IF] + "]"
     return title
 
 
