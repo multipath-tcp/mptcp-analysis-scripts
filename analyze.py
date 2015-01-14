@@ -582,6 +582,15 @@ def detect_ipv4(data):
         data[TYPE] = 'IPv4'
 
 
+def compute_duration(info):
+    """ Given the output of tcptrace as an array, compute the duration of a tcp connection
+        The computation done (in term of tcptrace's attributes) is last_packet - first_packet
+    """
+    first_packet = float(info[5])
+    last_packet = float(info[6])
+    return last_packet - first_packet
+
+
 def extract_tcp_flow_data(out_file):
     """ Given an (open) file, return a dictionary of as many elements as there are tcp flows """
     # Return at the beginning of the file
@@ -606,6 +615,7 @@ def extract_tcp_flow_data(out_file):
                 connections[conn][SPORT] = info[3]
                 connections[conn][DPORT] = info[4]
                 detect_ipv4(connections[conn])
+                connections[conn][DURATION] = compute_duration(info)
                 # TODO maybe extract more information
 
     return connections
