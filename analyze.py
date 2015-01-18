@@ -132,6 +132,12 @@ trace_dir_exp = os.path.abspath(os.path.expanduser(args.trace))
 graph_dir_exp = os.path.abspath(os.path.expanduser(args.graph))
 stat_dir_exp = os.path.abspath(os.path.expanduser(args.stat))
 
+if os.path.isdir(in_dir_exp):
+    base_dir = os.path.basename(in_dir_exp)
+    trace_dir_exp = os.path.join(trace_dir_exp, base_dir)
+    graph_dir_exp = os.path.join(graph_dir_exp, base_dir)
+    stat_dir_exp  = os.path.join(stat_dir_exp,  base_dir)
+
 if args.stderr:
     print_out = sys.stderr
 else:

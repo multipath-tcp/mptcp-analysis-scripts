@@ -9,5 +9,6 @@ mptcptrace_info
 graphs/
 stats/
 traces/
+pcap/
 tmp.pcap
 
