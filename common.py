@@ -25,6 +25,7 @@ from __future__ import print_function
 
 import os
 import Gnuplot
+import pickle
 
 Gnuplot.GnuplotOpts.default_term = 'pdf'
 
@@ -67,6 +68,23 @@ BYTES_D2S = 'bytes_destination2source'
 ##################################################
 ##               COMMON FUNCTIONS               ##
 ##################################################
+
+
+def save_object(obj, fname):
+    """ Save the object obj in the file with filename fname """
+    file = open(fname, 'wb')
+    file.write(pickle.dumps(obj))
+    file.close()
+
+
+def load_object(fname):
+    """ Return the object contained in the file with filename fname """
+    file = open(fname, 'rb')
+    obj = pickle.loads(file.read())
+    file.close()
+    return obj
+
+
 def check_directory_exists(directory):
     """ Check if the directory exists, and create it if needed
         If directory is a file, exit the program
