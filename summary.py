@@ -197,5 +197,5 @@ autolabel(tot_count)
 autolabel(flo_count)
 autolabel(int_count)
 
-plt.show()
+plt.savefig("count_" + args.app + "_" + start_time + "_" + stop_time + '.pdf')
 print("End of summary")
