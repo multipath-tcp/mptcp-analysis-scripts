@@ -198,4 +198,85 @@ autolabel(flo_count)
 autolabel(int_count)
 
 plt.savefig("count_" + args.app + "_" + start_time + "_" + stop_time + '.pdf')
+
+
+#TODO I will create a subroutine to avoid code duplication
+aggl_res = {}
+tot_lbl = 'Bytes s2d'
+tot_flw_lbl = 'Bytes d2s'
+tot_int_lbl = 'Duration'
+
+# Need to agglomerate same tests
+for fname, data in connections.iteritems():
+    condition = get_experiment_condition(fname)
+    if condition.startswith("mptcp"):
+        data = data[data.keys()[0]]
+    here = [i for i in data.keys() if i in [BYTES_S2D, BYTES_D2S, DURATION]]
+    if not len(here) == 3:
+        continue
+    if condition in aggl_res:
+        aggl_res[condition][tot_lbl] += [data[BYTES_S2D]]
+        aggl_res[condition][tot_flw_lbl] += [data[BYTES_D2S]]
+        aggl_res[condition][tot_int_lbl] += [data[DURATION]]
+    else:
+        aggl_res[condition] = {
+            tot_lbl: [data[BYTES_S2D]], tot_flw_lbl: [data[BYTES_D2S]], tot_int_lbl: [data[DURATION]]}
+
+# At the end, convert Python arrays to numpy arrays (easier for mean and std)
+for cond, elements in aggl_res.iteritems():
+    for label, array in elements.iteritems():
+        elements[label] = np.array(array)
+
+print(aggl_res)
+
+
+N = len(aggl_res)
+ind = np.arange(N)
+labels = []
+conn_mean = []
+conn_std = []
+flow_mean = []
+flow_std = []
+int_mean = []
+int_std = []
+width = 0.30       # the width of the bars
+fig, ax = plt.subplots()
+
+# So far, simply count the number of connections
+for cond, elements in aggl_res.iteritems():
+    labels.append(cond)
+    conn_mean.append(elements[tot_lbl].mean())
+    conn_std.append(elements[tot_lbl].std())
+    flow_mean.append(elements[tot_flw_lbl].mean())
+    flow_std.append(elements[tot_flw_lbl].std())
+    int_mean.append(elements[tot_int_lbl].mean())
+    int_std.append(elements[tot_int_lbl].std())
+
+tot_count = ax.bar(ind, conn_mean, width, color='b', yerr=conn_std, ecolor='g')
+flo_count = ax.bar(ind + width, flow_mean, width, color='g', yerr=flow_std, ecolor='r')
+int_count = ax.bar(ind + 2 * width, int_mean, width, color='r', yerr=int_std, ecolor='b')
+
+# add some text for labels, title and axes ticks
+ax.set_ylabel('Values (bytes & seconds)')
+ax.set_title('Counts of total and interesting connections of ' + args.app)
+ax.set_xticks(ind + width)
+ax.set_xticklabels(labels)
+
+ax.legend((tot_count[0], flo_count[0], int_count[0]),
+          (tot_lbl, tot_flw_lbl, tot_int_lbl))
+
+
+def autolabel(rects):
+    # attach some text labels
+    for rect in rects:
+        height = rect.get_height()
+        ax.text(rect.get_x() + rect.get_width() / 2., 1.05 * height, '%d' % int(height),
+                ha='center', va='bottom')
+
+autolabel(tot_count)
+autolabel(flo_count)
+autolabel(int_count)
+
+plt.savefig("bytes_" + args.app + "_" + start_time + "_" + stop_time + '.pdf')
+
 print("End of summary")
