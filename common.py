@@ -198,3 +198,13 @@ def indicates_wifi_or_rmnet(data):
         data[IF] = WIFI
     else:
         data[IF] = RMNET
+
+
+def detect_ipv4(data):
+    """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
+    saddr = data[SADDR]
+    daddr = data[DADDR]
+    num_saddr = saddr.split('.')
+    num_daddr = daddr.split('.')
+    if len(num_saddr) == 4 and len(num_daddr) == 4:
+        data[TYPE] = 'IPv4'
