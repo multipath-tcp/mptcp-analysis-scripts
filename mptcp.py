@@ -83,7 +83,7 @@ def extract_mptcp_flow_data(out_file):
             # A typical line: MPTCP connection 0 with id 2
             words = line.split()
             current_connection = words[-1]
-            connections[current_connection] = {}
+            connections[current_connection] = MPTCPConnection(current_connection)
 
         # Case 2: line for a subflow
         elif current_connection is not False and line.startswith("\tSubflow"):
@@ -92,22 +92,23 @@ def extract_mptcp_flow_data(out_file):
             # 37.185.171.74 daddr 194.78.99.114
             words = line.split()
             sub_flow_id = words[1]
-            connections[current_connection][sub_flow_id] = {}
+            subflow = MPTCPSubFlow(sub_flow_id)
             index_wscale = words.index("wscale")
-            connections[current_connection][sub_flow_id][
+            subflow.attr[
                 WSCALESRC] = words[index_wscale + 2]
-            connections[current_connection][sub_flow_id][
+            subflow.attr[
                 WSCALEDST] = words[index_wscale + 3]
-            connections[current_connection][sub_flow_id][
+            subflow.attr[
                 TYPE] = words[index_wscale + 4]
             index = words.index("sport")
             while index + 1 < len(words):
-                attr = words[index]
+                attri = words[index]
                 value = words[index + 1]
-                connections[current_connection][sub_flow_id][attr] = value
+                subflow.attr[attri] = value
                 index += 2
 
-            indicates_wifi_or_rmnet(connections[current_connection][sub_flow_id])
+            subflow.indicates_wifi_or_rmnet()
+            connections[current_connection].flows[sub_flow_id] = subflow
 
         # Case 3: skip the line (no more current connection)
         else:
@@ -171,13 +172,11 @@ def interesting_mptcp_graph(csv_fname, connections):
         Note that is the graph is interesting and IPv4, indicates if the traffic is Wi-Fi or rmnet
     """
     connection_id = get_connection_id(csv_fname)
-    for sub_flow_id, data in connections[connection_id].iteritems():
-        # There could have "pure" data in the connection
-        if isinstance(data, dict):
-            # Only had the case for IPv4, but what is its equivalent in IPv6?
-            if not data[TYPE] == 'IPv4':
+    for sub_flow_id, conn in connections[connection_id].flows.iteritems():
+        # Only had the case for IPv4, but what is its equivalent in IPv6?
+        if not conn.attr[TYPE] == 'IPv4':
                 return True
-            if not (data[SADDR] == LOCALHOST_IPv4 and data[DADDR] == LOCALHOST_IPv4):
+        if not (conn.attr[SADDR] == LOCALHOST_IPv4 and conn.attr[DADDR] == LOCALHOST_IPv4):
                 return True
     return False
 
@@ -211,27 +210,25 @@ def generate_title(csv_fname, connections):
     """ Generate the title for a mptcp connection """
 
     connection_id = get_connection_id(csv_fname)
-    title = "flows:" + str(count_mptcp_subflows(connections[connection_id])) + " "
+    title = "flows:" + str(len(connections[connection_id].flows)) + " "
 
     # If not reverse, correct order, otherwise reverse src and dst
     reverse = is_reverse_connection(csv_fname)
 
     # Show all details of the subflows
-    for sub_flow_id, data in connections[connection_id].iteritems():
-        # There could have "pure" data in the connection
-        if isinstance(data, dict):
-            # \n must be interpreted as a raw type to works with GnuPlot.py
-            title += r'\n' + "sf: " + sub_flow_id + " "
-            if reverse:
-                title += "(" + data[WSCALEDST] + " " + data[WSCALESRC] + ") "
-                title += data[DADDR] + ":" + data[DPORT] + \
-                    " -> " + data[SADDR] + ":" + data[SPORT]
-            else:
-                title += "(" + data[WSCALESRC] + " " + data[WSCALEDST] + ") "
-                title += data[SADDR] + ":" + data[SPORT] + \
-                    " -> " + data[DADDR] + ":" + data[DPORT]
-            if IF in data:
-                title += " [" + data[IF] + "]"
+    for sub_flow_id, conn in connections[connection_id].flows.iteritems():
+        # \n must be interpreted as a raw type to works with GnuPlot.py
+        title += r'\n' + "sf: " + sub_flow_id + " "
+        if reverse:
+            title += "(" + conn.attr[WSCALEDST] + " " + conn.attr[WSCALESRC] + ") "
+            title += conn.attr[DADDR] + ":" + conn.attr[DPORT] + \
+                " -> " + conn.attr[SADDR] + ":" + conn.attr[SPORT]
+        else:
+            title += "(" + conn.attr[WSCALESRC] + " " + conn.attr[WSCALEDST] + ") "
+            title += conn.attr[SADDR] + ":" + conn.attr[SPORT] + \
+                " -> " + conn.attr[DADDR] + ":" + conn.attr[DPORT]
+        if IF in conn.attr:
+            title += " [" + conn.attr[IF] + "]"
     return title
 
 
@@ -304,10 +301,10 @@ def process_mptcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp):
                             con_time = line.split(';')[-1]
 
                     if first_seqs and last_acks:
-                        connections[conn_id][BYTES_S2D] = int(last_acks[1]) - int(first_seqs[0])
-                        connections[conn_id][BYTES_D2S] = int(last_acks[0]) - int(first_seqs[1])
+                        connections[conn_id].attr[BYTES_S2D] = int(last_acks[1]) - int(first_seqs[0])
+                        connections[conn_id].attr[BYTES_D2S] = int(last_acks[0]) - int(first_seqs[1])
                     if con_time:
-                        connections[conn_id][DURATION] = float(con_time)
+                        connections[conn_id].attr[DURATION] = float(con_time)
 
 
                     csv_file.close()
