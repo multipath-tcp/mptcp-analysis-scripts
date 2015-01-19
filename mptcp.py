@@ -48,7 +48,7 @@ MPTCP_SF_FNAME = '_sf_'
 MPTCP_STATS_PREFIX = 'stats_'
 
 ##################################################
-##                  MPTCPTRACE                  ##
+##        CONNECTION IDENTIFIER RELATED         ##
 ##################################################
 
 
@@ -68,6 +68,11 @@ def is_reverse_connection(csv_fname):
     """
     first_underscore_index = csv_fname.index("_")
     return (csv_fname[0:first_underscore_index] == "s2c")
+
+
+##################################################
+##           CONNECTION DATA RELATED            ##
+##################################################
 
 
 def extract_mptcp_flow_data(out_file):
@@ -113,6 +118,33 @@ def extract_mptcp_flow_data(out_file):
         else:
             current_connection = False
     return connections
+
+
+##################################################
+##                  MPTCPTRACE                  ##
+##################################################
+
+
+def process_mptcptrace_cmd(cmd, pcap_fname):
+    """ Launch the command cmd given in argument, and return a dictionary containing information
+        about connections of the pcap file analyzed
+    """
+    pcap_flow_data = pcap_fname[:-5] + '.out'
+    flow_data_file = open(pcap_flow_data, 'w+')
+    if subprocess.call(cmd, stdout=flow_data_file) != 0:
+        print("Error of mptcptrace with " + pcap_fname + "; skip process", file=sys.stderr)
+        exit(1)
+
+    connections = extract_mptcp_flow_data(flow_data_file)
+    # Don't forget to close and remove pcap_flow_data
+    flow_data_file.close()
+    os.remove(pcap_flow_data)
+    return connections
+
+
+##################################################
+##                GRAPH RELATED                 ##
+##################################################
 
 
 def interesting_mptcp_graph(csv_fname, connections):
@@ -215,21 +247,9 @@ def create_graph_csv(pcap_fname, csv_fname, graph_dir_exp, connections):
     g.reset()
 
 
-def process_mptcptrace_cmd(cmd, pcap_fname):
-    """ Launch the command cmd given in argument, and return a dictionary containing information
-        about connections of the pcap file analyzed
-    """
-    pcap_flow_data = pcap_fname[:-5] + '.out'
-    flow_data_file = open(pcap_flow_data, 'w+')
-    if subprocess.call(cmd, stdout=flow_data_file) != 0:
-        print("Error of mptcptrace with " + pcap_fname + "; skip process", file=sys.stderr)
-        exit(1)
-
-    connections = extract_mptcp_flow_data(flow_data_file)
-    # Don't forget to close and remove pcap_flow_data
-    flow_data_file.close()
-    os.remove(pcap_flow_data)
-    return connections
+##################################################
+##               MPTCP PROCESSING               ##
+##################################################
 
 
 # We can't change dir per thread, we should use processes
