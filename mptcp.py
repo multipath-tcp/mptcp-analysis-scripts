@@ -48,31 +48,13 @@ MPTCP_SF_FNAME = '_sf_'
 MPTCP_STATS_PREFIX = 'stats_'
 
 ##################################################
-##        CONNECTION IDENTIFIER RELATED         ##
-##################################################
-
-
-def get_connection_id(csv_fname):
-    """ Given the filename of the csv file, return the id of the MPTCP connection
-        The id (returned as str) is assumed to be between last _ and last . in csv_fname
-    """
-    last_underscore_index = csv_fname.rindex("_")
-    last_dot_index = csv_fname.rindex(".")
-    return csv_fname[last_underscore_index + 1:last_dot_index]
-
-
-def is_reverse_connection(csv_fname):
-    """ Given the filename of the csv file, return True is it is a c2s flow or False if it is a s2c
-        one
-        The type is assumed to be before the first _ in csv_fname
-    """
-    first_underscore_index = csv_fname.index("_")
-    return (csv_fname[0:first_underscore_index] == "s2c")
-
-
-##################################################
 ##           CONNECTION DATA RELATED            ##
 ##################################################
+
+
+class MPTCPConnection(BasicConnection):
+    """ Represent a MPTCP connection """
+    flows = {}
 
 
 def extract_mptcp_flow_data(out_file):
@@ -118,6 +100,28 @@ def extract_mptcp_flow_data(out_file):
         else:
             current_connection = False
     return connections
+
+##################################################
+##        CONNECTION IDENTIFIER RELATED         ##
+##################################################
+
+
+def get_connection_id(csv_fname):
+    """ Given the filename of the csv file, return the id of the MPTCP connection
+        The id (returned as str) is assumed to be between last _ and last . in csv_fname
+    """
+    last_underscore_index = csv_fname.rindex("_")
+    last_dot_index = csv_fname.rindex(".")
+    return csv_fname[last_underscore_index + 1:last_dot_index]
+
+
+def is_reverse_connection(csv_fname):
+    """ Given the filename of the csv file, return True is it is a c2s flow or False if it is a s2c
+        one
+        The type is assumed to be before the first _ in csv_fname
+    """
+    first_underscore_index = csv_fname.index("_")
+    return (csv_fname[0:first_underscore_index] == "s2c")
 
 
 ##################################################
