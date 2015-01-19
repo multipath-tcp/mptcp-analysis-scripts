@@ -26,8 +26,22 @@ from __future__ import print_function
 import os
 import Gnuplot
 import pickle
+import subprocess
+import sys
 
-Gnuplot.GnuplotOpts.default_term = 'pdf'
+Gnuplot.GnuplotOpts.default_term = 'x11'
+
+
+##################################################
+##            WORKING DIRECTORIES               ##
+##################################################
+in_dir_exp = ""
+trace_dir_exp = ""
+graph_dir_exp = ""
+stat_dir_exp = ""
+
+
+print_out = sys.stdout
 
 
 ##################################################
@@ -64,6 +78,15 @@ PACKS_D2S = 'packets_destination2source'
 BYTES_S2D = 'bytes_source2destination'
 # Number of bytes from destination to source
 BYTES_D2S = 'bytes_destination2source'
+
+# IPv4 localhost address
+LOCALHOST_IPv4 = '127.0.0.1'
+# Port number of RedSocks
+PORT_RSOCKS = '8123'
+# Prefix of the Wi-Fi interface IP address
+PREFIX_WIFI_IF = '192.168.'
+# Size of Latin alphabet
+SIZE_LAT_ALPH = 26
 
 ##################################################
 ##               COMMON FUNCTIONS               ##
@@ -113,3 +136,56 @@ def count_mptcp_subflows(data):
             count += 1
 
     return count
+
+
+##################################################
+##                   PCAP                       ##
+##################################################
+
+
+def copy_remain_pcap_file(pcap_fname):
+    """ Given a pcap filename, return the filename of a copy, used for correction of traces """
+    remain_pcap_fname = pcap_fname[:-5] + "__rem.pcap"
+    cmd = ['cp', pcap_fname, remain_pcap_fname]
+    if subprocess.call(cmd, stdout=print_out) != 0:
+        print("Error when copying " + pcap_fname + ": skip tcp correction", file=sys.stderr)
+        return None
+    return remain_pcap_fname
+
+
+def save_connections(pcap_fname, connections):
+    """ Using the name pcap_fname, save the statistics about connections """
+    stat_fname = os.path.join(
+        stat_dir_exp, os.path.basename(pcap_fname)[:-5])
+    try:
+        stat_file = open(stat_fname, 'w')
+        pickle.dump(connections, stat_file)
+        stat_file.close()
+    except IOError as e:
+        print(str(e) + ': no stat file for ' + pcap_fname, file=sys.stderr)
+
+
+def clean_loopback_pcap(pcap_fname):
+    """ Remove noisy traffic (port 1984), see netstat """
+    tmp_pcap = "tmp.pcap"
+    cmd = ['tshark', '-Y', '!(tcp.dstport==1984||tcp.srcport==1984)&&!((ip.src==127.0.0.1)&&(ip.dst==127.0.0.1))', '-r',
+           pcap_fname, '-w', tmp_pcap, '-F', 'pcap']
+    if subprocess.call(cmd, stdout=print_out) != 0:
+        print("Error in cleaning " + pcap_fname, file=sys.stderr)
+        return
+    cmd = ['mv', tmp_pcap, pcap_fname]
+    if subprocess.call(cmd, stdout=print_out) != 0:
+        print("Error in moving " + tmp_pcap + " to " + pcap_fname, file=sys.stderr)
+
+
+##################################################
+##             CONNECTION RELATED               ##
+##################################################
+
+
+def indicates_wifi_or_rmnet(data):
+    """ Given data of a mptcp connection subflow, indicates if comes from wifi or rmnet """
+    if data[SADDR].startswith(PREFIX_WIFI_IF) or data[DADDR].startswith(PREFIX_WIFI_IF):
+        data[IF] = WIFI
+    else:
+        data[IF] = RMNET
