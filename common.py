@@ -94,7 +94,7 @@ PREFIX_WIFI_IF = '192.168.'
 SIZE_LAT_ALPH = 26
 
 ##################################################
-##               COMMON FUNCTIONS               ##
+##         (DE)SERIALIZATION OF OBJECTS         ##
 ##################################################
 
 
@@ -111,6 +111,10 @@ def load_object(fname):
     obj = pickle.loads(file.read())
     file.close()
     return obj
+
+##################################################
+##               COMMON FUNCTIONS               ##
+##################################################
 
 
 def check_directory_exists(directory):
