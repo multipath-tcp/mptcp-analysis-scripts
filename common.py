@@ -29,7 +29,7 @@ import pickle
 import subprocess
 import sys
 
-Gnuplot.GnuplotOpts.default_term = 'x11'
+Gnuplot.GnuplotOpts.default_term = 'pdf'
 
 ##################################################
 ##               COMMON CLASSES                 ##
