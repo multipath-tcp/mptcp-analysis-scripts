@@ -1,7 +1,7 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 #
-#  Copyright 2014-2015 Matthieu Baerts & Quentin De Coninck
+#  Copyright 2015 Matthieu Baerts & Quentin De Coninck
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ from __future__ import print_function
 from common import *
 
 import glob
+import os
 import subprocess
 import sys
 
@@ -221,7 +222,7 @@ def process_tcptrace_cmd(cmd, pcap_fname):
     return connections
 
 
-def merge_and_clean_sub_pcap(pcap_fname):
+def merge_and_clean_sub_pcap(pcap_fname, print_out=sys.stdout):
     """ Merge pcap files with name beginning with pcap_fname followed by two underscores and delete
         them
     """
@@ -237,7 +238,7 @@ def merge_and_clean_sub_pcap(pcap_fname):
         os.remove(subpcap_fname)
 
 
-def split_and_replace(pcap_fname, remain_pcap_fname, data, other_data, num):
+def split_and_replace(pcap_fname, remain_pcap_fname, data, other_data, num, print_out=sys.stdout):
     """ Split remain_pcap_fname and replace DADDR and DPORT of data by SADDR and DADDR of other_data
         num will be the numerotation of the splitted file
     """
@@ -278,14 +279,14 @@ def split_and_replace(pcap_fname, remain_pcap_fname, data, other_data, num):
     return 0
 
 
-def correct_trace(pcap_fname):
+def correct_trace(pcap_fname, print_out=sys.stdout):
     """ Make the link between two unidirectional connections that form one bidirectional one
         Do this also for mptcp, because mptcptrace will not be able to find all conversations
     """
     cmd = ['tcptrace', '-n', '-l', '--csv', pcap_fname]
     connections = process_tcptrace_cmd(cmd, pcap_fname)
     # Create the remaining_file
-    remain_pcap_fname = copy_remain_pcap_file(pcap_fname)
+    remain_pcap_fname = copy_remain_pcap_file(pcap_fname, print_out=print_out)
     if not remain_pcap_fname:
         return
 
@@ -305,7 +306,7 @@ def correct_trace(pcap_fname):
     merge_and_clean_sub_pcap(pcap_fname)
 
 
-def process_tcp_trace(pcap_fname, graph_dir_exp):
+def process_tcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0
@@ -359,4 +360,4 @@ def process_tcp_trace(pcap_fname, graph_dir_exp):
             print(str(e) + ": skipped", file=sys.stderr)
 
     # Save connections info
-    save_connections(pcap_fname, connections)
+    save_connections(pcap_fname, stat_dir_exp, connections)
