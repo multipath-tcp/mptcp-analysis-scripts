@@ -161,9 +161,7 @@ def prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp):
             gpl_file_ok.write(line)
         # Give the pdf filename where the graph will be stored
         pdf_fname = os.path.join(graph_dir_exp,
-                                 os.path.basename(pcap_fname)[:-5]
-                                 + "_" + gpl_fname[:-4]
-                                 + '.pdf')
+                                 gpl_fname[:-4] + '.pdf')
 
         # Needed to give again the line with all data (5th line from the end)
         # Better to reset the plot (to avoid potential bugs)
