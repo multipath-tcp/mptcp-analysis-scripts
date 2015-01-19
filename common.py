@@ -48,6 +48,38 @@ class cd:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
 
+##################################################
+##             CONNECTION RELATED               ##
+##################################################
+
+
+class BasicFlow():
+    """ Represent a flow between two hosts at transport layer """
+    attr = {}
+
+    def indicates_wifi_or_rmnet(self):
+        """ Given data of a mptcp connection subflow, indicates if comes from wifi or rmnet """
+        if attr[SADDR].startswith(PREFIX_WIFI_IF) or attr[DADDR].startswith(PREFIX_WIFI_IF):
+            attr[IF] = WIFI
+        else:
+            attr[IF] = RMNET
+
+
+    def detect_ipv4(self):
+        """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
+        saddr = attr[SADDR]
+        daddr = attr[DADDR]
+        num_saddr = saddr.split('.')
+        num_daddr = daddr.split('.')
+        if len(num_saddr) == 4 and len(num_daddr) == 4:
+            attr[TYPE] = 'IPv4'
+
+
+class BasicConnection():
+    """ Represent a connection between two hosts at high level """
+    conn_id = ""
+    attr = {}
+
 
 ##################################################
 ##               COMMON CONSTANTS               ##
@@ -187,24 +219,19 @@ def clean_loopback_pcap(pcap_fname, print_out=sys.stdout):
         print("Error in moving " + tmp_pcap + " to " + pcap_fname, file=sys.stderr)
 
 
-##################################################
-##             CONNECTION RELATED               ##
-##################################################
-
-
 def indicates_wifi_or_rmnet(data):
-    """ Given data of a mptcp connection subflow, indicates if comes from wifi or rmnet """
-    if data[SADDR].startswith(PREFIX_WIFI_IF) or data[DADDR].startswith(PREFIX_WIFI_IF):
-        data[IF] = WIFI
-    else:
-        data[IF] = RMNET
+        """ Given data of a mptcp connection subflow, indicates if comes from wifi or rmnet """
+        if data[SADDR].startswith(PREFIX_WIFI_IF) or data[DADDR].startswith(PREFIX_WIFI_IF):
+            data[IF] = WIFI
+        else:
+            data[IF] = RMNET
 
 
 def detect_ipv4(data):
-    """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
-    saddr = data[SADDR]
-    daddr = data[DADDR]
-    num_saddr = saddr.split('.')
-    num_daddr = daddr.split('.')
-    if len(num_saddr) == 4 and len(num_daddr) == 4:
-        data[TYPE] = 'IPv4'
+        """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
+        saddr = data[SADDR]
+        daddr = data[DADDR]
+        num_saddr = saddr.split('.')
+        num_daddr = daddr.split('.')
+        if len(num_saddr) == 4 and len(num_daddr) == 4:
+            data[TYPE] = 'IPv4'
