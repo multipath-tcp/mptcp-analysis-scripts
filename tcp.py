@@ -74,20 +74,23 @@ def extract_tcp_flow_data(out_file):
                 # Case 3: line begin with number --> extract info
                 nb_conn = info[0]
                 conn = convert_number_to_name(int(info[0]) - 1)
-                connections[conn] = {}
-                connections[conn][SADDR] = info[1]
-                connections[conn][DADDR] = info[2]
-                connections[conn][SPORT] = info[3]
-                connections[conn][DPORT] = info[4]
-                detect_ipv4(connections[conn])
-                indicates_wifi_or_rmnet(connections[conn])
-                connections[conn][DURATION] = compute_duration(info)
-                connections[conn][PACKS_S2D] = int(info[7])
-                connections[conn][PACKS_D2S] = int(info[8])
+                connection = TCPConnection(conn)
+                connection.flow.attr[SADDR] = info[1]
+                connection.flow.attr[DADDR] = info[2]
+                connection.flow.attr[SPORT] = info[3]
+                connection.flow.attr[DPORT] = info[4]
+                connection.flow.detect_ipv4()
+                connection.flow.indicates_wifi_or_rmnet()
+                connection.flow.attr[DURATION] = compute_duration(info)
+                connection.flow.attr[PACKS_S2D] = int(info[7])
+                connection.flow.attr[PACKS_D2S] = int(info[8])
                 # Note that this count is about unique_data_bytes
-                connections[conn][BYTES_S2D] = int(info[21])
-                connections[conn][BYTES_D2S] = int(info[22])
+                connection.flow.attr[BYTES_S2D] = int(info[21])
+                connection.flow.attr[BYTES_D2S] = int(info[22])
                 # TODO maybe extract more information
+
+                connections[conn] = connection
+
 
     return connections
 
@@ -176,9 +179,9 @@ def get_connection_data_with_ip_port_tcp(connections, ip, port, dst=True):
         If no connection found, return None
         Support for dst=False will be provided if needed
     """
-    for conn, data in connections.iteritems():
-        if data[DADDR] == ip and data[DPORT] == port:
-            return data
+    for conn_id, conn in connections.iteritems():
+        if conn.flow.attr[DADDR] == ip and conn.flow.attr[DPORT] == port:
+            return conn
 
     # If reach this, no matching connection found
     return None
@@ -200,25 +203,25 @@ def merge_and_clean_sub_pcap(pcap_fname, print_out=sys.stdout):
         os.remove(subpcap_fname)
 
 
-def split_and_replace(pcap_fname, remain_pcap_fname, data, other_data, num, print_out=sys.stdout):
-    """ Split remain_pcap_fname and replace DADDR and DPORT of data by SADDR and DADDR of other_data
+def split_and_replace(pcap_fname, remain_pcap_fname, conn, other_conn, num, print_out=sys.stdout):
+    """ Split remain_pcap_fname and replace DADDR and DPORT of conn by SADDR and DADDR of other_conn
         num will be the numerotation of the splitted file
     """
     # Split on the port criterion
     condition = '(tcp.srcport==' + \
-        data[SPORT] + ')or(tcp.dstport==' + data[SPORT] + ')'
+        conn.flow.attr[SPORT] + ')or(tcp.dstport==' + conn.flow.attr[SPORT] + ')'
     tmp_split_fname = pcap_fname[:-5] + "__tmp.pcap"
     cmd = ['tshark', '-r', remain_pcap_fname, '-Y', condition, '-w', tmp_split_fname]
     if subprocess.call(cmd, stdout=print_out) != 0:
         print(
-            "Error when tshark port " + data[SPORT] + ": skip tcp correction", file=sys.stderr)
+            "Error when tshark port " + conn.flow.attr[SPORT] + ": skip tcp correction", file=sys.stderr)
         return -1
     tmp_remain_fname = pcap_fname[:-5] + "__tmprem.pcap"
     cmd[4] = "!(" + condition + ")"
     cmd[6] = tmp_remain_fname
     if subprocess.call(cmd, stdout=print_out) != 0:
         print(
-            "Error when tshark port !" + data[SPORT] + ": skip tcp correction", file=sys.stderr)
+            "Error when tshark port !" + conn.flow.attr[SPORT] + ": skip tcp correction", file=sys.stderr)
         return -1
     cmd = ['mv', tmp_remain_fname, remain_pcap_fname]
     if subprocess.call(cmd, stdout=print_out) != 0:
@@ -229,13 +232,13 @@ def split_and_replace(pcap_fname, remain_pcap_fname, data, other_data, num, prin
     # Replace meaningless IP and port with the "real" values
     split_fname = pcap_fname[:-5] + "__" + str(num) + ".pcap"
     cmd = ['tcprewrite',
-           "--portmap=" + data[DPORT] + ":" + other_data[SPORT],
-           "--pnat=" + data[DADDR] + ":" + other_data[SADDR],
+           "--portmap=" + conn.flow.attr[DPORT] + ":" + other_conn.flow.attr[SPORT],
+           "--pnat=" + conn.flow.attr[DADDR] + ":" + other_conn.flow.attr[SADDR],
            "--infile=" + tmp_split_fname,
            "--outfile=" + split_fname]
     if subprocess.call(cmd, stdout=print_out) != 0:
         print(
-            "Error with tcprewrite " + data[SPORT] + ": skip tcp correction", file=sys.stderr)
+            "Error with tcprewrite " + conn.flow.attr[SPORT] + ": skip tcp correction", file=sys.stderr)
         return -1
     os.remove(tmp_split_fname)
     return 0
@@ -253,12 +256,12 @@ def correct_trace(pcap_fname, print_out=sys.stdout):
         return
 
     num = 0
-    for conn, data in connections.iteritems():
-        if data[DADDR] == LOCALHOST_IPv4 and data[DPORT] == PORT_RSOCKS:
-            other_data = get_connection_data_with_ip_port_tcp(
-                connections, data[SADDR], data[SPORT])
-            if other_data:
-                if split_and_replace(pcap_fname, remain_pcap_fname, data, other_data, num) != 0:
+    for conn_id, conn in connections.iteritems():
+        if conn.flow.attr[DADDR] == LOCALHOST_IPv4 and conn.flow.attr[DPORT] == PORT_RSOCKS:
+            other_conn = get_connection_data_with_ip_port_tcp(
+                connections, conn.flow.attr[SADDR], conn.flow.attr[SPORT])
+            if other_conn:
+                if split_and_replace(pcap_fname, remain_pcap_fname, conn, other_conn, num) != 0:
                     print("Stop correcting trace " + pcap_fname, file=print_out)
                     return
         num += 1
@@ -277,7 +280,7 @@ def interesting_tcp_graph(flow_name, connections):
         This function assumes that a graph is interesting if it has at least one connection that
         if not 127.0.0.1 -> 127.0.0.1
     """
-    return (not connections[flow_name][TYPE] == 'IPv4' or connections[flow_name][IF])
+    return (not connections[flow_name].flow.attr[TYPE] == 'IPv4' or connections[flow_name].flow.attr[IF])
 
 
 def prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp):
