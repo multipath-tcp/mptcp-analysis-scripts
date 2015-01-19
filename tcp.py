@@ -34,21 +34,8 @@ import subprocess
 import sys
 
 ##################################################
-##                   TCPTRACE                   ##
+##        CONNECTION IDENTIFIER RELATED         ##
 ##################################################
-
-
-def get_connection_data_with_ip_port_tcp(connections, ip, port, dst=True):
-    """ Get data for TCP connection with destination IP ip and port port in connections
-        If no connection found, return None
-        Support for dst=False will be provided if needed
-    """
-    for conn, data in connections.iteritems():
-        if data[DADDR] == ip and data[DPORT] == port:
-            return data
-
-    # If reach this, no matching connection found
-    return None
 
 
 def convert_number_to_letter(nb_conn):
@@ -76,6 +63,32 @@ def convert_number_to_name(nb_conn):
             + convert_number_to_letter(2 * mod_nb + 1)
     else:
         return convert_number_to_letter(2 * nb_conn) + '2' + convert_number_to_letter(2 * nb_conn + 1)
+
+
+def get_flow_name(xpl_fname):
+    """ Return the flow name in the form 'a2b' (and not 'b2a') """
+    # Basic information is contained between the two last '_'
+    last_us_index = xpl_fname.rindex("_")
+    nearly_last_us_index = xpl_fname.rindex("_", 0, last_us_index)
+    flow_name = xpl_fname[nearly_last_us_index + 1:last_us_index]
+
+    # Need to check if we need to reverse the flow name
+    two_index = flow_name.index("2")
+    left_letter = flow_name[two_index - 1]
+    right_letter = flow_name[-1]
+    if right_letter < left_letter:
+        # Swap those two characters
+        chars = list(flow_name)
+        chars[two_index - 1] = right_letter
+        chars[-1] = left_letter
+        return ''.join(chars)
+    else:
+        return flow_name
+
+
+##################################################
+##           CONNECTION DATA RELATED            ##
+##################################################
 
 
 def compute_duration(info):
@@ -122,74 +135,9 @@ def extract_tcp_flow_data(out_file):
     return connections
 
 
-def interesting_tcp_graph(flow_name, connections):
-    """ Return True if the MPTCP graph is worthy, else False
-        This function assumes that a graph is interesting if it has at least one connection that
-        if not 127.0.0.1 -> 127.0.0.1
-        Note that is the graph is interesting and IPv4, indicates if the traffic is Wi-Fi or rmnet
-    """
-    if not connections[flow_name][TYPE] == 'IPv4':
-        return True
-    if not (connections[flow_name][SADDR] == LOCALHOST_IPv4 and
-            connections[flow_name][DADDR] == LOCALHOST_IPv4):
-        indicates_wifi_or_rmnet(connections[flow_name])
-        return True
-    return False
-
-
-def prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp):
-    """ Return a gpl file name of a ready-to-use gpl file or None if an error
-        occurs
-    """
-    try:
-        gpl_fname_ok = gpl_fname[:-4] + '_ok.gpl'
-        gpl_file = open(gpl_fname, 'r')
-        gpl_file_ok = open(gpl_fname_ok, 'w')
-        data = gpl_file.readlines()
-        # Copy everything but the last 4 lines
-        for line in data[:-4]:
-            gpl_file_ok.write(line)
-        # Give the pdf filename where the graph will be stored
-        pdf_fname = os.path.join(graph_dir_exp,
-                                 gpl_fname[:-4] + '.pdf')
-
-        # Needed to give again the line with all data (5th line from the end)
-        # Better to reset the plot (to avoid potential bugs)
-        to_write = "set output '" + pdf_fname + "'\n" \
-            + "set terminal pdf\n" \
-            + data[-5] \
-            + "set terminal pdf\n" \
-            + "set output\n" \
-            + "reset\n"
-        gpl_file_ok.write(to_write)
-        # Don't forget to close files
-        gpl_file.close()
-        gpl_file_ok.close()
-        return gpl_fname_ok
-    except IOError as e:
-        print('IOError for graph file with ' + gpl_fname + ': skip', file=sys.stderr)
-        return None
-
-
-def get_flow_name(xpl_fname):
-    """ Return the flow name in the form 'a2b' (and not 'b2a') """
-    # Basic information is contained between the two last '_'
-    last_us_index = xpl_fname.rindex("_")
-    nearly_last_us_index = xpl_fname.rindex("_", 0, last_us_index)
-    flow_name = xpl_fname[nearly_last_us_index + 1:last_us_index]
-
-    # Need to check if we need to reverse the flow name
-    two_index = flow_name.index("2")
-    left_letter = flow_name[two_index - 1]
-    right_letter = flow_name[-1]
-    if right_letter < left_letter:
-        # Swap those two characters
-        chars = list(flow_name)
-        chars[two_index - 1] = right_letter
-        chars[-1] = left_letter
-        return ''.join(chars)
-    else:
-        return flow_name
+##################################################
+##                   TCPTRACE                   ##
+##################################################
 
 
 def process_tcptrace_cmd(cmd, pcap_fname):
@@ -208,6 +156,23 @@ def process_tcptrace_cmd(cmd, pcap_fname):
     flow_data_file.close()
     os.remove(pcap_flow_data)
     return connections
+
+##################################################
+##               CLEANING RELATED               ##
+##################################################
+
+
+def get_connection_data_with_ip_port_tcp(connections, ip, port, dst=True):
+    """ Get data for TCP connection with destination IP ip and port port in connections
+        If no connection found, return None
+        Support for dst=False will be provided if needed
+    """
+    for conn, data in connections.iteritems():
+        if data[DADDR] == ip and data[DPORT] == port:
+            return data
+
+    # If reach this, no matching connection found
+    return None
 
 
 def merge_and_clean_sub_pcap(pcap_fname, print_out=sys.stdout):
@@ -292,6 +257,59 @@ def correct_trace(pcap_fname, print_out=sys.stdout):
 
     # Merge small pcap files into a unique one
     merge_and_clean_sub_pcap(pcap_fname)
+
+##################################################
+##                   TCPTRACE                   ##
+##################################################
+
+
+def interesting_tcp_graph(flow_name, connections):
+    """ Return True if the MPTCP graph is worthy, else False
+        This function assumes that a graph is interesting if it has at least one connection that
+        if not 127.0.0.1 -> 127.0.0.1
+        Note that is the graph is interesting and IPv4, indicates if the traffic is Wi-Fi or rmnet
+    """
+    if not connections[flow_name][TYPE] == 'IPv4':
+        return True
+    if not (connections[flow_name][SADDR] == LOCALHOST_IPv4 and
+            connections[flow_name][DADDR] == LOCALHOST_IPv4):
+        indicates_wifi_or_rmnet(connections[flow_name])
+        return True
+    return False
+
+
+def prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp):
+    """ Return a gpl file name of a ready-to-use gpl file or None if an error
+        occurs
+    """
+    try:
+        gpl_fname_ok = gpl_fname[:-4] + '_ok.gpl'
+        gpl_file = open(gpl_fname, 'r')
+        gpl_file_ok = open(gpl_fname_ok, 'w')
+        data = gpl_file.readlines()
+        # Copy everything but the last 4 lines
+        for line in data[:-4]:
+            gpl_file_ok.write(line)
+        # Give the pdf filename where the graph will be stored
+        pdf_fname = os.path.join(graph_dir_exp,
+                                 gpl_fname[:-4] + '.pdf')
+
+        # Needed to give again the line with all data (5th line from the end)
+        # Better to reset the plot (to avoid potential bugs)
+        to_write = "set output '" + pdf_fname + "'\n" \
+            + "set terminal pdf\n" \
+            + data[-5] \
+            + "set terminal pdf\n" \
+            + "set output\n" \
+            + "reset\n"
+        gpl_file_ok.write(to_write)
+        # Don't forget to close files
+        gpl_file.close()
+        gpl_file_ok.close()
+        return gpl_fname_ok
+    except IOError as e:
+        print('IOError for graph file with ' + gpl_fname + ': skip', file=sys.stderr)
+        return None
 
 
 def process_tcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout):
