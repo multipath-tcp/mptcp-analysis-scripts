@@ -40,7 +40,11 @@ import sys
 
 class TCPConnection(BasicConnection):
     """ Represent a TCP connection """
-    flow = BasicFlow()
+    flow = None
+
+    def __init__(self, conn_id):
+        super(TCPConnection, self).__init__(conn_id)
+        self.flow = BasicFlow()
 
 
 def compute_duration(info):
