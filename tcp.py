@@ -34,6 +34,60 @@ import subprocess
 import sys
 
 ##################################################
+##           CONNECTION DATA RELATED            ##
+##################################################
+
+
+class TCPConnection(BasicConnection):
+    """ Represent a TCP connection """
+    flow = BasicFlow()
+
+
+def compute_duration(info):
+    """ Given the output of tcptrace as an array, compute the duration of a tcp connection
+        The computation done (in term of tcptrace's attributes) is last_packet - first_packet
+    """
+    first_packet = float(info[5])
+    last_packet = float(info[6])
+    return last_packet - first_packet
+
+
+def extract_tcp_flow_data(out_file):
+    """ Given an (open) file, return a dictionary of as many elements as there are tcp flows """
+    # Return at the beginning of the file
+    out_file.seek(0)
+    raw_data = out_file.readlines()
+    connections = {}
+    # The replacement of whitespaces by nothing prevents possible bugs if we use
+    # additional information from tcptrace
+    data = map(lambda x: x.replace(" ", ""), raw_data)
+    for line in data:
+        # Case 1: line start with #; skip it
+        if not line.startswith("#"):
+            info = line.split(',')
+            # Case 2: line is empty or line is the "header line"; skip it
+            if len(info) > 1 and is_number(info[0]):
+                # Case 3: line begin with number --> extract info
+                nb_conn = info[0]
+                conn = convert_number_to_name(int(info[0]) - 1)
+                connections[conn] = {}
+                connections[conn][SADDR] = info[1]
+                connections[conn][DADDR] = info[2]
+                connections[conn][SPORT] = info[3]
+                connections[conn][DPORT] = info[4]
+                detect_ipv4(connections[conn])
+                indicates_wifi_or_rmnet(connections[conn])
+                connections[conn][DURATION] = compute_duration(info)
+                connections[conn][PACKS_S2D] = int(info[7])
+                connections[conn][PACKS_D2S] = int(info[8])
+                # Note that this count is about unique_data_bytes
+                connections[conn][BYTES_S2D] = int(info[21])
+                connections[conn][BYTES_D2S] = int(info[22])
+                # TODO maybe extract more information
+
+    return connections
+
+##################################################
 ##        CONNECTION IDENTIFIER RELATED         ##
 ##################################################
 
@@ -84,56 +138,6 @@ def get_flow_name(xpl_fname):
         return ''.join(chars)
     else:
         return flow_name
-
-
-##################################################
-##           CONNECTION DATA RELATED            ##
-##################################################
-
-
-def compute_duration(info):
-    """ Given the output of tcptrace as an array, compute the duration of a tcp connection
-        The computation done (in term of tcptrace's attributes) is last_packet - first_packet
-    """
-    first_packet = float(info[5])
-    last_packet = float(info[6])
-    return last_packet - first_packet
-
-
-def extract_tcp_flow_data(out_file):
-    """ Given an (open) file, return a dictionary of as many elements as there are tcp flows """
-    # Return at the beginning of the file
-    out_file.seek(0)
-    raw_data = out_file.readlines()
-    connections = {}
-    # The replacement of whitespaces by nothing prevents possible bugs if we use
-    # additional information from tcptrace
-    data = map(lambda x: x.replace(" ", ""), raw_data)
-    for line in data:
-        # Case 1: line start with #; skip it
-        if not line.startswith("#"):
-            info = line.split(',')
-            # Case 2: line is empty or line is the "header line"; skip it
-            if len(info) > 1 and is_number(info[0]):
-                # Case 3: line begin with number --> extract info
-                nb_conn = info[0]
-                conn = convert_number_to_name(int(info[0]) - 1)
-                connections[conn] = {}
-                connections[conn][SADDR] = info[1]
-                connections[conn][DADDR] = info[2]
-                connections[conn][SPORT] = info[3]
-                connections[conn][DPORT] = info[4]
-                detect_ipv4(connections[conn])
-                indicates_wifi_or_rmnet(connections[conn])
-                connections[conn][DURATION] = compute_duration(info)
-                connections[conn][PACKS_S2D] = int(info[7])
-                connections[conn][PACKS_D2S] = int(info[8])
-                # Note that this count is about unique_data_bytes
-                connections[conn][BYTES_S2D] = int(info[21])
-                connections[conn][BYTES_D2S] = int(info[22])
-                # TODO maybe extract more information
-
-    return connections
 
 
 ##################################################
