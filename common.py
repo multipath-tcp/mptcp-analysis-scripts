@@ -53,32 +53,39 @@ class cd:
 ##################################################
 
 
-class BasicFlow():
+class BasicFlow(object):
     """ Represent a flow between two hosts at transport layer """
     attr = {}
 
+    def __init__(self):
+        self.attr = {}
+
     def indicates_wifi_or_rmnet(self):
         """ Given data of a mptcp connection subflow, indicates if comes from wifi or rmnet """
-        if attr[SADDR].startswith(PREFIX_WIFI_IF) or attr[DADDR].startswith(PREFIX_WIFI_IF):
-            attr[IF] = WIFI
+        if self.attr[SADDR].startswith(PREFIX_WIFI_IF) or self.attr[DADDR].startswith(PREFIX_WIFI_IF):
+            self.attr[IF] = WIFI
         else:
-            attr[IF] = RMNET
+            self.attr[IF] = RMNET
 
 
     def detect_ipv4(self):
         """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
-        saddr = attr[SADDR]
-        daddr = attr[DADDR]
+        saddr = self.attr[SADDR]
+        daddr = self.attr[DADDR]
         num_saddr = saddr.split('.')
         num_daddr = daddr.split('.')
         if len(num_saddr) == 4 and len(num_daddr) == 4:
-            attr[TYPE] = 'IPv4'
+            self.attr[TYPE] = 'IPv4'
 
 
-class BasicConnection():
+class BasicConnection(object):
     """ Represent a connection between two hosts at high level """
     conn_id = ""
     attr = {}
+
+    def __init__(self, cid):
+        self.conn_id = cid
+        self.attr = {}
 
 
 ##################################################
