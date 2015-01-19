@@ -124,6 +124,7 @@ def extract_tcp_flow_data(out_file):
                 connections[conn][SPORT] = info[3]
                 connections[conn][DPORT] = info[4]
                 detect_ipv4(connections[conn])
+                indicates_wifi_or_rmnet(connections[conn])
                 connections[conn][DURATION] = compute_duration(info)
                 connections[conn][PACKS_S2D] = int(info[7])
                 connections[conn][PACKS_D2S] = int(info[8])
@@ -267,15 +268,8 @@ def interesting_tcp_graph(flow_name, connections):
     """ Return True if the MPTCP graph is worthy, else False
         This function assumes that a graph is interesting if it has at least one connection that
         if not 127.0.0.1 -> 127.0.0.1
-        Note that is the graph is interesting and IPv4, indicates if the traffic is Wi-Fi or rmnet
     """
-    if not connections[flow_name][TYPE] == 'IPv4':
-        return True
-    if not (connections[flow_name][SADDR] == LOCALHOST_IPv4 and
-            connections[flow_name][DADDR] == LOCALHOST_IPv4):
-        indicates_wifi_or_rmnet(connections[flow_name])
-        return True
-    return False
+    return (not connections[flow_name][TYPE] == 'IPv4' or connections[flow_name][IF])
 
 
 def prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp):
