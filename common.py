@@ -31,17 +31,22 @@ import sys
 
 Gnuplot.GnuplotOpts.default_term = 'x11'
 
-
 ##################################################
-##            WORKING DIRECTORIES               ##
+##               COMMON CLASSES                 ##
 ##################################################
-in_dir_exp = ""
-trace_dir_exp = ""
-graph_dir_exp = ""
-stat_dir_exp = ""
 
+class cd:
+    """Context manager for changing the current working directory"""
 
-print_out = sys.stdout
+    def __init__(self, newPath):
+        self.newPath = newPath
+
+    def __enter__(self):
+        self.savedPath = os.getcwd()
+        os.chdir(self.newPath)
+
+    def __exit__(self, etype, value, traceback):
+        os.chdir(self.savedPath)
 
 
 ##################################################
@@ -143,7 +148,7 @@ def count_mptcp_subflows(data):
 ##################################################
 
 
-def copy_remain_pcap_file(pcap_fname):
+def copy_remain_pcap_file(pcap_fname, print_out=sys.stdout):
     """ Given a pcap filename, return the filename of a copy, used for correction of traces """
     remain_pcap_fname = pcap_fname[:-5] + "__rem.pcap"
     cmd = ['cp', pcap_fname, remain_pcap_fname]
@@ -153,7 +158,7 @@ def copy_remain_pcap_file(pcap_fname):
     return remain_pcap_fname
 
 
-def save_connections(pcap_fname, connections):
+def save_connections(pcap_fname, stat_dir_exp, connections):
     """ Using the name pcap_fname, save the statistics about connections """
     stat_fname = os.path.join(
         stat_dir_exp, os.path.basename(pcap_fname)[:-5])
@@ -165,7 +170,7 @@ def save_connections(pcap_fname, connections):
         print(str(e) + ': no stat file for ' + pcap_fname, file=sys.stderr)
 
 
-def clean_loopback_pcap(pcap_fname):
+def clean_loopback_pcap(pcap_fname, print_out=sys.stdout):
     """ Remove noisy traffic (port 1984), see netstat """
     tmp_pcap = "tmp.pcap"
     cmd = ['tshark', '-Y', '!(tcp.dstport==1984||tcp.srcport==1984)&&!((ip.src==127.0.0.1)&&(ip.dst==127.0.0.1))', '-r',
