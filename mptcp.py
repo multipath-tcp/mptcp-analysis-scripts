@@ -52,9 +52,22 @@ MPTCP_STATS_PREFIX = 'stats_'
 ##################################################
 
 
+class MPTCPSubFlow(BasicFlow):
+    """ Represent a MPTCP subflow """
+    subflow_id = ""
+
+    def __init__(self, sid):
+        super(MPTCPSubFlow, self).__init__()
+        self.subflow_id = sid
+
+
 class MPTCPConnection(BasicConnection):
     """ Represent a MPTCP connection """
     flows = {}
+
+    def __init__(self, cid):
+        super(MPTCPConnection, self).__init__(cid)
+        self.flows = {}
 
 
 def extract_mptcp_flow_data(out_file):
