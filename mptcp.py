@@ -107,6 +107,8 @@ def extract_mptcp_flow_data(out_file):
                 connections[current_connection][sub_flow_id][attr] = value
                 index += 2
 
+            indicates_wifi_or_rmnet(connections[current_connection][sub_flow_id])
+
         # Case 3: skip the line (no more current connection)
         else:
             current_connection = False
@@ -120,17 +122,15 @@ def interesting_mptcp_graph(csv_fname, connections):
         Note that is the graph is interesting and IPv4, indicates if the traffic is Wi-Fi or rmnet
     """
     connection_id = get_connection_id(csv_fname)
-    interesting = False
     for sub_flow_id, data in connections[connection_id].iteritems():
         # There could have "pure" data in the connection
         if isinstance(data, dict):
             # Only had the case for IPv4, but what is its equivalent in IPv6?
             if not data[TYPE] == 'IPv4':
-                interesting = True
+                return True
             if not (data[SADDR] == LOCALHOST_IPv4 and data[DADDR] == LOCALHOST_IPv4):
-                indicates_wifi_or_rmnet(data)
-                interesting = True
-    return interesting
+                return True
+    return False
 
 
 def get_begin_values(first_line):
