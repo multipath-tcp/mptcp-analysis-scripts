@@ -78,16 +78,6 @@ def convert_number_to_name(nb_conn):
         return convert_number_to_letter(2 * nb_conn) + '2' + convert_number_to_letter(2 * nb_conn + 1)
 
 
-def detect_ipv4(data):
-    """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
-    saddr = data[SADDR]
-    daddr = data[DADDR]
-    num_saddr = saddr.split('.')
-    num_daddr = daddr.split('.')
-    if len(num_saddr) == 4 and len(num_daddr) == 4:
-        data[TYPE] = 'IPv4'
-
-
 def compute_duration(info):
     """ Given the output of tcptrace as an array, compute the duration of a tcp connection
         The computation done (in term of tcptrace's attributes) is last_packet - first_packet
