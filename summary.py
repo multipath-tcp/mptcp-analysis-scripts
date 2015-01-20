@@ -26,18 +26,17 @@ from __future__ import print_function
 ##                   IMPORTS                    ##
 ##################################################
 
-from common import *
-from mptcp import *
-from tcp import *
-
 import argparse
-import Gnuplot
+import common as co
 import matplotlib
 import matplotlib.pyplot as plt
+import mptcp
 import numpy as np
 import os
 import os.path
 import pickle
+import tcp
+import sys
 
 ##################################################
 ##                  CONSTANTS                   ##
@@ -63,7 +62,7 @@ args = parser.parse_args()
 
 split_agg = args.time.split(',')
 
-if not len(split_agg) == 2 or not is_number(split_agg[0]) or not is_number(split_agg[1]):
+if not len(split_agg) == 2 or not co.is_number(split_agg[0]) or not co.is_number(split_agg[1]):
     print("The aggregation argument is not well formatted", file=sys.stderr)
     parser.print_help()
     exit(1)
@@ -82,7 +81,7 @@ stat_dir_exp = os.path.abspath(os.path.expanduser(args.stat))
 ##                 GET THE DATA                 ##
 ##################################################
 
-check_directory_exists(stat_dir_exp)
+co.check_directory_exists(stat_dir_exp)
 connections = {}
 for dirpath, dirnames, filenames in os.walk(stat_dir_exp):
     for fname in filenames:
@@ -171,20 +170,20 @@ def count_interesting_connections(data):
     count = 0
     tot = 0
     for k, v in data.iteritems():
-        if isinstance(v, MPTCPConnection):
+        if isinstance(v, mptcp.MPTCPConnection):
             for subflow_id, flow in v.flows.iteritems():
-                if flow.attr[IF]:
+                if flow.attr[co.IF]:
                     count += 1
-                if flow.attr[DADDR]:
+                if flow.attr[co.DADDR]:
                     tot += 1
 
-        elif isinstance(v, TCPConnection):
+        elif isinstance(v, tcp.TCPConnection):
             # Check the key k
             # An interesting flow has an IF field
-            if v.flow.attr[IF]:
+            if v.flow.attr[co.IF]:
                 count += 1
             # All flows have a DADDR field
-            if v.flow.attr[DADDR]:
+            if v.flow.attr[co.DADDR]:
                 tot += 1
     return tot, count
 
@@ -232,15 +231,15 @@ def bar_chart_bandwidth():
         s2d = 0
         d2s = 0
         for conn_id, conn in data.iteritems():
-            if isinstance(conn, MPTCPConnection):
+            if isinstance(conn, mptcp.MPTCPConnection):
                 data = conn.attr
-            elif isinstance(conn, TCPConnection):
+            elif isinstance(conn, mptcp.TCPConnection):
                 data = conn.flow.attr
-            here = [i for i in data.keys() if i in [BYTES_S2D, BYTES_D2S]]
+            here = [i for i in data.keys() if i in [co.BYTES_S2D, co.BYTES_D2S]]
             if not len(here) == 2:
                 continue
-            s2d += data[BYTES_S2D]
-            d2s += data[BYTES_D2S]
+            s2d += data[co.BYTES_S2D]
+            d2s += data[co.BYTES_D2S]
 
 
         if condition in aggl_res:
@@ -268,19 +267,19 @@ def bar_chart_bandwidth_smart():
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         for conn_id, conn in data.iteritems():
-            if isinstance(conn, MPTCPConnection):
+            if isinstance(conn, mptcp.MPTCPConnection):
                 data = conn.attr
-            elif isinstance(conn, TCPConnection):
+            elif isinstance(conn, tcp.TCPConnection):
                 data = conn.flow.attr
-            here = [i for i in data.keys() if i in [BYTES_S2D, BYTES_D2S]]
+            here = [i for i in data.keys() if i in [co.BYTES_S2D, co.BYTES_D2S]]
             if not len(here) == 2:
                 continue
             if condition in aggl_res:
-                aggl_res[condition][tot_lbl] += [data[BYTES_S2D]]
-                aggl_res[condition][tot_flw_lbl] += [data[BYTES_D2S]]
+                aggl_res[condition][tot_lbl] += [data[co.BYTES_S2D]]
+                aggl_res[condition][tot_flw_lbl] += [data[co.BYTES_D2S]]
             else:
                 aggl_res[condition] = {
-                    tot_lbl: [data[BYTES_S2D]], tot_flw_lbl: [data[BYTES_D2S]]}
+                    tot_lbl: [data[co.BYTES_S2D]], tot_flw_lbl: [data[co.BYTES_D2S]]}
 
     plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
@@ -299,17 +298,17 @@ def bar_chart_duration():
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         for conn_id, conn in data.iteritems():
-            if isinstance(conn, MPTCPConnection):
+            if isinstance(conn, mptcp.MPTCPConnection):
                 data = conn.attr
-            elif isinstance(conn, TCPConnection):
+            elif isinstance(conn, tcp.TCPConnection):
                 data = conn.flow.attr
-            here = [i for i in data.keys() if i in [DURATION]]
+            here = [i for i in data.keys() if i in [co.DURATION]]
             if not len(here) == 1:
                 continue
             if condition in aggl_res:
-                aggl_res[condition][tot_int_lbl] += [data[DURATION]]
+                aggl_res[condition][tot_int_lbl] += [data[co.DURATION]]
             else:
-                aggl_res[condition] = {tot_int_lbl: [data[DURATION]]}
+                aggl_res[condition] = {tot_int_lbl: [data[co.DURATION]]}
 
     plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
