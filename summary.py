@@ -97,37 +97,6 @@ for dirpath, dirnames, filenames in os.walk(stat_dir_exp):
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-
-def get_experiment_condition(fname):
-    """ Return a string of the format protocol_condition (e.g. tcp_both4TCD100m) """
-    app_index = fname.index(args.app)
-    dash_index = fname.index("-")
-    end_index = fname[:dash_index].rindex("_")
-    return fname[:app_index] + fname[app_index + len(args.app) + 1:end_index]
-
-
-def count_interesting_connections(data):
-    """ Return the number of interesting connections in data """
-    count = 0
-    tot = 0
-    for k, v in data.iteritems():
-        if isinstance(v, MPTCPConnection):
-            for subflow_id, flow in v.flows.iteritems():
-                if flow.attr[IF]:
-                    count += 1
-                if flow.attr[DADDR]:
-                    tot += 1
-
-        elif isinstance(v, TCPConnection):
-            # Check the key k
-            # An interesting flow has an IF field
-            if v.flow.attr[IF]:
-                count += 1
-            # All flows have a DADDR field
-            if v.flow.attr[DADDR]:
-                tot += 1
-    return tot, count
-
 def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname):
 
     # Convert Python arrays to numpy arrays (easier for mean and std)
@@ -186,68 +155,96 @@ def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fn
     plt.savefig(graph_fname)
 
 
-aggl_res = {}
-tot_lbl = 'Total Connections'
-tot_flw_lbl = 'Total Flows'
-tot_int_lbl = 'Interesting Flows'
-label_names = ['Total Connections', 'Total Flows', 'Interesting Flows']
-color = ['b', 'g', 'r']
-ecolor = ['g', 'r', 'b']
-ylabel = 'Number of connections'
-title = 'Counts of total and interesting connections of ' + args.app
-graph_fname = "count_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
-
-# Need to agglomerate same tests
-for fname, data in connections.iteritems():
-    condition = get_experiment_condition(fname)
-    tot_flow, tot_int = count_interesting_connections(data)
-    if condition in aggl_res:
-        aggl_res[condition][tot_lbl] += [len(data)]
-        aggl_res[condition][tot_flw_lbl] += [tot_flow]
-        aggl_res[condition][tot_int_lbl] += [tot_int]
-    else:
-        aggl_res[condition] = {
-            tot_lbl: [len(data)], tot_flw_lbl: [tot_flow], tot_int_lbl: [tot_int]}
-
-print(aggl_res)
+def get_experiment_condition(fname):
+    """ Return a string of the format protocol_condition (e.g. tcp_both4TCD100m) """
+    app_index = fname.index(args.app)
+    dash_index = fname.index("-")
+    end_index = fname[:dash_index].rindex("_")
+    return fname[:app_index] + fname[app_index + len(args.app) + 1:end_index]
 
 
-plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+def count_interesting_connections(data):
+    """ Return the number of interesting connections in data """
+    count = 0
+    tot = 0
+    for k, v in data.iteritems():
+        if isinstance(v, MPTCPConnection):
+            for subflow_id, flow in v.flows.iteritems():
+                if flow.attr[IF]:
+                    count += 1
+                if flow.attr[DADDR]:
+                    tot += 1
 
+        elif isinstance(v, TCPConnection):
+            # Check the key k
+            # An interesting flow has an IF field
+            if v.flow.attr[IF]:
+                count += 1
+            # All flows have a DADDR field
+            if v.flow.attr[DADDR]:
+                tot += 1
+    return tot, count
 
-aggl_res = {}
-tot_lbl = 'Bytes s2d'
-tot_flw_lbl = 'Bytes d2s'
-tot_int_lbl = 'Duration'
-label_names = ['Bytes s2d', 'Bytes d2s', 'Duration']
-color = ['b', 'g', 'r']
-ecolor = ['g', 'r', 'b']
-ylabel = 'Values (bytes & seconds)'
-title = 'Counts of total and interesting connections of ' + args.app
-graph_fname = "bytes_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+def bar_chart_count_connections():
+    aggl_res = {}
+    tot_lbl = 'Total Connections'
+    tot_flw_lbl = 'Total Flows'
+    tot_int_lbl = 'Interesting Flows'
+    label_names = ['Total Connections', 'Total Flows', 'Interesting Flows']
+    color = ['b', 'g', 'r']
+    ecolor = ['g', 'r', 'b']
+    ylabel = 'Number of connections'
+    title = 'Counts of total and interesting connections of ' + args.app
+    graph_fname = "count_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
 
-# Need to agglomerate same tests
-for fname, data in connections.iteritems():
-    condition = get_experiment_condition(fname)
-    for conn_id, conn in data.iteritems():
-        if isinstance(conn, MPTCPConnection):
-            data = conn.attr
-        elif isinstance(conn, TCPConnection):
-            data = conn.flow.attr
-        here = [i for i in data.keys() if i in [BYTES_S2D, BYTES_D2S, DURATION]]
-        if not len(here) == 3:
-            continue
+    # Need to agglomerate same tests
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        tot_flow, tot_int = count_interesting_connections(data)
         if condition in aggl_res:
-            aggl_res[condition][tot_lbl] += [data[BYTES_S2D]]
-            aggl_res[condition][tot_flw_lbl] += [data[BYTES_D2S]]
-            aggl_res[condition][tot_int_lbl] += [data[DURATION]]
+            aggl_res[condition][tot_lbl] += [len(data)]
+            aggl_res[condition][tot_flw_lbl] += [tot_flow]
+            aggl_res[condition][tot_int_lbl] += [tot_int]
         else:
             aggl_res[condition] = {
-                tot_lbl: [data[BYTES_S2D]], tot_flw_lbl: [data[BYTES_D2S]], tot_int_lbl: [data[DURATION]]}
+                tot_lbl: [len(data)], tot_flw_lbl: [tot_flow], tot_int_lbl: [tot_int]}
+
+    plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
-print(aggl_res)
+def bar_chart_bandwidth():
+    aggl_res = {}
+    tot_lbl = 'Bytes s2d'
+    tot_flw_lbl = 'Bytes d2s'
+    tot_int_lbl = 'Duration'
+    label_names = ['Bytes s2d', 'Bytes d2s', 'Duration']
+    color = ['b', 'g', 'r']
+    ecolor = ['g', 'r', 'b']
+    ylabel = 'Values (bytes & seconds)'
+    title = 'Counts of total and interesting connections of ' + args.app
+    graph_fname = "bytes_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
 
-plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    # Need to agglomerate same tests
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, MPTCPConnection):
+                data = conn.attr
+            elif isinstance(conn, TCPConnection):
+                data = conn.flow.attr
+            here = [i for i in data.keys() if i in [BYTES_S2D, BYTES_D2S, DURATION]]
+            if not len(here) == 3:
+                continue
+            if condition in aggl_res:
+                aggl_res[condition][tot_lbl] += [data[BYTES_S2D]]
+                aggl_res[condition][tot_flw_lbl] += [data[BYTES_D2S]]
+                aggl_res[condition][tot_int_lbl] += [data[DURATION]]
+            else:
+                aggl_res[condition] = {
+                    tot_lbl: [data[BYTES_S2D]], tot_flw_lbl: [data[BYTES_D2S]], tot_int_lbl: [data[DURATION]]}
 
+    plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+
+bar_chart_count_connections()
+bar_chart_bandwidth()
 print("End of summary")
