@@ -26,8 +26,7 @@ from __future__ import print_function
 ##                   IMPORTS                    ##
 ##################################################
 
-from common import *
-
+import common as co
 import glob
 import Gnuplot
 import os
@@ -60,7 +59,7 @@ class MPTCPTraceException(Exception):
 ##################################################
 
 
-class MPTCPSubFlow(BasicFlow):
+class MPTCPSubFlow(co.BasicFlow):
     """ Represent a MPTCP subflow """
     subflow_id = ""
 
@@ -69,7 +68,7 @@ class MPTCPSubFlow(BasicFlow):
         self.subflow_id = sid
 
 
-class MPTCPConnection(BasicConnection):
+class MPTCPConnection(co.BasicConnection):
     """ Represent a MPTCP connection """
     flows = {}
 
@@ -103,11 +102,11 @@ def extract_mptcp_flow_data(out_file):
             subflow = MPTCPSubFlow(sub_flow_id)
             index_wscale = words.index("wscale")
             subflow.attr[
-                WSCALESRC] = words[index_wscale + 2]
+                co.WSCALESRC] = words[index_wscale + 2]
             subflow.attr[
-                WSCALEDST] = words[index_wscale + 3]
+                co.WSCALEDST] = words[index_wscale + 3]
             subflow.attr[
-                TYPE] = words[index_wscale + 4]
+                co.TYPE] = words[index_wscale + 4]
             index = words.index("sport")
             while index + 1 < len(words):
                 attri = words[index]
@@ -182,9 +181,9 @@ def interesting_mptcp_graph(csv_fname, connections):
     connection_id = get_connection_id(csv_fname)
     for sub_flow_id, conn in connections[connection_id].flows.iteritems():
         # Only had the case for IPv4, but what is its equivalent in IPv6?
-        if not conn.attr[TYPE] == 'IPv4':
+        if not conn.attr[co.TYPE] == 'IPv4':
                 return True
-        if not (conn.attr[SADDR] == LOCALHOST_IPv4 and conn.attr[DADDR] == LOCALHOST_IPv4):
+        if not (conn.attr[co.SADDR] == co.LOCALHOST_IPv4 and conn.attr[co.DADDR] == co.LOCALHOST_IPv4):
                 return True
     return False
 
@@ -209,7 +208,7 @@ def write_graph_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq):
             seq = int(split_line[1]) - begin_seq
             graph_file.write(str(time) + ',' + str(seq) + '\n')
         graph_file.close()
-    except IOError as e:
+    except IOError:
         print('IOError for graph file with ' + csv_fname + ': stop', file=sys.stderr)
         exit(1)
 
@@ -228,15 +227,15 @@ def generate_title(csv_fname, connections):
         # \n must be interpreted as a raw type to works with GnuPlot.py
         title += r'\n' + "sf: " + sub_flow_id + " "
         if reverse:
-            title += "(" + conn.attr[WSCALEDST] + " " + conn.attr[WSCALESRC] + ") "
-            title += conn.attr[DADDR] + ":" + conn.attr[DPORT] + \
-                " -> " + conn.attr[SADDR] + ":" + conn.attr[SPORT]
+            title += "(" + conn.attr[co.WSCALEDST] + " " + conn.attr[co.WSCALESRC] + ") "
+            title += conn.attr[co.DADDR] + ":" + conn.attr[co.DPORT] + \
+                " -> " + conn.attr[co.SADDR] + ":" + conn.attr[co.SPORT]
         else:
-            title += "(" + conn.attr[WSCALESRC] + " " + conn.attr[WSCALEDST] + ") "
-            title += conn.attr[SADDR] + ":" + conn.attr[SPORT] + \
-                " -> " + conn.attr[DADDR] + ":" + conn.attr[DPORT]
-        if IF in conn.attr:
-            title += " [" + conn.attr[IF] + "]"
+            title += "(" + conn.attr[co.WSCALESRC] + " " + conn.attr[co.WSCALEDST] + ") "
+            title += conn.attr[co.SADDR] + ":" + conn.attr[co.SPORT] + \
+                " -> " + conn.attr[co.DADDR] + ":" + conn.attr[co.DPORT]
+        if co.IF in conn.attr:
+            title += " [" + conn.attr[co.IF] + "]"
     return title
 
 
@@ -249,7 +248,7 @@ def create_graph_csv(pcap_fname, csv_fname, graph_dir_exp, connections):
     try:
         csv_file = open(csv_fname)
         data = csv_file.readlines()
-    except IOError as e:
+    except IOError:
         print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
         return
 
@@ -279,7 +278,7 @@ def process_mptcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     csv_tmp_dir = tempfile.mkdtemp(dir=os.getcwd())
     try:
-        with cd(csv_tmp_dir):
+        with co.cd(csv_tmp_dir):
             # If segmentation faults, remove the -S option
             cmd = ['mptcptrace', '-f', pcap_fname, '-s', '-S', '-w', '2']
             connections = process_mptcptrace_cmd(cmd, pcap_fname)
@@ -310,19 +309,19 @@ def process_mptcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp):
                                 con_time = line.split(';')[-1]
 
                         if first_seqs and last_acks:
-                            connections[conn_id].attr[BYTES_S2D] = int(last_acks[1]) - int(first_seqs[0])
-                            connections[conn_id].attr[BYTES_D2S] = int(last_acks[0]) - int(first_seqs[1])
+                            connections[conn_id].attr[co.BYTES_S2D] = int(last_acks[1]) - int(first_seqs[0])
+                            connections[conn_id].attr[co.BYTES_D2S] = int(last_acks[0]) - int(first_seqs[1])
                         if con_time:
-                            connections[conn_id].attr[DURATION] = float(con_time)
+                            connections[conn_id].attr[co.DURATION] = float(con_time)
 
 
                         csv_file.close()
                         # Remove now stats files
                         os.remove(csv_fname)
-                    except IOError as e:
+                    except IOError:
                         print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
                         continue
-                    except ValueError as e:
+                    except ValueError:
                         print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
                         continue
 
@@ -335,10 +334,10 @@ def process_mptcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp):
                             if begin_time < relative_start and not begin_time == 0.0:
                                 relative_start = begin_time
                         csv_file.close()
-                    except IOError as e:
+                    except IOError:
                         print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
                         continue
-                    except ValueError as e:
+                    except ValueError:
                         print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
                         continue
 
@@ -359,14 +358,14 @@ def process_mptcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp):
                         # Remove the csv file
                         os.remove(csv_fname)
 
-                    except IOError as e:
+                    except IOError:
                         print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
                         continue
-                    except ValueError as e:
+                    except ValueError:
                         print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
                         continue
 
-            with cd(csv_graph_tmp_dir):
+            with co.cd(csv_graph_tmp_dir):
                 for csv_fname in glob.glob('*.csv'):
                     # No point to plot information on subflows (as many points as there are subflows)
                     if MPTCP_SF_FNAME not in csv_fname:
@@ -375,11 +374,11 @@ def process_mptcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp):
                     os.remove(csv_fname)
 
             # Save connections info
-            save_connections(pcap_fname, stat_dir_exp, connections)
+            co.save_connections(pcap_fname, stat_dir_exp, connections)
 
             # Remove temp dirs
             shutil.rmtree(csv_graph_tmp_dir)
-    except MPTCPTraceException as e:
+    except MPTCPTraceException:
         print("Skip mptcp process")
 
     shutil.rmtree(csv_tmp_dir)
