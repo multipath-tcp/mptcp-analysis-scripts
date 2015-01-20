@@ -167,14 +167,14 @@ def launch_analyze_pcap(pcap_fname, clean, correct, graph, purge):
             tcp.correct_trace(pcap_fname)
         # we need to change dir, do that in a new process
         if graph:
-            p = Process(target=mptcp.process_mptcp_trace, args=(pcap_fname, graph_dir_exp, stat_dir_exp,))
+            p = Process(target=mptcp.process_trace, args=(pcap_fname, graph_dir_exp, stat_dir_exp,))
             p.start()
             p.join()
     elif pcap_filename.startswith('tcp'):
         if correct:
             tcp.correct_trace(pcap_fname)
         if graph:
-            tcp.process_tcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=print_out)
+            tcp.process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=print_out)
     else:
         print(pcap_fname + ": don't know the protocol used; skipped", file=sys.stderr)
 

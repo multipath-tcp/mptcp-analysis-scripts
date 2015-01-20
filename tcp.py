@@ -315,7 +315,7 @@ def prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp):
         return None
 
 
-def process_tcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout):
+def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0

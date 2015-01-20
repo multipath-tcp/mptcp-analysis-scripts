@@ -274,7 +274,7 @@ def create_graph_csv(pcap_fname, csv_fname, graph_dir_exp, connections):
 
 
 # We can't change dir per thread, we should use processes
-def process_mptcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp):
+def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     csv_tmp_dir = tempfile.mkdtemp(dir=os.getcwd())
     try:
