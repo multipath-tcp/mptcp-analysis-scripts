@@ -30,22 +30,14 @@ from __future__ import print_function
 ##                   IMPORTS                    ##
 ##################################################
 
-from common import *
-from mptcp import *
-from numpy import *
-from tcp import *
-
 import argparse
 import common as co
-import glob
-import Gnuplot
+import mptcp
 import os
 import os.path
-import pickle
-import shutil
 import subprocess
 import sys
-import tempfile
+import tcp
 import threading
 import traceback
 
@@ -123,7 +115,7 @@ else:
 ##################################################
 
 pcap_list = []
-check_directory_exists(trace_dir_exp)
+co.check_directory_exists(trace_dir_exp)
 for dirpath, dirnames, filenames in os.walk(in_dir_exp):
     for fname in filenames:
         if args.pcap in fname:
@@ -168,21 +160,21 @@ def launch_analyze_pcap(pcap_fname, clean, correct, graph, purge):
     pcap_filename = os.path.basename(pcap_fname)
     # Cleaning, if needed (in future pcap, tcpdump should do the job)
     if clean:
-        clean_loopback_pcap(pcap_fname, print_out=print_out)
+        co.clean_loopback_pcap(pcap_fname, print_out=print_out)
     # Prefix of the name determine the protocol used
     if pcap_filename.startswith('mptcp'):
         if correct:
-            correct_trace(pcap_fname)
+            tcp.correct_trace(pcap_fname)
         # we need to change dir, do that in a new process
         if graph:
-            p = Process(target=process_mptcp_trace, args=(pcap_fname, graph_dir_exp, stat_dir_exp,))
+            p = Process(target=mptcp.process_mptcp_trace, args=(pcap_fname, graph_dir_exp, stat_dir_exp,))
             p.start()
             p.join()
     elif pcap_filename.startswith('tcp'):
         if correct:
-            correct_trace(pcap_fname)
+            tcp.correct_trace(pcap_fname)
         if graph:
-            process_tcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=print_out)
+            tcp.process_tcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=print_out)
     else:
         print(pcap_fname + ": don't know the protocol used; skipped", file=sys.stderr)
 
@@ -209,8 +201,8 @@ def thread_launch(thread_id, clean, correct, graph, purge):
 ##                     MAIN                     ##
 ##################################################
 
-check_directory_exists(graph_dir_exp)
-check_directory_exists(stat_dir_exp)
+co.check_directory_exists(graph_dir_exp)
+co.check_directory_exists(stat_dir_exp)
 # If file is a .pcap, use it for (mp)tcptrace
 pcap_list.reverse() # we will use pop: use the natural order
 
