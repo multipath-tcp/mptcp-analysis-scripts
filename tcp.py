@@ -26,8 +26,7 @@ from __future__ import print_function
 ##                   IMPORTS                    ##
 ##################################################
 
-from common import *
-
+import common as co
 import glob
 import os
 import subprocess
@@ -38,13 +37,13 @@ import sys
 ##################################################
 
 
-class TCPConnection(BasicConnection):
+class TCPConnection(co.BasicConnection):
     """ Represent a TCP connection """
     flow = None
 
     def __init__(self, conn_id):
         super(TCPConnection, self).__init__(conn_id)
-        self.flow = BasicFlow()
+        self.flow = co.BasicFlow()
 
 
 def compute_duration(info):
@@ -70,23 +69,22 @@ def extract_tcp_flow_data(out_file):
         if not line.startswith("#"):
             info = line.split(',')
             # Case 2: line is empty or line is the "header line"; skip it
-            if len(info) > 1 and is_number(info[0]):
+            if len(info) > 1 and co.is_number(info[0]):
                 # Case 3: line begin with number --> extract info
-                nb_conn = info[0]
                 conn = convert_number_to_name(int(info[0]) - 1)
                 connection = TCPConnection(conn)
-                connection.flow.attr[SADDR] = info[1]
-                connection.flow.attr[DADDR] = info[2]
-                connection.flow.attr[SPORT] = info[3]
-                connection.flow.attr[DPORT] = info[4]
+                connection.flow.attr[co.SADDR] = info[1]
+                connection.flow.attr[co.DADDR] = info[2]
+                connection.flow.attr[co.SPORT] = info[3]
+                connection.flow.attr[co.DPORT] = info[4]
                 connection.flow.detect_ipv4()
                 connection.flow.indicates_wifi_or_rmnet()
-                connection.flow.attr[DURATION] = compute_duration(info)
-                connection.flow.attr[PACKS_S2D] = int(info[7])
-                connection.flow.attr[PACKS_D2S] = int(info[8])
+                connection.flow.attr[co.DURATION] = compute_duration(info)
+                connection.flow.attr[co.PACKS_S2D] = int(info[7])
+                connection.flow.attr[co.PACKS_D2S] = int(info[8])
                 # Note that this count is about unique_data_bytes
-                connection.flow.attr[BYTES_S2D] = int(info[21])
-                connection.flow.attr[BYTES_D2S] = int(info[22])
+                connection.flow.attr[co.BYTES_S2D] = int(info[21])
+                connection.flow.attr[co.BYTES_D2S] = int(info[22])
                 # TODO maybe extract more information
 
                 connections[conn] = connection
@@ -106,9 +104,9 @@ def convert_number_to_letter(nb_conn):
 
 def get_prefix_name(nb_conn):
     """ Given an integer, return the (nb_conn)th prefix, based on the alphabet (zero-based index)"""
-    if nb_conn >= SIZE_LAT_ALPH:
-        mod_nb = nb_conn % SIZE_LAT_ALPH
-        div_nb = nb_conn / SIZE_LAT_ALPH
+    if nb_conn >= co.SIZE_LAT_ALPH:
+        mod_nb = nb_conn % co.SIZE_LAT_ALPH
+        div_nb = nb_conn / co.SIZE_LAT_ALPH
         return get_prefix_name(div_nb - 1) + convert_number_to_letter(mod_nb)
     else:
         return convert_number_to_letter(nb_conn)
@@ -116,9 +114,9 @@ def get_prefix_name(nb_conn):
 
 def convert_number_to_name(nb_conn):
     """ Given an integer, return a name of type 'a2b', 'aa2ab',... """
-    if nb_conn >= (SIZE_LAT_ALPH / 2):
-        mod_nb = nb_conn % (SIZE_LAT_ALPH / 2)
-        div_nb = nb_conn / (SIZE_LAT_ALPH / 2)
+    if nb_conn >= (co.SIZE_LAT_ALPH / 2):
+        mod_nb = nb_conn % (co.SIZE_LAT_ALPH / 2)
+        div_nb = nb_conn / (co.SIZE_LAT_ALPH / 2)
         prefix = get_prefix_name(div_nb - 1)
         return prefix + convert_number_to_letter(2 * mod_nb) + '2' + prefix \
             + convert_number_to_letter(2 * mod_nb + 1)
@@ -180,7 +178,7 @@ def get_connection_data_with_ip_port_tcp(connections, ip, port, dst=True):
         Support for dst=False will be provided if needed
     """
     for conn_id, conn in connections.iteritems():
-        if conn.flow.attr[DADDR] == ip and conn.flow.attr[DPORT] == port:
+        if conn.flow.attr[co.DADDR] == ip and conn.flow.attr[co.DPORT] == port:
             return conn
 
     # If reach this, no matching connection found
@@ -209,19 +207,19 @@ def split_and_replace(pcap_fname, remain_pcap_fname, conn, other_conn, num, prin
     """
     # Split on the port criterion
     condition = '(tcp.srcport==' + \
-        conn.flow.attr[SPORT] + ')or(tcp.dstport==' + conn.flow.attr[SPORT] + ')'
+        conn.flow.attr[co.SPORT] + ')or(tcp.dstport==' + conn.flow.attr[co.SPORT] + ')'
     tmp_split_fname = pcap_fname[:-5] + "__tmp.pcap"
     cmd = ['tshark', '-r', remain_pcap_fname, '-Y', condition, '-w', tmp_split_fname]
     if subprocess.call(cmd, stdout=print_out) != 0:
         print(
-            "Error when tshark port " + conn.flow.attr[SPORT] + ": skip tcp correction", file=sys.stderr)
+            "Error when tshark port " + conn.flow.attr[co.SPORT] + ": skip tcp correction", file=sys.stderr)
         return -1
     tmp_remain_fname = pcap_fname[:-5] + "__tmprem.pcap"
     cmd[4] = "!(" + condition + ")"
     cmd[6] = tmp_remain_fname
     if subprocess.call(cmd, stdout=print_out) != 0:
         print(
-            "Error when tshark port !" + conn.flow.attr[SPORT] + ": skip tcp correction", file=sys.stderr)
+            "Error when tshark port !" + conn.flow.attr[co.SPORT] + ": skip tcp correction", file=sys.stderr)
         return -1
     cmd = ['mv', tmp_remain_fname, remain_pcap_fname]
     if subprocess.call(cmd, stdout=print_out) != 0:
@@ -232,13 +230,13 @@ def split_and_replace(pcap_fname, remain_pcap_fname, conn, other_conn, num, prin
     # Replace meaningless IP and port with the "real" values
     split_fname = pcap_fname[:-5] + "__" + str(num) + ".pcap"
     cmd = ['tcprewrite',
-           "--portmap=" + conn.flow.attr[DPORT] + ":" + other_conn.flow.attr[SPORT],
-           "--pnat=" + conn.flow.attr[DADDR] + ":" + other_conn.flow.attr[SADDR],
+           "--portmap=" + conn.flow.attr[co.DPORT] + ":" + other_conn.flow.attr[co.SPORT],
+           "--pnat=" + conn.flow.attr[co.DADDR] + ":" + other_conn.flow.attr[co.SADDR],
            "--infile=" + tmp_split_fname,
            "--outfile=" + split_fname]
     if subprocess.call(cmd, stdout=print_out) != 0:
         print(
-            "Error with tcprewrite " + conn.flow.attr[SPORT] + ": skip tcp correction", file=sys.stderr)
+            "Error with tcprewrite " + conn.flow.attr[co.SPORT] + ": skip tcp correction", file=sys.stderr)
         return -1
     os.remove(tmp_split_fname)
     return 0
@@ -251,15 +249,15 @@ def correct_trace(pcap_fname, print_out=sys.stdout):
     cmd = ['tcptrace', '-n', '-l', '--csv', pcap_fname]
     connections = process_tcptrace_cmd(cmd, pcap_fname)
     # Create the remaining_file
-    remain_pcap_fname = copy_remain_pcap_file(pcap_fname, print_out=print_out)
+    remain_pcap_fname = co.copy_remain_pcap_file(pcap_fname, print_out=print_out)
     if not remain_pcap_fname:
         return
 
     num = 0
     for conn_id, conn in connections.iteritems():
-        if conn.flow.attr[DADDR] == LOCALHOST_IPv4 and conn.flow.attr[DPORT] == PORT_RSOCKS:
+        if conn.flow.attr[co.DADDR] == co.LOCALHOST_IPv4 and conn.flow.attr[co.DPORT] == co.PORT_RSOCKS:
             other_conn = get_connection_data_with_ip_port_tcp(
-                connections, conn.flow.attr[SADDR], conn.flow.attr[SPORT])
+                connections, conn.flow.attr[co.SADDR], conn.flow.attr[co.SPORT])
             if other_conn:
                 if split_and_replace(pcap_fname, remain_pcap_fname, conn, other_conn, num) != 0:
                     print("Stop correcting trace " + pcap_fname, file=print_out)
@@ -280,7 +278,7 @@ def interesting_tcp_graph(flow_name, connections):
         This function assumes that a graph is interesting if it has at least one connection that
         if not 127.0.0.1 -> 127.0.0.1
     """
-    return (not connections[flow_name].flow.attr[TYPE] == 'IPv4' or connections[flow_name].flow.attr[IF])
+    return (not connections[flow_name].flow.attr[co.TYPE] == 'IPv4' or connections[flow_name].flow.attr[co.IF])
 
 
 def prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp):
@@ -312,7 +310,7 @@ def prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp):
         gpl_file.close()
         gpl_file_ok.close()
         return gpl_fname_ok
-    except IOError as e:
+    except IOError:
         print('IOError for graph file with ' + gpl_fname + ': skip', file=sys.stderr)
         return None
 
@@ -359,7 +357,7 @@ def process_tcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.std
                 os.remove(gpl_fname_ok)
                 try:
                     os.remove(prefix_fname + '.datasets')
-                except OSError as e2:
+                except OSError:
                     # Throughput graphs have not .datasets file
                     pass
                 os.remove(prefix_fname + '.labels')
@@ -371,4 +369,4 @@ def process_tcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.std
             print(str(e) + ": skipped", file=sys.stderr)
 
     # Save connections info
-    save_connections(pcap_fname, stat_dir_exp, connections)
+    co.save_connections(pcap_fname, stat_dir_exp, connections)
