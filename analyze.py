@@ -84,7 +84,7 @@ parser.add_argument("-g",
 parser.add_argument("-s",
     "--stat", help="directory where the stats of the pcap files will be stored", default=DEF_STAT_DIR)
 parser.add_argument("-p",
-    "--pcap", help="analyze only pcap files containing the given string", default="")
+    "--pcap", help="analyze only pcap files containing the given string (default lo)", default="_lo.")
 parser.add_argument("-j",
     "--threads", type=int, help="process the analyse separated threads", default=DEF_NB_THREADS)
 parser.add_argument("-l",
