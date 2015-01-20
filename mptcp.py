@@ -77,7 +77,7 @@ class MPTCPConnection(co.BasicConnection):
         self.flows = {}
 
 
-def extract_mptcp_flow_data(out_file):
+def extract_flow_data(out_file):
     """ Given an (open) file, return a dictionary of as many elements as there are mptcp flows """
     # Return at the beginning of the file
     out_file.seek(0)
@@ -160,7 +160,7 @@ def process_mptcptrace_cmd(cmd, pcap_fname):
         print("Error of mptcptrace with " + pcap_fname + "; skip process", file=sys.stderr)
         raise MPTCPTraceException()
 
-    connections = extract_mptcp_flow_data(flow_data_file)
+    connections = extract_flow_data(flow_data_file)
     # Don't forget to close and remove pcap_flow_data
     flow_data_file.close()
     os.remove(pcap_flow_data)
@@ -172,7 +172,7 @@ def process_mptcptrace_cmd(cmd, pcap_fname):
 ##################################################
 
 
-def interesting_mptcp_graph(csv_fname, connections):
+def interesting_graph(csv_fname, connections):
     """ Return True if the MPTCP graph is worthy, else False
         This function assumes that a graph is interesting if it has at least one connection that
         if not 127.0.0.1 -> 127.0.0.1
@@ -243,7 +243,7 @@ def create_graph_csv(pcap_fname, csv_fname, graph_dir_exp, connections):
     """ Generate pdf for the csv file of the pcap file
     """
     # First see if useful to show the graph
-    if not interesting_mptcp_graph(csv_fname, connections):
+    if not interesting_graph(csv_fname, connections):
         return
     try:
         csv_file = open(csv_fname)
