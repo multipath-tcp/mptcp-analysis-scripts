@@ -32,6 +32,7 @@ from tcp import *
 
 import argparse
 import Gnuplot
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -98,6 +99,8 @@ for dirpath, dirnames, filenames in os.walk(stat_dir_exp):
 ##################################################
 
 def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname):
+
+    matplotlib.rcParams.update({'font.size': 8})
 
     # Convert Python arrays to numpy arrays (easier for mean and std)
     for cond, elements in aggl_res.iteritems():
