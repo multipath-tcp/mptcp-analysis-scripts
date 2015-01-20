@@ -27,6 +27,8 @@ from __future__ import print_function
 ##################################################
 
 from common import *
+from mptcp import *
+from tcp import *
 
 import argparse
 import Gnuplot
@@ -109,18 +111,20 @@ def count_interesting_connections(data):
     count = 0
     tot = 0
     for k, v in data.iteritems():
-        if isinstance(v, dict):
-            # Check for the dict v
-            int_tot, int_count = count_interesting_connections(v)
-            tot += int_tot
-            count += int_count
-        else:
+        if isinstance(v, MPTCPConnection):
+            for subflow_id, flow in v.flows.iteritems():
+                if flow.attr[IF]:
+                    count += 1
+                if flow.attr[DADDR]:
+                    tot += 1
+
+        elif isinstance(v, TCPConnection):
             # Check the key k
             # An interesting flow has an IF field
-            if k == IF:
+            if v.flow.attr[IF]:
                 count += 1
             # All flows have a DADDR field
-            if k == DADDR:
+            if v.flow.attr[DADDR]:
                 tot += 1
     return tot, count
 
@@ -209,18 +213,21 @@ tot_int_lbl = 'Duration'
 # Need to agglomerate same tests
 for fname, data in connections.iteritems():
     condition = get_experiment_condition(fname)
-    if condition.startswith("mptcp"):
-        data = data[data.keys()[0]]
-    here = [i for i in data.keys() if i in [BYTES_S2D, BYTES_D2S, DURATION]]
-    if not len(here) == 3:
-        continue
-    if condition in aggl_res:
-        aggl_res[condition][tot_lbl] += [data[BYTES_S2D]]
-        aggl_res[condition][tot_flw_lbl] += [data[BYTES_D2S]]
-        aggl_res[condition][tot_int_lbl] += [data[DURATION]]
-    else:
-        aggl_res[condition] = {
-            tot_lbl: [data[BYTES_S2D]], tot_flw_lbl: [data[BYTES_D2S]], tot_int_lbl: [data[DURATION]]}
+    for conn_id, conn in data.iteritems():
+        if isinstance(conn, MPTCPConnection):
+            data = conn.attr
+        elif isinstance(conn, TCPConnection):
+            data = conn.flow.attr
+        here = [i for i in data.keys() if i in [BYTES_S2D, BYTES_D2S, DURATION]]
+        if not len(here) == 3:
+            continue
+        if condition in aggl_res:
+            aggl_res[condition][tot_lbl] += [data[BYTES_S2D]]
+            aggl_res[condition][tot_flw_lbl] += [data[BYTES_D2S]]
+            aggl_res[condition][tot_int_lbl] += [data[DURATION]]
+        else:
+            aggl_res[condition] = {
+                tot_lbl: [data[BYTES_S2D]], tot_flw_lbl: [data[BYTES_D2S]], tot_int_lbl: [data[DURATION]]}
 
 # At the end, convert Python arrays to numpy arrays (easier for mean and std)
 for cond, elements in aggl_res.iteritems():
