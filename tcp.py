@@ -55,7 +55,7 @@ def compute_duration(info):
     return last_packet - first_packet
 
 
-def extract_tcp_flow_data(out_file):
+def extract_flow_data(out_file):
     """ Given an (open) file, return a dictionary of as many elements as there are tcp flows """
     # Return at the beginning of the file
     out_file.seek(0)
@@ -160,7 +160,7 @@ def process_tcptrace_cmd(cmd, pcap_fname):
     if subprocess.call(cmd, stdout=flow_data_file) != 0:
         print("Error of tcptrace with " + pcap_fname + "; skip process", file=sys.stderr)
         return
-    connections = extract_tcp_flow_data(flow_data_file)
+    connections = extract_flow_data(flow_data_file)
 
     # Don't forget to close and remove pcap_flow_data
     flow_data_file.close()
@@ -172,7 +172,7 @@ def process_tcptrace_cmd(cmd, pcap_fname):
 ##################################################
 
 
-def get_connection_data_with_ip_port_tcp(connections, ip, port, dst=True):
+def get_connection_data_with_ip_port(connections, ip, port, dst=True):
     """ Get data for TCP connection with destination IP ip and port port in connections
         If no connection found, return None
         Support for dst=False will be provided if needed
@@ -256,7 +256,7 @@ def correct_trace(pcap_fname, print_out=sys.stdout):
     num = 0
     for conn_id, conn in connections.iteritems():
         if conn.flow.attr[co.DADDR] == co.LOCALHOST_IPv4 and conn.flow.attr[co.DPORT] == co.PORT_RSOCKS:
-            other_conn = get_connection_data_with_ip_port_tcp(
+            other_conn = get_connection_data_with_ip_port(
                 connections, conn.flow.attr[co.SADDR], conn.flow.attr[co.SPORT])
             if other_conn:
                 if split_and_replace(pcap_fname, remain_pcap_fname, conn, other_conn, num) != 0:
@@ -273,7 +273,7 @@ def correct_trace(pcap_fname, print_out=sys.stdout):
 ##################################################
 
 
-def interesting_tcp_graph(flow_name, connections):
+def interesting_graph(flow_name, connections):
     """ Return True if the MPTCP graph is worthy, else False
         This function assumes that a graph is interesting if it has at least one connection that
         if not 127.0.0.1 -> 127.0.0.1
@@ -334,7 +334,7 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout)
     # The tcptrace call will generate .xpl files to cope with
     for xpl_fname in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_fname[:-5]) + '*.xpl')):
         flow_name = get_flow_name(xpl_fname)
-        if interesting_tcp_graph(flow_name, connections):
+        if interesting_graph(flow_name, connections):
             cmd = ['xpl2gpl', xpl_fname]
             if subprocess.call(cmd, stdout=print_out) != 0:
                 print("Error of xpl2gpl with " + xpl_fname + "; skip xpl file", file=sys.stderr)
