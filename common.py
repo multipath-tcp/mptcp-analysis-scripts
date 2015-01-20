@@ -28,6 +28,7 @@ import Gnuplot
 import pickle
 import subprocess
 import sys
+import tempfile
 
 Gnuplot.GnuplotOpts.default_term = 'pdf'
 
@@ -215,7 +216,7 @@ def save_connections(pcap_fname, stat_dir_exp, connections):
 
 def clean_loopback_pcap(pcap_fname, print_out=sys.stdout):
     """ Remove noisy traffic (port 1984), see netstat """
-    tmp_pcap = "tmp.pcap"
+    tmp_pcap = tempfile.mkstemp(suffix='.pcap')[1]
     cmd = ['tshark', '-Y', '!(tcp.dstport==1984||tcp.srcport==1984)&&!((ip.src==127.0.0.1)&&(ip.dst==127.0.0.1))', '-r',
            pcap_fname, '-w', tmp_pcap, '-F', 'pcap']
     if subprocess.call(cmd, stdout=print_out) != 0:
