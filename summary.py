@@ -229,6 +229,44 @@ def bar_chart_bandwidth():
     # Need to agglomerate same tests
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
+        s2d = 0
+        d2s = 0
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, MPTCPConnection):
+                data = conn.attr
+            elif isinstance(conn, TCPConnection):
+                data = conn.flow.attr
+            here = [i for i in data.keys() if i in [BYTES_S2D, BYTES_D2S]]
+            if not len(here) == 2:
+                continue
+            s2d += data[BYTES_S2D]
+            d2s += data[BYTES_D2S]
+
+
+        if condition in aggl_res:
+            aggl_res[condition][tot_lbl] += [s2d]
+            aggl_res[condition][tot_flw_lbl] += [d2s]
+        else:
+            aggl_res[condition] = {
+                tot_lbl: [s2d], tot_flw_lbl: [d2s]}
+
+    plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+
+
+def bar_chart_bandwidth_smart():
+    aggl_res = {}
+    tot_lbl = 'Bytes s2d'
+    tot_flw_lbl = 'Bytes d2s'
+    label_names = ['Bytes s2d', 'Bytes d2s']
+    color = ['b', 'g']
+    ecolor = ['g', 'r']
+    ylabel = 'Bytes'
+    title = 'Number of bytes transfered of ' + args.app
+    graph_fname = "bytes_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+
+    # Need to agglomerate same tests
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
         for conn_id, conn in data.iteritems():
             if isinstance(conn, MPTCPConnection):
                 data = conn.attr
