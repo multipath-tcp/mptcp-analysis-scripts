@@ -48,6 +48,14 @@ MPTCP_SF_FNAME = '_sf_'
 MPTCP_STATS_PREFIX = 'stats_'
 
 ##################################################
+##                  EXCEPTIONS                  ##
+##################################################
+
+
+class MPTCPTraceException(Exception):
+    pass
+
+##################################################
 ##           CONNECTION DATA RELATED            ##
 ##################################################
 
@@ -151,7 +159,7 @@ def process_mptcptrace_cmd(cmd, pcap_fname):
     flow_data_file = open(pcap_flow_data, 'w+')
     if subprocess.call(cmd, stdout=flow_data_file) != 0:
         print("Error of mptcptrace with " + pcap_fname + "; skip process", file=sys.stderr)
-        exit(1)
+        raise MPTCPTraceException()
 
     connections = extract_mptcp_flow_data(flow_data_file)
     # Don't forget to close and remove pcap_flow_data
@@ -270,105 +278,108 @@ def create_graph_csv(pcap_fname, csv_fname, graph_dir_exp, connections):
 def process_mptcp_trace(pcap_fname, graph_dir_exp, stat_dir_exp):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     csv_tmp_dir = tempfile.mkdtemp(dir=os.getcwd())
-    with cd(csv_tmp_dir):
-        # If segmentation faults, remove the -S option
-        cmd = ['mptcptrace', '-f', pcap_fname, '-s', '-S', '-w', '2']
-        connections = process_mptcptrace_cmd(cmd, pcap_fname)
+    try:
+        with cd(csv_tmp_dir):
+            # If segmentation faults, remove the -S option
+            cmd = ['mptcptrace', '-f', pcap_fname, '-s', '-S', '-w', '2']
+            connections = process_mptcptrace_cmd(cmd, pcap_fname)
 
-        csv_graph_tmp_dir = tempfile.mkdtemp(dir=graph_dir_exp)
-        # The mptcptrace call will generate .csv files to cope with
+            csv_graph_tmp_dir = tempfile.mkdtemp(dir=graph_dir_exp)
+            # The mptcptrace call will generate .csv files to cope with
 
-        # First see all csv files, to detect the relative 0 of all connections
-        # Also, compute the duration and number of bytes of the MPTCP connection
-        relative_start = float("inf")
-        for csv_fname in glob.glob('*.csv'):
-            if csv_fname.startswith(MPTCP_STATS_PREFIX):
-                try:
-                    csv_file = open(csv_fname)
-                    # Or reuse conn_id from the stats file
-                    conn_id = get_connection_id(csv_fname)
-                    data = csv_file.readlines()
-                    first_seqs = None
-                    last_acks = None
-                    con_time = None
-                    for line in data:
-                        if 'firstSeq' in line:
-                            first_seqs = line.split(';')[-2:]
-                        elif 'lastAck' in line:
-                            last_acks = line.split(';')[-2:]
-                        elif 'conTime' in line:
-                            # Only takes one of the values, because they are the same
-                            con_time = line.split(';')[-1]
+            # First see all csv files, to detect the relative 0 of all connections
+            # Also, compute the duration and number of bytes of the MPTCP connection
+            relative_start = float("inf")
+            for csv_fname in glob.glob('*.csv'):
+                if csv_fname.startswith(MPTCP_STATS_PREFIX):
+                    try:
+                        csv_file = open(csv_fname)
+                        # Or reuse conn_id from the stats file
+                        conn_id = get_connection_id(csv_fname)
+                        data = csv_file.readlines()
+                        first_seqs = None
+                        last_acks = None
+                        con_time = None
+                        for line in data:
+                            if 'firstSeq' in line:
+                                first_seqs = line.split(';')[-2:]
+                            elif 'lastAck' in line:
+                                last_acks = line.split(';')[-2:]
+                            elif 'conTime' in line:
+                                # Only takes one of the values, because they are the same
+                                con_time = line.split(';')[-1]
 
-                    if first_seqs and last_acks:
-                        connections[conn_id].attr[BYTES_S2D] = int(last_acks[1]) - int(first_seqs[0])
-                        connections[conn_id].attr[BYTES_D2S] = int(last_acks[0]) - int(first_seqs[1])
-                    if con_time:
-                        connections[conn_id].attr[DURATION] = float(con_time)
+                        if first_seqs and last_acks:
+                            connections[conn_id].attr[BYTES_S2D] = int(last_acks[1]) - int(first_seqs[0])
+                            connections[conn_id].attr[BYTES_D2S] = int(last_acks[0]) - int(first_seqs[1])
+                        if con_time:
+                            connections[conn_id].attr[DURATION] = float(con_time)
 
 
-                    csv_file.close()
-                    # Remove now stats files
-                    os.remove(csv_fname)
-                except IOError as e:
-                    print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
-                    continue
-                except ValueError as e:
-                    print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
-                    continue
+                        csv_file.close()
+                        # Remove now stats files
+                        os.remove(csv_fname)
+                    except IOError as e:
+                        print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
+                        continue
+                    except ValueError as e:
+                        print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
+                        continue
 
-            elif MPTCP_SEQ_FNAME in csv_fname:
-                try:
-                    csv_file = open(csv_fname)
-                    data = csv_file.readlines()
-                    if not data == [] and len(data) > 1:
-                        begin_time, begin_seq = get_begin_values(data[0])
-                        if begin_time < relative_start and not begin_time == 0.0:
-                            relative_start = begin_time
-                    csv_file.close()
-                except IOError as e:
-                    print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
-                    continue
-                except ValueError as e:
-                    print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
-                    continue
+                elif MPTCP_SEQ_FNAME in csv_fname:
+                    try:
+                        csv_file = open(csv_fname)
+                        data = csv_file.readlines()
+                        if not data == [] and len(data) > 1:
+                            begin_time, begin_seq = get_begin_values(data[0])
+                            if begin_time < relative_start and not begin_time == 0.0:
+                                relative_start = begin_time
+                        csv_file.close()
+                    except IOError as e:
+                        print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
+                        continue
+                    except ValueError as e:
+                        print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
+                        continue
 
-        # Then really process csv files
-        for csv_fname in glob.glob('*.csv'):
-            if MPTCP_SEQ_FNAME in csv_fname:
-                try:
-                    csv_file = open(csv_fname)
-                    data = csv_file.readlines()
-                    # Check if there is data in file (and not only one line of 0s)
-                    if not data == [] and len(data) > 1:
-                        # Collect begin time and seq num to plot graph starting at 0
-                        begin_time, begin_seq = get_begin_values(data[0])
+            # Then really process csv files
+            for csv_fname in glob.glob('*.csv'):
+                if MPTCP_SEQ_FNAME in csv_fname:
+                    try:
+                        csv_file = open(csv_fname)
+                        data = csv_file.readlines()
+                        # Check if there is data in file (and not only one line of 0s)
+                        if not data == [] and len(data) > 1:
+                            # Collect begin time and seq num to plot graph starting at 0
+                            begin_time, begin_seq = get_begin_values(data[0])
 
-                        write_graph_csv(csv_graph_tmp_dir, csv_fname, data, relative_start, begin_seq)
+                            write_graph_csv(csv_graph_tmp_dir, csv_fname, data, relative_start, begin_seq)
 
-                    csv_file.close()
+                        csv_file.close()
+                        # Remove the csv file
+                        os.remove(csv_fname)
+
+                    except IOError as e:
+                        print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
+                        continue
+                    except ValueError as e:
+                        print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
+                        continue
+
+            with cd(csv_graph_tmp_dir):
+                for csv_fname in glob.glob('*.csv'):
+                    # No point to plot information on subflows (as many points as there are subflows)
+                    if MPTCP_SF_FNAME not in csv_fname:
+                        create_graph_csv(pcap_fname, csv_fname, graph_dir_exp, connections)
                     # Remove the csv file
                     os.remove(csv_fname)
 
-                except IOError as e:
-                    print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
-                    continue
-                except ValueError as e:
-                    print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
-                    continue
+            # Save connections info
+            save_connections(pcap_fname, stat_dir_exp, connections)
 
-        with cd(csv_graph_tmp_dir):
-            for csv_fname in glob.glob('*.csv'):
-                # No point to plot information on subflows (as many points as there are subflows)
-                if MPTCP_SF_FNAME not in csv_fname:
-                    create_graph_csv(pcap_fname, csv_fname, graph_dir_exp, connections)
-                # Remove the csv file
-                os.remove(csv_fname)
-
-        # Save connections info
-        save_connections(pcap_fname, stat_dir_exp, connections)
-
-        # Remove temp dirs
-        shutil.rmtree(csv_graph_tmp_dir)
+            # Remove temp dirs
+            shutil.rmtree(csv_graph_tmp_dir)
+    except MPTCPTraceException as e:
+        print("Skip mptcp process")
 
     shutil.rmtree(csv_tmp_dir)
