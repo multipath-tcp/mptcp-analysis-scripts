@@ -128,11 +128,74 @@ def count_interesting_connections(data):
                 tot += 1
     return tot, count
 
+def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname):
+
+    # Convert Python arrays to numpy arrays (easier for mean and std)
+    for cond, elements in aggl_res.iteritems():
+        for label, array in elements.iteritems():
+            elements[label] = np.array(array)
+
+    N = len(aggl_res)
+    nb_subbars = len(label_names)
+    ind = np.arange(N)
+    labels = []
+    values = {}
+    for label_name in label_names:
+        values[label_name] = ([], [])
+
+    width = (1.00 / nb_subbars) - (0.1 / nb_subbars)        # the width of the bars
+    fig, ax = plt.subplots()
+
+    # So far, simply count the number of connections
+    for cond, elements in aggl_res.iteritems():
+        labels.append(cond)
+        for label_name in label_names:
+            values[label_name][0].append(elements[label_name].mean())
+            values[label_name][1].append(elements[label_name].std())
+
+    bars = []
+    labels_names = []
+    zero_bars = []
+    count = 0
+    for label_name, (mean, std) in values.iteritems():
+        bar = ax.bar(ind + (count * width), mean, width, color=color[count], yerr=std, ecolor=ecolor[count])
+        bars.append(bar)
+        zero_bars.append(bar[0])
+        labels_names.append(label_name)
+        count += 1
+
+    # add some text for labels, title and axes ticks
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    ax.set_xticks(ind + width)
+    ax.set_xticklabels(labels)
+
+    ax.legend(zero_bars, labels_names)
+
+
+    def autolabel(rects):
+        # attach some text labels
+        for rect in rects:
+            height = rect.get_height()
+            ax.text(rect.get_x() + rect.get_width() / 2., 1.05 * height, '%d' % int(height),
+                    ha='center', va='bottom')
+
+    for bar in bars:
+        autolabel(bar)
+
+    plt.savefig(graph_fname)
+
 
 aggl_res = {}
 tot_lbl = 'Total Connections'
 tot_flw_lbl = 'Total Flows'
 tot_int_lbl = 'Interesting Flows'
+label_names = ['Total Connections', 'Total Flows', 'Interesting Flows']
+color = ['b', 'g', 'r']
+ecolor = ['g', 'r', 'b']
+ylabel = 'Number of connections'
+title = 'Counts of total and interesting connections of ' + args.app
+graph_fname = "count_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
 
 # Need to agglomerate same tests
 for fname, data in connections.iteritems():
@@ -146,69 +209,22 @@ for fname, data in connections.iteritems():
         aggl_res[condition] = {
             tot_lbl: [len(data)], tot_flw_lbl: [tot_flow], tot_int_lbl: [tot_int]}
 
-# At the end, convert Python arrays to numpy arrays (easier for mean and std)
-for cond, elements in aggl_res.iteritems():
-    for label, array in elements.iteritems():
-        elements[label] = np.array(array)
-
 print(aggl_res)
 
 
-N = len(aggl_res)
-ind = np.arange(N)
-labels = []
-conn_mean = []
-conn_std = []
-flow_mean = []
-flow_std = []
-int_mean = []
-int_std = []
-width = 0.30       # the width of the bars
-fig, ax = plt.subplots()
-
-# So far, simply count the number of connections
-for cond, elements in aggl_res.iteritems():
-    labels.append(cond)
-    conn_mean.append(elements[tot_lbl].mean())
-    conn_std.append(elements[tot_lbl].std())
-    flow_mean.append(elements[tot_flw_lbl].mean())
-    flow_std.append(elements[tot_flw_lbl].std())
-    int_mean.append(elements[tot_int_lbl].mean())
-    int_std.append(elements[tot_int_lbl].std())
-
-tot_count = ax.bar(ind, conn_mean, width, color='b', yerr=conn_std, ecolor='g')
-flo_count = ax.bar(ind + width, flow_mean, width, color='g', yerr=flow_std, ecolor='r')
-int_count = ax.bar(ind + 2 * width, int_mean, width, color='r', yerr=int_std, ecolor='b')
-
-# add some text for labels, title and axes ticks
-ax.set_ylabel('Counts')
-ax.set_title('Counts of total and interesting connections of ' + args.app)
-ax.set_xticks(ind + width)
-ax.set_xticklabels(labels)
-
-ax.legend((tot_count[0], flo_count[0], int_count[0]),
-          (tot_lbl, tot_flw_lbl, tot_int_lbl))
+plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
-def autolabel(rects):
-    # attach some text labels
-    for rect in rects:
-        height = rect.get_height()
-        ax.text(rect.get_x() + rect.get_width() / 2., 1.05 * height, '%d' % int(height),
-                ha='center', va='bottom')
-
-autolabel(tot_count)
-autolabel(flo_count)
-autolabel(int_count)
-
-plt.savefig("count_" + args.app + "_" + start_time + "_" + stop_time + '.pdf')
-
-
-#TODO I will create a subroutine to avoid code duplication
 aggl_res = {}
 tot_lbl = 'Bytes s2d'
 tot_flw_lbl = 'Bytes d2s'
 tot_int_lbl = 'Duration'
+label_names = ['Bytes s2d', 'Bytes d2s', 'Duration']
+color = ['b', 'g', 'r']
+ecolor = ['g', 'r', 'b']
+ylabel = 'Values (bytes & seconds)'
+title = 'Counts of total and interesting connections of ' + args.app
+graph_fname = "bytes_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
 
 # Need to agglomerate same tests
 for fname, data in connections.iteritems():
@@ -229,61 +245,9 @@ for fname, data in connections.iteritems():
             aggl_res[condition] = {
                 tot_lbl: [data[BYTES_S2D]], tot_flw_lbl: [data[BYTES_D2S]], tot_int_lbl: [data[DURATION]]}
 
-# At the end, convert Python arrays to numpy arrays (easier for mean and std)
-for cond, elements in aggl_res.iteritems():
-    for label, array in elements.iteritems():
-        elements[label] = np.array(array)
 
 print(aggl_res)
 
-
-N = len(aggl_res)
-ind = np.arange(N)
-labels = []
-conn_mean = []
-conn_std = []
-flow_mean = []
-flow_std = []
-int_mean = []
-int_std = []
-width = 0.30       # the width of the bars
-fig, ax = plt.subplots()
-
-# So far, simply count the number of connections
-for cond, elements in aggl_res.iteritems():
-    labels.append(cond)
-    conn_mean.append(elements[tot_lbl].mean())
-    conn_std.append(elements[tot_lbl].std())
-    flow_mean.append(elements[tot_flw_lbl].mean())
-    flow_std.append(elements[tot_flw_lbl].std())
-    int_mean.append(elements[tot_int_lbl].mean())
-    int_std.append(elements[tot_int_lbl].std())
-
-tot_count = ax.bar(ind, conn_mean, width, color='b', yerr=conn_std, ecolor='g')
-flo_count = ax.bar(ind + width, flow_mean, width, color='g', yerr=flow_std, ecolor='r')
-int_count = ax.bar(ind + 2 * width, int_mean, width, color='r', yerr=int_std, ecolor='b')
-
-# add some text for labels, title and axes ticks
-ax.set_ylabel('Values (bytes & seconds)')
-ax.set_title('Counts of total and interesting connections of ' + args.app)
-ax.set_xticks(ind + width)
-ax.set_xticklabels(labels)
-
-ax.legend((tot_count[0], flo_count[0], int_count[0]),
-          (tot_lbl, tot_flw_lbl, tot_int_lbl))
-
-
-def autolabel(rects):
-    # attach some text labels
-    for rect in rects:
-        height = rect.get_height()
-        ax.text(rect.get_x() + rect.get_width() / 2., 1.05 * height, '%d' % int(height),
-                ha='center', va='bottom')
-
-autolabel(tot_count)
-autolabel(flo_count)
-autolabel(int_count)
-
-plt.savefig("bytes_" + args.app + "_" + start_time + "_" + stop_time + '.pdf')
+plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 print("End of summary")
