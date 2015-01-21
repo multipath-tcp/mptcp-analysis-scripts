@@ -333,6 +333,45 @@ def prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp):
         return None
 
 
+def prepare_datasets_file(prefix_fname, connection, relative_start):
+    """ Rewrite datasets file, set relative values of time for all connections in a pcap
+        Return a list of lists to create a fully aggregated graph
+    """
+    not_viewed = True
+    found = False
+    count_no_data = 0
+    aggregate_seq = []
+    datasets_fname = prefix_fname + '.datasets'
+    try:
+        # First read the file
+        datasets_file = open(datasets_fname, 'r')
+        datasets = datasets_file.readlines()
+        datasets_file.close()
+        # Then overwrite it
+        time_offset = connection.flow.attr[co.START] - relative_start
+        datasets_file = open(datasets_fname, 'w')
+        for line in datasets:
+            split_line = line.split(" ")
+            if len(split_line) == 2:
+                if not_viewed and count_no_data == 3:
+                    found = True
+                count_no_data = 0
+                time = float(split_line[0]) + time_offset
+                datasets_file.write(str(time) + " " + split_line[1])
+                if found:
+                    aggregate_seq.append([time, float(split_line[1]])
+            else: # Not a data line, write it as it is
+                count_no_data += 1
+                found = False
+                datasets_file.write(line)
+
+        datasets_file.close()
+    except IOError as e:
+        print(e)
+        print("IOError in preparing datasets file of " + prefix_fname)
+    return aggregate_seq
+
+
 def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
@@ -349,6 +388,9 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout)
 
     connections = process_tcptrace_cmd(cmd, pcap_fname)
 
+    relative_start = get_relative_start_time(connections)
+    aggregate_list = []
+
     # The tcptrace call will generate .xpl files to cope with
     for xpl_fname in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_fname[:-5]) + '*.xpl')):
         flow_name, is_reversed = get_flow_name(xpl_fname)
@@ -361,6 +403,8 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout)
             gpl_fname = prefix_fname + '.gpl'
             gpl_fname_ok = prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp)
             if gpl_fname_ok:
+                if 'tsg' in gpl_fname_ok:
+                    aggregate_tsg = prepare_datasets_file(prefix_fname, connections[flow_name], relative_start)
                 devnull = open(os.devnull, 'w')
                 cmd = ['gnuplot', gpl_fname_ok]
                 if subprocess.call(cmd, stdout=devnull) != 0:
