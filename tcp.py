@@ -55,6 +55,16 @@ def compute_duration(info):
     return last_packet - first_packet
 
 
+def get_relative_start_time(connections):
+    """ Given a  dictionary of TCPConnection, return the smallest start time (0 of relative scale) """
+    relative_start = float("inf")
+    for conn_id, conn in connections.iteritems():
+        start_time = conn.flow.attr[co.START]
+        if start_time < relative_start:
+            relative_start = start_time
+    return relative_start
+
+
 def extract_flow_data(out_file):
     """ Given an (open) file, return a dictionary of as many elements as there are tcp flows """
     # Return at the beginning of the file
@@ -79,6 +89,7 @@ def extract_flow_data(out_file):
                 connection.flow.attr[co.DPORT] = info[4]
                 connection.flow.detect_ipv4()
                 connection.flow.indicates_wifi_or_rmnet()
+                connection.flow.attr[co.START] = float(info[5])
                 connection.flow.attr[co.DURATION] = compute_duration(info)
                 connection.flow.attr[co.PACKS_S2D] = int(info[7])
                 connection.flow.attr[co.PACKS_D2S] = int(info[8])
