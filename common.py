@@ -113,6 +113,8 @@ DPORT = 'dport'
 WSCALESRC = 'wscalesrc'
 # Window scale for destination
 WSCALEDST = 'wscaledst'
+# Start of a connection (first packet)
+START = 'start_time'
 # Duration of a connection
 DURATION = 'duration'
 # Number of packets from source to destination
