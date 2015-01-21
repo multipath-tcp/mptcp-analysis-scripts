@@ -136,7 +136,9 @@ def convert_number_to_name(nb_conn):
 
 
 def get_flow_name(xpl_fname):
-    """ Return the flow name in the form 'a2b' (and not 'b2a') """
+    """ Return the flow name in the form 'a2b' (and not 'b2a'), reverse is True iff in xpl_fname,
+        it contains 'b2a' instead of 'a2b'
+    """
     # Basic information is contained between the two last '_'
     last_us_index = xpl_fname.rindex("_")
     nearly_last_us_index = xpl_fname.rindex("_", 0, last_us_index)
@@ -151,9 +153,9 @@ def get_flow_name(xpl_fname):
         chars = list(flow_name)
         chars[two_index - 1] = right_letter
         chars[-1] = left_letter
-        return ''.join(chars)
+        return ''.join(chars), True
     else:
-        return flow_name
+        return flow_name, False
 
 
 ##################################################
@@ -344,8 +346,8 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout)
 
     # The tcptrace call will generate .xpl files to cope with
     for xpl_fname in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_fname[:-5]) + '*.xpl')):
-        flow_name = get_flow_name(xpl_fname)
         if interesting_graph(flow_name, connections):
+        flow_name, is_reversed = get_flow_name(xpl_fname)
             cmd = ['xpl2gpl', xpl_fname]
             if subprocess.call(cmd, stdout=print_out) != 0:
                 print("Error of xpl2gpl with " + xpl_fname + "; skip xpl file", file=sys.stderr)
