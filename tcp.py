@@ -286,12 +286,17 @@ def correct_trace(pcap_fname, print_out=sys.stdout):
 ##################################################
 
 
-def interesting_graph(flow_name, connections):
+def interesting_graph(flow_name, is_reversed, connections):
     """ Return True if the MPTCP graph is worthy, else False
         This function assumes that a graph is interesting if it has at least one connection that
-        if not 127.0.0.1 -> 127.0.0.1
+        if not 127.0.0.1 -> 127.0.0.1 and if there are data packets sent
     """
-    return (not connections[flow_name].flow.attr[co.TYPE] == 'IPv4' or connections[flow_name].flow.attr[co.IF])
+    if (not connections[flow_name].flow.attr[co.TYPE] == 'IPv4' or connections[flow_name].flow.attr[co.IF]):
+        if is_reversed:
+            return (connections[flow_name].flow.attr[co.PACKS_D2S] > 0)
+        else:
+            return (connections[flow_name].flow.attr[co.PACKS_S2D] > 0)
+    return False
 
 
 def prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp):
@@ -346,8 +351,8 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout)
 
     # The tcptrace call will generate .xpl files to cope with
     for xpl_fname in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_fname[:-5]) + '*.xpl')):
-        if interesting_graph(flow_name, connections):
         flow_name, is_reversed = get_flow_name(xpl_fname)
+        if interesting_graph(flow_name, is_reversed, connections):
             cmd = ['xpl2gpl', xpl_fname]
             if subprocess.call(cmd, stdout=print_out) != 0:
                 print("Error of xpl2gpl with " + xpl_fname + "; skip xpl file", file=sys.stderr)
