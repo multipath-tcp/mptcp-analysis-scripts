@@ -537,7 +537,7 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=Non
                 graph_dir_exp, os.path.basename(pcap_fname)[:-5] + "_" + direction + "_" + interface + '.pdf'))
 
         co.plot_line_graph(aggregate_dict[direction].values(), aggregate_dict[direction].keys(), [
-                           'k:', 'k--'], "YLABEL", "TITLE", os.path.join(graph_dir_exp, os.path.basename(pcap_fname)[:-5] + "_" + direction + "_all.pdf"))
+                           'r:', 'b--'], "YLABEL", "TITLE", os.path.join(graph_dir_exp, os.path.basename(pcap_fname)[:-5] + "_" + direction + "_all.pdf"))
 
     # Save connections info
     if mptcp_connections:
