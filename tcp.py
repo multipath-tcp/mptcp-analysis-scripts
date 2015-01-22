@@ -355,6 +355,7 @@ def prepare_datasets_file(prefix_fname, connection, relative_start):
             if len(split_line) == 2:
                 if not_viewed and count_no_data == 3:
                     found = True
+                    not_viewed= False
                 count_no_data = 0
                 time = float(split_line[0]) + time_offset
                 datasets_file.write(str(time) + " " + split_line[1])
