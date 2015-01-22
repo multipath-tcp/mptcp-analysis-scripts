@@ -396,7 +396,23 @@ def sort_and_aggregate(aggr_list):
     return return_list
 
 
-def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout):
+def get_flow_name_connection(connection, connections):
+    """ Return the connection id and flow id in MPTCP connections of the TCP connection
+        Same if same source/dest ip/port
+        If not found, return None, None
+    """
+    for conn_id, conn in connections.iteritems():
+        for flow_id, flow in conn.flows.iteritems():
+            if (connection.flow.attr[co.SADDR] == flow.attr[co.SADDR] and
+                connection.flow.attr[co.DADDR] == flow.attr[co.DADDR] and
+                connection.flow.attr[co.SPORT] == flow.attr[co.SPORT] and
+                connection.flow.attr[co.DPORT] == flow.attr[co.DPORT]):
+                return conn_id, flow_id
+
+    return None, None
+
+
+def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=None, print_out=sys.stdout):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0
@@ -418,8 +434,16 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout)
     # The tcptrace call will generate .xpl files to cope with
     for xpl_fname in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_fname[:-5]) + '*.xpl')):
         flow_name, is_reversed = get_flow_name(xpl_fname)
-        connections[flow_name].attr[co.S2D] = {}
-        connections[flow_name].attr[co.D2S] = {}
+        if mptcp_connections:
+            conn_id, flow_id = get_flow_name_connection(
+                connections[flow_name], mptcp_connections)
+            if conn_id:
+                mptcp_connections[conn_id].attr[co.S2D] = {}
+                mptcp_connections[conn_id].attr[co.D2S] = {}
+        else:
+            connections[flow_name].attr[co.S2D] = {}
+            connections[flow_name].attr[co.D2S] = {}
+
         if interesting_graph(flow_name, is_reversed, connections):
             cmd = ['xpl2gpl', xpl_fname]
             if subprocess.call(cmd, stdout=print_out) != 0:
@@ -434,18 +458,43 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout)
                     interface = connections[flow_name].flow.attr[co.IF]
                     if is_reversed:
                         aggregate_dict[co.D2S][interface] += aggregate_tsg
-                        connections[flow_name].attr[co.D2S][interface] = connections[flow_name].flow.attr[co.BYTES_D2S]
+                        if mptcp_connections:
+                            if conn_id:
+                                mptcp_connections[conn_id].flows[flow_id].attr[
+                                    co.BYTES_D2S] = connections[flow_name].flow.attr[co.BYTES_D2S]
+                                if interface in mptcp_connections[conn_id].attr[co.D2S].keys():
+                                    mptcp_connections[conn_id].attr[co.D2S][
+                                        interface] += connections[flow_name].flow.attr[co.BYTES_D2S]
+                                else:
+                                    mptcp_connections[conn_id].attr[co.D2S][
+                                        interface] = connections[flow_name].flow.attr[co.BYTES_D2S]
+                        else:
+                            connections[flow_name].attr[co.D2S][interface] = connections[
+                                flow_name].flow.attr[co.BYTES_D2S]
                     else:
                         aggregate_dict[co.S2D][interface] += aggregate_tsg
-                        connections[flow_name].attr[co.S2D][interface] = connections[flow_name].flow.attr[co.BYTES_S2D]
+                        if mptcp_connections:
+                            if conn_id:
+                                mptcp_connections[conn_id].flows[flow_id].attr[
+                                    co.BYTES_S2D] = connections[flow_name].flow.attr[co.BYTES_S2D]
+                                if interface in mptcp_connections[conn_id].attr[co.S2D].keys():
+                                    mptcp_connections[conn_id].attr[co.S2D][
+                                        interface] += connections[flow_name].flow.attr[co.BYTES_S2D]
+                                else:
+                                    mptcp_connections[conn_id].attr[co.S2D][
+                                        interface] = connections[flow_name].flow.attr[co.BYTES_S2D]
+                        else:
+                            connections[flow_name].attr[co.S2D][interface] = connections[
+                                flow_name].flow.attr[co.BYTES_S2D]
 
-                devnull = open(os.devnull, 'w')
-                cmd = ['gnuplot', gpl_fname_ok]
-                if subprocess.call(cmd, stdout=devnull) != 0:
-                    print(
-                        "Error of gnuplot with " + pcap_fname + "; skip process", file=sys.stderr)
-                    return
-                devnull.close()
+                if not mptcp_connections:
+                    devnull = open(os.devnull, 'w')
+                    cmd = ['gnuplot', gpl_fname_ok]
+                    if subprocess.call(cmd, stdout=devnull) != 0:
+                        print(
+                            "Error of gnuplot with " + pcap_fname + "; skip process", file=sys.stderr)
+                        return
+                    devnull.close()
 
             # Delete gpl, xpl and others files generated
             try:
@@ -475,4 +524,7 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout)
 
 
     # Save connections info
-    co.save_connections(pcap_fname, stat_dir_exp, connections)
+    if mptcp_connections:
+        co.save_connections(pcap_fname, stat_dir_exp, mptcp_connections)
+    else:
+        co.save_connections(pcap_fname, stat_dir_exp, connections)
