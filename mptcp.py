@@ -33,6 +33,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tcp
 import tempfile
 
 ##################################################
@@ -373,12 +374,13 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp):
                     # Remove the csv file
                     os.remove(csv_fname)
 
-            # Save connections info
-            co.save_connections(pcap_fname, stat_dir_exp, connections)
-
             # Remove temp dirs
             shutil.rmtree(csv_graph_tmp_dir)
     except MPTCPTraceException:
         print("Skip mptcp process")
 
     shutil.rmtree(csv_tmp_dir)
+
+    # Create aggregated graphes and add per interface information on MPTCPConnection
+    # This will save the mptcp connections
+    tcp.process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=connections)
