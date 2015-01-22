@@ -25,6 +25,7 @@ from __future__ import print_function
 
 import os
 import Gnuplot
+import matplotlib.pyplot as plt
 import pickle
 import subprocess
 import sys
@@ -249,3 +250,27 @@ def detect_ipv4(data):
         num_daddr = daddr.split('.')
         if len(num_saddr) == 4 and len(num_daddr) == 4:
             data[TYPE] = 'IPv4'
+
+##################################################
+##                    GRAPHS                    ##
+##################################################
+
+
+def plot_line_graph(data, label_names, formatting, ylabel, title, graph_fname):
+    """ Plot a line graph with data """
+    count = 0
+    # Create plots
+    for dataset in data:
+        x_val = [x[0] for x in dataset]
+        y_val = [x[1] for x in dataset]
+        plt.plot(x_val, y_val, formatting[count], label=label_names[count])
+        count += 1
+
+    legend = plt.legend(loc='upper center', shadow=True, fontsize='x-large')
+
+    # Put a nicer background color on the legend.
+    legend.get_frame().set_facecolor('#00FFCC')
+
+    plt.savefig(graph_fname)
+    # Don't forget to clean the plot, otherwise previous ones will be there!
+    plt.clf()
