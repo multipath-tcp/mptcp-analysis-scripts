@@ -374,6 +374,28 @@ def prepare_datasets_file(prefix_fname, connections, flow_name, relative_start):
     return aggregate_seq
 
 
+def sort_and_aggregate(aggr_list):
+    """ Given a list of elements as returned by prepare_datasets_file, return a sorted and
+        aggregated list
+    """
+    offsets = {}
+    total = 0
+    # Sort list by time
+    sorted_list = sorted(aggr_list, key=lambda elem: elem[0])
+    return_list = []
+    for elem in sorted_list:
+        # Manage the case when the flow name is seen for the first time
+        if elem[2] in offsets.keys():
+            total += elem[1] - offsets[elem[2]]
+        else:
+            total += elem[1]
+
+        offsets[elem[2]] = elem[1]
+        return_list.append([elem[0], total])
+
+    return return_list
+
+
 def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
@@ -442,5 +464,8 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout)
         except OSError as e:
             print(str(e) + ": skipped", file=sys.stderr)
 
+    for direction, interfaces in aggregate_dict.iteritems():
+        for interface, aggr_list in interfaces.iteritems():
+            aggregate_dict[direction][interface] = sort_and_aggregate(aggr_list)
     # Save connections info
     co.save_connections(pcap_fname, stat_dir_exp, connections)
