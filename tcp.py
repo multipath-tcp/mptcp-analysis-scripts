@@ -38,6 +38,7 @@ import sys
 
 
 class TCPConnection(co.BasicConnection):
+
     """ Represent a TCP connection """
     flow = None
 
@@ -99,7 +100,6 @@ def extract_flow_data(out_file):
                 # TODO maybe extract more information
 
                 connections[conn] = connection
-
 
     return connections
 
@@ -171,7 +171,8 @@ def process_tcptrace_cmd(cmd, pcap_fname):
     pcap_flow_data = pcap_fname[:-5] + '.out'
     flow_data_file = open(pcap_flow_data, 'w+')
     if subprocess.call(cmd, stdout=flow_data_file) != 0:
-        print("Error of tcptrace with " + pcap_fname + "; skip process", file=sys.stderr)
+        print("Error of tcptrace with " + pcap_fname +
+              "; skip process", file=sys.stderr)
         return
     connections = extract_flow_data(flow_data_file)
 
@@ -220,9 +221,11 @@ def split_and_replace(pcap_fname, remain_pcap_fname, conn, other_conn, num, prin
     """
     # Split on the port criterion
     condition = '(tcp.srcport==' + \
-        conn.flow.attr[co.SPORT] + ')or(tcp.dstport==' + conn.flow.attr[co.SPORT] + ')'
+        conn.flow.attr[co.SPORT] + \
+        ')or(tcp.dstport==' + conn.flow.attr[co.SPORT] + ')'
     tmp_split_fname = pcap_fname[:-5] + "__tmp.pcap"
-    cmd = ['tshark', '-r', remain_pcap_fname, '-Y', condition, '-w', tmp_split_fname]
+    cmd = ['tshark', '-r', remain_pcap_fname,
+           '-Y', condition, '-w', tmp_split_fname]
     if subprocess.call(cmd, stdout=print_out) != 0:
         print(
             "Error when tshark port " + conn.flow.attr[co.SPORT] + ": skip tcp correction", file=sys.stderr)
@@ -237,14 +240,16 @@ def split_and_replace(pcap_fname, remain_pcap_fname, conn, other_conn, num, prin
     cmd = ['mv', tmp_remain_fname, remain_pcap_fname]
     if subprocess.call(cmd, stdout=print_out) != 0:
         print(
-            "Error when moving " + tmp_remain_fname + " to " + remain_pcap_fname +  ": skip tcp correction", file=sys.stderr)
+            "Error when moving " + tmp_remain_fname + " to " + remain_pcap_fname + ": skip tcp correction", file=sys.stderr)
         return -1
 
     # Replace meaningless IP and port with the "real" values
     split_fname = pcap_fname[:-5] + "__" + str(num) + ".pcap"
     cmd = ['tcprewrite',
-           "--portmap=" + conn.flow.attr[co.DPORT] + ":" + other_conn.flow.attr[co.SPORT],
-           "--pnat=" + conn.flow.attr[co.DADDR] + ":" + other_conn.flow.attr[co.SADDR],
+           "--portmap=" +
+           conn.flow.attr[co.DPORT] + ":" + other_conn.flow.attr[co.SPORT],
+           "--pnat=" + conn.flow.attr[co.DADDR] +
+           ":" + other_conn.flow.attr[co.SADDR],
            "--infile=" + tmp_split_fname,
            "--outfile=" + split_fname]
     if subprocess.call(cmd, stdout=print_out) != 0:
@@ -262,7 +267,8 @@ def correct_trace(pcap_fname, print_out=sys.stdout):
     cmd = ['tcptrace', '-n', '-l', '--csv', pcap_fname]
     connections = process_tcptrace_cmd(cmd, pcap_fname)
     # Create the remaining_file
-    remain_pcap_fname = co.copy_remain_pcap_file(pcap_fname, print_out=print_out)
+    remain_pcap_fname = co.copy_remain_pcap_file(
+        pcap_fname, print_out=print_out)
     if not remain_pcap_fname:
         return
 
@@ -273,10 +279,12 @@ def correct_trace(pcap_fname, print_out=sys.stdout):
                 connections, conn.flow.attr[co.SADDR], conn.flow.attr[co.SPORT])
             if other_conn:
                 if split_and_replace(pcap_fname, remain_pcap_fname, conn, other_conn, num) != 0:
-                    print("Stop correcting trace " + pcap_fname, file=print_out)
+                    print(
+                        "Stop correcting trace " + pcap_fname, file=print_out)
                     return
         num += 1
-        print(os.path.basename(pcap_fname) + ": Corrected: " + str(num) + "/" + str(len(connections)), file=print_out)
+        print(os.path.basename(pcap_fname) + ": Corrected: " +
+              str(num) + "/" + str(len(connections)), file=print_out)
 
     # Merge small pcap files into a unique one
     merge_and_clean_sub_pcap(pcap_fname)
@@ -329,7 +337,8 @@ def prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp):
         gpl_file_ok.close()
         return gpl_fname_ok
     except IOError:
-        print('IOError for graph file with ' + gpl_fname + ': skip', file=sys.stderr)
+        print('IOError for graph file with ' +
+              gpl_fname + ': skip', file=sys.stderr)
         return None
 
 
@@ -356,13 +365,14 @@ def prepare_datasets_file(prefix_fname, connections, flow_name, relative_start):
             if len(split_line) == 2:
                 if not_viewed and count_no_data == 3:
                     found = True
-                    not_viewed= False
+                    not_viewed = False
                 count_no_data = 0
                 time = float(split_line[0]) + time_offset
                 datasets_file.write(str(time) + " " + split_line[1])
                 if found:
-                    aggregate_seq.append([time, float(split_line[1]), flow_name])
-            else: # Not a data line, write it as it is
+                    aggregate_seq.append(
+                        [time, float(split_line[1]), flow_name])
+            else:  # Not a data line, write it as it is
                 count_no_data += 1
                 found = False
                 datasets_file.write(line)
@@ -421,15 +431,17 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=Non
     # -l for long output
     # --csv for csv file
     cmd = ['tcptrace', '--output_dir=' + os.getcwd(),
-        '--output_prefix=' + os.path.basename(pcap_fname[:-5]) + '_', '-C', '-S', '-T', '-zxy',
-        '-n', '-y', '-l', '--csv', '--noshowzwndprobes', '--noshowoutorder', '--noshowrexmit',
-        '--noshowsacks', '--noshowzerowindow', '--noshowurg', '--noshowdupack3',
-        '--noshowzerolensegs', pcap_fname]
+           '--output_prefix=' +
+           os.path.basename(pcap_fname[:-5]) + '_', '-C', '-S', '-T', '-zxy',
+           '-n', '-y', '-l', '--csv', '--noshowzwndprobes', '--noshowoutorder', '--noshowrexmit',
+           '--noshowsacks', '--noshowzerowindow', '--noshowurg', '--noshowdupack3',
+           '--noshowzerolensegs', pcap_fname]
 
     connections = process_tcptrace_cmd(cmd, pcap_fname)
 
     relative_start = get_relative_start_time(connections)
-    aggregate_dict = {co.S2D: {co.WIFI: [], co.RMNET: []}, co.D2S: {co.WIFI: [], co.RMNET: []}}
+    aggregate_dict = {
+        co.S2D: {co.WIFI: [], co.RMNET: []}, co.D2S: {co.WIFI: [], co.RMNET: []}}
 
     # The tcptrace call will generate .xpl files to cope with
     for xpl_fname in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_fname[:-5]) + '*.xpl')):
@@ -447,14 +459,17 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=Non
         if interesting_graph(flow_name, is_reversed, connections):
             cmd = ['xpl2gpl', xpl_fname]
             if subprocess.call(cmd, stdout=print_out) != 0:
-                print("Error of xpl2gpl with " + xpl_fname + "; skip xpl file", file=sys.stderr)
+                print("Error of xpl2gpl with " + xpl_fname +
+                      "; skip xpl file", file=sys.stderr)
                 continue
             prefix_fname = os.path.basename(xpl_fname)[:-4]
             gpl_fname = prefix_fname + '.gpl'
-            gpl_fname_ok = prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp)
+            gpl_fname_ok = prepare_gpl_file(
+                pcap_fname, gpl_fname, graph_dir_exp)
             if gpl_fname_ok:
                 if 'tsg' in gpl_fname_ok:
-                    aggregate_tsg = prepare_datasets_file(prefix_fname, connections, flow_name, relative_start)
+                    aggregate_tsg = prepare_datasets_file(
+                        prefix_fname, connections, flow_name, relative_start)
                     interface = connections[flow_name].flow.attr[co.IF]
                     if is_reversed:
                         aggregate_dict[co.D2S][interface] += aggregate_tsg
@@ -516,12 +531,13 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=Non
     # Create graph for aggregated results
     for direction, interfaces in aggregate_dict.iteritems():
         for interface, aggr_list in interfaces.iteritems():
-            aggregate_dict[direction][interface] = sort_and_aggregate(aggr_list)
-            co.plot_line_graph([aggregate_dict[direction][interface]], [interface], ['k'], "YLABEL", "TITLE", os.path.join(graph_dir_exp, os.path.basename(pcap_fname)[:-4] + "_" + direction + "_" + interface + '.pdf'))
+            aggregate_dict[direction][
+                interface] = sort_and_aggregate(aggr_list)
+            co.plot_line_graph([aggregate_dict[direction][interface]], [interface], ['k'], "YLABEL", "TITLE", os.path.join(
+                graph_dir_exp, os.path.basename(pcap_fname)[:-4] + "_" + direction + "_" + interface + '.pdf'))
 
-        co.plot_line_graph(aggregate_dict[direction].values(), aggregate_dict[direction].keys(), ['k:', 'k--'], "YLABEL", "TITLE", os.path.join(graph_dir_exp, os.path.basename(pcap_fname)[:-4] + "_" + direction + "_all.pdf"))
-
-
+        co.plot_line_graph(aggregate_dict[direction].values(), aggregate_dict[direction].keys(), [
+                           'k:', 'k--'], "YLABEL", "TITLE", os.path.join(graph_dir_exp, os.path.basename(pcap_fname)[:-4] + "_" + direction + "_all.pdf"))
 
     # Save connections info
     if mptcp_connections:
