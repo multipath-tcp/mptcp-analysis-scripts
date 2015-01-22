@@ -434,10 +434,10 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout)
                     interface = connections[flow_name].flow.attr[co.IF]
                     if is_reversed:
                         aggregate_dict[co.D2S][interface] += aggregate_tsg
-                        connections[flow_name].attr[co.REV][interface] = connections[flow_name].flow.attr[co.BYTES_D2S]
+                        connections[flow_name].attr[co.D2S][interface] = connections[flow_name].flow.attr[co.BYTES_D2S]
                     else:
                         aggregate_dict[co.S2D][interface] += aggregate_tsg
-                        connections[flow_name].attr[co.DIR][interface] = connections[flow_name].flow.attr[co.BYTES_S2D]
+                        connections[flow_name].attr[co.S2D][interface] = connections[flow_name].flow.attr[co.BYTES_S2D]
 
                 devnull = open(os.devnull, 'w')
                 cmd = ['gnuplot', gpl_fname_ok]
