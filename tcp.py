@@ -333,10 +333,11 @@ def prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp):
         return None
 
 
-def prepare_datasets_file(prefix_fname, connection, relative_start):
+def prepare_datasets_file(prefix_fname, connections, flow_name, relative_start):
     """ Rewrite datasets file, set relative values of time for all connections in a pcap
         Return a list of lists to create a fully aggregated graph
     """
+    connection = connections[flow_name]
     not_viewed = True
     found = False
     count_no_data = 0
@@ -360,7 +361,7 @@ def prepare_datasets_file(prefix_fname, connection, relative_start):
                 time = float(split_line[0]) + time_offset
                 datasets_file.write(str(time) + " " + split_line[1])
                 if found:
-                    aggregate_seq.append([time, float(split_line[1]])
+                    aggregate_seq.append([time, float(split_line[1]), flow_name])
             else: # Not a data line, write it as it is
                 count_no_data += 1
                 found = False
@@ -405,7 +406,7 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout)
             gpl_fname_ok = prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp)
             if gpl_fname_ok:
                 if 'tsg' in gpl_fname_ok:
-                    aggregate_tsg = prepare_datasets_file(prefix_fname, connections[flow_name], relative_start)
+                    aggregate_tsg = prepare_datasets_file(prefix_fname, connections, flow_name, relative_start)
                 devnull = open(os.devnull, 'w')
                 cmd = ['gnuplot', gpl_fname_ok]
                 if subprocess.call(cmd, stdout=devnull) != 0:
