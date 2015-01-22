@@ -391,7 +391,7 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout)
     connections = process_tcptrace_cmd(cmd, pcap_fname)
 
     relative_start = get_relative_start_time(connections)
-    aggregate_list = []
+    aggregate_dict = {co.S2D: {co.WIFI: [], co.RMNET: []}, co.D2S: {co.WIFI: [], co.RMNET: []}}
 
     # The tcptrace call will generate .xpl files to cope with
     for xpl_fname in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_fname[:-5]) + '*.xpl')):
@@ -407,6 +407,11 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout)
             if gpl_fname_ok:
                 if 'tsg' in gpl_fname_ok:
                     aggregate_tsg = prepare_datasets_file(prefix_fname, connections, flow_name, relative_start)
+                    interface = connections[flow_name].flow.attr[co.IF]
+                    if is_reversed:
+                        aggregate_dict[co.D2S][interface] += aggregate_tsg
+                    else:
+                        aggregate_dict[co.S2D][interface] += aggregate_tsg
                 devnull = open(os.devnull, 'w')
                 cmd = ['gnuplot', gpl_fname_ok]
                 if subprocess.call(cmd, stdout=devnull) != 0:
