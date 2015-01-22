@@ -396,6 +396,8 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout)
     # The tcptrace call will generate .xpl files to cope with
     for xpl_fname in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_fname[:-5]) + '*.xpl')):
         flow_name, is_reversed = get_flow_name(xpl_fname)
+        connections[flow_name].attr[co.S2D] = {}
+        connections[flow_name].attr[co.D2S] = {}
         if interesting_graph(flow_name, is_reversed, connections):
             cmd = ['xpl2gpl', xpl_fname]
             if subprocess.call(cmd, stdout=print_out) != 0:
@@ -410,8 +412,11 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=sys.stdout)
                     interface = connections[flow_name].flow.attr[co.IF]
                     if is_reversed:
                         aggregate_dict[co.D2S][interface] += aggregate_tsg
+                        connections[flow_name].attr[co.REV][interface] = connections[flow_name].flow.attr[co.BYTES_D2S]
                     else:
                         aggregate_dict[co.S2D][interface] += aggregate_tsg
+                        connections[flow_name].attr[co.DIR][interface] = connections[flow_name].flow.attr[co.BYTES_S2D]
+
                 devnull = open(os.devnull, 'w')
                 cmd = ['gnuplot', gpl_fname_ok]
                 if subprocess.call(cmd, stdout=devnull) != 0:
