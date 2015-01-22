@@ -266,7 +266,7 @@ def plot_line_graph(data, label_names, formatting, ylabel, title, graph_fname):
         plt.plot(x_val, y_val, formatting[count], label=label_names[count])
         count += 1
 
-    legend = plt.legend(loc='upper center', shadow=True, fontsize='x-large')
+    legend = plt.legend(loc='upper left', shadow=True, fontsize='x-large')
 
     # Put a nicer background color on the legend.
     legend.get_frame().set_facecolor('#00FFCC')
