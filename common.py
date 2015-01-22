@@ -126,6 +126,10 @@ BYTES_S2D = 'bytes_source2destination'
 # Number of bytes from destination to source
 BYTES_D2S = 'bytes_destination2source'
 
+# For aggregation
+S2D = 'source2destination'
+D2S = 'destination2source'
+
 # IPv4 localhost address
 LOCALHOST_IPv4 = '127.0.0.1'
 # Port number of RedSocks
