@@ -256,9 +256,10 @@ def detect_ipv4(data):
 ##################################################
 
 
-def plot_line_graph(data, label_names, formatting, ylabel, title, graph_fname):
+def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_fname):
     """ Plot a line graph with data """
     count = 0
+    fig = plt.figure()
     # Create plots
     for dataset in data:
         x_val = [x[0] for x in dataset]
@@ -270,6 +271,10 @@ def plot_line_graph(data, label_names, formatting, ylabel, title, graph_fname):
 
     # Put a nicer background color on the legend.
     legend.get_frame().set_facecolor('#00FFCC')
+
+    fig.suptitle(title, fontsize=20)
+    plt.xlabel(xlabel, fontsize=18)
+    plt.ylabel(ylabel, fontsize=16)
 
     plt.savefig(graph_fname)
     # Don't forget to clean the plot, otherwise previous ones will be there!

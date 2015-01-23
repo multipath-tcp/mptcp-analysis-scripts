@@ -558,11 +558,11 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=Non
         for interface, aggr_list in interfaces.iteritems():
             aggregate_dict[direction][
                 interface] = sort_and_aggregate(aggr_list)
-            co.plot_line_graph([aggregate_dict[direction][interface]], [interface], ['k'], "YLABEL", "TITLE", os.path.join(
+            co.plot_line_graph([aggregate_dict[direction][interface]], [interface], ['k'], "Time [s]", "Sequence number", "Agglomeration of " + interface + " connections", os.path.join(
                 graph_dir_exp, os.path.basename(pcap_fname)[:-5] + "_" + direction + "_" + interface + '.pdf'))
 
         co.plot_line_graph(aggregate_dict[direction].values(), aggregate_dict[direction].keys(), [
-                           'r:', 'b--'], "YLABEL", "TITLE", os.path.join(graph_dir_exp, os.path.basename(pcap_fname)[:-5] + "_" + direction + "_all.pdf"))
+                           'r:', 'b--'], "Time [s]", "Sequence number", "Agglomeration of all connections", os.path.join(graph_dir_exp, os.path.basename(pcap_fname)[:-5] + "_" + direction + "_all.pdf"))
 
     # Save connections info
     if mptcp_connections:
