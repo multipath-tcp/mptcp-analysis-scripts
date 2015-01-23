@@ -428,9 +428,9 @@ def get_flow_name_connection(connection, connections):
     for conn_id, conn in connections.iteritems():
         for flow_id, flow in conn.flows.iteritems():
             if (connection.flow.attr[co.SADDR] == flow.attr[co.SADDR] and
-                connection.flow.attr[co.DADDR] == flow.attr[co.DADDR] and
-                connection.flow.attr[co.SPORT] == flow.attr[co.SPORT] and
-                connection.flow.attr[co.DPORT] == flow.attr[co.DPORT]):
+                    connection.flow.attr[co.DADDR] == flow.attr[co.DADDR] and
+                    connection.flow.attr[co.SPORT] == flow.attr[co.SPORT] and
+                    connection.flow.attr[co.DPORT] == flow.attr[co.DPORT]):
                 return conn_id, flow_id
 
     return None, None
