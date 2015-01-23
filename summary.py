@@ -378,9 +378,50 @@ def bar_chart_duration():
 
     plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
+
+def bar_chart_duration_all():
+    aggl_res = {}
+    tot_int_lbl = 'Duration'
+    label_names = ['Duration']
+    color = ['r']
+    ecolor = ['b']
+    ylabel = 'Number of seconds'
+    title = 'Time of scenario of ' + args.app
+    graph_fname = "duration_all_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+
+    # Need to agglomerate same tests
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        start = float("inf")
+        stop = 0
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    here = [i for i in flow.attr.keys() if i in [co.DURATION]]
+                    if not len(here) == 1:
+                            continue
+                    start = min(start, flow.attr[co.START])
+                    stop = max(stop, flow.attr[co.START] + flow.attr[co.DURATION])
+
+            elif isinstance(conn, tcp.TCPConnection):
+                here = [i for i in conn.flow.attr.keys() if i in [co.DURATION]]
+                if not len(here) == 1:
+                        continue
+                start = min(start, conn.flow.attr[co.START])
+                stop = max(stop, conn.flow.attr[co.START] + conn.flow.attr[co.DURATION])
+
+        if stop - start >= 0:
+            if condition in aggl_res:
+                aggl_res[condition][tot_int_lbl] += [stop - start]
+            else:
+                aggl_res[condition] = {tot_int_lbl: [stop - start]}
+
+    plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+
 bar_chart_count_connections()
 bar_chart_bandwidth()
 bar_chart_duration()
 bar_chart_bandwidth_s2d_interface()
 bar_chart_bandwidth_d2s_interface()
+bar_chart_duration_all()
 print("End of summary")
