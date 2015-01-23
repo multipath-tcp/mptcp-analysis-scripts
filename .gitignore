@@ -1,5 +1,8 @@
 *.pyc
 
+# Tests
+input/
+
 # MPTCP
 file_stats.csv
 mptcptrace.log
@@ -11,4 +14,3 @@ stats/
 traces/
 pcap/
 tmp.pcap
-
