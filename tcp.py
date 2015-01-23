@@ -473,6 +473,9 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=Non
         if mptcp_connections:
             conn_id, flow_id = get_flow_name_connection(
                 connections[flow_name], mptcp_connections)
+            if conn_id:
+                mptcp_connections[conn_id].flows[flow_id].attr[co.START] = connections[flow_name].flow.attr[co.START]
+                mptcp_connections[conn_id].flows[flow_id].attr[co.DURATION] = connections[flow_name].flow.attr[co.DURATION]
 
         if interesting_graph(flow_name, is_reversed, connections):
             cmd = ['xpl2gpl', xpl_fname]
