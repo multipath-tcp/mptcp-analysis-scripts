@@ -443,18 +443,22 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=Non
     aggregate_dict = {
         co.S2D: {co.WIFI: [], co.RMNET: []}, co.D2S: {co.WIFI: [], co.RMNET: []}}
 
+    # Prepare connections objects
+    if mptcp_connections:
+        for conn_id, conn in mptcp_connections.iteritems():
+            conn.attr[co.S2D] = {}
+            conn.attr[co.D2S] = {}
+    else:
+        for conn_id, conn in connections.iteritems():
+            conn.attr[co.S2D] = {}
+            conn.attr[co.D2S] = {}
+
     # The tcptrace call will generate .xpl files to cope with
     for xpl_fname in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_fname[:-5]) + '*.xpl')):
         flow_name, is_reversed = get_flow_name(xpl_fname)
         if mptcp_connections:
             conn_id, flow_id = get_flow_name_connection(
                 connections[flow_name], mptcp_connections)
-            if conn_id:
-                mptcp_connections[conn_id].attr[co.S2D] = {}
-                mptcp_connections[conn_id].attr[co.D2S] = {}
-        else:
-            connections[flow_name].attr[co.S2D] = {}
-            connections[flow_name].attr[co.D2S] = {}
 
         if interesting_graph(flow_name, is_reversed, connections):
             cmd = ['xpl2gpl', xpl_fname]
