@@ -347,10 +347,6 @@ def prepare_datasets_file(prefix_fname, connections, flow_name, relative_start):
         Return a list of lists to create a fully aggregated graph
     """
     connection = connections[flow_name]
-    not_viewed = True
-    found = False
-    count_no_data = 0
-    aggregate_seq = []
     datasets_fname = prefix_fname + '.datasets'
     try:
         # First read the file
@@ -363,24 +359,42 @@ def prepare_datasets_file(prefix_fname, connections, flow_name, relative_start):
         for line in datasets:
             split_line = line.split(" ")
             if len(split_line) == 2:
-                if not_viewed and count_no_data == 3:
-                    found = True
-                    not_viewed = False
-                count_no_data = 0
                 time = float(split_line[0]) + time_offset
                 datasets_file.write(str(time) + " " + split_line[1])
-                if found:
-                    aggregate_seq.append(
-                        [time, float(split_line[1]), flow_name])
             else:  # Not a data line, write it as it is
-                count_no_data += 1
-                found = False
                 datasets_file.write(line)
 
         datasets_file.close()
     except IOError as e:
         print(e)
         print("IOError in preparing datasets file of " + prefix_fname)
+
+
+def get_upper_packets_in_flight(xpl_fname, connections, flow_name, relative_start):
+    """ Read the file with name xpl_fname and collect upper bound of packet in flight and return
+        a list ready to aggregate
+    """
+    connection = connections[flow_name]
+    aggregate_seq = []
+    max_seq = 0
+    try:
+        # First read the file
+        xpl_file = open(xpl_fname, 'r')
+        data = xpl_file.readlines()
+        xpl_file.close()
+        # Then collect all useful data
+        time_offset = connection.flow.attr[co.START] - relative_start
+        for line in data:
+            if line.startswith("uarrow") or line.startswith("diamond"):
+                split_line = line.split(" ")
+                if ((not split_line[0] == "diamond") or (len(split_line) == 4 and "white" in split_line[3])):
+                    time = float(split_line[1]) + time_offset
+                    aggregate_seq.append([time, int(split_line[2]), flow_name])
+                    max_seq = max(max_seq, int(split_line[2]))
+
+    except IOError as e:
+        print(e)
+        print("IOError in reading file " + xpl_fname)
     return aggregate_seq
 
 
@@ -472,8 +486,10 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=Non
                 pcap_fname, gpl_fname, graph_dir_exp)
             if gpl_fname_ok:
                 if 'tsg' in gpl_fname_ok:
-                    aggregate_tsg = prepare_datasets_file(
+                    prepare_datasets_file(
                         prefix_fname, connections, flow_name, relative_start)
+                    aggregate_tsg = get_upper_packets_in_flight(
+                        xpl_fname, connections, flow_name, relative_start)
                     interface = connections[flow_name].flow.attr[co.IF]
                     if is_reversed:
                         aggregate_dict[co.D2S][interface] += aggregate_tsg
