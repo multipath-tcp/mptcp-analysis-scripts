@@ -284,6 +284,73 @@ def bar_chart_bandwidth_smart():
     plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
+def bar_chart_bandwidth_s2d_interface():
+    aggl_res = {}
+    wifi = "Wi-Fi"
+    rmnet = "rmnet"
+    label_names = [wifi, rmnet]
+    color = ['r', 'b']
+    ecolor = ['b', 'r']
+    ylabel = "Bytes"
+    title = "Number of bytes transfered from source to destination by interface of " + args.app
+    graph_fname = "iface_s2d_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        wifi_bytes = 0
+        rmnet_bytes = 0
+        for conn_id, conn in data.iteritems():
+            for flow_id, flow in conn.flows.iteritems():
+            if not co.S2D in conn.attr.keys():
+                continue
+            if co.WIFI in conn.attr[co.S2D].keys():
+                wifi_bytes += conn.attr[co.S2D][co.WIFI]
+            if co.RMNET in conn.attr[co.S2D].keys():
+                rmnet_bytes += conn.attr[co.S2D][co.RMNET]
+
+        if condition in aggl_res:
+            aggl_res[condition][wifi] += [wifi_bytes]
+            aggl_res[condition][rmnet] += [rmnet_bytes]
+        else:
+            aggl_res[condition] = {
+                wifi: [wifi_bytes], rmnet: [rmnet_bytes]}
+
+    plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+
+
+def bar_chart_bandwidth_d2s_interface():
+    aggl_res = {}
+    wifi = "Wi-Fi"
+    rmnet = "rmnet"
+    label_names = [wifi, rmnet]
+    color = ['r', 'b']
+    ecolor = ['b', 'r']
+    ylabel = "Bytes"
+    title = "Number of bytes transfered from destination to source by interface of " + args.app
+    graph_fname = "iface_d2s_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        wifi_bytes = 0
+        rmnet_bytes = 0
+        for conn_id, conn in data.iteritems():
+            if not co.D2S in conn.attr.keys():
+                continue
+            if co.WIFI in conn.attr[co.D2S].keys():
+                wifi_bytes += conn.attr[co.D2S][co.WIFI]
+            if co.RMNET in conn.attr[co.D2S].keys():
+                rmnet_bytes += conn.attr[co.D2S][co.RMNET]
+
+        if condition in aggl_res:
+            aggl_res[condition][wifi] += [wifi_bytes]
+            aggl_res[condition][rmnet] += [rmnet_bytes]
+        else:
+            aggl_res[condition] = {
+                wifi: [wifi_bytes], rmnet: [rmnet_bytes]}
+
+    plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+
+
 def bar_chart_duration():
     aggl_res = {}
     tot_int_lbl = 'Duration'
@@ -315,4 +382,6 @@ def bar_chart_duration():
 bar_chart_count_connections()
 bar_chart_bandwidth()
 bar_chart_duration()
+bar_chart_bandwidth_s2d_interface()
+bar_chart_bandwidth_d2s_interface()
 print("End of summary")
