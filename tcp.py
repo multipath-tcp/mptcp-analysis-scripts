@@ -436,7 +436,7 @@ def get_flow_name_connection(connection, connections):
     return None, None
 
 
-def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=None, print_out=sys.stdout):
+def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0
@@ -526,13 +526,15 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=Non
                                 flow_name].flow.attr[co.BYTES_S2D]
 
                 if not mptcp_connections:
-                    devnull = open(os.devnull, 'w')
-                    cmd = ['gnuplot', gpl_fname_ok]
-                    if subprocess.call(cmd, stdout=devnull) != 0:
-                        print(
-                            "Error of gnuplot with " + pcap_fname + "; skip process", file=sys.stderr)
-                        return
-                    devnull.close()
+                    if ((is_reversed and connections[flow_name].flow.attr[co.BYTES_D2S] >= min_bytes) or
+                        (not is_reversed and connections[flow_name].flow.attr[co.BYTES_S2D] >= min_bytes)):
+                        devnull = open(os.devnull, 'w')
+                        cmd = ['gnuplot', gpl_fname_ok]
+                        if subprocess.call(cmd, stdout=devnull) != 0:
+                            print(
+                                "Error of gnuplot with " + pcap_fname + "; skip process", file=sys.stderr)
+                            return
+                        devnull.close()
 
             # Delete gpl, xpl and others files generated
             try:
