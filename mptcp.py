@@ -275,9 +275,10 @@ def create_graph_csv(pcap_fname, csv_fname, graph_dir_exp, connections):
 
 
 # We can't change dir per thread, we should use processes
-def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp):
+def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, min_bytes=0):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     csv_tmp_dir = tempfile.mkdtemp(dir=os.getcwd())
+    connections = None
     try:
         with co.cd(csv_tmp_dir):
             # If segmentation faults, remove the -S option
@@ -346,14 +347,17 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp):
             for csv_fname in glob.glob('*.csv'):
                 if MPTCP_SEQ_FNAME in csv_fname:
                     try:
+                        conn_id = get_connection_id(csv_fname)
+                        is_reversed = is_reverse_connection(csv_fname)
                         csv_file = open(csv_fname)
                         data = csv_file.readlines()
                         # Check if there is data in file (and not only one line of 0s)
                         if not data == [] and len(data) > 1:
-                            # Collect begin time and seq num to plot graph starting at 0
-                            begin_time, begin_seq = get_begin_values(data[0])
-
-                            write_graph_csv(csv_graph_tmp_dir, csv_fname, data, relative_start, begin_seq)
+                            if ((is_reversed and connections[conn_id].attr[co.BYTES_D2S] >= min_bytes) or
+                                (not is_reversed and connections[conn_id].attr[co.BYTES_S2D] >= min_bytes)):
+                                # Collect begin time and seq num to plot graph starting at 0
+                                begin_time, begin_seq = get_begin_values(data[0])
+                                write_graph_csv(csv_graph_tmp_dir, csv_fname, data, relative_start, begin_seq)
 
                         csv_file.close()
                         # Remove the csv file
@@ -383,4 +387,5 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp):
 
     # Create aggregated graphes and add per interface information on MPTCPConnection
     # This will save the mptcp connections
-    tcp.process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=connections)
+    if connections:
+        tcp.process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=connections)
