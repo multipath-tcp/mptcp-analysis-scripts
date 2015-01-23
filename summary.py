@@ -233,7 +233,7 @@ def bar_chart_bandwidth():
         for conn_id, conn in data.iteritems():
             if isinstance(conn, mptcp.MPTCPConnection):
                 data = conn.attr
-            elif isinstance(conn, mptcp.TCPConnection):
+            elif isinstance(conn, tcp.TCPConnection):
                 data = conn.flow.attr
             here = [i for i in data.keys() if i in [co.BYTES_S2D, co.BYTES_D2S]]
             if not len(here) == 2:
