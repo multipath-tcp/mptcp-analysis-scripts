@@ -300,7 +300,6 @@ def bar_chart_bandwidth_s2d_interface():
         wifi_bytes = 0
         rmnet_bytes = 0
         for conn_id, conn in data.iteritems():
-            for flow_id, flow in conn.flows.iteritems():
             if not co.S2D in conn.attr.keys():
                 continue
             if co.WIFI in conn.attr[co.S2D].keys():
