@@ -92,6 +92,8 @@ parser.add_argument("-G",
     "--not-graph", help="do not produce graphes and keep corrected traces, implies -P", action="store_true")
 parser.add_argument("-P",
     "--not-purge", help="do not remove corrected traces", action="store_true")
+parser.add_argument("-b",
+    "--min-bytes", help="only plot graphs of connections with at least a given amount of bytes", default=0)
 args = parser.parse_args()
 
 in_dir_exp = os.path.abspath(os.path.expanduser(args.input))
@@ -167,14 +169,14 @@ def launch_analyze_pcap(pcap_fname, clean, correct, graph, purge):
             tcp.correct_trace(pcap_fname)
         # we need to change dir, do that in a new process
         if graph:
-            p = Process(target=mptcp.process_trace, args=(pcap_fname, graph_dir_exp, stat_dir_exp,))
+            p = Process(target=mptcp.process_trace, args=(pcap_fname, graph_dir_exp, stat_dir_exp,), kwargs={'min_bytes': args.min_bytes})
             p.start()
             p.join()
     elif pcap_filename.startswith('tcp'):
         if correct:
             tcp.correct_trace(pcap_fname)
         if graph:
-            tcp.process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=print_out)
+            tcp.process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=print_out, min_bytes=args.min_bytes)
     else:
         print(pcap_fname + ": don't know the protocol used; skipped", file=sys.stderr)
 
