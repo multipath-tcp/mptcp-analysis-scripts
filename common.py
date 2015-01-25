@@ -261,6 +261,11 @@ def detect_ipv4(data):
 
 def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_fname):
     """ Plot a line graph with data """
+    # no data, skip
+    if not data:
+        print("No data for " + title + ": skip", file=sys.stderr)
+        return
+
     count = 0
     fig = plt.figure()
     # Create plots
