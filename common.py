@@ -25,6 +25,9 @@ from __future__ import print_function
 
 import os
 import Gnuplot
+import matplotlib
+# Do not use any X11 backend
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pickle
 import subprocess

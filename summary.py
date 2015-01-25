@@ -29,6 +29,8 @@ from __future__ import print_function
 import argparse
 import common as co
 import matplotlib
+# Do not use any X11 backend
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import mptcp
 import numpy as np
