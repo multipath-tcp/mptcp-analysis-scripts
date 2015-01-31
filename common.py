@@ -264,7 +264,7 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
     # no data, skip
     for dataset in data:
         if not dataset or len(dataset) <= 1:
-            # If no data, remove it from dataset and manage label name and fromatting
+            # If no data, remove it from dataset and manage label name and formatting
             number = "One" if len(dataset) == 1 else "No"
             print(number + " data in dataset; remove it")
             index = data.index(dataset)
