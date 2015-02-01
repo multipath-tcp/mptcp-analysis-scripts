@@ -166,7 +166,7 @@ def launch_analyze_pcap(pcap_fname, clean, correct, graph, purge):
     # Prefix of the name determine the protocol used
     if pcap_filename.startswith('mptcp'):
         if correct:
-            tcp.correct_trace(pcap_fname)
+            tcp.correct_trace(pcap_fname, print_out=print_out)
         # we need to change dir, do that in a new process
         if graph:
             p = Process(target=mptcp.process_trace, args=(pcap_fname, graph_dir_exp, stat_dir_exp,), kwargs={'min_bytes': args.min_bytes})
@@ -174,7 +174,7 @@ def launch_analyze_pcap(pcap_fname, clean, correct, graph, purge):
             p.join()
     elif pcap_filename.startswith('tcp'):
         if correct:
-            tcp.correct_trace(pcap_fname)
+            tcp.correct_trace(pcap_fname, print_out=print_out)
         if graph:
             tcp.process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=print_out, min_bytes=args.min_bytes)
     else:
