@@ -99,65 +99,6 @@ for dirpath, dirnames, filenames in os.walk(stat_dir_exp):
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname):
-
-    matplotlib.rcParams.update({'font.size': 8})
-
-    # Convert Python arrays to numpy arrays (easier for mean and std)
-    for cond, elements in aggl_res.iteritems():
-        for label, array in elements.iteritems():
-            elements[label] = np.array(array)
-
-    N = len(aggl_res)
-    nb_subbars = len(label_names)
-    ind = np.arange(N)
-    labels = []
-    values = {}
-    for label_name in label_names:
-        values[label_name] = ([], [])
-
-    width = (1.00 / nb_subbars) - (0.1 / nb_subbars)        # the width of the bars
-    fig, ax = plt.subplots()
-
-    # So far, simply count the number of connections
-    for cond, elements in aggl_res.iteritems():
-        labels.append(cond)
-        for label_name in label_names:
-            values[label_name][0].append(elements[label_name].mean())
-            values[label_name][1].append(elements[label_name].std())
-
-    bars = []
-    labels_names = []
-    zero_bars = []
-    count = 0
-    for label_name, (mean, std) in values.iteritems():
-        bar = ax.bar(ind + (count * width), mean, width, color=color[count], yerr=std, ecolor=ecolor[count])
-        bars.append(bar)
-        zero_bars.append(bar[0])
-        labels_names.append(label_name)
-        count += 1
-
-    # add some text for labels, title and axes ticks
-    ax.set_ylabel(ylabel)
-    ax.set_title(title)
-    ax.set_xticks(ind + width)
-    ax.set_xticklabels(labels)
-
-    ax.legend(zero_bars, labels_names)
-
-
-    def autolabel(rects):
-        # attach some text labels
-        for rect in rects:
-            height = rect.get_height()
-            ax.text(rect.get_x() + rect.get_width() / 2., 1.05 * height, '%d' % int(height),
-                    ha='center', va='bottom')
-
-    for bar in bars:
-        autolabel(bar)
-
-    plt.savefig(graph_fname)
-
 
 def get_experiment_condition(fname):
     """ Return a string of the format protocol_condition (e.g. tcp_both4TCD100m) """
@@ -213,7 +154,7 @@ def bar_chart_count_connections():
             aggl_res[condition] = {
                 tot_lbl: [len(data)], tot_flw_lbl: [tot_flow], tot_int_lbl: [tot_int]}
 
-    plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
 def bar_chart_bandwidth():
@@ -251,7 +192,7 @@ def bar_chart_bandwidth():
             aggl_res[condition] = {
                 tot_lbl: [s2d], tot_flw_lbl: [d2s]}
 
-    plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
 def bar_chart_bandwidth_smart():
@@ -283,7 +224,7 @@ def bar_chart_bandwidth_smart():
                 aggl_res[condition] = {
                     tot_lbl: [data[co.BYTES_S2D]], tot_flw_lbl: [data[co.BYTES_D2S]]}
 
-    plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
 def bar_chart_bandwidth_s2d_interface():
@@ -316,7 +257,7 @@ def bar_chart_bandwidth_s2d_interface():
             aggl_res[condition] = {
                 wifi: [wifi_bytes], rmnet: [rmnet_bytes]}
 
-    plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
 def bar_chart_bandwidth_d2s_interface():
@@ -349,7 +290,7 @@ def bar_chart_bandwidth_d2s_interface():
             aggl_res[condition] = {
                 wifi: [wifi_bytes], rmnet: [rmnet_bytes]}
 
-    plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
 def bar_chart_duration():
@@ -378,7 +319,7 @@ def bar_chart_duration():
             else:
                 aggl_res[condition] = {tot_int_lbl: [data[co.DURATION]]}
 
-    plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
 def bar_chart_duration_all():
@@ -418,7 +359,7 @@ def bar_chart_duration_all():
             else:
                 aggl_res[condition] = {tot_int_lbl: [stop - start]}
 
-    plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 bar_chart_count_connections()
 bar_chart_bandwidth()
