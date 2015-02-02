@@ -372,7 +372,7 @@ def process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, m
 
     except IOError:
         print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
-        continue
+        return
 
 
 
