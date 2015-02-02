@@ -52,7 +52,7 @@ MPTCP_STATS_PREFIX = 'stats_'
 ##################################################
 
 
-class MPTCPTraceException(Exception):
+class MPTCPTraceError(Exception):
     pass
 
 ##################################################
@@ -154,12 +154,12 @@ def is_reverse_connection(csv_fname):
 def process_mptcptrace_cmd(cmd, pcap_fname):
     """ Launch the command cmd given in argument, and return a dictionary containing information
         about connections of the pcap file analyzed
+        Raise a MPTCPTraceError if mptcptrace encounters problems
     """
     pcap_flow_data = pcap_fname[:-5] + '.out'
     flow_data_file = open(pcap_flow_data, 'w+')
     if subprocess.call(cmd, stdout=flow_data_file) != 0:
-        print("Error of mptcptrace with " + pcap_fname + "; skip process", file=sys.stderr)
-        raise MPTCPTraceException()
+        raise MPTCPTraceError("Error of mptcptrace with " + pcap_fname)
 
     connections = extract_flow_data(flow_data_file)
     # Don't forget to close and remove pcap_flow_data
@@ -241,7 +241,7 @@ def generate_title(csv_fname, connections):
 
 
 def create_graph_csv(pcap_fname, csv_fname, graph_dir_exp, connections):
-    """ Generate pdf for the csv file of the pcap file
+    """ Generate pdf for the csv file of the pcap file, if interesting
     """
     # First see if useful to show the graph
     if not interesting_graph(csv_fname, connections):
@@ -380,8 +380,8 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, min_bytes=0):
 
             # Remove temp dirs
             shutil.rmtree(csv_graph_tmp_dir)
-    except MPTCPTraceException:
-        print("Skip mptcp process", file=sys.stderr)
+    except MPTCPTraceError as e:
+        print(str(e) + "; skip mptcp process", file=sys.stderr)
 
     shutil.rmtree(csv_tmp_dir)
 
