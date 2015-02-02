@@ -381,7 +381,7 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, min_bytes=0):
             # Remove temp dirs
             shutil.rmtree(csv_graph_tmp_dir)
     except MPTCPTraceException:
-        print("Skip mptcp process")
+        print("Skip mptcp process", file=sys.stderr)
 
     shutil.rmtree(csv_tmp_dir)
 

@@ -278,7 +278,7 @@ def correct_trace(pcap_fname, print_out=sys.stdout):
             other_conn = get_connection_data_with_ip_port(
                 connections, conn.flow.attr[co.SADDR], conn.flow.attr[co.SPORT])
             if other_conn:
-                if split_and_replace(pcap_fname, remain_pcap_fname, conn, other_conn, num) != 0:
+                if split_and_replace(pcap_fname, remain_pcap_fname, conn, other_conn, num, print_out=print_out) != 0:
                     print(
                         "Stop correcting trace " + pcap_fname, file=print_out)
                     return
@@ -287,7 +287,7 @@ def correct_trace(pcap_fname, print_out=sys.stdout):
               str(num) + "/" + str(len(connections)), file=print_out)
 
     # Merge small pcap files into a unique one
-    merge_and_clean_sub_pcap(pcap_fname)
+    merge_and_clean_sub_pcap(pcap_fname, print_out=print_out)
 
 ##################################################
 ##                   TCPTRACE                   ##
