@@ -274,6 +274,109 @@ def create_graph_csv(pcap_fname, csv_fname, graph_dir_exp, connections):
 ##################################################
 
 
+def process_stats_csv(csv_fname, connections):
+    """ Add information in connections based on the stats csv file, and remove it """
+    try:
+        csv_file = open(csv_fname)
+        conn_id = get_connection_id(csv_fname) # Or reuse conn_id from the stats file
+        data = csv_file.readlines()
+        first_seqs = None
+        last_acks = None
+        con_time = None
+        for line in data:
+            if 'firstSeq' in line:
+                first_seqs = line.split(';')[-2:]
+            elif 'lastAck' in line:
+                last_acks = line.split(';')[-2:]
+            elif 'conTime' in line:
+                # Only takes one of the values, because they are the same
+                con_time = line.split(';')[-1]
+
+        if first_seqs and last_acks:
+            connections[conn_id].attr[co.BYTES_S2D] = int(last_acks[1]) - int(first_seqs[0])
+            connections[conn_id].attr[co.BYTES_D2S] = int(last_acks[0]) - int(first_seqs[1])
+        if con_time:
+            connections[conn_id].attr[co.DURATION] = float(con_time)
+
+        csv_file.close()
+
+        # Remove now stats files
+        os.remove(csv_fname)
+    except IOError:
+        print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
+        return
+    except ValueError:
+        print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
+        return
+
+
+def first_pass_on_seq_csv(csv_fname, relative_start):
+    """ Return the smallest timestamp between the smallest one in csv_fname and relative_start"""
+    minimum = relative_start
+    try:
+        csv_file = open(csv_fname)
+        data = csv_file.readlines()
+        if not data == [] and len(data) > 1:
+            try:
+                begin_time, begin_seq = get_begin_values(data[0])
+                if begin_time < relative_start and not begin_time == 0.0:
+                    minimum = begin_time
+            except ValueError:
+                print('ValueError for ' + csv_fname + ': keep old value', file=sys.stderr)
+
+        csv_file.close()
+    except IOError:
+        print('IOError for ' + csv_fname + ': keep old value', file=sys.stderr)
+
+    return minimum
+
+def first_pass_on_csvs(connections):
+    """ Do a first pass on csvs in current directory, without modifying them
+        This returns the relative start of all connections and modify connections to add information
+        contained in the csvs
+    """
+    relative_start = float("inf")
+    for csv_fname in glob.glob('*.csv'):
+        if csv_fname.startswith(MPTCP_STATS_PREFIX):
+            process_stats_csv(csv_fname, connections)
+
+        elif MPTCP_SEQ_FNAME in csv_fname:
+            relative_start = first_pass_on_seq_csv(csv_fname, relative_start)
+
+    return relative_start
+
+
+def process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, min_bytes):
+    """ If the csv is interesting, rewrite it in another folder csv_graph_tmp_dir
+        Delete the csv given in argument
+    """
+    try:
+        conn_id = get_connection_id(csv_fname)
+        is_reversed = is_reverse_connection(csv_fname)
+        csv_file = open(csv_fname)
+        data = csv_file.readlines()
+        # Check if there is data in file (and not only one line of 0s)
+        if not data == [] and len(data) > 1:
+            if ((is_reversed and connections[conn_id].attr[co.BYTES_D2S] >= min_bytes) or
+                (not is_reversed and connections[conn_id].attr[co.BYTES_S2D] >= min_bytes)):
+                # Collect begin time and seq num to plot graph starting at 0
+                try:
+                    begin_time, begin_seq = get_begin_values(data[0])
+                    write_graph_csv(csv_graph_tmp_dir, csv_fname, data, relative_start, begin_seq)
+                except ValueError:
+                    print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
+
+        csv_file.close()
+        # Remove the csv file
+        os.remove(csv_fname)
+
+    except IOError:
+        print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
+        continue
+
+
+
+
 # We can't change dir per thread, we should use processes
 def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, min_bytes=0):
     """ Process a mptcp pcap file and generate graphs of its subflows """
@@ -290,85 +393,13 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, min_bytes=0):
 
             # First see all csv files, to detect the relative 0 of all connections
             # Also, compute the duration and number of bytes of the MPTCP connection
-            relative_start = float("inf")
-            for csv_fname in glob.glob('*.csv'):
-                if csv_fname.startswith(MPTCP_STATS_PREFIX):
-                    try:
-                        csv_file = open(csv_fname)
-                        # Or reuse conn_id from the stats file
-                        conn_id = get_connection_id(csv_fname)
-                        data = csv_file.readlines()
-                        first_seqs = None
-                        last_acks = None
-                        con_time = None
-                        for line in data:
-                            if 'firstSeq' in line:
-                                first_seqs = line.split(';')[-2:]
-                            elif 'lastAck' in line:
-                                last_acks = line.split(';')[-2:]
-                            elif 'conTime' in line:
-                                # Only takes one of the values, because they are the same
-                                con_time = line.split(';')[-1]
-
-                        if first_seqs and last_acks:
-                            connections[conn_id].attr[co.BYTES_S2D] = int(last_acks[1]) - int(first_seqs[0])
-                            connections[conn_id].attr[co.BYTES_D2S] = int(last_acks[0]) - int(first_seqs[1])
-                        if con_time:
-                            connections[conn_id].attr[co.DURATION] = float(con_time)
-
-
-                        csv_file.close()
-                        # Remove now stats files
-                        os.remove(csv_fname)
-                    except IOError:
-                        print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
-                        continue
-                    except ValueError:
-                        print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
-                        continue
-
-                elif MPTCP_SEQ_FNAME in csv_fname:
-                    try:
-                        csv_file = open(csv_fname)
-                        data = csv_file.readlines()
-                        if not data == [] and len(data) > 1:
-                            begin_time, begin_seq = get_begin_values(data[0])
-                            if begin_time < relative_start and not begin_time == 0.0:
-                                relative_start = begin_time
-                        csv_file.close()
-                    except IOError:
-                        print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
-                        continue
-                    except ValueError:
-                        print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
-                        continue
+            relative_start = first_pass_on_csvs(connections)
 
             # Then really process csv files
             for csv_fname in glob.glob('*.csv'):
                 if MPTCP_SEQ_FNAME in csv_fname:
-                    try:
-                        conn_id = get_connection_id(csv_fname)
-                        is_reversed = is_reverse_connection(csv_fname)
-                        csv_file = open(csv_fname)
-                        data = csv_file.readlines()
-                        # Check if there is data in file (and not only one line of 0s)
-                        if not data == [] and len(data) > 1:
-                            if ((is_reversed and connections[conn_id].attr[co.BYTES_D2S] >= min_bytes) or
-                                (not is_reversed and connections[conn_id].attr[co.BYTES_S2D] >= min_bytes)):
-                                # Collect begin time and seq num to plot graph starting at 0
-                                begin_time, begin_seq = get_begin_values(data[0])
-                                write_graph_csv(csv_graph_tmp_dir, csv_fname, data, relative_start, begin_seq)
+                    process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, min_bytes)
 
-                        csv_file.close()
-                        # Remove the csv file
-                        os.remove(csv_fname)
-
-                    except IOError:
-                        print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
-                        continue
-                    except ValueError:
-                        print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
-                        continue
 
             with co.cd(csv_graph_tmp_dir):
                 for csv_fname in glob.glob('*.csv'):
