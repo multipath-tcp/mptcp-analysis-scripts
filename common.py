@@ -29,6 +29,7 @@ import matplotlib
 # Do not use any X11 backend
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import numpy as np
 import pickle
 import subprocess
 import sys
@@ -298,3 +299,62 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
     plt.savefig(graph_fname)
     # Don't forget to clean the plot, otherwise previous ones will be there!
     plt.clf()
+
+def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname):
+    """ Plot a bar chart with aggl_res """
+    matplotlib.rcParams.update({'font.size': 8})
+
+    # Convert Python arrays to numpy arrays (easier for mean and std)
+    for cond, elements in aggl_res.iteritems():
+        for label, array in elements.iteritems():
+            elements[label] = np.array(array)
+
+    N = len(aggl_res)
+    nb_subbars = len(label_names)
+    ind = np.arange(N)
+    labels = []
+    values = {}
+    for label_name in label_names:
+        values[label_name] = ([], [])
+
+    width = (1.00 / nb_subbars) - (0.1 / nb_subbars)        # the width of the bars
+    fig, ax = plt.subplots()
+
+    # So far, simply count the number of connections
+    for cond, elements in aggl_res.iteritems():
+        labels.append(cond)
+        for label_name in label_names:
+            values[label_name][0].append(elements[label_name].mean())
+            values[label_name][1].append(elements[label_name].std())
+
+    bars = []
+    labels_names = []
+    zero_bars = []
+    count = 0
+    for label_name, (mean, std) in values.iteritems():
+        bar = ax.bar(ind + (count * width), mean, width, color=color[count], yerr=std, ecolor=ecolor[count])
+        bars.append(bar)
+        zero_bars.append(bar[0])
+        labels_names.append(label_name)
+        count += 1
+
+    # add some text for labels, title and axes ticks
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    ax.set_xticks(ind + width)
+    ax.set_xticklabels(labels)
+
+    ax.legend(zero_bars, labels_names)
+
+
+    def autolabel(rects):
+        # attach some text labels
+        for rect in rects:
+            height = rect.get_height()
+            ax.text(rect.get_x() + rect.get_width() / 2., 1.05 * height, '%d' % int(height),
+                    ha='center', va='bottom')
+
+    for bar in bars:
+        autolabel(bar)
+
+    plt.savefig(graph_fname)
