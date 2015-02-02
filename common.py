@@ -280,14 +280,19 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
 
     count = 0
     fig = plt.figure()
+    plt.clf()
     # Create plots
-    for dataset in data:
-        x_val = [x[0] for x in dataset]
-        y_val = [x[1] for x in dataset]
-        plt.plot(x_val, y_val, formatting[count], label=label_names[count])
-        count += 1
+    try:
+        for dataset in data:
+            x_val = [x[0] for x in dataset]
+            y_val = [x[1] for x in dataset]
+            plt.plot(x_val, y_val, formatting[count], label=label_names[count])
+            count += 1
 
-    legend = plt.legend(loc='upper left', shadow=True, fontsize='x-large')
+        legend = plt.legend(loc='upper left', shadow=True, fontsize='x-large')
+    except ValueError as e:
+        print(str(e))
+        return
 
     # Put a nicer background color on the legend.
     legend.get_frame().set_facecolor('#00FFCC')
@@ -299,6 +304,7 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
     plt.savefig(graph_fname)
     # Don't forget to clean the plot, otherwise previous ones will be there!
     plt.clf()
+    plt.close()
 
 def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname):
     """ Plot a bar chart with aggl_res """
