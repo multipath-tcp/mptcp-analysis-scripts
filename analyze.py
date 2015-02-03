@@ -67,7 +67,7 @@ DEF_NB_THREADS = 1
 parser = argparse.ArgumentParser(
     description="Analyze pcap files of TCP or MPTCP connections")
 parser.add_argument("-i",
-    "--input", help="input directory of the (possibly compressed) pcap files", default=DEF_IN_DIR)
+    "--input", help="input directory/file of the (possibly compressed) pcap files", default=DEF_IN_DIR)
 parser.add_argument("-t",
     "--trace", help="temporary directory that will be used to store uncompressed "
                     + "pcap files", default=DEF_TRACE_DIR)
@@ -116,42 +116,55 @@ else:
 ##                 PREPROCESSING                ##
 ##################################################
 
+def uncompress_file(fname, dirpath):
+    if args.pcap in fname:
+        # Files from UI tests will be compressed; unzip them
+        if fname.endswith('.gz'):
+            output_file = os.path.join(trace_dir_exp, fname[:-3])
+            if args.not_correct:
+                return output_file
+            else:
+                print("Uncompressing " + fname + " to " + trace_dir_exp, file=print_out)
+                output = open(output_file, 'w')
+                cmd = ['gunzip', '-c', '-9', os.path.join(dirpath, fname)]
+                if args.keep:
+                    cmd.insert(1, '-k')
+                if subprocess.call(cmd, stdout=output) != 0:
+                    print("Error when uncompressing " + fname, file=sys.stderr)
+                    output.close()
+                else:
+                    output.close()
+                    return output_file
+        elif fname.endswith('.pcap'):
+            output_file = os.path.join(trace_dir_exp, fname)
+            if args.not_correct:
+                return output_file
+            else:
+                # Move the file to out_dir_exp
+                print("Copying " + fname + " to " + trace_dir_exp, file=print_out)
+                cmd = ['cp', os.path.join(dirpath, fname), output_file]
+                if subprocess.call(cmd, stdout=print_out) != 0:
+                    print("Error when moving " + fname, file=sys.stderr)
+                else:
+                    return output_file
+        else:
+            print(fname + ": not in a valid format, skipped", file=sys.stderr)
+    return False
+
+def add_if_valid(list, item):
+    if item:
+        list.append(item)
+
 pcap_list = []
 co.check_directory_exists(trace_dir_exp)
-for dirpath, dirnames, filenames in os.walk(in_dir_exp):
-    for fname in filenames:
-        if args.pcap in fname:
-            # Files from UI tests will be compressed; unzip them
-            if fname.endswith('.gz'):
-                output_file = os.path.join(trace_dir_exp, fname[:-3])
-                if args.not_correct:
-                    pcap_list.append(output_file)
-                else:
-                    print("Uncompressing " + fname + " to " + trace_dir_exp, file=print_out)
-                    output = open(output_file, 'w')
-                    cmd = ['gunzip', '-c', '-9', os.path.join(dirpath, fname)]
-                    if args.keep:
-                        cmd.insert(1, '-k')
-                    if subprocess.call(cmd, stdout=output) != 0:
-                        print("Error when uncompressing " + fname, file=sys.stderr)
-                    else:
-                        pcap_list.append(output_file)
-                    output.close()
-            elif fname.endswith('.pcap'):
-                output_file = os.path.join(trace_dir_exp, fname)
-                if args.not_correct:
-                    pcap_list.append(output_file)
-                else:
-                    # Move the file to out_dir_exp
-                    print("Copying " + fname + " to " + trace_dir_exp, file=print_out)
-                    cmd = ['cp', os.path.join(dirpath, fname), output_file]
-                    if subprocess.call(cmd, stdout=print_out) != 0:
-                        print("Error when moving " + fname, file=sys.stderr)
-                    else:
-                        pcap_list.append(output_file)
-            else:
-                print(fname + ": not in a valid format, skipped", file=sys.stderr)
-                continue
+if os.path.isdir(in_dir_exp):
+    for dirpath, dirnames, filenames in os.walk(in_dir_exp):
+        for fname in filenames:
+            add_if_valid(pcap_list, uncompress_file(fname, dirpath))
+else:
+    add_if_valid(pcap_list, uncompress_file(os.path.basename(in_dir_exp),
+                                            os.path.dirname(dirpath)))
+
 
 
 ##################################################
