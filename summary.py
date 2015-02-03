@@ -85,7 +85,8 @@ co.check_directory_exists(stat_dir_exp)
 connections = {}
 for dirpath, dirnames, filenames in os.walk(stat_dir_exp):
     for fname in filenames:
-        if args.app in fname:
+        fname_date = co.get_date_as_int(fname)
+        if args.app in fname and (fname_date and (int(start_time) <= fname_date <= int(stop_time))):
             try:
                 stat_file = open(os.path.join(dirpath, fname), 'r')
                 connections[fname] = pickle.load(stat_file)
