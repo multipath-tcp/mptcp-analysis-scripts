@@ -239,21 +239,35 @@ def clean_loopback_pcap(pcap_fname, print_out=sys.stdout):
 
 
 def indicates_wifi_or_rmnet(data):
-        """ Given data of a mptcp connection subflow, indicates if comes from wifi or rmnet """
-        if data[SADDR].startswith(PREFIX_WIFI_IF) or data[DADDR].startswith(PREFIX_WIFI_IF):
-            data[IF] = WIFI
-        else:
-            data[IF] = RMNET
+    """ Given data of a mptcp connection subflow, indicates if comes from wifi or rmnet """
+    if data[SADDR].startswith(PREFIX_WIFI_IF) or data[DADDR].startswith(PREFIX_WIFI_IF):
+        data[IF] = WIFI
+    else:
+        data[IF] = RMNET
 
 
 def detect_ipv4(data):
-        """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
-        saddr = data[SADDR]
-        daddr = data[DADDR]
-        num_saddr = saddr.split('.')
-        num_daddr = daddr.split('.')
-        if len(num_saddr) == 4 and len(num_daddr) == 4:
-            data[TYPE] = 'IPv4'
+    """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
+    saddr = data[SADDR]
+    daddr = data[DADDR]
+    num_saddr = saddr.split('.')
+    num_daddr = daddr.split('.')
+    if len(num_saddr) == 4 and len(num_daddr) == 4:
+        data[TYPE] = 'IPv4'
+
+
+def get_date_as_int(pcap_fname):
+    """ Return the date of the pcap trace in int (like 20141230)
+        If there is no date, return None
+    """
+    dash_index = pcap_fname.index("-")
+    start_index = pcap_fname[:dash_index].rindex("_")
+    try:
+        return int(pcap_fname[start_index+1:dash_index])
+    except ValueError as e:
+        print(str(e), file=sys.stderr)
+        return None
+
 
 ##################################################
 ##                    GRAPHS                    ##
