@@ -57,6 +57,8 @@ parser.add_argument("-a",
                     "--app", help="application results to summarize", default="")
 parser.add_argument(
     "time", help="aggregate data in specified time, in format START,STOP")
+parser.add_argument("-d",
+                    "--dirs", help="list of directories to aggregate", nargs="+")
 
 args = parser.parse_args()
 
@@ -81,18 +83,26 @@ stat_dir_exp = os.path.abspath(os.path.expanduser(args.stat))
 ##                 GET THE DATA                 ##
 ##################################################
 
+def check_in_list(dirpath, dirs):
+    """ Check if dirpath is one of the dir in dirs, True if dirs is empty """
+    if not dirs:
+        return True
+    return os.path.basename(dirpath) in dirs
+
+
 co.check_directory_exists(stat_dir_exp)
 connections = {}
 for dirpath, dirnames, filenames in os.walk(stat_dir_exp):
-    for fname in filenames:
-        fname_date = co.get_date_as_int(fname)
-        if args.app in fname and (fname_date and (int(start_time) <= fname_date <= int(stop_time))):
-            try:
-                stat_file = open(os.path.join(dirpath, fname), 'r')
-                connections[fname] = pickle.load(stat_file)
-                stat_file.close()
-            except IOError as e:
-                print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
+    if check_in_list(dirpath, args.dirs):
+        for fname in filenames:
+            fname_date = co.get_date_as_int(fname)
+            if args.app in fname and (fname_date and (int(start_time) <= fname_date <= int(stop_time))):
+                try:
+                    stat_file = open(os.path.join(dirpath, fname), 'r')
+                    connections[fname] = pickle.load(stat_file)
+                    stat_file.close()
+                except IOError as e:
+                    print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
 
 ##################################################
 ##               PLOTTING RESULTS               ##
