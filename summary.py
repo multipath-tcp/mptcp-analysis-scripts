@@ -59,6 +59,10 @@ parser.add_argument(
     "time", help="aggregate data in specified time, in format START,STOP")
 parser.add_argument("-d",
                     "--dirs", help="list of directories to aggregate", nargs="+")
+parser.add_argument("-c",
+                    "--cond", help="(exact) condition to show", default="")
+parser.add_argument("-p",
+                    "--prot", help="(exact) protocol to show", default="")
 
 args = parser.parse_args()
 
@@ -90,13 +94,18 @@ def check_in_list(dirpath, dirs):
     return os.path.basename(dirpath) in dirs
 
 
+def check_conditions(fname):
+    """ Check if conditions are respected to take into account the trace """
+    return fname.startswith(args.prot) and fname.endswith(args.cond)
+
+
 co.check_directory_exists(stat_dir_exp)
 connections = {}
 for dirpath, dirnames, filenames in os.walk(stat_dir_exp):
     if check_in_list(dirpath, args.dirs):
         for fname in filenames:
             fname_date = co.get_date_as_int(fname)
-            if args.app in fname and (fname_date and (int(start_time) <= fname_date <= int(stop_time))):
+            if args.app in fname and (fname_date and (int(start_time) <= fname_date <= int(stop_time))) and check_conditions(fname):
                 try:
                     stat_file = open(os.path.join(dirpath, fname), 'r')
                     connections[fname] = pickle.load(stat_file)
