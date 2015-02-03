@@ -163,7 +163,7 @@ if os.path.isdir(in_dir_exp):
             add_if_valid(pcap_list, uncompress_file(fname, dirpath))
 else:
     add_if_valid(pcap_list, uncompress_file(os.path.basename(in_dir_exp),
-                                            os.path.dirname(dirpath)))
+                                            os.path.dirname(in_dir_exp)))
 
 
 
