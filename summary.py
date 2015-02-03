@@ -87,6 +87,14 @@ stat_dir_exp = os.path.abspath(os.path.expanduser(args.stat))
 ##                 GET THE DATA                 ##
 ##################################################
 
+
+def get_experiment_condition(fname):
+    """ Return a string of the format protocol_condition (e.g. tcp_both4TCD100m) """
+    app_index = fname.index(args.app)
+    dash_index = fname.index("-")
+    end_index = fname[:dash_index].rindex("_")
+    return fname[:app_index] + fname[app_index + len(args.app) + 1:end_index]
+
 def check_in_list(dirpath, dirs):
     """ Check if dirpath is one of the dir in dirs, True if dirs is empty """
     if not dirs:
@@ -96,7 +104,8 @@ def check_in_list(dirpath, dirs):
 
 def check_conditions(fname):
     """ Check if conditions are respected to take into account the trace """
-    return fname.startswith(args.prot) and fname.endswith(args.cond)
+    condition = get_experiment_condition(fname)
+    return condition.startswith(args.prot) and condition.endswith(args.cond)
 
 
 co.check_directory_exists(stat_dir_exp)
@@ -116,14 +125,6 @@ for dirpath, dirnames, filenames in os.walk(stat_dir_exp):
 ##################################################
 ##               PLOTTING RESULTS               ##
 ##################################################
-
-
-def get_experiment_condition(fname):
-    """ Return a string of the format protocol_condition (e.g. tcp_both4TCD100m) """
-    app_index = fname.index(args.app)
-    dash_index = fname.index("-")
-    end_index = fname[:dash_index].rindex("_")
-    return fname[:app_index] + fname[app_index + len(args.app) + 1:end_index]
 
 
 def count_interesting_connections(data):
