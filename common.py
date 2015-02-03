@@ -267,7 +267,7 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
         if not dataset or len(dataset) <= 1:
             # If no data, remove it from dataset and manage label name and formatting
             number = "One" if len(dataset) == 1 else "No"
-            print(number + " data in dataset; remove it")
+            print(number + " data in dataset; remove it", file=sys.stderr)
             index = data.index(dataset)
             data.remove(dataset)
             label_names.pop(index)
@@ -291,7 +291,7 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
 
         legend = plt.legend(loc='upper left', shadow=True, fontsize='x-large')
     except ValueError as e:
-        print(str(e))
+        print(str(e), file=sys.stderr)
         return
 
     # Put a nicer background color on the legend.
