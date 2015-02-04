@@ -423,28 +423,6 @@ def get_upper_packets_in_flight(xpl_fname, connections, flow_name, relative_star
     return aggregate_seq
 
 
-def sort_and_aggregate(aggr_list):
-    """ Given a list of elements as returned by prepare_datasets_file, return a sorted and
-        aggregated list
-    """
-    offsets = {}
-    total = 0
-    # Sort list by time
-    sorted_list = sorted(aggr_list, key=lambda elem: elem[0])
-    return_list = []
-    for elem in sorted_list:
-        # Manage the case when the flow name is seen for the first time
-        if elem[2] in offsets.keys():
-            total += elem[1] - offsets[elem[2]]
-        else:
-            total += elem[1]
-
-        offsets[elem[2]] = elem[1]
-        return_list.append([elem[0], total])
-
-    return return_list
-
-
 def get_flow_name_connection(connection, connections):
     """ Return the connection id and flow id in MPTCP connections of the TCP connection
         Same if same source/dest ip/port
@@ -528,7 +506,7 @@ def plot_aggregated_results(pcap_fname, graph_dir_exp, aggregate_dict):
     for direction, interfaces in aggregate_dict.iteritems():
         for interface, aggr_list in interfaces.iteritems():
             aggregate_dict[direction][
-                interface] = sort_and_aggregate(aggr_list)
+                interface] = co.sort_and_aggregate(aggr_list)
             co.plot_line_graph([aggregate_dict[direction][interface]], [interface], ['k'], "Time [s]", "Sequence number", "Agglomeration of " + interface + " connections", os.path.join(
                 graph_dir_exp, os.path.basename(pcap_fname)[:-5] + "_" + direction + "_" + interface + '.pdf'))
 
