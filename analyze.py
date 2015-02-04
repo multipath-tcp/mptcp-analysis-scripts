@@ -55,10 +55,6 @@ DEF_IN_DIR = 'input'
 DEF_TRACE_DIR = 'traces'
 # The default graph directory (output directory for graphes)
 DEF_GRAPH_DIR = 'graphs'
-# The default stat directory
-DEF_STAT_DIR = 'stats'
-# The default aggl directory
-DEF_AGGL_DIR = 'aggls'
 # The default number of threads
 DEF_NB_THREADS = 1
 
@@ -76,9 +72,9 @@ parser.add_argument("-t",
 parser.add_argument("-g",
     "--graph", help="directory where the graphs of the pcap files will be stored", default=DEF_GRAPH_DIR)
 parser.add_argument("-s",
-    "--stat", help="directory where the stats of the pcap files will be stored", default=DEF_STAT_DIR)
+    "--stat", help="directory where the stats of the pcap files will be stored", default=co.DEF_STAT_DIR)
 parser.add_argument("-a",
-    "--aggl", help="directory where data of agglomerated graphs will be stored", default=DEF_AGGL_DIR)
+    "--aggl", help="directory where data of agglomerated graphs will be stored", default=co.DEF_AGGL_DIR)
 parser.add_argument("-p",
     "--pcap", help="analyze only pcap files containing the given string (default lo)", default="_lo.")
 parser.add_argument("-j",
