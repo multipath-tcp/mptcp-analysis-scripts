@@ -278,6 +278,29 @@ def get_date_as_int(pcap_fname):
 ##                    GRAPHS                    ##
 ##################################################
 
+def sort_and_aggregate(aggr_list):
+    """ Given a list of elements as returned by prepare_datasets_file, return a sorted and
+        aggregated list
+        List is ordered with elem at index 0, aggregated on elem at index 1 and indicates its source
+        with elem at index 2
+    """
+    offsets = {}
+    total = 0
+    # Sort list by time
+    sorted_list = sorted(aggr_list, key=lambda elem: elem[0])
+    return_list = []
+    for elem in sorted_list:
+        # Manage the case when the flow name is seen for the first time
+        if elem[2] in offsets.keys():
+            total += elem[1] - offsets[elem[2]]
+        else:
+            total += elem[1]
+
+        offsets[elem[2]] = elem[1]
+        return_list.append([elem[0], total])
+
+    return return_list
+
 
 def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_fname):
     """ Plot a line graph with data """
