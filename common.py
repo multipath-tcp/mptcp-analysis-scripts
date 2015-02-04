@@ -98,6 +98,11 @@ class BasicConnection(object):
 ##               COMMON CONSTANTS               ##
 ##################################################
 
+# The default stat directory
+DEF_STAT_DIR = 'stats'
+# The default aggl directory
+DEF_AGGL_DIR = 'aggls'
+
 # Following constants are used to make the code cleaner and more robust (for dictionary)
 # Those are mainly determined by the output of mptcptrace
 RMNET = 'rmnet'
