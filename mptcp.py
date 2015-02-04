@@ -378,7 +378,7 @@ def process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, m
 
 
 # We can't change dir per thread, we should use processes
-def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, min_bytes=0):
+def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_bytes=0):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     csv_tmp_dir = tempfile.mkdtemp(dir=os.getcwd())
     connections = None
@@ -419,4 +419,4 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, min_bytes=0):
     # Create aggregated graphes and add per interface information on MPTCPConnection
     # This will save the mptcp connections
     if connections:
-        tcp.process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=connections)
+        tcp.process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_connections=connections)
