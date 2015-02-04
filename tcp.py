@@ -384,6 +384,10 @@ def prepare_datasets_file(prefix_fname, connections, flow_name, relative_start):
     try:
         # First read the file
         datasets_file = open(datasets_fname, 'r')
+    except IOError:
+        # Sometimes, no datasets file; skip the file
+        return
+    try:
         datasets = datasets_file.readlines()
         datasets_file.close()
         # Then overwrite it
