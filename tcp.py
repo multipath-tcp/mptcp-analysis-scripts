@@ -117,6 +117,14 @@ def extract_flow_data(out_file):
                 # Note that this count is about unique_data_bytes
                 connection.flow.attr[co.BYTES_S2D] = int(info[21])
                 connection.flow.attr[co.BYTES_D2S] = int(info[22])
+
+                connection.flow.attr[co.PACKS_RETRANS_S2D] = int(info[27])
+                connection.flow.attr[co.PACKS_RETRANS_D2S] = int(info[28])
+                connection.flow.attr[co.BYTES_RETRANS_S2D] = int(info[29])
+                connection.flow.attr[co.BYTES_RETRANS_D2S] = int(info[30])
+
+                connection.flow.attr[co.PACKS_OOO_S2D] = int(info[35])
+                connection.flow.attr[co.PACKS_OOO_D2S] = int(info[36])
                 # TODO maybe extract more information
 
                 connections[conn] = connection
@@ -451,7 +459,7 @@ def prepare_connections_objects(connections, mptcp_connections):
             conn.attr[co.D2S] = {}
 
 
-def copy_start_and_duration_to_mptcp_connections(connection, mptcp_connections):
+def copy_info_to_mptcp_connections(connection, mptcp_connections):
     """ Given a tcp connection, copy its start and duration to the corresponding mptcp connection
         Return the corresponding connection and flow ids of the mptcp connection
     """
@@ -459,6 +467,12 @@ def copy_start_and_duration_to_mptcp_connections(connection, mptcp_connections):
     if conn_id:
         mptcp_connections[conn_id].flows[flow_id].attr[co.START] = connection.flow.attr[co.START]
         mptcp_connections[conn_id].flows[flow_id].attr[co.DURATION] = connection.flow.attr[co.DURATION]
+        mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_RETRANS_S2D] = connection.flow.attr[co.PACKS_RETRANS_S2D]
+        mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_RETRANS_D2S] = connection.flow.attr[co.PACKS_RETRANS_D2S]
+        mptcp_connections[conn_id].flows[flow_id].attr[co.BYTES_RETRANS_S2D] = connection.flow.attr[co.BYTES_RETRANS_S2D]
+        mptcp_connections[conn_id].flows[flow_id].attr[co.BYTES_RETRANS_D2S] = connection.flow.attr[co.BYTES_RETRANS_D2S]
+        mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_OOO_S2D] = connection.flow.attr[co.PACKS_OOO_S2D]
+        mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_OOO_D2S] = connection.flow.attr[co.PACKS_OOO_D2S]
     return conn_id, flow_id
 
 
@@ -546,7 +560,7 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_c
         conn_id, flow_id = None, None
         flow_name, is_reversed = get_flow_name(xpl_fname)
         if mptcp_connections:
-            conn_id, flow_id = copy_start_and_duration_to_mptcp_connections(connections[flow_name], mptcp_connections)
+            conn_id, flow_id = copy_info_to_mptcp_connections(connections[flow_name], mptcp_connections)
 
         if interesting_graph(flow_name, is_reversed, connections):
             cmd = ['xpl2gpl', xpl_fname]
