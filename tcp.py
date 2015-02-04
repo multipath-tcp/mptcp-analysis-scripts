@@ -536,7 +536,7 @@ def plot_aggregated_results(pcap_fname, graph_dir_exp, aggregate_dict):
                            'r:', 'b--'], "Time [s]", "Sequence number", "Agglomeration of all connections", os.path.join(graph_dir_exp, os.path.basename(pcap_fname)[:-5] + "_" + direction + "_all.pdf"))
 
 
-def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
+def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0
@@ -619,3 +619,6 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, mptcp_connections=Non
         co.save_connections(pcap_fname, stat_dir_exp, mptcp_connections)
     else:
         co.save_connections(pcap_fname, stat_dir_exp, connections)
+
+    # And save aggregated graphs (even it's not connections)
+    co.save_connections(pcap_fname, aggl_dir_exp, aggregate_dict)
