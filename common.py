@@ -135,6 +135,18 @@ PACKS_D2S = 'packets_destination2source'
 BYTES_S2D = 'bytes_source2destination'
 # Number of bytes from destination to source
 BYTES_D2S = 'bytes_destination2source'
+# Number of packets retransmitted from source to destination
+PACKS_RETRANS_S2D = 'packets_retrans_source2destination'
+# Number of packets retransmitted from destination to source
+PACKS_RETRANS_D2S = 'packets_retrans_destination2source'
+# Number of bytes retransmitted from source to destination
+BYTES_RETRANS_S2D = 'bytes_retrans_source2destination'
+# Number of bytes retransmitted from destination to source
+BYTES_RETRANS_D2S = 'bytes_retrans_destination2source'
+# Number of packets out of orders from source to destination
+PACKS_OOO_S2D = 'packets_outoforder_source2destination'
+# Number of packets out of orders from destination to source
+PACKS_OOO_D2S = 'packets_outoforder_destination2source'
 
 # For aggregation
 S2D = 'source2destination'
