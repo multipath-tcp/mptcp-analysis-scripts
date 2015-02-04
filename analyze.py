@@ -57,6 +57,8 @@ DEF_TRACE_DIR = 'traces'
 DEF_GRAPH_DIR = 'graphs'
 # The default stat directory
 DEF_STAT_DIR = 'stats'
+# The default aggl directory
+DEF_AGGL_DIR = 'aggls'
 # The default number of threads
 DEF_NB_THREADS = 1
 
@@ -75,6 +77,8 @@ parser.add_argument("-g",
     "--graph", help="directory where the graphs of the pcap files will be stored", default=DEF_GRAPH_DIR)
 parser.add_argument("-s",
     "--stat", help="directory where the stats of the pcap files will be stored", default=DEF_STAT_DIR)
+parser.add_argument("-a",
+    "--aggl", help="directory where data of agglomerated graphs will be stored", default=DEF_AGGL_DIR)
 parser.add_argument("-p",
     "--pcap", help="analyze only pcap files containing the given string (default lo)", default="_lo.")
 parser.add_argument("-j",
@@ -100,12 +104,14 @@ in_dir_exp = os.path.abspath(os.path.expanduser(args.input))
 trace_dir_exp = os.path.abspath(os.path.expanduser(args.trace))
 graph_dir_exp = os.path.abspath(os.path.expanduser(args.graph))
 stat_dir_exp = os.path.abspath(os.path.expanduser(args.stat))
+aggl_dir_exp = os.path.abspath(os.path.expanduser(args.aggl))
 
 if os.path.isdir(in_dir_exp):
     base_dir = os.path.basename(in_dir_exp)
     trace_dir_exp = os.path.join(trace_dir_exp, base_dir)
     graph_dir_exp = os.path.join(graph_dir_exp, base_dir)
     stat_dir_exp  = os.path.join(stat_dir_exp,  base_dir)
+    aggl_dir_exp  = os.path.join(aggl_dir_exp,  base_dir)
 
 if args.stderr:
     print_out = sys.stderr
@@ -182,14 +188,14 @@ def launch_analyze_pcap(pcap_fname, clean, correct, graph, purge):
             tcp.correct_trace(pcap_fname, print_out=print_out)
         # we need to change dir, do that in a new process
         if graph:
-            p = Process(target=mptcp.process_trace, args=(pcap_fname, graph_dir_exp, stat_dir_exp,), kwargs={'min_bytes': args.min_bytes})
+            p = Process(target=mptcp.process_trace, args=(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp,), kwargs={'min_bytes': args.min_bytes})
             p.start()
             p.join()
     elif pcap_filename.startswith('tcp'):
         if correct:
             tcp.correct_trace(pcap_fname, print_out=print_out)
         if graph:
-            tcp.process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, print_out=print_out, min_bytes=args.min_bytes)
+            tcp.process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, print_out=print_out, min_bytes=args.min_bytes)
     else:
         print(pcap_fname + ": don't know the protocol used; skipped", file=sys.stderr)
 
@@ -218,6 +224,7 @@ def thread_launch(thread_id, clean, correct, graph, purge):
 
 co.check_directory_exists(graph_dir_exp)
 co.check_directory_exists(stat_dir_exp)
+co.check_directory_exists(aggl_dir_exp)
 # If file is a .pcap, use it for (mp)tcptrace
 pcap_list.reverse() # we will use pop: use the natural order
 
