@@ -496,12 +496,73 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections):
     return conn_id, flow_id
 
 
-def process_tsg_gpl_file(xpl_fname, prefix_fname, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id):
+def append_to_all_elements(lst, element):
+    """ Append element to all lists in the list lst """
+    return_list = []
+    for elem in lst:
+        elem += element
+        return_list.append(elem)
+    return return_list
+
+
+def create_congestion_window_plot(tsg, adv_rwin, prefix_fname, graph_dir_exp, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id):
+    """ With the time sequence data and the advertised receiver window, plot graph of estimated
+        congestion control
+    """
+    tsg_list = append_to_all_elements(tsg, 'tsg')
+    adv_rwin_list = append_to_all_elements(adv_rwin, 'adv_rwin')
+    all_data_list = sorted(tsg_list + adv_rwin_list, key=lambda elem: elem[0])
+    congestion_list = []
+    congestion_value = 0
+    offsets = {'tsg': 0, 'adv_rwin': 0}
+    for elem in all_data_list:
+        if elem[2] == 'tsg':
+            congestion_value -= elem[1] - offsets['tsg']
+        elif elem[2] == 'adv_rwin':
+            congestion_value += elem[1] - offsets['adv_rwin']
+
+        offsets[elem[2]] = elem[1]
+        congestion_list.append([elem[0], congestion_value])
+
+    graph_fname = prefix_fname
+
+    if mptcp_connections:
+        if not conn_id:
+            return
+        graph_fname += '_congestion_' + conn_id
+        if is_reversed:
+            graph_fname += '_d2s'
+        else:
+            graph_fname += '_s2d'
+        graph_fname += '_' + mptcp_connections[conn_id].flows[flow_id].attr[co.IF]
+        graph_fname += '_' + mptcp_connections[conn_id].flows[flow_id].attr[co.SADDR].replace('.', '-') \
+                     + '_' + mptcp_connections[conn_id].flows[flow_id].attr[co.SPORT] \
+                     + '_' + mptcp_connections[conn_id].flows[flow_id].attr[co.DADDR].replace('.', '-') \
+                     + '_' + mptcp_connections[conn_id].flows[flow_id].attr[co.DPORT]
+    else:
+        graph_fname += '_' + flow_name
+        if is_reversed:
+            graph_fname += '_d2s'
+        else:
+            graph_fname += '_s2d'
+        graph_fname += '_' + connections[flow_name].flow.attr[co.IF]
+        graph_fname += '_' + connections[flow_name].flow.attr[co.SADDR].replace('.', '-') \
+                     + '_' + connections[flow_name].flow.attr[co.SPORT] \
+                     + '_' + connections[flow_name].flow.attr[co.DADDR].replace('.', '-') \
+                     + '_' + connections[flow_name].flow.attr[co.DPORT]
+
+    graph_fname += '.pdf'
+    graph_fname = os.path.join(graph_dir_exp, graph_fname)
+    co.plot_line_graph([congestion_list], ['congestion value'], ['k'], "Time [s]", "Congestion window [Bytes]", "Congestion window", graph_fname)
+
+
+def process_tsg_gpl_file(xpl_fname, prefix_fname, graph_dir_exp, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id):
     """ Prepare gpl file for the (possible) plot and aggregate its content
         Also update connections or mptcp_connections with the processed data
     """
     prepare_datasets_file(prefix_fname, connections, flow_name, relative_start)
     aggregate_tsg, adv_rwin = get_upper_packets_in_flight_and_adv_rwin(xpl_fname, connections, flow_name, relative_start)
+    create_congestion_window_plot(aggregate_tsg, adv_rwin, prefix_fname, graph_dir_exp, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id)
     interface = connections[flow_name].flow.attr[co.IF]
     if is_reversed:
         aggregate_dict[co.D2S][interface] += aggregate_tsg
@@ -594,7 +655,7 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_c
             gpl_fname_ok = prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp)
             if gpl_fname_ok:
                 if 'tsg' in gpl_fname_ok:
-                    process_tsg_gpl_file(xpl_fname, prefix_fname, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id)
+                    process_tsg_gpl_file(xpl_fname, prefix_fname, graph_dir_exp, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id)
 
                 if not mptcp_connections:
                     if ((is_reversed and connections[flow_name].flow.attr[co.BYTES_D2S] >= min_bytes) or
