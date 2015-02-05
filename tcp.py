@@ -496,12 +496,13 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections):
     return conn_id, flow_id
 
 
-def append_to_all_elements(lst, element):
-    """ Append element to all lists in the list lst """
+def append_as_third_to_all_elements(lst, element):
+    """ Append element at index 2 to all lists in the list lst
+        Lists are assumed to have at least 2 elements, and output will have 3
+    """
     return_list = []
     for elem in lst:
-        elem += element
-        return_list.append(elem)
+        return_list.append([elem[0], elem[1], element])
     return return_list
 
 
@@ -509,8 +510,8 @@ def create_congestion_window_plot(tsg, adv_rwin, prefix_fname, graph_dir_exp, is
     """ With the time sequence data and the advertised receiver window, plot graph of estimated
         congestion control
     """
-    tsg_list = append_to_all_elements(tsg, 'tsg')
-    adv_rwin_list = append_to_all_elements(adv_rwin, 'adv_rwin')
+    tsg_list = append_as_third_to_all_elements(tsg, 'tsg')
+    adv_rwin_list = append_as_third_to_all_elements(adv_rwin, 'adv_rwin')
     all_data_list = sorted(tsg_list + adv_rwin_list, key=lambda elem: elem[0])
     congestion_list = []
     congestion_value = 0
@@ -524,12 +525,12 @@ def create_congestion_window_plot(tsg, adv_rwin, prefix_fname, graph_dir_exp, is
         offsets[elem[2]] = elem[1]
         congestion_list.append([elem[0], congestion_value])
 
-    graph_fname = prefix_fname
+    graph_fname = prefix_fname + '_congestion'
 
     if mptcp_connections:
         if not conn_id:
             return
-        graph_fname += '_congestion_' + conn_id
+        graph_fname += '_' + conn_id
         if is_reversed:
             graph_fname += '_d2s'
         else:
@@ -540,7 +541,6 @@ def create_congestion_window_plot(tsg, adv_rwin, prefix_fname, graph_dir_exp, is
                      + '_' + mptcp_connections[conn_id].flows[flow_id].attr[co.DADDR].replace('.', '-') \
                      + '_' + mptcp_connections[conn_id].flows[flow_id].attr[co.DPORT]
     else:
-        graph_fname += '_' + flow_name
         if is_reversed:
             graph_fname += '_d2s'
         else:
