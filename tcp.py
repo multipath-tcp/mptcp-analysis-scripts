@@ -407,12 +407,15 @@ def prepare_datasets_file(prefix_fname, connections, flow_name, relative_start):
         print("IOError in preparing datasets file of " + prefix_fname, file=sys.stderr)
 
 
-def get_upper_packets_in_flight(xpl_fname, connections, flow_name, relative_start):
-    """ Read the file with name xpl_fname and collect upper bound of packet in flight and return
-        a list ready to aggregate
+def get_upper_packets_in_flight_and_adv_rwin(xpl_fname, connections, flow_name, relative_start):
+    """ Read the file with name xpl_fname and collect upper bound of packet in flight and advertised
+        receiver window and return a tuple with a list ready to aggregate and the list of values of
+        advertised window of receiver
     """
     connection = connections[flow_name]
+    is_adv_rwin = False
     aggregate_seq = []
+    adv_rwin = []
     max_seq = 0
     try:
         # First read the file
@@ -423,16 +426,29 @@ def get_upper_packets_in_flight(xpl_fname, connections, flow_name, relative_star
         time_offset = connection.flow.attr[co.START] - relative_start
         for line in data:
             if line.startswith("uarrow") or line.startswith("diamond"):
+                is_adv_rwin = False
                 split_line = line.split(" ")
                 if ((not split_line[0] == "diamond") or (len(split_line) == 4 and "white" in split_line[3])):
                     time = float(split_line[1]) + time_offset
                     aggregate_seq.append([time, int(split_line[2]), flow_name])
                     max_seq = max(max_seq, int(split_line[2]))
+            elif line.startswith("yellow"):
+                is_adv_rwin = True
+            elif is_adv_rwin and line.startswith("line"):
+                split_line = line.split(" ")
+                time_1 = float(split_line[1]) + time_offset
+                seq_1 = int(split_line[2])
+                time_2 = float(split_line[3]) + time_offset
+                seq_2 = int(split_line[4])
+                adv_rwin.append([time_1, seq_1])
+                adv_rwin.append([time_2, seq_2])
+            else:
+                is_adv_rwin = False
 
     except IOError as e:
         print(e, file=sys.stderr)
         print("IOError in reading file " + xpl_fname, file=sys.stderr)
-    return aggregate_seq
+    return aggregate_seq, adv_rwin
 
 
 def get_flow_name_connection(connection, connections):
@@ -485,7 +501,7 @@ def process_tsg_gpl_file(xpl_fname, prefix_fname, connections, aggregate_dict, f
         Also update connections or mptcp_connections with the processed data
     """
     prepare_datasets_file(prefix_fname, connections, flow_name, relative_start)
-    aggregate_tsg = get_upper_packets_in_flight(xpl_fname, connections, flow_name, relative_start)
+    aggregate_tsg, adv_rwin = get_upper_packets_in_flight_and_adv_rwin(xpl_fname, connections, flow_name, relative_start)
     interface = connections[flow_name].flow.attr[co.IF]
     if is_reversed:
         aggregate_dict[co.D2S][interface] += aggregate_tsg
