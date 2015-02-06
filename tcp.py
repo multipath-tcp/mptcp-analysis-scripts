@@ -693,9 +693,9 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_c
 
     # Save connections info
     if mptcp_connections:
-        co.save_connections(pcap_fname, stat_dir_exp, mptcp_connections)
+        co.save_data(pcap_fname, stat_dir_exp, mptcp_connections)
     else:
-        co.save_connections(pcap_fname, stat_dir_exp, connections)
+        co.save_data(pcap_fname, stat_dir_exp, connections)
 
     # And save aggregated graphs (even it's not connections)
-    co.save_connections(pcap_fname, aggl_dir_exp, aggregate_dict)
+    co.save_data(pcap_fname, aggl_dir_exp, aggregate_dict)

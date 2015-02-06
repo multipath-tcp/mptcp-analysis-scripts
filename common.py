@@ -252,16 +252,16 @@ def copy_remain_pcap_file(pcap_fname, print_out=sys.stdout):
     return remain_pcap_fname
 
 
-def save_connections(pcap_fname, stat_dir_exp, connections):
-    """ Using the name pcap_fname, save the statistics about connections """
-    stat_fname = os.path.join(
-        stat_dir_exp, os.path.basename(pcap_fname)[:-5])
+def save_data(fname, dir_exp, data):
+    """ Using the name pcap_fname, save data in a file with filename fname in dir dir_exp """
+    path_name = os.path.join(
+        dir_exp, os.path.basename(fname)[:-5])
     try:
-        stat_file = open(stat_fname, 'w')
-        pickle.dump(connections, stat_file)
-        stat_file.close()
+        data_file = open(path_name, 'w')
+        pickle.dump(data, data_file)
+        data_file.close()
     except IOError as e:
-        print(str(e) + ': no stat file for ' + pcap_fname, file=sys.stderr)
+        print(str(e) + ': no data file for ' + fname, file=sys.stderr)
 
 
 def clean_loopback_pcap(pcap_fname, print_out=sys.stdout):
