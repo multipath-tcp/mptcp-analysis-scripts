@@ -525,7 +525,7 @@ def create_congestion_window_plot(tsg, adv_rwin, prefix_fname, graph_dir_exp, is
         offsets[elem[2]] = elem[1]
         congestion_list.append([elem[0], congestion_value])
 
-    graph_fname = prefix_fname + '_congestion'
+    graph_fname = prefix_fname + '_cwin'
 
     if mptcp_connections:
         if not conn_id:
@@ -552,8 +552,8 @@ def create_congestion_window_plot(tsg, adv_rwin, prefix_fname, graph_dir_exp, is
                      + '_' + connections[flow_name].flow.attr[co.DPORT]
 
     graph_fname += '.pdf'
-    graph_fname = os.path.join(graph_dir_exp, graph_fname)
-    co.plot_line_graph([congestion_list], ['congestion value'], ['k'], "Time [s]", "Congestion window [Bytes]", "Congestion window", graph_fname, ymin=0)
+    graph_fname = os.path.join(cwin_graph_dir, graph_fname)
+    co.plot_line_graph([congestion_list], [connections[flow_name].flow.attr[co.IF]], ['k'], "Time [s]", "Congestion window [Bytes]", "Congestion window", graph_fname, ymin=0)
 
 
 def process_tsg_gpl_file(xpl_fname, prefix_fname, graph_dir_exp, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id):
