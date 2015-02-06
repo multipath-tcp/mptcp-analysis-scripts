@@ -375,8 +375,6 @@ def process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, m
         return
 
 
-
-
 # We can't change dir per thread, we should use processes
 def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_bytes=0):
     """ Process a mptcp pcap file and generate graphs of its subflows """
