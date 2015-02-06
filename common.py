@@ -118,6 +118,13 @@ DEF_STAT_DIR = 'stats'
 # The default aggl directory
 DEF_AGGL_DIR = 'aggls'
 
+# The time sequence and throughput graphs directory
+TSG_THGPT_DIR = 'tsg_thgpt'
+# The congestion window graphs directory
+CWIN_DIR = 'cwin'
+# THe agglomerated graphs directory
+AGGL_DIR = 'aggl'
+
 # Following constants are used to make the code cleaner and more robust (for dictionary)
 # Those are mainly determined by the output of mptcptrace
 RMNET = 'rmnet'

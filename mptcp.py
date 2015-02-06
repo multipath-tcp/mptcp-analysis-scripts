@@ -263,7 +263,10 @@ def create_graph_csv(pcap_fname, csv_fname, graph_dir_exp, connections):
     g.xlabel('Time [s]')
     g.ylabel('Sequence number')
     g.plot(data_plot)
-    pdf_fname = os.path.join(graph_dir_exp,
+
+    tsg_thgpt_dir = os.path.join(graph_dir_exp, co.TSG_THGPT_DIR)
+    co.check_directory_exists(tsg_thgpt_dir)
+    pdf_fname = os.path.join(tsg_thgpt_dir,
                              os.path.basename(pcap_fname)[:-5] + "_" + csv_fname[:-4] + '.pdf')
     g.hardcopy(filename=pdf_fname, terminal='pdf')
     g.reset()

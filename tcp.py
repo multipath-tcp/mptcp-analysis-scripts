@@ -353,7 +353,9 @@ def prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp):
         for line in data[:-4]:
             gpl_file_ok.write(line)
         # Give the pdf filename where the graph will be stored
-        pdf_fname = os.path.join(graph_dir_exp,
+        tsg_thgpt_dir = os.path.join(graph_dir_exp, co.TSG_THGPT_DIR)
+        co.check_directory_exists(tsg_thgpt_dir)
+        pdf_fname = os.path.join(tsg_thgpt_dir,
                                  gpl_fname[:-4] + '.pdf')
 
         # Needed to give again the line with all data (5th line from the end)
@@ -510,6 +512,8 @@ def create_congestion_window_plot(tsg, adv_rwin, prefix_fname, graph_dir_exp, is
     """ With the time sequence data and the advertised receiver window, plot graph of estimated
         congestion control
     """
+    cwin_graph_dir = os.path.join(graph_dir_exp, co.CWIN_DIR)
+    co.check_directory_exists(cwin_graph_dir)
     tsg_list = append_as_third_to_all_elements(tsg, 'tsg')
     adv_rwin_list = append_as_third_to_all_elements(adv_rwin, 'adv_rwin')
     all_data_list = sorted(tsg_list + adv_rwin_list, key=lambda elem: elem[0])
@@ -598,15 +602,17 @@ def process_tsg_gpl_file(xpl_fname, prefix_fname, graph_dir_exp, connections, ag
 
 def plot_aggregated_results(pcap_fname, graph_dir_exp, aggregate_dict):
     """ Create graphs for aggregated results """
+    aggl_dir = os.path.join(graph_dir_exp, co.AGGL_DIR)
+    co.check_directory_exists(aggl_dir)
     for direction, interfaces in aggregate_dict.iteritems():
         for interface, aggr_list in interfaces.iteritems():
             aggregate_dict[direction][
                 interface] = co.sort_and_aggregate(aggr_list)
             co.plot_line_graph([aggregate_dict[direction][interface]], [interface], ['k'], "Time [s]", "Sequence number", "Agglomeration of " + interface + " connections", os.path.join(
-                graph_dir_exp, os.path.basename(pcap_fname)[:-5] + "_" + direction + "_" + interface + '.pdf'))
+                aggl_dir, os.path.basename(pcap_fname)[:-5] + "_" + direction + "_" + interface + '.pdf'))
 
         co.plot_line_graph(aggregate_dict[direction].values(), aggregate_dict[direction].keys(), [
-                           'r:', 'b--'], "Time [s]", "Sequence number", "Agglomeration of all connections", os.path.join(graph_dir_exp, os.path.basename(pcap_fname)[:-5] + "_" + direction + "_all.pdf"))
+                           'r:', 'b--'], "Time [s]", "Sequence number", "Agglomeration of all connections", os.path.join(aggl_dir, os.path.basename(pcap_fname)[:-5] + "_" + direction + "_all.pdf"))
 
 
 def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
