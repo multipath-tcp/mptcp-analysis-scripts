@@ -620,9 +620,7 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_c
     cmd = ['tcptrace', '--output_dir=' + os.getcwd(),
            '--output_prefix=' +
            os.path.basename(pcap_fname[:-5]) + '_', '-C', '-S', '-T', '-zxy',
-           '-n', '-y', '-l', '--csv', '--noshowzwndprobes', '--noshowoutorder', '--noshowrexmit',
-           '--noshowsacks', '--noshowzerowindow', '--noshowurg', '--noshowdupack3',
-           '--noshowzerolensegs', pcap_fname]
+           '-n', '-y', '-l', '--csv', pcap_fname]
 
     try:
         connections = process_tcptrace_cmd(cmd, pcap_fname)
