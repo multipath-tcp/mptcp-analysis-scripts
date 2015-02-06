@@ -37,6 +37,21 @@ import tempfile
 
 Gnuplot.GnuplotOpts.default_term = 'pdf'
 
+# This import must be done here, because of the internals of matplotlib
+from matplotlib.backends.backend_pgf import FigureCanvasPgf
+matplotlib.backend_bases.register_backend('pdf', FigureCanvasPgf)
+
+pgf_with_pdflatex = {
+    "pgf.texsystem": "pdflatex",
+    ##"pgf.preamble": [
+    ##    r'\usepackage{amsmath}',
+    ##    r'\usepackage[scientific-notation=true]{siunitx}',
+    ##      r"\usepackage[utf8x]{inputenc}",
+    ##      r"\usepackage[T1]{fontenc}",
+    ##    ]
+}
+matplotlib.rcParams.update(pgf_with_pdflatex)
+
 ##################################################
 ##               COMMON CLASSES                 ##
 ##################################################
