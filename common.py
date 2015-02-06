@@ -329,7 +329,7 @@ def sort_and_aggregate(aggr_list):
     return return_list
 
 
-def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_fname):
+def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_fname, ymin=None):
     """ Plot a line graph with data """
     # no data, skip
     for dataset in data:
@@ -369,6 +369,9 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
     fig.suptitle(title, fontsize=20)
     plt.xlabel(xlabel, fontsize=18)
     plt.ylabel(ylabel, fontsize=16)
+
+    if ymin is not None:
+        plt.ylim(ymin=ymin)
 
     plt.savefig(graph_fname)
     # Don't forget to clean the plot, otherwise previous ones will be there!
