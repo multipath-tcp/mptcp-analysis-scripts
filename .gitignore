@@ -1,7 +1,7 @@
 *.pyc
 
 # Tests
-input/
+input*/
 
 # MPTCP
 file_stats.csv
@@ -9,6 +9,7 @@ mptcptrace.log
 mptcptrace_info
 
 # Generated
+aggls/
 graphs/
 stats/
 traces/
