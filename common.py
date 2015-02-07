@@ -370,8 +370,13 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
         print(str(e), file=sys.stderr)
         return
 
-    # Put a nicer background color on the legend.
-    legend.get_frame().set_facecolor('#00FFCC')
+    try:
+        # Put a nicer background color on the legend.
+        legend.get_frame().set_facecolor('#00FFCC')
+    except AttributeError as e:
+        # if we have no frame, it means we have no object...
+        print(str(e), file=sys.stderr)
+        return
 
     fig.suptitle(title, fontsize=20)
     plt.xlabel(xlabel, fontsize=18)
