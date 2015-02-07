@@ -38,20 +38,20 @@ import traceback
 
 Gnuplot.GnuplotOpts.default_term = 'pdf'
 
-# This import must be done here, because of the internals of matplotlib
-from matplotlib.backends.backend_pgf import FigureCanvasPgf
-matplotlib.backend_bases.register_backend('pdf', FigureCanvasPgf)
-
-pgf_with_pdflatex = {
-    "pgf.texsystem": "pdflatex",
-    ##"pgf.preamble": [
-    ##    r'\usepackage{amsmath}',
-    ##    r'\usepackage[scientific-notation=true]{siunitx}',
-    ##      r"\usepackage[utf8x]{inputenc}",
-    ##      r"\usepackage[T1]{fontenc}",
-    ##    ]
-}
-matplotlib.rcParams.update(pgf_with_pdflatex)
+# # This import must be done here, because of the internals of matplotlib
+# from matplotlib.backends.backend_pgf import FigureCanvasPgf
+# matplotlib.backend_bases.register_backend('pdf', FigureCanvasPgf)
+#
+# pgf_with_pdflatex = {
+#     "pgf.texsystem": "pdflatex",
+#     ##"pgf.preamble": [
+#     ##    r'\usepackage{amsmath}',
+#     ##    r'\usepackage[scientific-notation=true]{siunitx}',
+#     ##      r"\usepackage[utf8x]{inputenc}",
+#     ##      r"\usepackage[T1]{fontenc}",
+#     ##    ]
+# }
+# matplotlib.rcParams.update(pgf_with_pdflatex)
 
 ##################################################
 ##               COMMON CLASSES                 ##
@@ -397,7 +397,10 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
         return
 
     # Don't forget to clean the plot, otherwise previous ones will be there!
-    plt.clf()
+    try:
+        plt.clf()
+    except KeyError as e:
+        print(str(e) + ": when cleaning graph " + graph_fname, file=sys.stderr)
     plt.close()
 
 def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname):
