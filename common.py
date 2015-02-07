@@ -34,6 +34,7 @@ import pickle
 import subprocess
 import sys
 import tempfile
+import traceback
 
 Gnuplot.GnuplotOpts.default_term = 'pdf'
 
@@ -385,7 +386,13 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
     if ymin is not None:
         plt.ylim(ymin=ymin)
 
-    plt.savefig(graph_fname)
+    try:
+        plt.savefig(graph_fname)
+    except:
+        print('ERROR when creating graph for ' + graph_fname, file=sys.stderr)
+        print(traceback.format_exc(), file=sys.stderr)
+        return
+
     # Don't forget to clean the plot, otherwise previous ones will be there!
     plt.clf()
     plt.close()
