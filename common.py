@@ -34,6 +34,7 @@ import pickle
 import subprocess
 import sys
 import tempfile
+import threading
 import traceback
 
 Gnuplot.GnuplotOpts.default_term = 'pdf'
@@ -337,6 +338,11 @@ def sort_and_aggregate(aggr_list):
     return return_list
 
 
+# Initialize lock semaphore for matplotlib
+# This is needed to avoid race conditions inside matplotlib
+plt_lock = threading.Lock()
+
+
 def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_fname, ymin=None):
     """ Plot a line graph with data """
     # no data, skip
@@ -354,6 +360,8 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
     if not data:
         print("No data for " + title + ": skip", file=sys.stderr)
         return
+
+    plt_lock.acquire()
 
     count = 0
     fig = plt.figure()
@@ -403,8 +411,12 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
         print(str(e) + ": when cleaning graph " + graph_fname, file=sys.stderr)
     plt.close()
 
+    plt_lock.release()
+
 def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname):
     """ Plot a bar chart with aggl_res """
+    plt_lock.acquire()
+
     matplotlib.rcParams.update({'font.size': 8})
 
     # Convert Python arrays to numpy arrays (easier for mean and std)
@@ -461,3 +473,5 @@ def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fn
         autolabel(bar)
 
     plt.savefig(graph_fname)
+
+    plt_lock.acquire()
