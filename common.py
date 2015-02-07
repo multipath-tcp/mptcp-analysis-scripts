@@ -304,7 +304,7 @@ def get_date_as_int(pcap_fname):
     try:
         return int(pcap_fname[start_index+1:dash_index])
     except ValueError as e:
-        print(str(e), file=sys.stderr)
+        print(str(e) + ": get date as int for " + pcap_fname, file=sys.stderr)
         return None
 
 
@@ -367,7 +367,7 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
 
         legend = plt.legend(loc='upper left', shadow=True, fontsize='x-large')
     except ValueError as e:
-        print(str(e), file=sys.stderr)
+        print(str(e) + ": create plots: skip " + graph_fname, file=sys.stderr)
         return
 
     try:
@@ -375,7 +375,7 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
         legend.get_frame().set_facecolor('#00FFCC')
     except AttributeError as e:
         # if we have no frame, it means we have no object...
-        print(str(e), file=sys.stderr)
+        print(str(e) + ": change legend: skip " + graph_fname, file=sys.stderr)
         return
 
     fig.suptitle(title, fontsize=20)
