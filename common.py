@@ -377,6 +377,9 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
     except AttributeError as e:
         # if we have no frame, it means we have no object...
         print(str(e) + ": change legend: skip " + graph_fname, file=sys.stderr)
+        print('label_names: ' + str(label_names), file=sys.stderr)
+        print('formatting: ' + str(formatting), file=sys.stderr)
+        print('data: ' + str(data), file=sys.stderr)
         return
 
     fig.suptitle(title, fontsize=20)
