@@ -171,6 +171,8 @@ BYTES_RETRANS_D2S = 'bytes_retrans_destination2source'
 PACKS_OOO_S2D = 'packets_outoforder_source2destination'
 # Number of packets out of orders from destination to source
 PACKS_OOO_D2S = 'packets_outoforder_destination2source'
+# Congestion window graph data dictionary
+CWIN_DATA = 'congestion_window_data'
 
 # For aggregation
 S2D = 'source2destination'

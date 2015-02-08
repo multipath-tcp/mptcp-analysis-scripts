@@ -378,6 +378,26 @@ def process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, m
         return
 
 
+def plot_congestion_graphs(pcap_fname, graph_dir_exp, connections):
+    """ Given MPTCPConnections (in connections), plot their congestion graph """
+    cwin_graph_dir = os.path.join(graph_dir_exp, co.CWIN_DIR)
+    co.check_directory_exists(cwin_graph_dir)
+
+    formatting = ['b', 'r', 'g', 'p']
+
+    for conn_id, conn in connections.iteritems():
+        base_graph_fname = os.path.basename(pcap_fname[:-5]) + '_' + conn.conn_id + '_cwin'
+
+        for direction, data_if in conn.attr[co.CWIN_DATA].iteritems():
+            dir_abr = 'd2s' if direction == co.D2S else 's2d' if direction == co.S2D else '?'
+            graph_fname = base_graph_fname + '_' + dir_abr
+            graph_fname += '.pdf'
+            graph_fname = os.path.join(cwin_graph_dir, graph_fname)
+
+            nb_curves = len(data_if)
+            co.plot_line_graph(data_if.values(), data_if.keys(), formatting[:nb_curves], "Time [s]", "Congestion window [Bytes]", "Congestion window", graph_fname, ymin=0)
+
+
 # We can't change dir per thread, we should use processes
 def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_bytes=0):
     """ Process a mptcp pcap file and generate graphs of its subflows """
@@ -421,3 +441,4 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_byt
     # This will save the mptcp connections
     if connections:
         tcp.process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_connections=connections)
+        plot_congestion_graphs(pcap_fname, graph_dir_exp, connections)
