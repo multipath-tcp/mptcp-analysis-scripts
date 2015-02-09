@@ -59,6 +59,8 @@ parser.add_argument("-c",
                     "--cond", help="(exact) condition to show", default="")
 parser.add_argument("-p",
                     "--prot", help="(exact) protocol to show", default="")
+parser.add_argument("-r",
+                    "--remove", help="if set, remove outliers from dataset", action="store_true")
 
 args = parser.parse_args()
 
@@ -175,7 +177,7 @@ def bar_chart_count_connections(log_file=sys.stdout):
             aggl_res[condition] = {
                 tot_lbl: [(len(data), fname)], tot_flw_lbl: [(tot_flow, fname)], tot_int_lbl: [(tot_int, fname)]}
 
-    co.log_outliers(aggl_res, log_file=log_file)
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
@@ -214,7 +216,7 @@ def bar_chart_bytes(log_file=sys.stdout):
             aggl_res[condition] = {
                 tot_lbl: [(s2d, fname)], tot_flw_lbl: [(d2s, fname)]}
 
-    co.log_outliers(aggl_res, log_file=log_file)
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
@@ -250,7 +252,7 @@ def bar_chart_bandwidth_smart(log_file=sys.stdout):
                 aggl_res[condition] = {
                     tot_lbl: [data[(co.BYTES_S2D, fname)]], tot_flw_lbl: [(data[co.BYTES_D2S], fname)]}
 
-    co.log_outliers(aggl_res, log_file=log_file)
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
@@ -284,7 +286,7 @@ def bar_chart_bytes_s2d_interface(log_file=sys.stdout):
             aggl_res[condition] = {
                 wifi: [(wifi_bytes, fname)], rmnet: [(rmnet_bytes, fname)]}
 
-    co.log_outliers(aggl_res, log_file=log_file)
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
@@ -318,7 +320,7 @@ def bar_chart_bytes_d2s_interface(log_file=sys.stdout):
             aggl_res[condition] = {
                 wifi: [(wifi_bytes, fname)], rmnet: [(rmnet_bytes, fname)]}
 
-    co.log_outliers(aggl_res, log_file=log_file)
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
@@ -364,7 +366,7 @@ def bar_chart_packs_retrans(log_file=sys.stdout):
             aggl_res[condition] = {
                 tot_lbl: [(s2d, fname)], tot_flw_lbl: [(d2s, fname)]}
 
-    co.log_outliers(aggl_res, log_file=log_file)
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
@@ -416,7 +418,7 @@ def bar_chart_packs_retrans_s2d_interface(log_file=sys.stdout):
             aggl_res[condition] = {
                 wifi: [(wifi_packs, fname)], rmnet: [(rmnet_packs, fname)]}
 
-    co.log_outliers(aggl_res, log_file=log_file)
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
@@ -468,7 +470,7 @@ def bar_chart_packs_retrans_d2s_interface(log_file=sys.stdout):
             aggl_res[condition] = {
                 wifi: [(wifi_packs, fname)], rmnet: [(rmnet_packs, fname)]}
 
-    co.log_outliers(aggl_res, log_file=log_file)
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
@@ -498,7 +500,7 @@ def bar_chart_duration(log_file=sys.stdout):
             else:
                 aggl_res[condition] = {tot_int_lbl: [(data[co.DURATION], fname)]}
 
-    co.log_outliers(aggl_res, log_file=log_file)
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
@@ -539,7 +541,7 @@ def bar_chart_duration_all(log_file=sys.stdout):
             else:
                 aggl_res[condition] = {tot_int_lbl: [(stop - start, fname)]}
 
-    co.log_outliers(aggl_res, log_file=log_file)
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 def line_graph_aggl():
@@ -586,6 +588,7 @@ def line_graph_aggl():
 millis = int(round(time.time() * 1000))
 
 log_file = open('log_summary_' + args.app + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt', 'w')
+print("Remove option is " + str(args.remove), file=log_file)
 print("Plot count", file=log_file)
 bar_chart_count_connections(log_file=log_file)
 print("Plot bytes", file=log_file)
