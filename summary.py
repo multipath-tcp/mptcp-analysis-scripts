@@ -234,6 +234,9 @@ def bar_chart_bandwidth_smart():
                 data = conn.attr
             elif isinstance(conn, tcp.TCPConnection):
                 data = conn.flow.attr
+            else:
+                print(conn + ": unknown object")
+                continue
             here = [i for i in data.keys() if i in [co.BYTES_S2D, co.BYTES_D2S]]
             if not len(here) == 2:
                 continue
@@ -309,6 +312,153 @@ def bar_chart_bytes_d2s_interface():
         else:
             aggl_res[condition] = {
                 wifi: [wifi_bytes], rmnet: [rmnet_bytes]}
+
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+
+
+def bar_chart_packs_retrans():
+    aggl_res = {}
+    tot_lbl = 'Packs s2d'
+    tot_flw_lbl = 'Packs d2s'
+    label_names = ['Packs s2d', 'Packs d2s']
+    color = ['b', 'g']
+    ecolor = ['g', 'r']
+    ylabel = 'Packets'
+    title = 'Number of packets retransmitted of ' + args.app
+    graph_fname = "packs_retrans_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+
+    # Need to agglomerate same tests
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        s2d = 0
+        d2s = 0
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    here = [i for i in flow.attr.keys() if i in [co.PACKS_RETRANS_S2D, co.PACKS_RETRANS_D2S]]
+                    if not len(here) == 2:
+                        continue
+                    s2d += flow.attr[co.PACKS_RETRANS_S2D]
+                    d2s += flow.attr[co.PACKS_RETRANS_D2S]
+            elif isinstance(conn, tcp.TCPConnection):
+                here = [i for i in conn.flow.attr.keys() if i in [co.BYTES_S2D, co.BYTES_D2S]]
+                if not len(here) == 2:
+                    continue
+
+                s2d += conn.flow.attr[co.PACKS_RETRANS_S2D]
+                d2s += conn.flow.attr[co.PACKS_RETRANS_D2S]
+            else:
+                print(conn + ": unknown object")
+                continue
+
+        if condition in aggl_res.keys():
+            aggl_res[condition][tot_lbl] += [s2d]
+            aggl_res[condition][tot_flw_lbl] += [d2s]
+        else:
+            aggl_res[condition] = {
+                tot_lbl: [s2d], tot_flw_lbl: [d2s]}
+
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+
+
+def bar_chart_packs_retrans_s2d_interface():
+    aggl_res = {}
+    wifi = "Wi-Fi"
+    rmnet = "rmnet"
+    label_names = [wifi, rmnet]
+    color = ['r', 'b']
+    ecolor = ['b', 'r']
+    ylabel = "Packets"
+    title = "Number of packets retransmitted from source to destination by interface of " + args.app
+    graph_fname = "packs_retrans_iface_s2d_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        wifi_packs = 0
+        rmnet_packs = 0
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, tcp.TCPConnection):
+                # For compatibility reasons with old stat files
+                if co.PACKS_RETRANS_S2D not in conn.flow.attr:
+                    # Will produce a graph with 0 values, result should be ignored (so break for no graph)
+                    print(co.PACKS_RETRANS_S2D + " not in " + conn_id + " of " + fname, file=sys.err)
+                    break
+                if conn.flow.attr[co.IF] == co.WIFI:
+                    wifi_packs += conn.flow.attr[co.PACKS_RETRANS_S2D]
+                elif conn.flow.attr[co.IF] == co.RMNET:
+                    rmnet_packs += conn.flow.attr[co.PACKS_RETRANS_S2D]
+            elif isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    # For compatibility reasons with old stat files
+                    if co.PACKS_RETRANS_S2D not in flow.attr:
+                        # Will produce a graph with 0 values, result should be ignored (so break for no graph)
+                        print(co.PACKS_RETRANS_S2D + " not in flow" + flow_id + " of connection " + conn_id + " of " + fname, file=sys.err)
+                        break
+                    if flow.attr[co.IF] == co.WIFI:
+                        wifi_packs += flow.attr[co.PACKS_RETRANS_S2D]
+                    elif flow.attr[co.IF] == co.RMNET:
+                        rmnet_packs += flow.attr[co.PACKS_RETRANS_S2D]
+            else:
+                print(conn + ": unknown object")
+                continue
+
+        if condition in aggl_res:
+            aggl_res[condition][wifi] += [wifi_packs]
+            aggl_res[condition][rmnet] += [rmnet_packs]
+        else:
+            aggl_res[condition] = {
+                wifi: [wifi_packs], rmnet: [rmnet_packs]}
+
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+
+
+def bar_chart_packs_retrans_d2s_interface():
+    aggl_res = {}
+    wifi = "Wi-Fi"
+    rmnet = "rmnet"
+    label_names = [wifi, rmnet]
+    color = ['r', 'b']
+    ecolor = ['b', 'r']
+    ylabel = "Packets"
+    title = "Number of packets retransmitted from destination to source by interface of " + args.app
+    graph_fname = "packs_retrans_iface_d2s_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        wifi_packs = 0
+        rmnet_packs = 0
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, tcp.TCPConnection):
+                # For compatibility reasons with old stat files
+                if co.PACKS_RETRANS_D2S not in conn.flow.attr:
+                    # Will produce a graph with 0 values, result should be ignored (so break for no graph)
+                    print(co.PACKS_RETRANS_D2S + " not in " + conn_id + " of " + fname, file=sys.err)
+                    break
+                if conn.flow.attr[co.IF] == co.WIFI:
+                    wifi_packs += conn.flow.attr[co.PACKS_RETRANS_D2S]
+                elif conn.flow.attr[co.IF] == co.RMNET:
+                    rmnet_packs += conn.flow.attr[co.PACKS_RETRANS_D2S]
+            elif isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    # For compatibility reasons with old stat files
+                    if co.PACKS_RETRANS_D2S not in flow.attr:
+                        # Will produce a graph with 0 values, result should be ignored (so break for no graph)
+                        print(co.PACKS_RETRANS_D2S + " not in flow" + flow_id + " of connection " + conn_id + " of " + fname, file=sys.err)
+                        break
+                    if flow.attr[co.IF] == co.WIFI:
+                        wifi_packs += flow.attr[co.PACKS_RETRANS_D2S]
+                    elif flow.attr[co.IF] == co.RMNET:
+                        rmnet_packs += flow.attr[co.PACKS_RETRANS_D2S]
+            else:
+                print(conn + ": unknown object")
+                continue
+
+        if condition in aggl_res:
+            aggl_res[condition][wifi] += [wifi_packs]
+            aggl_res[condition][rmnet] += [rmnet_packs]
+        else:
+            aggl_res[condition] = {
+                wifi: [wifi_packs], rmnet: [rmnet_packs]}
 
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
@@ -427,5 +577,8 @@ bar_chart_duration()
 bar_chart_bytes_s2d_interface()
 bar_chart_bytes_d2s_interface()
 bar_chart_duration_all()
+bar_chart_packs_retrans()
+bar_chart_packs_retrans_s2d_interface()
+bar_chart_packs_retrans_d2s_interface()
 line_graph_aggl()
 print("End of summary")
