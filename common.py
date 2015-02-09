@@ -476,4 +476,4 @@ def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fn
 
     plt.savefig(graph_fname)
 
-    plt_lock.acquire()
+    plt_lock.release()
