@@ -316,6 +316,30 @@ def get_date_as_int(pcap_fname):
 ##                    GRAPHS                    ##
 ##################################################
 
+
+def log_outliers(aggl_res, remove=False, m=2.0, log_file=sys.stdout):
+    """ Print on stderr outliers (value + filename), remove them from aggl_res if remove is True """
+    for condition, data_label in aggl_res.iteritems():
+        for label, data in data_label.iteritems():
+            num_data = [elem[0] for elem in data]
+            np_data = np.array(num_data)
+            d = np.abs(np_data - np.median(np_data))
+            mdev = np.median(d)
+            s = d/mdev if mdev else 0.0
+
+            if isinstance(s, float) and s == 0.0:
+                aggl_res[condition][label] = num_data
+                continue
+            new_list = []
+            for index in range(0, len(data)):
+                if s[index] >= m:
+                    print("Outlier " + str(data[index][0]) + " of file " + data[index][1] + "; median = " + str(np.median(np_data)) + ", mstd = " + str(mdev) + " and s = " + str(s[index]), file=log_file)
+                    if remove:
+                        continue
+                new_list.append(data[index][0])
+            aggl_res[condition][label] = new_list
+
+
 def sort_and_aggregate(aggr_list):
     """ Given a list of elements as returned by prepare_datasets_file, return a sorted and
         aggregated list

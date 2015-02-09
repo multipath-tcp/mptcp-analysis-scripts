@@ -35,8 +35,9 @@ import mptcp
 import os
 import os.path
 import pickle
-import tcp
 import sys
+import tcp
+import time
 
 ##################################################
 ##                  ARGUMENTS                   ##
@@ -150,7 +151,7 @@ def count_interesting_connections(data):
                 tot += 1
     return tot, count
 
-def bar_chart_count_connections():
+def bar_chart_count_connections(log_file=sys.stdout):
     aggl_res = {}
     tot_lbl = 'Total Connections'
     tot_flw_lbl = 'Total Flows'
@@ -167,17 +168,18 @@ def bar_chart_count_connections():
         condition = get_experiment_condition(fname)
         tot_flow, tot_int = count_interesting_connections(data)
         if condition in aggl_res:
-            aggl_res[condition][tot_lbl] += [len(data)]
-            aggl_res[condition][tot_flw_lbl] += [tot_flow]
-            aggl_res[condition][tot_int_lbl] += [tot_int]
+            aggl_res[condition][tot_lbl] += [(len(data), fname)]
+            aggl_res[condition][tot_flw_lbl] += [(tot_flow, fname)]
+            aggl_res[condition][tot_int_lbl] += [(tot_int, fname)]
         else:
             aggl_res[condition] = {
-                tot_lbl: [len(data)], tot_flw_lbl: [tot_flow], tot_int_lbl: [tot_int]}
+                tot_lbl: [(len(data), fname)], tot_flw_lbl: [(tot_flow, fname)], tot_int_lbl: [(tot_int, fname)]}
 
+    co.log_outliers(aggl_res, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
-def bar_chart_bytes():
+def bar_chart_bytes(log_file=sys.stdout):
     aggl_res = {}
     tot_lbl = 'Bytes s2d'
     tot_flw_lbl = 'Bytes d2s'
@@ -206,16 +208,17 @@ def bar_chart_bytes():
 
 
         if condition in aggl_res:
-            aggl_res[condition][tot_lbl] += [s2d]
-            aggl_res[condition][tot_flw_lbl] += [d2s]
+            aggl_res[condition][tot_lbl] += [(s2d, fname)]
+            aggl_res[condition][tot_flw_lbl] += [(d2s, fname)]
         else:
             aggl_res[condition] = {
-                tot_lbl: [s2d], tot_flw_lbl: [d2s]}
+                tot_lbl: [(s2d, fname)], tot_flw_lbl: [(d2s, fname)]}
 
+    co.log_outliers(aggl_res, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
-def bar_chart_bandwidth_smart():
+def bar_chart_bandwidth_smart(log_file=sys.stdout):
     aggl_res = {}
     tot_lbl = 'Bytes s2d'
     tot_flw_lbl = 'Bytes d2s'
@@ -241,16 +244,17 @@ def bar_chart_bandwidth_smart():
             if not len(here) == 2:
                 continue
             if condition in aggl_res:
-                aggl_res[condition][tot_lbl] += [data[co.BYTES_S2D]]
-                aggl_res[condition][tot_flw_lbl] += [data[co.BYTES_D2S]]
+                aggl_res[condition][tot_lbl] += [(data[co.BYTES_S2D], fname)]
+                aggl_res[condition][tot_flw_lbl] += [(data[co.BYTES_D2S], fname)]
             else:
                 aggl_res[condition] = {
-                    tot_lbl: [data[co.BYTES_S2D]], tot_flw_lbl: [data[co.BYTES_D2S]]}
+                    tot_lbl: [data[(co.BYTES_S2D, fname)]], tot_flw_lbl: [(data[co.BYTES_D2S], fname)]}
 
+    co.log_outliers(aggl_res, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
-def bar_chart_bytes_s2d_interface():
+def bar_chart_bytes_s2d_interface(log_file=sys.stdout):
     aggl_res = {}
     wifi = "Wi-Fi"
     rmnet = "rmnet"
@@ -274,16 +278,17 @@ def bar_chart_bytes_s2d_interface():
                 rmnet_bytes += conn.attr[co.S2D][co.RMNET]
 
         if condition in aggl_res:
-            aggl_res[condition][wifi] += [wifi_bytes]
-            aggl_res[condition][rmnet] += [rmnet_bytes]
+            aggl_res[condition][wifi] += [(wifi_bytes, fname)]
+            aggl_res[condition][rmnet] += [(rmnet_bytes, fname)]
         else:
             aggl_res[condition] = {
-                wifi: [wifi_bytes], rmnet: [rmnet_bytes]}
+                wifi: [(wifi_bytes, fname)], rmnet: [(rmnet_bytes, fname)]}
 
+    co.log_outliers(aggl_res, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
-def bar_chart_bytes_d2s_interface():
+def bar_chart_bytes_d2s_interface(log_file=sys.stdout):
     aggl_res = {}
     wifi = "Wi-Fi"
     rmnet = "rmnet"
@@ -307,16 +312,17 @@ def bar_chart_bytes_d2s_interface():
                 rmnet_bytes += conn.attr[co.D2S][co.RMNET]
 
         if condition in aggl_res:
-            aggl_res[condition][wifi] += [wifi_bytes]
-            aggl_res[condition][rmnet] += [rmnet_bytes]
+            aggl_res[condition][wifi] += [(wifi_bytes, fname)]
+            aggl_res[condition][rmnet] += [(rmnet_bytes, fname)]
         else:
             aggl_res[condition] = {
-                wifi: [wifi_bytes], rmnet: [rmnet_bytes]}
+                wifi: [(wifi_bytes, fname)], rmnet: [(rmnet_bytes, fname)]}
 
+    co.log_outliers(aggl_res, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
-def bar_chart_packs_retrans():
+def bar_chart_packs_retrans(log_file=sys.stdout):
     aggl_res = {}
     tot_lbl = 'Packs s2d'
     tot_flw_lbl = 'Packs d2s'
@@ -352,16 +358,17 @@ def bar_chart_packs_retrans():
                 continue
 
         if condition in aggl_res.keys():
-            aggl_res[condition][tot_lbl] += [s2d]
-            aggl_res[condition][tot_flw_lbl] += [d2s]
+            aggl_res[condition][tot_lbl] += [(s2d, fname)]
+            aggl_res[condition][tot_flw_lbl] += [(d2s, fname)]
         else:
             aggl_res[condition] = {
-                tot_lbl: [s2d], tot_flw_lbl: [d2s]}
+                tot_lbl: [(s2d, fname)], tot_flw_lbl: [(d2s, fname)]}
 
+    co.log_outliers(aggl_res, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
-def bar_chart_packs_retrans_s2d_interface():
+def bar_chart_packs_retrans_s2d_interface(log_file=sys.stdout):
     aggl_res = {}
     wifi = "Wi-Fi"
     rmnet = "rmnet"
@@ -403,16 +410,17 @@ def bar_chart_packs_retrans_s2d_interface():
                 continue
 
         if condition in aggl_res:
-            aggl_res[condition][wifi] += [wifi_packs]
-            aggl_res[condition][rmnet] += [rmnet_packs]
+            aggl_res[condition][wifi] += [(wifi_packs, fname)]
+            aggl_res[condition][rmnet] += [(rmnet_packs, fname)]
         else:
             aggl_res[condition] = {
-                wifi: [wifi_packs], rmnet: [rmnet_packs]}
+                wifi: [(wifi_packs, fname)], rmnet: [(rmnet_packs, fname)]}
 
+    co.log_outliers(aggl_res, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
-def bar_chart_packs_retrans_d2s_interface():
+def bar_chart_packs_retrans_d2s_interface(log_file=sys.stdout):
     aggl_res = {}
     wifi = "Wi-Fi"
     rmnet = "rmnet"
@@ -454,16 +462,17 @@ def bar_chart_packs_retrans_d2s_interface():
                 continue
 
         if condition in aggl_res:
-            aggl_res[condition][wifi] += [wifi_packs]
-            aggl_res[condition][rmnet] += [rmnet_packs]
+            aggl_res[condition][wifi] += [(wifi_packs, fname)]
+            aggl_res[condition][rmnet] += [(rmnet_packs, fname)]
         else:
             aggl_res[condition] = {
-                wifi: [wifi_packs], rmnet: [rmnet_packs]}
+                wifi: [(wifi_packs, fname)], rmnet: [(rmnet_packs, fname)]}
 
+    co.log_outliers(aggl_res, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
-def bar_chart_duration():
+def bar_chart_duration(log_file=sys.stdout):
     aggl_res = {}
     tot_int_lbl = 'Duration'
     label_names = ['Duration']
@@ -485,14 +494,15 @@ def bar_chart_duration():
             if not len(here) == 1:
                 continue
             if condition in aggl_res:
-                aggl_res[condition][tot_int_lbl] += [data[co.DURATION]]
+                aggl_res[condition][tot_int_lbl] += [(data[co.DURATION], fname)]
             else:
-                aggl_res[condition] = {tot_int_lbl: [data[co.DURATION]]}
+                aggl_res[condition] = {tot_int_lbl: [(data[co.DURATION], fname)]}
 
+    co.log_outliers(aggl_res, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
-def bar_chart_duration_all():
+def bar_chart_duration_all(log_file=sys.stdout):
     aggl_res = {}
     tot_int_lbl = 'Duration'
     label_names = ['Duration']
@@ -525,10 +535,11 @@ def bar_chart_duration_all():
 
         if stop - start >= 0:
             if condition in aggl_res:
-                aggl_res[condition][tot_int_lbl] += [stop - start]
+                aggl_res[condition][tot_int_lbl] += [(stop - start, fname)]
             else:
-                aggl_res[condition] = {tot_int_lbl: [stop - start]}
+                aggl_res[condition] = {tot_int_lbl: [(stop - start, fname)]}
 
+    co.log_outliers(aggl_res, log_file=log_file)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 def line_graph_aggl():
@@ -571,14 +582,29 @@ def line_graph_aggl():
                 # len == 1
                 co.plot_line_graph(aggl_res[condition][direction].values(), aggl_res[condition][direction].keys(), ['k'], xlabel, ylabel, title, "mean_tsg_" + args.app + "_" + condition + "_" + direction + ".pdf")
 
-bar_chart_count_connections()
-bar_chart_bytes()
-bar_chart_duration()
-bar_chart_bytes_s2d_interface()
-bar_chart_bytes_d2s_interface()
-bar_chart_duration_all()
-bar_chart_packs_retrans()
-bar_chart_packs_retrans_s2d_interface()
-bar_chart_packs_retrans_d2s_interface()
+
+millis = int(round(time.time() * 1000))
+
+log_file = open('log_summary_' + args.app + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt', 'w')
+print("Plot count", file=log_file)
+bar_chart_count_connections(log_file=log_file)
+print("Plot bytes", file=log_file)
+bar_chart_bytes(log_file=log_file)
+print("Plot duration", file=log_file)
+bar_chart_duration(log_file=log_file)
+print("Plot bytes s2d", file=log_file)
+bar_chart_bytes_s2d_interface(log_file=log_file)
+print("Plot bytes d2s", file=log_file)
+bar_chart_bytes_d2s_interface(log_file=log_file)
+print("Plot duration all", file=log_file)
+bar_chart_duration_all(log_file=log_file)
+print("Plot packs retrans", file=log_file)
+bar_chart_packs_retrans(log_file=log_file)
+print("Plot packs retrans s2d", file=log_file)
+bar_chart_packs_retrans_s2d_interface(log_file=log_file)
+print("Plot packs retrans d2s", file=log_file)
+bar_chart_packs_retrans_d2s_interface(log_file=log_file)
+print("Plot line graph aggl", file=log_file)
 line_graph_aggl()
+log_file.close()
 print("End of summary")
