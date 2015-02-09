@@ -577,7 +577,7 @@ def line_graph_aggl():
                 aggl_res[condition][direction][interface] = final_list
 
             if len(aggl_res[condition][direction].keys()) == 2:
-                co.plot_line_graph(aggl_res[condition][direction].values(), aggl_res[condition][direction].keys(), ['r:', 'b--'], xlabel, ylabel, title, "mean_tsg_" + args.app + "_" + condition + "_" + direction + ".pdf")
+                co.plot_line_graph(aggl_res[condition][direction].values(), aggl_res[condition][direction].keys(), ['r', 'b'], xlabel, ylabel, title, "mean_tsg_" + args.app + "_" + condition + "_" + direction + ".pdf")
             else:
                 # len == 1
                 co.plot_line_graph(aggl_res[condition][direction].values(), aggl_res[condition][direction].keys(), ['k'], xlabel, ylabel, title, "mean_tsg_" + args.app + "_" + condition + "_" + direction + ".pdf")
