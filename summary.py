@@ -177,7 +177,7 @@ def bar_chart_count_connections():
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
-def bar_chart_bandwidth():
+def bar_chart_bytes():
     aggl_res = {}
     tot_lbl = 'Bytes s2d'
     tot_flw_lbl = 'Bytes d2s'
@@ -247,7 +247,7 @@ def bar_chart_bandwidth_smart():
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
-def bar_chart_bandwidth_s2d_interface():
+def bar_chart_bytes_s2d_interface():
     aggl_res = {}
     wifi = "Wi-Fi"
     rmnet = "rmnet"
@@ -280,7 +280,7 @@ def bar_chart_bandwidth_s2d_interface():
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
 
 
-def bar_chart_bandwidth_d2s_interface():
+def bar_chart_bytes_d2s_interface():
     aggl_res = {}
     wifi = "Wi-Fi"
     rmnet = "rmnet"
@@ -422,10 +422,10 @@ def line_graph_aggl():
                 co.plot_line_graph(aggl_res[condition][direction].values(), aggl_res[condition][direction].keys(), ['k'], xlabel, ylabel, title, "mean_tsg_" + args.app + "_" + condition + "_" + direction + ".pdf")
 
 bar_chart_count_connections()
-bar_chart_bandwidth()
+bar_chart_bytes()
 bar_chart_duration()
-bar_chart_bandwidth_s2d_interface()
-bar_chart_bandwidth_d2s_interface()
+bar_chart_bytes_s2d_interface()
+bar_chart_bytes_d2s_interface()
 bar_chart_duration_all()
 line_graph_aggl()
 print("End of summary")
