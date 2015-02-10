@@ -49,6 +49,8 @@ parser.add_argument("-s",
                     "--stat", help="directory where the stat files are stored", default=co.DEF_STAT_DIR)
 parser.add_argument("-A",
                     "--aggl", help="directory where data of agglomerated graphs are stored", default=co.DEF_AGGL_DIR)
+parser.add_argument('-S',
+                    "--sums", help="directory where the summary graphs will be stored", default=co.DEF_SUMS_DIR)
 parser.add_argument("-a",
                     "--app", help="application results to summarize", default="")
 parser.add_argument(
@@ -81,6 +83,13 @@ if int(start_time) > int(stop_time):
 
 stat_dir_exp = os.path.abspath(os.path.expanduser(args.stat))
 aggl_dir_exp = os.path.abspath(os.path.expanduser(args.aggl))
+sums_dir_exp = os.path.abspath(os.path.expanduser(args.sums))
+
+co.check_directory_exists(sums_dir_exp)
+
+if args.prot or args.cond:
+    sums_dir_exp = os.path.join(sums_dir_exp, args.prot + args.cond)
+    co.check_directory_exists(sums_dir_exp)
 
 ##################################################
 ##                 GET THE DATA                 ##
@@ -172,6 +181,7 @@ def bar_chart_count_connections(log_file=sys.stdout):
     ylabel = 'Number of connections'
     title = 'Counts of total and interesting connections of ' + args.app
     graph_fname = "count_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     # Need to agglomerate same tests
     for fname, data in connections.iteritems():
@@ -186,7 +196,7 @@ def bar_chart_count_connections(log_file=sys.stdout):
                 tot_lbl: [(len(data), fname)], tot_flw_lbl: [(tot_flow, fname)], tot_int_lbl: [(tot_int, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
 def bar_chart_bytes(log_file=sys.stdout):
@@ -199,6 +209,7 @@ def bar_chart_bytes(log_file=sys.stdout):
     ylabel = 'Bytes'
     title = 'Number of bytes transfered of ' + args.app
     graph_fname = "bytes_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     # Need to agglomerate same tests
     for fname, data in connections.iteritems():
@@ -225,7 +236,7 @@ def bar_chart_bytes(log_file=sys.stdout):
                 tot_lbl: [(s2d, fname)], tot_flw_lbl: [(d2s, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
 def bar_chart_bandwidth_smart(log_file=sys.stdout):
@@ -238,6 +249,7 @@ def bar_chart_bandwidth_smart(log_file=sys.stdout):
     ylabel = 'Bytes'
     title = 'Number of bytes transfered of ' + args.app
     graph_fname = "bytes_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     # Need to agglomerate same tests
     for fname, data in connections.iteritems():
@@ -261,7 +273,7 @@ def bar_chart_bandwidth_smart(log_file=sys.stdout):
                     tot_lbl: [data[(co.BYTES_S2D, fname)]], tot_flw_lbl: [(data[co.BYTES_D2S], fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
 def bar_chart_bytes_s2d_interface(log_file=sys.stdout):
@@ -274,6 +286,7 @@ def bar_chart_bytes_s2d_interface(log_file=sys.stdout):
     ylabel = "Bytes"
     title = "Number of bytes transfered from source to destination by interface of " + args.app
     graph_fname = "iface_s2d_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
@@ -295,7 +308,7 @@ def bar_chart_bytes_s2d_interface(log_file=sys.stdout):
                 wifi: [(wifi_bytes, fname)], rmnet: [(rmnet_bytes, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
 def bar_chart_bytes_d2s_interface(log_file=sys.stdout):
@@ -308,6 +321,7 @@ def bar_chart_bytes_d2s_interface(log_file=sys.stdout):
     ylabel = "Bytes"
     title = "Number of bytes transfered from destination to source by interface of " + args.app
     graph_fname = "iface_d2s_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
@@ -329,7 +343,7 @@ def bar_chart_bytes_d2s_interface(log_file=sys.stdout):
                 wifi: [(wifi_bytes, fname)], rmnet: [(rmnet_bytes, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
 def bar_chart_packs_retrans(log_file=sys.stdout):
@@ -342,6 +356,7 @@ def bar_chart_packs_retrans(log_file=sys.stdout):
     ylabel = 'Packets'
     title = 'Number of packets retransmitted of ' + args.app
     graph_fname = "packs_retrans_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     # Need to agglomerate same tests
     for fname, data in connections.iteritems():
@@ -375,7 +390,7 @@ def bar_chart_packs_retrans(log_file=sys.stdout):
                 tot_lbl: [(s2d, fname)], tot_flw_lbl: [(d2s, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
 def bar_chart_packs_retrans_s2d_interface(log_file=sys.stdout):
@@ -388,6 +403,7 @@ def bar_chart_packs_retrans_s2d_interface(log_file=sys.stdout):
     ylabel = "Packets"
     title = "Number of packets retransmitted from source to destination by interface of " + args.app
     graph_fname = "packs_retrans_iface_s2d_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
@@ -427,7 +443,7 @@ def bar_chart_packs_retrans_s2d_interface(log_file=sys.stdout):
                 wifi: [(wifi_packs, fname)], rmnet: [(rmnet_packs, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
 def bar_chart_packs_retrans_d2s_interface(log_file=sys.stdout):
@@ -440,6 +456,7 @@ def bar_chart_packs_retrans_d2s_interface(log_file=sys.stdout):
     ylabel = "Packets"
     title = "Number of packets retransmitted from destination to source by interface of " + args.app
     graph_fname = "packs_retrans_iface_d2s_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
@@ -479,7 +496,7 @@ def bar_chart_packs_retrans_d2s_interface(log_file=sys.stdout):
                 wifi: [(wifi_packs, fname)], rmnet: [(rmnet_packs, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
 def bar_chart_duration(log_file=sys.stdout):
@@ -491,6 +508,7 @@ def bar_chart_duration(log_file=sys.stdout):
     ylabel = 'Number of seconds'
     title = 'Time of connections of ' + args.app
     graph_fname = "duration_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     # Need to agglomerate same tests
     for fname, data in connections.iteritems():
@@ -509,7 +527,7 @@ def bar_chart_duration(log_file=sys.stdout):
                 aggl_res[condition] = {tot_int_lbl: [(data[co.DURATION], fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
 def bar_chart_duration_all(log_file=sys.stdout):
@@ -521,6 +539,7 @@ def bar_chart_duration_all(log_file=sys.stdout):
     ylabel = 'Number of seconds'
     title = 'Time of scenario of ' + args.app
     graph_fname = "duration_all_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     # Need to agglomerate same tests
     for fname, data in connections.iteritems():
@@ -550,7 +569,7 @@ def bar_chart_duration_all(log_file=sys.stdout):
                 aggl_res[condition] = {tot_int_lbl: [(stop - start, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 def line_graph_aggl():
     aggl_res = {}
