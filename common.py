@@ -119,6 +119,8 @@ class BasicConnection(object):
 DEF_STAT_DIR = 'stats'
 # The default aggl directory
 DEF_AGGL_DIR = 'aggls'
+# The default sums directory
+DEF_SUMS_DIR = 'sums'
 
 # The time sequence and throughput graphs directory
 TSG_THGPT_DIR = 'tsg_thgpt'
@@ -448,7 +450,7 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
     try:
         critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_fname, ymin=ymin, titlesize=titlesize)
     except Exception as e:
-        print("UNCATCHED EXCEPTION IN critical_plot_line_graph", file=sys.stderr)
+        print("UNCATCHED EXCEPTION IN critical_plot_line_graph for " + graph_fname, file=sys.stderr)
         print(str(e), file=sys.stderr)
         print(traceback.format_exc(), file=sys.stderr)
 
