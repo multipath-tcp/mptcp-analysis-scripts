@@ -369,6 +369,57 @@ def sort_and_aggregate(aggr_list):
 plt_lock = threading.Lock()
 
 
+def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_fname, ymin=None, titlesize=20):
+    """ Critical part to plot a line graph """
+    count = 0
+    fig = plt.figure()
+    plt.clf()
+    # Create plots
+    try:
+        for dataset in data:
+            x_val = [x[0] for x in dataset]
+            y_val = [x[1] for x in dataset]
+            plt.plot(x_val, y_val, formatting[count], label=label_names[count])
+            count += 1
+
+        legend = plt.legend(loc='upper left', shadow=True, fontsize='x-large')
+    except ValueError as e:
+        print(str(e) + ": create plots: skip " + graph_fname, file=sys.stderr)
+        return
+
+    try:
+        # Put a nicer background color on the legend.
+        legend.get_frame().set_facecolor('#00FFCC')
+    except AttributeError as e:
+        # if we have no frame, it means we have no object...
+        print(str(e) + ": change legend: skip " + graph_fname, file=sys.stderr)
+        print('label_names: ' + str(label_names), file=sys.stderr)
+        print('formatting: ' + str(formatting), file=sys.stderr)
+        print('data: ' + str(data), file=sys.stderr)
+        return
+
+    fig.suptitle(title, fontsize=titlesize)
+    plt.xlabel(xlabel, fontsize=18)
+    plt.ylabel(ylabel, fontsize=16)
+
+    if ymin is not None:
+        plt.ylim(ymin=ymin)
+
+    try:
+        plt.savefig(graph_fname)
+    except:
+        print('ERROR when creating graph for ' + graph_fname, file=sys.stderr)
+        print(traceback.format_exc(), file=sys.stderr)
+        return
+
+    # Don't forget to clean the plot, otherwise previous ones will be there!
+    try:
+        plt.clf()
+    except KeyError as e:
+        print(str(e) + ": when cleaning graph " + graph_fname, file=sys.stderr)
+    plt.close()
+
+
 def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_fname, ymin=None, titlesize=20):
     """ Plot a line graph with data """
     # no data, skip
@@ -394,56 +445,12 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
 
     plt_lock.acquire()
 
-    count = 0
-    fig = plt.figure()
-    plt.clf()
-    # Create plots
     try:
-        for dataset in data:
-            x_val = [x[0] for x in dataset]
-            y_val = [x[1] for x in dataset]
-            plt.plot(x_val, y_val, formatting[count], label=label_names[count])
-            count += 1
-
-        legend = plt.legend(loc='upper left', shadow=True, fontsize='x-large')
-    except ValueError as e:
-        print(str(e) + ": create plots: skip " + graph_fname, file=sys.stderr)
-        plt_lock.release()
-        return
-
-    try:
-        # Put a nicer background color on the legend.
-        legend.get_frame().set_facecolor('#00FFCC')
-    except AttributeError as e:
-        # if we have no frame, it means we have no object...
-        print(str(e) + ": change legend: skip " + graph_fname, file=sys.stderr)
-        print('label_names: ' + str(label_names), file=sys.stderr)
-        print('formatting: ' + str(formatting), file=sys.stderr)
-        print('data: ' + str(data), file=sys.stderr)
-        plt_lock.release()
-        return
-
-    fig.suptitle(title, fontsize=titlesize)
-    plt.xlabel(xlabel, fontsize=18)
-    plt.ylabel(ylabel, fontsize=16)
-
-    if ymin is not None:
-        plt.ylim(ymin=ymin)
-
-    try:
-        plt.savefig(graph_fname)
-    except:
-        print('ERROR when creating graph for ' + graph_fname, file=sys.stderr)
+        critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_fname, ymin=ymin, titlesize=titlesize)
+    except Exception as e:
+        print("UNCATCHED EXCEPTION IN critical_plot_line_graph", file=sys.stderr)
+        print(str(e), file=sys.stderr)
         print(traceback.format_exc(), file=sys.stderr)
-        plt_lock.release()
-        return
-
-    # Don't forget to clean the plot, otherwise previous ones will be there!
-    try:
-        plt.clf()
-    except KeyError as e:
-        print(str(e) + ": when cleaning graph " + graph_fname, file=sys.stderr)
-    plt.close()
 
     plt_lock.release()
 
