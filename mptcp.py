@@ -194,24 +194,47 @@ def get_begin_values(first_line):
     return float(split_line[0]), int(split_line[1])
 
 
-def write_graph_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq):
-    """ Write in the graphs directory a new csv file containing relative values
-        for plotting them
-        Exit the program if an IOError is raised
+def get_data_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq):
+    """ Return a list of lists of data
+        Index 0: data of tsg of flow 0
+        Index 1: data of tsg of flow 1
+        ...
+        Index 4: data of reinjected segment that was first on flow 0
+        Index 5: data of reinjected segment that was first on flow 1
     """
-    try:
-        graph_fname = os.path.join(csv_graph_tmp_dir, csv_fname)
-        graph_file = open(graph_fname, 'w')
-        # Modify lines for that
-        for line in data:
-            split_line = line.split(',')
-            time = float(split_line[0]) - begin_time
-            seq = int(split_line[1]) - begin_seq
-            graph_file.write(str(time) + ',' + str(seq) + '\n')
-        graph_file.close()
-    except IOError:
-        print('IOError for graph file with ' + csv_fname + ': stop', file=sys.stderr)
-        exit(1)
+    graph_data = [[], [], [], []]
+    reinject_data = [[], [], [], []]
+    last_offset = 0
+    offsets = {0: 0, 1:0, 2:0, 3:0}
+    last_time = 0.0
+
+    for line in data:
+        split_line = line.split(',')
+        time = float(split_line[0]) - begin_time
+        seq = int(split_line[1]) - begin_seq
+        if int(split_line[3]) == 0:
+            # Ack
+            # graph_data[int(split_line[2])].append([time, seq])
+            pass
+        elif int(split_line[3]) == 1:
+            # Map
+            seq_to_plot = seq - last_offset + offsets[int(split_line[2]) - 1]
+            if int(split_line[5]) == -1:
+                # Not already seen on another flow
+                graph_data[int(split_line[2]) - 1].append([time, seq_to_plot])
+            else:
+                # Reinjected segment
+                graph_data[int(split_line[2]) - 1].append([time, seq_to_plot])
+                reinject_data[int(split_line[5]) - 1].append([time, seq_to_plot])
+
+            offsets[int(split_line[2]) - 1] = seq_to_plot
+            last_offset = seq
+            last_time = time
+
+    for i in range(0, len(graph_data)):
+        graph_data[i].append([last_time, offsets[i]])
+
+    return graph_data + reinject_data
 
 
 def generate_title(csv_fname, connections):
@@ -226,7 +249,7 @@ def generate_title(csv_fname, connections):
     # Show all details of the subflows
     for sub_flow_id, conn in connections[connection_id].flows.iteritems():
         # \n must be interpreted as a raw type to works with GnuPlot.py
-        title += r'\n' + "sf: " + sub_flow_id + " "
+        title += '\n' + "sf: " + sub_flow_id + " "
         if reverse:
             title += "(" + conn.attr[co.WSCALEDST] + " " + conn.attr[co.WSCALESRC] + ") "
             title += conn.attr[co.DADDR] + ":" + conn.attr[co.DPORT] + \
@@ -240,36 +263,38 @@ def generate_title(csv_fname, connections):
     return title
 
 
-def create_graph_csv(pcap_fname, csv_fname, graph_dir_exp, connections):
+def create_graph_csv(data_plot, pcap_fname, csv_fname, graph_dir_exp, connections):
     """ Generate pdf for the csv file of the pcap file, if interesting
     """
     # First see if useful to show the graph
     if not interesting_graph(csv_fname, connections):
         return
-    try:
-        csv_file = open(csv_fname)
-        data = csv_file.readlines()
-    except IOError:
-        print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
-        return
+    # try:
+    #     csv_file = open(csv_fname)
+    #     data = csv_file.readlines()
+    # except IOError:
+    #     print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
+    #     return
+    #
+    # # If file was generated, the csv is not empty
+    # data_split = map(lambda x: x.split(','), data)
+    # data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
 
-    # If file was generated, the csv is not empty
-    data_split = map(lambda x: x.split(','), data)
-    data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
-
-    g = Gnuplot.Gnuplot(debug=0)
-    g('set title "' + generate_title(csv_fname, connections) + '"')
-    g('set style data linespoints')
-    g.xlabel('Time [s]')
-    g.ylabel('Sequence number')
-    g.plot(data_plot)
+    # g = Gnuplot.Gnuplot(debug=0)
+    # g('set title "' + generate_title(csv_fname, connections) + '"')
+    # g('set style data linespoints')
+    # g.xlabel('Time [s]')
+    # g.ylabel('Sequence number')
+    # g.plot(data_plot, 'lt rgb blue')
 
     tsg_thgpt_dir = os.path.join(graph_dir_exp, co.TSG_THGPT_DIR)
     co.check_directory_exists(tsg_thgpt_dir)
     pdf_fname = os.path.join(tsg_thgpt_dir,
                              os.path.basename(pcap_fname)[:-5] + "_" + csv_fname[:-4] + '.pdf')
-    g.hardcopy(filename=pdf_fname, terminal='pdf')
-    g.reset()
+    # g.hardcopy(filename=pdf_fname, terminal='pdf')
+    # g.reset()
+
+    co.plot_line_graph(data_plot, ['0', '1', '2', '3', 'rf0', 'rf1', 'rf2', 'rf3'], ['r', 'b', 'g', 'k', 'r+', 'b+', 'g+', 'k+'], 'Time [s]', 'Sequence number [Bytes]', generate_title(csv_fname, connections), pdf_fname, titlesize=10)
 
 
 ##################################################
@@ -353,6 +378,7 @@ def process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, m
     """ If the csv is interesting, rewrite it in another folder csv_graph_tmp_dir
         Delete the csv given in argument
     """
+    graph_data = None
     try:
         conn_id = get_connection_id(csv_fname)
         is_reversed = is_reverse_connection(csv_fname)
@@ -365,13 +391,15 @@ def process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, m
                 # Collect begin time and seq num to plot graph starting at 0
                 try:
                     begin_time, begin_seq = get_begin_values(data[0])
-                    write_graph_csv(csv_graph_tmp_dir, csv_fname, data, relative_start, begin_seq)
+                    graph_data = get_data_csv(csv_graph_tmp_dir, csv_fname, data, relative_start, begin_seq)
                 except ValueError:
                     print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
 
         csv_file.close()
         # Remove the csv file
         os.remove(csv_fname)
+
+        return graph_data
 
     except IOError:
         print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
@@ -419,16 +447,17 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_byt
             # Then really process csv files
             for csv_fname in glob.glob('*.csv'):
                 if MPTCP_SEQ_FNAME in csv_fname:
-                    process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, min_bytes)
+                    graph_data = process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, min_bytes)
+                    create_graph_csv(graph_data, pcap_fname, csv_fname, graph_dir_exp, connections)
 
 
-            with co.cd(csv_graph_tmp_dir):
-                for csv_fname in glob.glob('*.csv'):
-                    # No point to plot information on subflows (as many points as there are subflows)
-                    if MPTCP_SF_FNAME not in csv_fname:
-                        create_graph_csv(pcap_fname, csv_fname, graph_dir_exp, connections)
-                    # Remove the csv file
-                    os.remove(csv_fname)
+            # with co.cd(csv_graph_tmp_dir):
+            #     for csv_fname in glob.glob('*.csv'):
+            #         # No point to plot information on subflows (as many points as there are subflows)
+            #         if MPTCP_SF_FNAME not in csv_fname:
+            #             create_graph_csv(pcap_fname, csv_fname, graph_dir_exp, connections)
+            #         # Remove the csv file
+            #         os.remove(csv_fname)
 
             # Remove temp dirs
             shutil.rmtree(csv_graph_tmp_dir)
