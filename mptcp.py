@@ -204,8 +204,11 @@ def get_data_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq):
     """
     graph_data = [[], [], [], []]
     reinject_data = [[], [], [], []]
+    acks_data = [[], [], [], []]
     last_offset = 0
     offsets = {0: 0, 1:0, 2:0, 3:0}
+    acks_offsets = {0: 0, 1:0, 2:0, 3:0}
+    last_acks_offset = 0
     last_time = 0.0
 
     for line in data:
@@ -214,8 +217,10 @@ def get_data_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq):
         seq = int(split_line[1]) - begin_seq
         if int(split_line[3]) == 0:
             # Ack
-            # graph_data[int(split_line[2])].append([time, seq])
-            pass
+            seq_to_plot = seq - last_acks_offset + acks_offsets[int(split_line[2]) - 1]
+            acks_data[int(split_line[2])].append([time, seq_to_plot])
+            acks_offsets[int(split_line[2]) - 1] = seq_to_plot
+            last_acks_offset = seq
         elif int(split_line[3]) == 1:
             # Map
             seq_to_plot = seq - last_offset + offsets[int(split_line[2]) - 1]
@@ -234,7 +239,7 @@ def get_data_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq):
     for i in range(0, len(graph_data)):
         graph_data[i].append([last_time, offsets[i]])
 
-    return graph_data + reinject_data
+    return graph_data + reinject_data, acks_data
 
 
 def generate_title(csv_fname, connections):
@@ -263,7 +268,7 @@ def generate_title(csv_fname, connections):
     return title
 
 
-def create_graph_csv(data_plot, pcap_fname, csv_fname, graph_dir_exp, connections):
+def create_graph_csv(data_plot, acks_plot, pcap_fname, csv_fname, graph_dir_exp, connections):
     """ Generate pdf for the csv file of the pcap file, if interesting
     """
     # First see if useful to show the graph
@@ -295,6 +300,11 @@ def create_graph_csv(data_plot, pcap_fname, csv_fname, graph_dir_exp, connection
     # g.reset()
 
     co.plot_line_graph(data_plot, ['0', '1', '2', '3', 'rf0', 'rf1', 'rf2', 'rf3'], ['r', 'b', 'g', 'k', 'r+', 'b+', 'g+', 'k+'], 'Time [s]', 'Sequence number [Bytes]', generate_title(csv_fname, connections), pdf_fname, titlesize=10)
+
+    pdf_fname = os.path.join(tsg_thgpt_dir,
+                             os.path.basename(pcap_fname)[:-5] + "_" + csv_fname[:-4] + "_acks" + '.pdf')
+    co.plot_line_graph(data_plot, ['0', '1', '2', '3'], ['r', 'b', 'g', 'k'], 'Time [s]', 'Sequence number [Bytes]', generate_title(csv_fname, connections), pdf_fname, titlesize=10)
+
 
 
 ##################################################
@@ -378,7 +388,7 @@ def process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, m
     """ If the csv is interesting, rewrite it in another folder csv_graph_tmp_dir
         Delete the csv given in argument
     """
-    graph_data = None
+    graph_data, acks_data = None, None
     try:
         conn_id = get_connection_id(csv_fname)
         is_reversed = is_reverse_connection(csv_fname)
@@ -391,7 +401,7 @@ def process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, m
                 # Collect begin time and seq num to plot graph starting at 0
                 try:
                     begin_time, begin_seq = get_begin_values(data[0])
-                    graph_data = get_data_csv(csv_graph_tmp_dir, csv_fname, data, relative_start, begin_seq)
+                    graph_data, acks_data = get_data_csv(csv_graph_tmp_dir, csv_fname, data, relative_start, begin_seq)
                 except ValueError:
                     print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
 
@@ -399,7 +409,7 @@ def process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, m
         # Remove the csv file
         os.remove(csv_fname)
 
-        return graph_data
+        return graph_data, acks_data
 
     except IOError:
         print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
@@ -447,8 +457,8 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_byt
             # Then really process csv files
             for csv_fname in glob.glob('*.csv'):
                 if MPTCP_SEQ_FNAME in csv_fname:
-                    graph_data = process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, min_bytes)
-                    create_graph_csv(graph_data, pcap_fname, csv_fname, graph_dir_exp, connections)
+                    graph_data, acks_data = process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, min_bytes)
+                    create_graph_csv(graph_data, acks_data, pcap_fname, csv_fname, graph_dir_exp, connections)
 
 
             # with co.cd(csv_graph_tmp_dir):
