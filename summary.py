@@ -94,6 +94,14 @@ def get_experiment_condition(fname):
     end_index = fname[:dash_index].rindex("_")
     return fname[:app_index] + fname[app_index + len(args.app) + 1:end_index]
 
+
+def get_app_name(fname):
+    """ Return a string of the name of the application """
+    app_index = fname.index(args.app)
+    end_index = fname[app_index:].index("_")
+    return fname[app_index:end_index]
+
+
 def check_in_list(dirpath, dirs):
     """ Check if dirpath is one of the dir in dirs, True if dirs is empty """
     if not dirs:
@@ -114,7 +122,7 @@ def fetch_data(dir_exp):
         if check_in_list(dirpath, args.dirs):
             for fname in filenames:
                 fname_date = co.get_date_as_int(fname)
-                if args.app in fname and (fname_date and (int(start_time) <= fname_date <= int(stop_time))) and check_conditions(fname):
+                if args.app == get_app_name(fname) and (fname_date and (int(start_time) <= fname_date <= int(stop_time))) and check_conditions(fname):
                     try:
                         stat_file = open(os.path.join(dirpath, fname), 'r')
                         dico[fname] = pickle.load(stat_file)
