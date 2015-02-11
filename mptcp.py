@@ -194,7 +194,7 @@ def get_begin_values(first_line):
     return float(split_line[0]), int(split_line[1])
 
 
-def get_data_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq):
+def get_data_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq, connections, conn_id, is_reversed):
     """ Return a list of lists of data
         Index 0: data of tsg of flow 0
         Index 1: data of tsg of flow 1
@@ -238,6 +238,12 @@ def get_data_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq):
 
     for i in range(0, len(graph_data)):
         graph_data[i].append([last_time, offsets[i]])
+
+    for i in range(0, len(connections[conn_id].flows)):
+        if is_reversed:
+            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_PACKS_D2S] = len(reinject_data[i])
+        else:
+            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_PACKS_S2D] = len(reinject_data[i])
 
     return graph_data + reinject_data, acks_data
 
@@ -401,7 +407,7 @@ def process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, m
                 # Collect begin time and seq num to plot graph starting at 0
                 try:
                     begin_time, begin_seq = get_begin_values(data[0])
-                    graph_data, acks_data = get_data_csv(csv_graph_tmp_dir, csv_fname, data, relative_start, begin_seq)
+                    graph_data, acks_data = get_data_csv(csv_graph_tmp_dir, csv_fname, data, relative_start, begin_seq, connections, conn_id, is_reversed)
                 except ValueError:
                     print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
 

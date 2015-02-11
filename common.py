@@ -175,6 +175,10 @@ PACKS_OOO_S2D = 'packets_outoforder_source2destination'
 PACKS_OOO_D2S = 'packets_outoforder_destination2source'
 # Congestion window graph data dictionary
 CWIN_DATA = 'congestion_window_data'
+# Reinjected packets from source to destination
+REINJ_ORIG_PACKS_S2D = 'reinjected_orig_packets_source2destination'
+# Reinjected packets from destination to source
+REINJ_ORIG_PACKS_D2S = 'reinjected_orig_packets_destination2source'
 
 # For aggregation
 S2D = 'source2destination'
