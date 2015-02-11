@@ -219,15 +219,22 @@ def bar_chart_bytes(log_file=sys.stdout):
         s2d = 0
         d2s = 0
         for conn_id, conn in data.iteritems():
+            reinject_bytes_s2d = 0
+            reinject_bytes_d2s = 0
             if isinstance(conn, mptcp.MPTCPConnection):
                 data = conn.attr
+                for flow_id, flow in conn.flows.iteritems():
+                    if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
+                        break
+                    reinject_bytes_s2d += flow.attr[co.REINJ_ORIG_BYTES_S2D]
+                    reinject_bytes_d2s += flow.attr[co.REINJ_ORIG_BYTES_D2S]
             elif isinstance(conn, tcp.TCPConnection):
                 data = conn.flow.attr
             here = [i for i in data.keys() if i in [co.BYTES_S2D, co.BYTES_D2S]]
             if not len(here) == 2:
                 continue
-            s2d += data[co.BYTES_S2D]
-            d2s += data[co.BYTES_D2S]
+            s2d += data[co.BYTES_S2D] - reinject_bytes_s2d
+            d2s += data[co.BYTES_D2S] - reinject_bytes_d2s
 
 
         if condition in aggl_res:
@@ -294,13 +301,26 @@ def bar_chart_bytes_s2d_interface(log_file=sys.stdout):
         condition = get_experiment_condition(fname)
         wifi_bytes = 0
         rmnet_bytes = 0
+        reinject_bytes_wifi = 0
+        reinject_bytes_rmnet = 0
         for conn_id, conn in data.iteritems():
             if not co.S2D in conn.attr.keys():
                 continue
+            if isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    if co.REINJ_ORIG_BYTES_S2D not in flow.attr:
+                        break
+                    if flow.attr[co.IF] == co.WIFI:
+                        reinject_bytes_wifi += flow.attr[co.REINJ_ORIG_BYTES_S2D]
+                    elif flow.attr[co.IF] == co.RMNET:
+                        reinject_bytes_rmnet += flow.attr[co.REINJ_ORIG_BYTES_S2D]
             if co.WIFI in conn.attr[co.S2D].keys():
                 wifi_bytes += conn.attr[co.S2D][co.WIFI]
             if co.RMNET in conn.attr[co.S2D].keys():
                 rmnet_bytes += conn.attr[co.S2D][co.RMNET]
+
+        wifi_bytes -= reinject_bytes_wifi
+        rmnet_bytes -= reinject_bytes_rmnet
 
         if condition in aggl_res:
             aggl_res[condition][wifi] += [(wifi_bytes, fname)]
@@ -329,13 +349,26 @@ def bar_chart_bytes_d2s_interface(log_file=sys.stdout):
         condition = get_experiment_condition(fname)
         wifi_bytes = 0
         rmnet_bytes = 0
+        reinject_bytes_wifi = 0
+        reinject_bytes_rmnet = 0
         for conn_id, conn in data.iteritems():
             if not co.D2S in conn.attr.keys():
                 continue
+            if isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    if co.REINJ_ORIG_BYTES_D2S not in flow.attr:
+                        break
+                    if flow.attr[co.IF] == co.WIFI:
+                        reinject_bytes_wifi += flow.attr[co.REINJ_ORIG_BYTES_D2S]
+                    if flow.attr[co.IF] == co.RMNET:
+                        reinject_bytes_rmnet += flow.attr[co.REINJ_ORIG_BYTES_D2S]
             if co.WIFI in conn.attr[co.D2S].keys():
                 wifi_bytes += conn.attr[co.D2S][co.WIFI]
             if co.RMNET in conn.attr[co.D2S].keys():
                 rmnet_bytes += conn.attr[co.D2S][co.RMNET]
+
+        wifi_bytes -= reinject_bytes_wifi
+        rmnet_bytes -= reinject_bytes_rmnet
 
         if condition in aggl_res:
             aggl_res[condition][wifi] += [(wifi_bytes, fname)]
