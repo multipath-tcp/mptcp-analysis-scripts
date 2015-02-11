@@ -578,6 +578,7 @@ def line_graph_aggl():
     xlabel = "Time [s]"
     ylabel = "Sequence number"
     title = "Agglomeration of all connections"
+    graph_fname_start = "mean_tsg_" + args.app + "_"
 
     count = {}
 
@@ -607,11 +608,11 @@ def line_graph_aggl():
                     final_list.append([point[0], point[1] / count[condition]])
                 aggl_res[condition][direction][interface] = final_list
 
-            if len(aggl_res[condition][direction].keys()) == 2:
-                co.plot_line_graph(aggl_res[condition][direction].values(), aggl_res[condition][direction].keys(), ['r', 'b'], xlabel, ylabel, title, "mean_tsg_" + args.app + "_" + condition + "_" + direction + ".pdf")
-            else:
-                # len == 1
-                co.plot_line_graph(aggl_res[condition][direction].values(), aggl_res[condition][direction].keys(), ['k'], xlabel, ylabel, title, "mean_tsg_" + args.app + "_" + condition + "_" + direction + ".pdf")
+            co.plot_line_graph(aggl_res[condition][direction].values(),
+                               aggl_res[condition][direction].keys(),
+                               ['r', 'b'] if len(aggl_res[condition][direction].keys()) == 2 else ['k'],
+                               xlabel, ylabel, title,
+                               os.path.join(sums_dir_exp, graph_fname_start + condition + "_" + direction + ".pdf"))
 
 
 millis = int(round(time.time() * 1000))
