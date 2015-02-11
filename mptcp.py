@@ -208,6 +208,7 @@ def get_data_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq, conn
     last_offset = 0
     offsets = {0: 0, 1:0, 2:0, 3:0}
     acks_offsets = {0: 0, 1:0, 2:0, 3:0}
+    reinject_offsets = {0: 0, 1:0, 2:0, 3:0}
     last_acks_offset = 0
     last_time = 0.0
 
@@ -231,6 +232,7 @@ def get_data_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq, conn
                 # Reinjected segment
                 graph_data[int(split_line[2]) - 1].append([time, seq_to_plot])
                 reinject_data[int(split_line[5]) - 1].append([time, seq_to_plot])
+                reinject_offsets[int(split_line[5]) - 1] += int(split_line[4]) - int(split_line[1])
 
             offsets[int(split_line[2]) - 1] = seq_to_plot
             last_offset = seq
@@ -242,8 +244,10 @@ def get_data_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq, conn
     for i in range(0, len(connections[conn_id].flows)):
         if is_reversed:
             connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_PACKS_D2S] = len(reinject_data[i])
+            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_BYTES_D2S] = reinject_offsets[i]
         else:
             connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_PACKS_S2D] = len(reinject_data[i])
+            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_BYTES_S2D] = reinject_offsets[i]
 
     return graph_data + reinject_data, acks_data
 

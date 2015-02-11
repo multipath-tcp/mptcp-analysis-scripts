@@ -179,6 +179,10 @@ CWIN_DATA = 'congestion_window_data'
 REINJ_ORIG_PACKS_S2D = 'reinjected_orig_packets_source2destination'
 # Reinjected packets from destination to source
 REINJ_ORIG_PACKS_D2S = 'reinjected_orig_packets_destination2source'
+# Reinjected bytes from source to destination
+REINJ_ORIG_BYTES_S2D = 'reinjected_orig_bytes_source2destination'
+# Reinjected bytes from destination to source
+REINJ_ORIG_BYTES_D2S = 'reinjected_orig_bytes_destination2source'
 
 # For aggregation
 S2D = 'source2destination'
