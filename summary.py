@@ -672,6 +672,8 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
     x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     xlabels = ['dailymotion', 'drive', 'dropbox', 'facebook', 'firefox', 'firefoxspdy', 'messenger', 'shazam', 'spotify', 'youtube']
 
+    marks = {co.S2D: 'o', co.D2S: '*'}
+
     y_datas = {co.S2D: {}, co.D2S: {}}
 
     color = {'both3': 'b', 'both4': 'g', 'both4TCD10m': 'r', 'both4TCD100m': 'c', 'both4TCD1000m': 'm', 'both4TCL5p': 'y', 'both4TCL5p100m': 'k', 'both4TCL15p': 'purple'}
@@ -702,9 +704,10 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
                         y_datas[co.S2D][condition][app][interface] -= flow.attr[co.REINJ_ORIG_BYTES_S2D]
                         y_datas[co.D2S][condition][app][interface] -= flow.attr[co.REINJ_ORIG_BYTES_D2S]
 
+    plt.figure()
+    plt.clf()
+
     for direction in y_datas.keys():
-        plt.figure()
-        plt.clf()
 
         for condition in y_datas[direction].keys():
             print(condition)
@@ -725,18 +728,20 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
             for i in reversed(to_pop):
                 loc_x.pop(i)
 
-            plt.plot(loc_x, points, color=color[cond], marker='o', label=cond)
+            small_dir = "s2d" if direction == co.S2D else "d2s" if direction == co.D2S else "?"
 
-        legend = plt.legend(loc='upper left', shadow=True, fontsize='x-large')
-        legend.get_frame().set_facecolor('#00FFCC')
+            plt.plot(loc_x, points, marks[direction], color=color[cond], label=small_dir+"_"+cond)
 
-        # You can specify a rotation for the tick labels in degrees or with keywords.
-        plt.xticks(x, xlabels, rotation='vertical')
-        # Pad margins so that markers don't get clipped by the axes
-        plt.margins(0.2)
-        # Tweak spacing to prevent clipping of tick-labels
-        plt.subplots_adjust(bottom=0.2)
-        plt.savefig("test_" + direction + ".pdf")
+    legend = plt.legend(loc='upper left', shadow=True, fontsize='x-small')
+    legend.get_frame().set_facecolor('#00FFCC')
+
+    # You can specify a rotation for the tick labels in degrees or with keywords.
+    plt.xticks(x, xlabels, rotation='vertical')
+    # Pad margins so that markers don't get clipped by the axes
+    plt.margins(0.2)
+    # Tweak spacing to prevent clipping of tick-labels
+    plt.subplots_adjust(bottom=0.2)
+    plt.savefig("test.pdf")
 
 
 millis = int(round(time.time() * 1000))
