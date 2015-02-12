@@ -846,6 +846,9 @@ def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
 
     for fname, conns in connections.iteritems():
         condition = get_experiment_condition(fname)
+        if not 'both' in condition or not 'mptcp' in condition:
+            # No point to do this for one-flow connections
+            continue
         app = get_app_name(fname)
         if condition not in data[co.S2D].keys():
             data[co.S2D][condition] = {}
@@ -880,6 +883,64 @@ def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
 
             plt.savefig("fog_bytes_" + direction + "_" + condition + ".pdf")
 
+
+def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
+    data = {co.S2D: {}, co.D2S: {}}
+    color = {'dailymotion': 'b', 'drive': 'g', 'dropbox': 'r', 'facebook': 'c', 'firefox': 'm', 'firefoxspdy': 'y', 'messenger': 'k', 'shazam':'purple', 'spotify':'brown', 'youtube': 'orange'}
+
+    for fname, conns in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if not 'both' in condition or not 'mptcp' in condition:
+            # No point to do this for one-flow connections
+            continue
+        app = get_app_name(fname)
+        if condition not in data[co.S2D].keys():
+            data[co.S2D][condition] = {}
+            data[co.D2S][condition] = {}
+        if app not in data[co.S2D][condition].keys():
+            data[co.S2D][condition][app] = []
+            data[co.D2S][condition][app] = []
+
+        for conn_id, conn in conns.iteritems():
+            # conn is then a MPTCPConnection, be still better to be sure of
+            if isinstance(conn, mptcp.MPTCPConnection):
+                packs = {co.S2D: {co.RMNET:0, co.WIFI:0}, co.D2S: {co.RMNET:0, co.WIFI:0}}
+                for flow_id, flow in conn.flows.iteritems():
+                    if not co.PACKS_S2D in flow.attr or not co.PACKS_D2S in flow.attr:
+                        break
+                    interface = flow.attr[co.IF]
+                    packs[co.S2D][interface] += flow.attr[co.PACKS_S2D]
+                    packs[co.D2S][interface] += flow.attr[co.PACKS_D2S]
+
+                if packs[co.S2D][co.RMNET] == 0 and packs[co.S2D][co.WIFI] == 0 and packs[co.D2S][co.RMNET] == 0 and packs[co.D2S][co.WIFI] == 0:
+                    continue
+
+                data[co.S2D][condition][app].append([packs[co.S2D][co.WIFI], packs[co.S2D][co.RMNET]])
+                data[co.D2S][condition][app].append([packs[co.D2S][co.WIFI], packs[co.D2S][co.RMNET]])
+
+
+    for direction, data_dir in data.iteritems():
+        for condition, data_cond in data_dir.iteritems():
+            plt.figure()
+            plt.clf()
+
+            fig, ax = plt.subplots()
+
+            for app_name, data_app in data_cond.iteritems():
+                wifi_val = [x[0] for x in data_app]
+                rmnet_val = [x[1] for x in data_app]
+                ax.plot(wifi_val, rmnet_val, 'o', label=app_name, color=color[app_name])
+
+            legend = ax.legend(loc='upper left', shadow=True, fontsize='x-small')
+            legend.get_frame().set_facecolor('#00FFCC')
+            plt.xlabel("Packets on Wifi", fontsize=18)
+            plt.ylabel("Packets on rmnet", fontsize=16)
+            ax.set_yscale('symlog')
+            ax.set_xscale('symlog')
+
+            plt.savefig("fog_packs_" + direction + "_" + condition + ".pdf")
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open('log_summary_' + args.app + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt', 'w')
@@ -912,5 +973,6 @@ else:
     percentage_rmnet_by_app_with_conditions(log_file=log_file)
     nb_conns_by_app(log_file=log_file)
     fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=log_file)
+    fog_plot_with_packs_wifi_rmnet_per_condition(log_file=log_file)
 log_file.close()
 print("End of summary")
