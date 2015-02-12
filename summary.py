@@ -31,6 +31,7 @@ import common as co
 import matplotlib
 # Do not use any X11 backend
 matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import mptcp
 import os
 import os.path
@@ -96,16 +97,35 @@ if args.prot or args.cond:
 ##################################################
 
 
+def get_app_name_index(fname):
+    """ Return the app name index in fname """
+    dash_index = fname.index("-")
+    us_1_index = fname[:dash_index].rindex("_")
+    us_2_index = fname[:us_1_index].rindex("_")
+    us_3_index = fname[:us_2_index].rindex("_")
+    return us_3_index + 1, us_2_index
+
 def get_experiment_condition(fname):
     """ Return a string of the format protocol_condition (e.g. tcp_both4TCD100m) """
-    app_index = fname.index(args.app)
+    app_index, end_app_index = get_app_name_index(fname)
     dash_index = fname.index("-")
     end_index = fname[:dash_index].rindex("_")
-    return fname[:app_index] + fname[app_index + len(args.app) + 1:end_index]
+    return fname[:app_index] + fname[end_app_index + 1:end_index]
+
+
+def get_app_name(fname):
+    """ Return a string of the name of the application """
+    dash_index = fname.index("-")
+    us_1_index = fname[:dash_index].rindex("_")
+    us_2_index = fname[:us_1_index].rindex("_")
+    us_3_index = fname[:us_2_index].rindex("_")
+    return fname[us_3_index + 1:us_2_index]
 
 
 def is_app_name(fname, app_name):
-    """ Return a string of the name of the application """
+    """ Return if string of the name of the application is app_name """
+    if not args.app:
+        return True
     if app_name in fname:
         app_index = fname.index(app_name)
         end_index = fname[app_index:].index("_")
@@ -648,29 +668,106 @@ def line_graph_aggl():
                                os.path.join(sums_dir_exp, graph_fname_start + condition + "_" + direction + ".pdf"))
 
 
+def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
+    x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    xlabels = ['dailymotion', 'drive', 'dropbox', 'facebook', 'firefox', 'firefoxspdy', 'messenger', 'shazam', 'spotify', 'youtube']
+
+    y_datas = {co.S2D: {}, co.D2S: {}}
+
+    color = {'both3': 'b', 'both4': 'g', 'both4TCD10m': 'r', 'both4TCD100m': 'c', 'both4TCD1000m': 'm', 'both4TCL5p': 'y', 'both4TCL5p100m': 'k', 'both4TCL15p': 'purple'}
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if 'both' in condition and 'mptcp_fm_' in condition:
+            app = get_app_name(fname)
+            for conn_id, conn in data.iteritems():
+                if condition not in y_datas[co.S2D]:
+                    for direction in y_datas.keys():
+                        y_datas[direction][condition] = {'dailymotion': {}, 'drive': {}, 'dropbox': {}, 'facebook': {}, 'firefox': {}, 'firefoxspdy': {}, 'messenger': {}, 'shazam':{}, 'spotify':{}, 'youtube': {}}
+                        for app_name in y_datas[direction][condition].keys():
+                            y_datas[direction][condition][app_name] = {co.WIFI: 0, co.RMNET: 0}
+
+                if isinstance(conn, tcp.TCPConnection):
+                    interface = conn.flow.attr[co.IF]
+                    y_datas[co.S2D][condition][app][interface] += conn.attr[co.BYTES_S2D]
+                    y_datas[co.D2S][condition][app][interface] += conn.attr[co.BYTES_D2S]
+                elif isinstance(conn, mptcp.MPTCPConnection):
+                    for interface in conn.attr[co.S2D]:
+                        y_datas[co.S2D][condition][app][interface] += conn.attr[co.S2D][interface]
+                    for interface in conn.attr[co.D2S]:
+                        y_datas[co.D2S][condition][app][interface] += conn.attr[co.D2S][interface]
+                    for flow_id, flow in conn.flows.iteritems():
+                        if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
+                            break
+                        interface = flow.attr[co.IF]
+                        y_datas[co.S2D][condition][app][interface] -= flow.attr[co.REINJ_ORIG_BYTES_S2D]
+                        y_datas[co.D2S][condition][app][interface] -= flow.attr[co.REINJ_ORIG_BYTES_D2S]
+
+    for direction in y_datas.keys():
+        plt.figure()
+        plt.clf()
+
+        for condition in y_datas[direction].keys():
+            print(condition)
+            points = []
+            loc_x = list(x)
+            # Suppose condition starts with mptcp_fm_
+            cond = condition[9:]
+            count = 0
+            to_pop = []
+            for app in xlabels:
+                if y_datas[direction][condition][app][co.RMNET] == 0 and y_datas[direction][condition][app][co.WIFI] == 0:
+                    to_pop.append(count)
+                else:
+                    point = (y_datas[direction][condition][app][co.RMNET] + 0.) / (y_datas[direction][condition][app][co.RMNET] + y_datas[direction][condition][app][co.WIFI])
+                    points.append(point)
+                count += 1
+
+            for i in reversed(to_pop):
+                loc_x.pop(i)
+
+            plt.plot(loc_x, points, color=color[cond], marker='o', label=cond)
+
+        legend = plt.legend(loc='upper left', shadow=True, fontsize='x-large')
+        legend.get_frame().set_facecolor('#00FFCC')
+
+        # You can specify a rotation for the tick labels in degrees or with keywords.
+        plt.xticks(x, xlabels, rotation='vertical')
+        # Pad margins so that markers don't get clipped by the axes
+        plt.margins(0.2)
+        # Tweak spacing to prevent clipping of tick-labels
+        plt.subplots_adjust(bottom=0.2)
+        plt.savefig("test_" + direction + ".pdf")
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open('log_summary_' + args.app + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt', 'w')
-print("Remove option is " + str(args.remove), file=log_file)
-print("Plot count", file=log_file)
-bar_chart_count_connections(log_file=log_file)
-print("Plot bytes", file=log_file)
-bar_chart_bytes(log_file=log_file)
-print("Plot duration", file=log_file)
-bar_chart_duration(log_file=log_file)
-print("Plot bytes s2d", file=log_file)
-bar_chart_bytes_s2d_interface(log_file=log_file)
-print("Plot bytes d2s", file=log_file)
-bar_chart_bytes_d2s_interface(log_file=log_file)
-print("Plot duration all", file=log_file)
-bar_chart_duration_all(log_file=log_file)
-print("Plot packs retrans", file=log_file)
-bar_chart_packs_retrans(log_file=log_file)
-print("Plot packs retrans s2d", file=log_file)
-bar_chart_packs_retrans_s2d_interface(log_file=log_file)
-print("Plot packs retrans d2s", file=log_file)
-bar_chart_packs_retrans_d2s_interface(log_file=log_file)
-print("Plot line graph aggl", file=log_file)
-line_graph_aggl()
+if args.app:
+    print("Remove option is " + str(args.remove), file=log_file)
+    print("Plot count", file=log_file)
+    bar_chart_count_connections(log_file=log_file)
+    print("Plot bytes", file=log_file)
+    bar_chart_bytes(log_file=log_file)
+    print("Plot duration", file=log_file)
+    bar_chart_duration(log_file=log_file)
+    print("Plot bytes s2d", file=log_file)
+    bar_chart_bytes_s2d_interface(log_file=log_file)
+    print("Plot bytes d2s", file=log_file)
+    bar_chart_bytes_d2s_interface(log_file=log_file)
+    print("Plot duration all", file=log_file)
+    bar_chart_duration_all(log_file=log_file)
+    print("Plot packs retrans", file=log_file)
+    bar_chart_packs_retrans(log_file=log_file)
+    print("Plot packs retrans s2d", file=log_file)
+    bar_chart_packs_retrans_s2d_interface(log_file=log_file)
+    print("Plot packs retrans d2s", file=log_file)
+    bar_chart_packs_retrans_d2s_interface(log_file=log_file)
+    print("Plot line graph aggl", file=log_file)
+    line_graph_aggl()
+elif args.cond:
+    print("To be implemented after", file=log_file)
+else:
+    print("Work in progress")
+    percentage_rmnet_by_app_with_conditions(log_file=log_file)
 log_file.close()
 print("End of summary")
