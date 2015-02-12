@@ -751,7 +751,11 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
     plt.margins(0.2)
     # Tweak spacing to prevent clipping of tick-labels
     plt.subplots_adjust(bottom=0.2)
-    plt.savefig("summary_percentage_bytes_rmnet.pdf")
+
+    graph_fname = "summary_percentage_bytes_rmnet" + start_time + '_' + stop_time + ".pdf"
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+    plt.savefig(graph_full_path)
 
 
     plt.figure()
@@ -791,7 +795,10 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
     plt.margins(0.2)
     # Tweak spacing to prevent clipping of tick-labels
     plt.subplots_adjust(bottom=0.2)
-    plt.savefig("summary_percentage_packs_rmnet.pdf")
+    graph_fname = "summary_percentage_packs_rmnet" + start_time + '_' + stop_time + ".pdf"
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+    plt.savefig(graph_full_path)
 
 
 def nb_conns_by_app(log_file=sys.stdout):
@@ -837,7 +844,10 @@ def nb_conns_by_app(log_file=sys.stdout):
         plt.margins(0.2)
         # Tweak spacing to prevent clipping of tick-labels
         plt.subplots_adjust(bottom=0.2)
-        plt.savefig("summary_connection_" + condition + ".pdf")
+        graph_fname = "summary_connection_" + condition + start_time + '_' + stop_time + ".pdf"
+        graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+        plt.savefig(graph_full_path)
 
 
 def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
@@ -881,7 +891,10 @@ def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
             ax.set_yscale('symlog')
             ax.set_xscale('symlog')
 
-            plt.savefig("fog_bytes_" + direction + "_" + condition + ".pdf")
+            graph_fname = "fog_bytes_" + direction + "_" + condition + "_" + start_time + '_' + stop_time + ".pdf"
+            graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+            plt.savefig(graph_full_path)
 
 
 def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
@@ -938,7 +951,10 @@ def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
             ax.set_yscale('symlog')
             ax.set_xscale('symlog')
 
-            plt.savefig("fog_packs_" + direction + "_" + condition + ".pdf")
+            graph_fname = "fog_packs_" + direction + "_" + condition + "_" + start_time + '_' + stop_time + ".pdf"
+            graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+            plt.savefig(graph_full_path)
 
 
 millis = int(round(time.time() * 1000))
@@ -969,7 +985,7 @@ if args.app:
 elif args.cond:
     print("To be implemented after", file=log_file)
 else:
-    print("Work in progress")
+    print("Summary plots", file=log_file)
     percentage_rmnet_by_app_with_conditions(log_file=log_file)
     nb_conns_by_app(log_file=log_file)
     fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=log_file)
