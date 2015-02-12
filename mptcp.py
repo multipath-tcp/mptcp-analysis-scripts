@@ -281,6 +281,10 @@ def generate_title(csv_fname, connections):
 def create_graph_csv(data_plot, acks_plot, pcap_fname, csv_fname, graph_dir_exp, connections):
     """ Generate pdf for the csv file of the pcap file, if interesting
     """
+    # See if there is a graph to plot (IOError or empty dataset)
+    if not data_plot or not acks_plot:
+        return
+
     # First see if useful to show the graph
     if not interesting_graph(csv_fname, connections):
         return
