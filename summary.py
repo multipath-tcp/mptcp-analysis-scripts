@@ -33,6 +33,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import mptcp
+import numpy as np
 import os
 import os.path
 import pickle
@@ -793,6 +794,51 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
     plt.savefig("summary_percentage_packs_rmnet.pdf")
 
 
+def nb_conns_by_app(log_file=sys.stdout):
+    xlabels = ['dailymotion', 'drive', 'dropbox', 'facebook', 'firefox', 'firefoxspdy', 'messenger', 'shazam', 'spotify', 'youtube']
+    data = {}
+
+    for fname, conns in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        app = get_app_name(fname)
+        if condition not in data.keys():
+            data[condition] = {}
+        if app not in data[condition].keys():
+            data[condition][app] = []
+        data[condition][app].append(len(conns))
+
+    for condition, data_app in data.iteritems():
+        to_pop = []
+        to_plot_mean = []
+        to_plot_std = []
+        xlabels_loc = list(xlabels)
+
+        count = 0
+        for app_name in xlabels_loc:
+            if app_name in data[condition].keys():
+                np_array = np.array(data[condition][app_name])
+                to_plot_mean.append(np_array.mean())
+                to_plot_std.append(np_array.std())
+            else:
+                to_pop.append(count)
+            count += 1
+
+        for i in reversed(to_pop):
+            xlabels_loc.pop(i)
+
+
+        plt.figure()
+        width = 0.35
+        ind = np.arange(len(to_plot_mean))
+        plt.bar(ind, to_plot_mean, width, yerr=to_plot_std, ecolor="r")
+        plt.xticks(ind + width / 2, xlabels_loc, rotation='vertical')
+        # Pad margins so that markers don't get clipped by the axes
+        plt.margins(0.2)
+        # Tweak spacing to prevent clipping of tick-labels
+        plt.subplots_adjust(bottom=0.2)
+        plt.savefig("summary_connection_" + condition + ".pdf")
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open('log_summary_' + args.app + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt', 'w')
@@ -823,5 +869,6 @@ elif args.cond:
 else:
     print("Work in progress")
     percentage_rmnet_by_app_with_conditions(log_file=log_file)
+    nb_conns_by_app(log_file=log_file)
 log_file.close()
 print("End of summary")
