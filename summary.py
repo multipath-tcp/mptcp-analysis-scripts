@@ -840,6 +840,46 @@ def nb_conns_by_app(log_file=sys.stdout):
         plt.savefig("summary_connection_" + condition + ".pdf")
 
 
+def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
+    data = {co.S2D: {}, co.D2S: {}}
+    color = {'dailymotion': 'b', 'drive': 'g', 'dropbox': 'r', 'facebook': 'c', 'firefox': 'm', 'firefoxspdy': 'y', 'messenger': 'k', 'shazam':'purple', 'spotify':'brown', 'youtube': 'orange'}
+
+    for fname, conns in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        app = get_app_name(fname)
+        if condition not in data[co.S2D].keys():
+            data[co.S2D][condition] = {}
+            data[co.D2S][condition] = {}
+        if app not in data[co.S2D][condition].keys():
+            data[co.S2D][condition][app] = []
+            data[co.D2S][condition][app] = []
+
+        for conn_id, conn in conns.iteritems():
+            data[co.S2D][condition][app].append([conn.attr[co.S2D].get(co.WIFI, 0), conn.attr[co.S2D].get(co.RMNET, 0)])
+            data[co.D2S][condition][app].append([conn.attr[co.D2S].get(co.WIFI, 0), conn.attr[co.D2S].get(co.RMNET, 0)])
+
+
+    for direction, data_dir in data.iteritems():
+        for condition, data_cond in data_dir.iteritems():
+            plt.figure()
+            plt.clf()
+
+            fig, ax = plt.subplots()
+
+            for app_name, data_app in data_cond.iteritems():
+                wifi_val = [x[0] for x in data_app]
+                rmnet_val = [x[1] for x in data_app]
+                ax.plot(wifi_val, rmnet_val, 'o', label=app_name, color=color[app_name])
+
+            legend = ax.legend(loc='upper left', shadow=True, fontsize='x-small')
+            legend.get_frame().set_facecolor('#00FFCC')
+            plt.xlabel("Bytes on Wifi", fontsize=18)
+            plt.ylabel("Bytes on rmnet", fontsize=16)
+            ax.set_yscale('symlog')
+            ax.set_xscale('symlog')
+
+            plt.savefig("fog_bytes_" + direction + "_" + condition + ".pdf")
+
 millis = int(round(time.time() * 1000))
 
 log_file = open('log_summary_' + args.app + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt', 'w')
@@ -871,5 +911,6 @@ else:
     print("Work in progress")
     percentage_rmnet_by_app_with_conditions(log_file=log_file)
     nb_conns_by_app(log_file=log_file)
+    fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=log_file)
 log_file.close()
 print("End of summary")
