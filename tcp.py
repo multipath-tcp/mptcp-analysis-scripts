@@ -489,6 +489,8 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections):
     if conn_id:
         mptcp_connections[conn_id].flows[flow_id].attr[co.START] = connection.flow.attr[co.START]
         mptcp_connections[conn_id].flows[flow_id].attr[co.DURATION] = connection.flow.attr[co.DURATION]
+        mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_S2D] = connection.flow.attr[co.PACKS_S2D]
+        mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_D2S] = connection.flow.attr[co.PACKS_D2S]
         mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_RETRANS_S2D] = connection.flow.attr[co.PACKS_RETRANS_S2D]
         mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_RETRANS_D2S] = connection.flow.attr[co.PACKS_RETRANS_D2S]
         mptcp_connections[conn_id].flows[flow_id].attr[co.BYTES_RETRANS_S2D] = connection.flow.attr[co.BYTES_RETRANS_S2D]
