@@ -674,7 +674,8 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
 
     marks = {co.S2D: 'o', co.D2S: '*'}
 
-    y_datas = {co.S2D: {}, co.D2S: {}}
+    y_datas_bytes = {co.S2D: {}, co.D2S: {}}
+    y_datas_packs = {co.S2D: {}, co.D2S: {}}
 
     color = {'both3': 'b', 'both4': 'g', 'both4TCD10m': 'r', 'both4TCD100m': 'c', 'both4TCD1000m': 'm', 'both4TCL5p': 'y', 'both4TCL5p100m': 'k', 'both4TCL15p': 'purple'}
     for fname, data in connections.iteritems():
@@ -682,35 +683,42 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
         if 'both' in condition and 'mptcp_fm_' in condition:
             app = get_app_name(fname)
             for conn_id, conn in data.iteritems():
-                if condition not in y_datas[co.S2D]:
-                    for direction in y_datas.keys():
-                        y_datas[direction][condition] = {'dailymotion': {}, 'drive': {}, 'dropbox': {}, 'facebook': {}, 'firefox': {}, 'firefoxspdy': {}, 'messenger': {}, 'shazam':{}, 'spotify':{}, 'youtube': {}}
-                        for app_name in y_datas[direction][condition].keys():
-                            y_datas[direction][condition][app_name] = {co.WIFI: 0, co.RMNET: 0}
+                if condition not in y_datas_bytes[co.S2D]:
+                    for direction in y_datas_bytes.keys():
+                        y_datas_bytes[direction][condition] = {'dailymotion': {}, 'drive': {}, 'dropbox': {}, 'facebook': {}, 'firefox': {}, 'firefoxspdy': {}, 'messenger': {}, 'shazam':{}, 'spotify':{}, 'youtube': {}}
+                        y_datas_packs[direction][condition] = {'dailymotion': {}, 'drive': {}, 'dropbox': {}, 'facebook': {}, 'firefox': {}, 'firefoxspdy': {}, 'messenger': {}, 'shazam':{}, 'spotify':{}, 'youtube': {}}
+                        for app_name in y_datas_bytes[direction][condition].keys():
+                            y_datas_bytes[direction][condition][app_name] = {co.WIFI: 0, co.RMNET: 0}
+                            y_datas_packs[direction][condition][app_name] = {co.WIFI: 0, co.RMNET: 0}
 
                 if isinstance(conn, tcp.TCPConnection):
                     interface = conn.flow.attr[co.IF]
-                    y_datas[co.S2D][condition][app][interface] += conn.attr[co.BYTES_S2D]
-                    y_datas[co.D2S][condition][app][interface] += conn.attr[co.BYTES_D2S]
+                    y_datas_bytes[co.S2D][condition][app][interface] += conn.attr[co.BYTES_S2D]
+                    y_datas_bytes[co.D2S][condition][app][interface] += conn.attr[co.BYTES_D2S]
+                    if co.PACKS_D2S in conn.attr.keys() and co.PACKS_S2D in conn.attr.keys():
+                        y_datas_packs[co.S2D][condition][app][interface] += conn.attr[co.PACKS_S2D]
+                        y_datas_packs[co.D2S][condition][app][interface] += conn.attr[co.PACKS_D2S]
                 elif isinstance(conn, mptcp.MPTCPConnection):
                     for interface in conn.attr[co.S2D]:
-                        y_datas[co.S2D][condition][app][interface] += conn.attr[co.S2D][interface]
+                        y_datas_bytes[co.S2D][condition][app][interface] += conn.attr[co.S2D][interface]
                     for interface in conn.attr[co.D2S]:
-                        y_datas[co.D2S][condition][app][interface] += conn.attr[co.D2S][interface]
+                        y_datas_bytes[co.D2S][condition][app][interface] += conn.attr[co.D2S][interface]
                     for flow_id, flow in conn.flows.iteritems():
                         if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
                             break
                         interface = flow.attr[co.IF]
-                        y_datas[co.S2D][condition][app][interface] -= flow.attr[co.REINJ_ORIG_BYTES_S2D]
-                        y_datas[co.D2S][condition][app][interface] -= flow.attr[co.REINJ_ORIG_BYTES_D2S]
+                        y_datas_bytes[co.S2D][condition][app][interface] -= flow.attr[co.REINJ_ORIG_BYTES_S2D]
+                        y_datas_bytes[co.D2S][condition][app][interface] -= flow.attr[co.REINJ_ORIG_BYTES_D2S]
+                        if co.PACKS_D2S in flow.attr.keys() and co.PACKS_S2D in flow.attr.keys():
+                            y_datas_packs[co.S2D][condition][app][interface] += flow.attr[co.PACKS_S2D]
+                            y_datas_packs[co.D2S][condition][app][interface] += flow.attr[co.PACKS_D2S]
 
     plt.figure()
     plt.clf()
 
-    for direction in y_datas.keys():
+    for direction in y_datas_bytes.keys():
 
-        for condition in y_datas[direction].keys():
-            print(condition)
+        for condition in y_datas_bytes[direction].keys():
             points = []
             loc_x = list(x)
             # Suppose condition starts with mptcp_fm_
@@ -718,10 +726,10 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
             count = 0
             to_pop = []
             for app in xlabels:
-                if y_datas[direction][condition][app][co.RMNET] == 0 and y_datas[direction][condition][app][co.WIFI] == 0:
+                if y_datas_bytes[direction][condition][app][co.RMNET] == 0 and y_datas_bytes[direction][condition][app][co.WIFI] == 0:
                     to_pop.append(count)
                 else:
-                    point = (y_datas[direction][condition][app][co.RMNET] + 0.) / (y_datas[direction][condition][app][co.RMNET] + y_datas[direction][condition][app][co.WIFI])
+                    point = (y_datas_bytes[direction][condition][app][co.RMNET] + 0.) / (y_datas_bytes[direction][condition][app][co.RMNET] + y_datas_bytes[direction][condition][app][co.WIFI])
                     points.append(point)
                 count += 1
 
@@ -737,11 +745,52 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
 
     # You can specify a rotation for the tick labels in degrees or with keywords.
     plt.xticks(x, xlabels, rotation='vertical')
+    plt.ylabel("Percentage of bytes on rmnet", fontsize=16)
     # Pad margins so that markers don't get clipped by the axes
     plt.margins(0.2)
     # Tweak spacing to prevent clipping of tick-labels
     plt.subplots_adjust(bottom=0.2)
-    plt.savefig("test.pdf")
+    plt.savefig("summary_percentage_bytes_rmnet.pdf")
+
+
+    plt.figure()
+    plt.clf()
+
+    for direction in y_datas_packs.keys():
+
+        for condition in y_datas_packs[direction].keys():
+            points = []
+            loc_x = list(x)
+            # Suppose condition starts with mptcp_fm_
+            cond = condition[9:]
+            count = 0
+            to_pop = []
+            for app in xlabels:
+                if y_datas_packs[direction][condition][app][co.RMNET] == 0 and y_datas_packs[direction][condition][app][co.WIFI] == 0:
+                    to_pop.append(count)
+                else:
+                    point = (y_datas_packs[direction][condition][app][co.RMNET] + 0.) / (y_datas_packs[direction][condition][app][co.RMNET] + y_datas_packs[direction][condition][app][co.WIFI])
+                    points.append(point)
+                count += 1
+
+            for i in reversed(to_pop):
+                loc_x.pop(i)
+
+            small_dir = "s2d" if direction == co.S2D else "d2s" if direction == co.D2S else "?"
+
+            plt.plot(loc_x, points, marks[direction], color=color[cond], label=small_dir+"_"+cond)
+
+    legend = plt.legend(loc='upper left', shadow=True, fontsize='x-small')
+    legend.get_frame().set_facecolor('#00FFCC')
+
+    # You can specify a rotation for the tick labels in degrees or with keywords.
+    plt.xticks(x, xlabels, rotation='vertical')
+    plt.ylabel("Percentage of packets on rmnet", fontsize=16)
+    # Pad margins so that markers don't get clipped by the axes
+    plt.margins(0.2)
+    # Tweak spacing to prevent clipping of tick-labels
+    plt.subplots_adjust(bottom=0.2)
+    plt.savefig("summary_percentage_packs_rmnet.pdf")
 
 
 millis = int(round(time.time() * 1000))
