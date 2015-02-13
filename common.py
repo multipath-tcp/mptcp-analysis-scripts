@@ -116,11 +116,11 @@ class BasicConnection(object):
 ##################################################
 
 # The default stat directory
-DEF_STAT_DIR = 'stats'
+DEF_STAT_DIR = 'stats_lo'
 # The default aggl directory
-DEF_AGGL_DIR = 'aggls'
+DEF_AGGL_DIR = 'aggls_lo'
 # The default sums directory
-DEF_SUMS_DIR = 'sums'
+DEF_SUMS_DIR = 'sums_lo'
 
 # The time sequence and throughput graphs directory
 TSG_THGPT_DIR = 'tsg_thgpt'

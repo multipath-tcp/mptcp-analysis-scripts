@@ -49,12 +49,12 @@ from multiprocessing import Process
 ##################################################
 
 # The default input directory (with .pcap and .pcap.gz files)
-DEF_IN_DIR = 'input'
+DEF_IN_DIR = 'input_lo'
 # The default traces directory (kind of temparary directory, where traces
 # will be stored)
-DEF_TRACE_DIR = 'traces'
+DEF_TRACE_DIR = 'traces_lo'
 # The default graph directory (output directory for graphes)
-DEF_GRAPH_DIR = 'graphs'
+DEF_GRAPH_DIR = 'graphs_lo'
 # The default number of threads
 DEF_NB_THREADS = 1
 
