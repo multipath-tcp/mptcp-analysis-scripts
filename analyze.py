@@ -49,12 +49,12 @@ from multiprocessing import Process
 ##################################################
 
 # The default input directory (with .pcap and .pcap.gz files)
-DEF_IN_DIR = 'input_lo'
+DEF_IN_DIR = 'input'
 # The default traces directory (kind of temparary directory, where traces
 # will be stored)
-DEF_TRACE_DIR = 'traces_lo'
+DEF_TRACE_DIR = 'traces'
 # The default graph directory (output directory for graphes)
-DEF_GRAPH_DIR = 'graphs_lo'
+DEF_GRAPH_DIR = 'graphs'
 # The default number of threads
 DEF_NB_THREADS = 1
 
@@ -97,12 +97,14 @@ parser.add_argument("-b",
 args = parser.parse_args()
 
 in_dir_exp = os.path.abspath(os.path.expanduser(args.input))
-trace_dir_exp = os.path.abspath(os.path.expanduser(args.trace))
-graph_dir_exp = os.path.abspath(os.path.expanduser(args.graph))
-stat_dir_exp = os.path.abspath(os.path.expanduser(args.stat))
-aggl_dir_exp = os.path.abspath(os.path.expanduser(args.aggl))
+# ~/graphs -> /home/mptcp/graphs_lo ; ../graphs/ -> /home/mptcp/graphs_lo
+trace_dir_exp = co.append_to_dir(args.trace, args.pcap)
+graph_dir_exp = co.append_to_dir(args.graph, args.pcap)
+stat_dir_exp  = co.append_to_dir(args.stat,  args.pcap)
+aggl_dir_exp  = co.append_to_dir(args.aggl,  args.pcap)
 
 if os.path.isdir(in_dir_exp):
+    # add the basename of the input dir
     base_dir = os.path.basename(in_dir_exp)
     trace_dir_exp = os.path.join(trace_dir_exp, base_dir)
     graph_dir_exp = os.path.join(graph_dir_exp, base_dir)

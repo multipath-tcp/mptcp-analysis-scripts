@@ -232,6 +232,13 @@ def check_directory_exists(directory):
     else:
         os.makedirs(directory)
 
+def get_dir_from_arg(directory, end=''):
+    """ Get the abspath of the dir given by the user and append 'end' """
+    if end.endswith('.'):
+        end = end[:-1]
+    if directory.endswith('/'):
+        directory = directory[:-1]
+    return os.path.abspath(os.path.expanduser(directory)) + end
 
 def is_number(s):
     """ Check if the str s is a number """
