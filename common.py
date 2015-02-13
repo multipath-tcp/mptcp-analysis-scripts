@@ -227,7 +227,8 @@ def check_directory_exists(directory):
     """
     if os.path.exists(directory):
         if not os.path.isdir(directory):
-            print(directory + " is a file: stop")
+            print(directory + " is a file: stop", file=sys.stderr)
+            sys.exit(1)
     else:
         os.makedirs(directory)
 
