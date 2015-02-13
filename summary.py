@@ -164,7 +164,8 @@ def fetch_data(dir_exp):
     return dico
 
 connections = fetch_data(stat_dir_exp)
-aggl_graphs = fetch_data(aggl_dir_exp)
+if args.app:
+    aggl_graphs = fetch_data(aggl_dir_exp)
 
 ##################################################
 ##               PLOTTING RESULTS               ##
@@ -678,7 +679,7 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
     y_datas_bytes = {co.S2D: {}, co.D2S: {}}
     y_datas_packs = {co.S2D: {}, co.D2S: {}}
 
-    color = {'both3': 'b', 'both4': 'g', 'both4TCD10m': 'r', 'both4TCD100m': 'c', 'both4TCD1000m': 'm', 'both4TCL5p': 'y', 'both4TCL5p100m': 'k', 'both4TCL15p': 'purple'}
+    color = {'both3': 'b', 'both4': 'g', 'both4TCD10m': 'r', 'both4TCD100m': 'c', 'both4TCD1000m': 'm', 'both4TCL5p': 'y', 'both4TCL5pD100m': 'k', 'both4TCL15p': 'purple'}
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         if 'both' in condition and 'mptcp_fm_' in condition:
@@ -717,6 +718,8 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
     plt.figure()
     plt.clf()
 
+    fig, ax = plt.subplots()
+
     for direction in y_datas_bytes.keys():
 
         for condition in y_datas_bytes[direction].keys():
@@ -739,10 +742,17 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
 
             small_dir = "s2d" if direction == co.S2D else "d2s" if direction == co.D2S else "?"
 
-            plt.plot(loc_x, points, marks[direction], color=color[cond], label=small_dir+"_"+cond)
+            ax.plot(loc_x, points, marks[direction], color=color[cond], label=small_dir+"_"+cond)
 
-    legend = plt.legend(loc='upper left', shadow=True, fontsize='x-small')
-    legend.get_frame().set_facecolor('#00FFCC')
+    # legend = plt.legend(loc='upper left', shadow=True, fontsize='x-small')
+    # legend.get_frame().set_facecolor('#00FFCC')
+
+    # Shrink current axis by 20%
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+    # Put a legend to the right of the current axis
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small')
 
     # You can specify a rotation for the tick labels in degrees or with keywords.
     plt.xticks(x, xlabels, rotation='vertical')
@@ -757,9 +767,11 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
 
     plt.savefig(graph_full_path)
 
+    plt.close()
 
     plt.figure()
     plt.clf()
+    fig, ax = plt.subplots()
 
     for direction in y_datas_packs.keys():
 
@@ -783,10 +795,14 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
 
             small_dir = "s2d" if direction == co.S2D else "d2s" if direction == co.D2S else "?"
 
-            plt.plot(loc_x, points, marks[direction], color=color[cond], label=small_dir+"_"+cond)
+            ax.plot(loc_x, points, marks[direction], color=color[cond], label=small_dir+"_"+cond)
 
-    legend = plt.legend(loc='upper left', shadow=True, fontsize='x-small')
-    legend.get_frame().set_facecolor('#00FFCC')
+    # Shrink current axis by 20%
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+    # Put a legend to the right of the current axis
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small')
 
     # You can specify a rotation for the tick labels in degrees or with keywords.
     plt.xticks(x, xlabels, rotation='vertical')
@@ -799,6 +815,8 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     plt.savefig(graph_full_path)
+
+    plt.close()
 
 
 def nb_conns_by_app(log_file=sys.stdout):
@@ -884,8 +902,12 @@ def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
                 rmnet_val = [x[1] for x in data_app]
                 ax.plot(wifi_val, rmnet_val, 'o', label=app_name, color=color[app_name])
 
-            legend = ax.legend(loc='upper left', shadow=True, fontsize='x-small')
-            legend.get_frame().set_facecolor('#00FFCC')
+            # Shrink current axis by 20%
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+            # Put a legend to the right of the current axis
+            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small')
             plt.xlabel("Bytes on Wifi", fontsize=18)
             plt.ylabel("Bytes on rmnet", fontsize=16)
             ax.set_yscale('symlog')
@@ -895,6 +917,8 @@ def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
             graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
             plt.savefig(graph_full_path)
+
+            plt.close()
 
 
 def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
@@ -944,8 +968,13 @@ def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
                 rmnet_val = [x[1] for x in data_app]
                 ax.plot(wifi_val, rmnet_val, 'o', label=app_name, color=color[app_name])
 
-            legend = ax.legend(loc='upper left', shadow=True, fontsize='x-small')
-            legend.get_frame().set_facecolor('#00FFCC')
+            # Shrink current axis by 20%
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+            # Put a legend to the right of the current axis
+            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small')
+
             plt.xlabel("Packets on Wifi", fontsize=18)
             plt.ylabel("Packets on rmnet", fontsize=16)
             ax.set_yscale('symlog')
@@ -955,6 +984,8 @@ def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
             graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
             plt.savefig(graph_full_path)
+
+            plt.close()
 
 
 millis = int(round(time.time() * 1000))
