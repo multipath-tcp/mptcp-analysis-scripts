@@ -127,6 +127,9 @@ def uncompress_file(fname, dirpath):
             output_file = os.path.join(trace_dir_exp, fname[:-3])
             if args.not_correct:
                 return output_file
+            elif os.path.exists(output_file):
+                print("Do no uncompress file: already exists " + fname, file=sys.stderr)
+                return output_file
             else:
                 print("Uncompressing " + fname + " to " + trace_dir_exp, file=print_out)
                 output = open(output_file, 'w')
@@ -142,6 +145,9 @@ def uncompress_file(fname, dirpath):
         elif fname.endswith('.pcap'):
             output_file = os.path.join(trace_dir_exp, fname)
             if args.not_correct:
+                return output_file
+            elif os.path.exists(output_file):
+                print("Do no copy file: already exists " + fname, file=sys.stderr)
                 return output_file
             else:
                 # Move the file to out_dir_exp
