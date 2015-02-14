@@ -169,6 +169,7 @@ else:
     add_if_valid(pcap_list, uncompress_file(os.path.basename(in_dir_exp),
                                             os.path.dirname(in_dir_exp)))
 
+pcap_list_len = len(pcap_list)
 
 
 ##################################################
@@ -208,7 +209,8 @@ def thread_launch(thread_id, clean, correct, graph, purge):
             pcap_fname = pcap_list.pop()
         except IndexError: # no more thread
             break
-        print("Thread " + str(thread_id) + ": Analyze: " + pcap_fname, file=print_out)
+        analyze_no = str(pcap_list_len - len(pcap_list)) + "/" + str(pcap_list_len)
+        print("Thread " + str(thread_id) + ": Analyze: " + pcap_fname + " (" + analyze_no + ")", file=print_out)
         try:
             launch_analyze_pcap(pcap_fname, clean, correct, graph, purge)
         except:
@@ -230,7 +232,7 @@ co.check_directory_exists(aggl_dir_exp)
 pcap_list.reverse() # we will use pop: use the natural order
 
 threads = []
-args.threads = min(args.threads, len(pcap_list))
+args.threads = min(args.threads, pcap_list_len)
 if args.threads > 1:
     # Launch new thread
     for thread_id in range(args.threads):
