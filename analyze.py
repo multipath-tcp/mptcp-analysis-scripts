@@ -221,6 +221,9 @@ def thread_launch(thread_id, clean, correct, graph, purge):
 ##################################################
 
 co.check_directory_exists(graph_dir_exp)
+co.check_directory_exists(os.path.join(graph_dir_exp, co.TSG_THGPT_DIR))
+co.check_directory_exists(os.path.join(graph_dir_exp, co.CWIN_DIR))
+co.check_directory_exists(os.path.join(graph_dir_exp, co.AGGL_DIR))
 co.check_directory_exists(stat_dir_exp)
 co.check_directory_exists(aggl_dir_exp)
 # If file is a .pcap, use it for (mp)tcptrace

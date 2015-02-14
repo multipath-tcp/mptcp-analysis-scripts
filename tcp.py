@@ -354,7 +354,6 @@ def prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp):
             gpl_file_ok.write(line)
         # Give the pdf filename where the graph will be stored
         tsg_thgpt_dir = os.path.join(graph_dir_exp, co.TSG_THGPT_DIR)
-        co.check_directory_exists(tsg_thgpt_dir)
         pdf_fname = os.path.join(tsg_thgpt_dir,
                                  gpl_fname[:-4] + '.pdf')
 
@@ -562,7 +561,6 @@ def create_congestion_window_data(tsg, adv_rwin, prefix_fname, graph_dir_exp, is
 def plot_congestion_graphs(pcap_fname, graph_dir_exp, connections):
     """ Given a TCPConnections (in connections), plot their congestion graph """
     cwin_graph_dir = os.path.join(graph_dir_exp, co.CWIN_DIR)
-    co.check_directory_exists(cwin_graph_dir)
 
     for flow_id, conn in connections.iteritems():
         base_graph_fname = os.path.basename(pcap_fname[:-5]) + '_' + conn.conn_id + '_cwin'
@@ -626,7 +624,6 @@ def process_tsg_gpl_file(xpl_fname, prefix_fname, graph_dir_exp, connections, ag
 def plot_aggregated_results(pcap_fname, graph_dir_exp, aggregate_dict):
     """ Create graphs for aggregated results """
     aggl_dir = os.path.join(graph_dir_exp, co.AGGL_DIR)
-    co.check_directory_exists(aggl_dir)
     for direction, interfaces in aggregate_dict.iteritems():
         for interface, aggr_list in interfaces.iteritems():
             aggregate_dict[direction][

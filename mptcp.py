@@ -307,7 +307,6 @@ def create_graph_csv(data_plot, acks_plot, pcap_fname, csv_fname, graph_dir_exp,
     # g.plot(data_plot, 'lt rgb blue')
 
     tsg_thgpt_dir = os.path.join(graph_dir_exp, co.TSG_THGPT_DIR)
-    co.check_directory_exists(tsg_thgpt_dir)
     pdf_fname = os.path.join(tsg_thgpt_dir,
                              os.path.basename(pcap_fname)[:-5] + "_" + csv_fname[:-4] + '.pdf')
     # g.hardcopy(filename=pdf_fname, terminal='pdf')
@@ -433,7 +432,6 @@ def process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, m
 def plot_congestion_graphs(pcap_fname, graph_dir_exp, connections):
     """ Given MPTCPConnections (in connections), plot their congestion graph """
     cwin_graph_dir = os.path.join(graph_dir_exp, co.CWIN_DIR)
-    co.check_directory_exists(cwin_graph_dir)
 
     formatting = ['b', 'r', 'g', 'p']
 
