@@ -98,10 +98,10 @@ args = parser.parse_args()
 
 in_dir_exp = os.path.abspath(os.path.expanduser(args.input))
 # ~/graphs -> /home/mptcp/graphs_lo ; ../graphs/ -> /home/mptcp/graphs_lo
-trace_dir_exp = co.append_to_dir(args.trace, args.pcap)
-graph_dir_exp = co.append_to_dir(args.graph, args.pcap)
-stat_dir_exp  = co.append_to_dir(args.stat,  args.pcap)
-aggl_dir_exp  = co.append_to_dir(args.aggl,  args.pcap)
+trace_dir_exp = co.get_dir_from_arg(args.trace, args.pcap)
+graph_dir_exp = co.get_dir_from_arg(args.graph, args.pcap)
+stat_dir_exp  = co.get_dir_from_arg(args.stat,  args.pcap)
+aggl_dir_exp  = co.get_dir_from_arg(args.aggl,  args.pcap)
 
 if os.path.isdir(in_dir_exp):
     # add the basename of the input dir
