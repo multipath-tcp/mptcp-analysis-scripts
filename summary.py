@@ -769,8 +769,9 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
         graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
         plt.savefig(graph_full_path)
+        plt.clf()
 
-        plt.close()
+        plt.close('all')
 
     for direction in y_datas_packs.keys():
 
@@ -819,7 +820,8 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
 
         plt.savefig(graph_full_path)
 
-        plt.close()
+        plt.clf()
+        plt.close('all')
 
 
 def percentage_rmnet_by_condition_with_apps(log_file=sys.stdout):
@@ -919,8 +921,9 @@ def percentage_rmnet_by_condition_with_apps(log_file=sys.stdout):
         graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
         plt.savefig(graph_full_path)
+        plt.clf()
 
-        plt.close()
+        plt.close('all')
 
     for direction in y_datas_packs.keys():
 
@@ -967,7 +970,8 @@ def percentage_rmnet_by_condition_with_apps(log_file=sys.stdout):
 
         plt.savefig(graph_full_path)
 
-        plt.close()
+        plt.clf()
+        plt.close('all')
 
 
 def nb_conns_by_app(log_file=sys.stdout):
@@ -1004,6 +1008,7 @@ def nb_conns_by_app(log_file=sys.stdout):
 
 
         plt.figure()
+        plt.clf()
         width = 0.35
         ind = np.arange(len(to_plot_mean))
         plt.bar(ind, to_plot_mean, width, yerr=to_plot_std, ecolor="r")
@@ -1017,6 +1022,9 @@ def nb_conns_by_app(log_file=sys.stdout):
         graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
         plt.savefig(graph_full_path)
+
+        plt.clf()
+        plt.close('all')
 
 
 def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
@@ -1047,15 +1055,13 @@ def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
             plt.clf()
 
             fig, ax = plt.subplots()
-            max_value = 0
 
             for app_name, data_app in data_cond.iteritems():
                 wifi_val = [x[0] for x in data_app]
                 rmnet_val = [x[1] for x in data_app]
-                max_value = max(max_value, max(max(wifi_val), max(rmnet_val)))
                 ax.plot(wifi_val, rmnet_val, 'o', label=app_name, color=color[app_name])
 
-            identity = np.arange(0, max_value)
+            identity = np.arange(0, 100000000, 1000000)
             ax.plot(identity, identity, 'k--')
             # Shrink current axis by 20%
             box = ax.get_position()
@@ -1073,7 +1079,8 @@ def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
 
             plt.savefig(graph_full_path)
 
-            plt.close()
+            plt.clf()
+            plt.close('all')
 
 
 def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
@@ -1117,15 +1124,13 @@ def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
             plt.clf()
 
             fig, ax = plt.subplots()
-            max_value = 0
 
             for app_name, data_app in data_cond.iteritems():
                 wifi_val = [x[0] for x in data_app]
                 rmnet_val = [x[1] for x in data_app]
-                max_value = max(max_value, max(max(wifi_val), max(rmnet_val)))
                 ax.plot(wifi_val, rmnet_val, 'o', label=app_name, color=color[app_name])
 
-            identity = np.arange(0, max_value)
+            identity = np.arange(0, 100000000, 1000000)
             ax.plot(identity, identity, 'k--')
 
             # Shrink current axis by 20%
@@ -1145,7 +1150,8 @@ def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
 
             plt.savefig(graph_full_path)
 
-            plt.close()
+            plt.clf()
+            plt.close('all')
 
 
 millis = int(round(time.time() * 1000))
