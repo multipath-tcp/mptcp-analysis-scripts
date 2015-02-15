@@ -65,6 +65,8 @@ parser.add_argument("-p",
                     "--prot", help="(exact) protocol to show", default="")
 parser.add_argument("-r",
                     "--remove", help="if set, remove outliers from dataset", action="store_true")
+parser.add_argument("-l",
+                    "--load-apps", help="list of applications whose data is loaded", nargs="+")
 
 args = parser.parse_args()
 
@@ -154,7 +156,7 @@ def fetch_data(dir_exp):
         if check_in_list(dirpath, args.dirs):
             for fname in filenames:
                 fname_date = co.get_date_as_int(fname)
-                if is_app_name(fname, args.app) and (fname_date and (int(start_time) <= fname_date <= int(stop_time))) and check_conditions(fname):
+                if is_app_name(fname, args.app) and (fname_date and (int(start_time) <= fname_date <= int(stop_time))) and check_conditions(fname) and (not args.load_apps or get_app_name(fname) in args.load_apps):
                     try:
                         stat_file = open(os.path.join(dirpath, fname), 'r')
                         dico[fname] = pickle.load(stat_file)
