@@ -1050,12 +1050,16 @@ def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
             plt.clf()
 
             fig, ax = plt.subplots()
+            max_value = 0
 
             for app_name, data_app in data_cond.iteritems():
                 wifi_val = [x[0] for x in data_app]
                 rmnet_val = [x[1] for x in data_app]
+                max_value = max(max_value, max(max(wifi_val), max(rmnet_val)))
                 ax.plot(wifi_val, rmnet_val, 'o', label=app_name, color=color[app_name])
 
+            identity = np.arange(0, max_value)
+            ax.plot(identity, identity, 'k--')
             # Shrink current axis by 20%
             box = ax.get_position()
             ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
@@ -1116,11 +1120,16 @@ def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
             plt.clf()
 
             fig, ax = plt.subplots()
+            max_value = 0
 
             for app_name, data_app in data_cond.iteritems():
                 wifi_val = [x[0] for x in data_app]
                 rmnet_val = [x[1] for x in data_app]
+                max_value = max(max_value, max(max(wifi_val), max(rmnet_val)))
                 ax.plot(wifi_val, rmnet_val, 'o', label=app_name, color=color[app_name])
+
+            identity = np.arange(0, max_value)
+            ax.plot(identity, identity, 'k--')
 
             # Shrink current axis by 20%
             box = ax.get_position()
