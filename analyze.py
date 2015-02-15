@@ -106,7 +106,7 @@ aggl_dir_exp  = co.get_dir_from_arg(args.aggl,  args.pcap)
 if os.path.isdir(in_dir_exp):
     # add the basename of the input dir
     base_dir = os.path.basename(in_dir_exp) # 20150215-013001_d8cac271ad6d544930b0e804383c19378ed4908c
-    parent_dir = os.path.basename(base_dir) # TCPDump or TCPDump_bad_simulation
+    parent_dir = os.path.basename(os.path.dirname(in_dir_exp)) # TCPDump or TCPDump_bad_simulation
     trace_dir_exp = os.path.join(trace_dir_exp, parent_dir, base_dir)
     graph_dir_exp = os.path.join(graph_dir_exp, parent_dir, base_dir)
     stat_dir_exp  = os.path.join(stat_dir_exp,  parent_dir, base_dir)
