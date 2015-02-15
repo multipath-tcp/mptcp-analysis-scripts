@@ -877,8 +877,6 @@ def percentage_rmnet_by_condition_with_apps(log_file=sys.stdout):
 
         fig, ax = plt.subplots()
 
-        print(y_datas_bytes[direction])
-
         for app in y_datas_bytes[direction].keys():
             points = []
             loc_x = list(x)
@@ -896,9 +894,6 @@ def percentage_rmnet_by_condition_with_apps(log_file=sys.stdout):
                 loc_x.pop(i)
 
             #small_dir = "s2d" if direction == co.S2D else "d2s" if direction == co.D2S else "?"
-
-            print(loc_x)
-            print(points)
 
             ax.plot(loc_x, points, marks[direction], color=color[app], label=app)
 
