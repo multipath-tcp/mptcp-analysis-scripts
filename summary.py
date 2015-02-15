@@ -34,7 +34,6 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import mptcp
 import numpy as np
-import operator
 import os
 import os.path
 import pickle
@@ -821,6 +820,159 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
         plt.close()
 
 
+def percentage_rmnet_by_condition_with_apps(log_file=sys.stdout):
+    x = [1, 2, 3, 4, 5, 6, 7, 8]
+    xlabels = ['both3', 'both4', 'both4TCD10m', 'both4TCD100m', 'both4TCD1000m', 'both4TCL5p', 'both4TCL15p', 'both4TCL5pD100m']
+
+    marks = {co.S2D: 'o', co.D2S: '*'}
+
+    y_datas_bytes = {co.S2D: {}, co.D2S: {}}
+    y_datas_packs = {co.S2D: {}, co.D2S: {}}
+
+    color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'g', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'y', 'messenger': 'b', 'shazam': 'gray', 'spotify': 'k', 'youtube': 'r'}
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if 'both' in condition and 'mptcp_fm_' in condition:
+            condition = condition[9:]
+            app = get_app_name(fname)
+            for conn_id, conn in data.iteritems():
+                if app not in y_datas_bytes[co.S2D]:
+                    for direction in y_datas_bytes.keys():
+                        y_datas_bytes[direction][app] = {'both3': {}, 'both4': {}, 'both4TCD10m': {}, 'both4TCD100m': {}, 'both4TCD1000m': {}, 'both4TCL5p': {}, 'both4TCL15p': {}, 'both4TCL5pD100m': {}}
+                        y_datas_packs[direction][app] = {'both3': {}, 'both4': {}, 'both4TCD10m': {}, 'both4TCD100m': {}, 'both4TCD1000m': {}, 'both4TCL5p': {}, 'both4TCL15p': {}, 'both4TCL5pD100m': {}}
+                        for cond_name in y_datas_bytes[direction][app].keys():
+                            y_datas_bytes[direction][app][cond_name] = {co.WIFI: 0, co.RMNET: 0}
+                            y_datas_packs[direction][app][cond_name] = {co.WIFI: 0, co.RMNET: 0}
+
+                if isinstance(conn, tcp.TCPConnection):
+                    interface = conn.flow.attr[co.IF]
+                    y_datas_bytes[co.S2D][app][condition][interface] += conn.attr[co.BYTES_S2D]
+                    y_datas_bytes[co.D2S][app][condition][interface] += conn.attr[co.BYTES_D2S]
+                    if co.PACKS_D2S in conn.attr.keys() and co.PACKS_S2D in conn.attr.keys():
+                        y_datas_packs[co.S2D][app][condition][interface] += conn.attr[co.PACKS_S2D]
+                        y_datas_packs[co.D2S][app][condition][interface] += conn.attr[co.PACKS_D2S]
+                elif isinstance(conn, mptcp.MPTCPConnection):
+                    for interface in conn.attr[co.S2D]:
+                        y_datas_bytes[co.S2D][app][condition][interface] += conn.attr[co.S2D][interface]
+                    for interface in conn.attr[co.D2S]:
+                        y_datas_bytes[co.D2S][app][condition][interface] += conn.attr[co.D2S][interface]
+                    for flow_id, flow in conn.flows.iteritems():
+                        if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
+                            break
+                        interface = flow.attr[co.IF]
+                        y_datas_bytes[co.S2D][app][condition][interface] -= flow.attr[co.REINJ_ORIG_BYTES_S2D]
+                        y_datas_bytes[co.D2S][app][condition][interface] -= flow.attr[co.REINJ_ORIG_BYTES_D2S]
+                        if co.PACKS_D2S in flow.attr.keys() and co.PACKS_S2D in flow.attr.keys():
+                            y_datas_packs[co.S2D][app][condition][interface] += flow.attr[co.PACKS_S2D]
+                            y_datas_packs[co.D2S][app][condition][interface] += flow.attr[co.PACKS_D2S]
+
+
+    for direction in y_datas_bytes.keys():
+
+        plt.figure()
+        plt.clf()
+
+        fig, ax = plt.subplots()
+
+        print(y_datas_bytes[direction])
+
+        for app in y_datas_bytes[direction].keys():
+            points = []
+            loc_x = list(x)
+            count = 0
+            to_pop = []
+            for cond in xlabels:
+                if cond not in y_datas_bytes[direction][app] or y_datas_bytes[direction][app][cond][co.RMNET] == 0 and y_datas_bytes[direction][app][cond][co.WIFI] == 0:
+                    to_pop.append(count)
+                else:
+                    point = (y_datas_bytes[direction][app][cond][co.RMNET] + 0.) / (y_datas_bytes[direction][app][cond][co.RMNET] + y_datas_bytes[direction][app][cond][co.WIFI])
+                    points.append(point)
+                count += 1
+
+            for i in reversed(to_pop):
+                loc_x.pop(i)
+
+            #small_dir = "s2d" if direction == co.S2D else "d2s" if direction == co.D2S else "?"
+
+            print(loc_x)
+            print(points)
+
+            ax.plot(loc_x, points, marks[direction], color=color[app], label=app)
+
+        # legend = plt.legend(loc='upper left', shadow=True, fontsize='x-small')
+        # legend.get_frame().set_facecolor('#00FFCC')
+
+        # Shrink current axis by 20%
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0, box.width * 0.5, box.height])
+
+        # Put a legend to the right of the current axis
+        ax.legend(loc='center right', bbox_to_anchor=(1, 0.5), fontsize='x-small')
+
+        # You can specify a rotation for the tick labels in degrees or with keywords.
+        plt.xticks(x, xlabels, rotation='vertical')
+        plt.ylabel("Fraction of bytes on rmnet", fontsize=16)
+        # Pad margins so that markers don't get clipped by the axes
+        plt.margins(0.5)
+        # Tweak spacing to prevent clipping of tick-labels
+        plt.subplots_adjust(bottom=0.25)
+
+        graph_fname = "summary_percentage_bytes_rmnet_reversed_" + direction + "_" + start_time + '_' + stop_time + ".pdf"
+        graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+        plt.savefig(graph_full_path)
+
+        plt.close()
+
+    for direction in y_datas_packs.keys():
+
+        plt.figure()
+        plt.clf()
+        fig, ax = plt.subplots()
+
+        for app in y_datas_packs[direction].keys():
+            points = []
+            loc_x = list(x)
+            count = 0
+            to_pop = []
+            for cond in xlabels:
+                if cond not in y_datas_packs[direction][app] or y_datas_packs[direction][app][cond][co.RMNET] == 0 and y_datas_packs[direction][app][cond][co.WIFI] == 0:
+                    to_pop.append(count)
+                else:
+                    point = (y_datas_packs[direction][app][cond][co.RMNET] + 0.) / (y_datas_packs[direction][app][cond][co.RMNET] + y_datas_packs[direction][app][cond][co.WIFI])
+                    points.append(point)
+                count += 1
+
+            for i in reversed(to_pop):
+                loc_x.pop(i)
+
+            #small_dir = "s2d" if direction == co.S2D else "d2s" if direction == co.D2S else "?"
+
+            ax.plot(loc_x, points, marks[direction], color=color[app], label=app)
+
+        # Shrink current axis by 20%
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0, box.width * 0.5, box.height])
+
+        # Put a legend to the right of the current axis
+        ax.legend(loc='center right', bbox_to_anchor=(1, 0.5), fontsize='x-small')
+
+        # You can specify a rotation for the tick labels in degrees or with keywords.
+        plt.xticks(x, xlabels, rotation='vertical')
+        plt.ylabel("Fraction of packets on rmnet", fontsize=16)
+        # Pad margins so that markers don't get clipped by the axes
+        plt.margins(0.5)
+        # Tweak spacing to prevent clipping of tick-labels
+        plt.subplots_adjust(bottom=0.25)
+        graph_fname = "summary_percentage_packs_rmnet_reversed_" + direction + "_" + start_time + '_' + stop_time + ".pdf"
+        graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+        plt.savefig(graph_full_path)
+
+        plt.close()
+
+
 def nb_conns_by_app(log_file=sys.stdout):
     xlabels = ['dailymotion', 'drive', 'dropbox', 'facebook', 'firefox', 'firefoxspdy', 'messenger', 'shazam', 'spotify', 'youtube']
     data = {}
@@ -1020,6 +1172,7 @@ elif args.cond:
 else:
     print("Summary plots", file=log_file)
     percentage_rmnet_by_app_with_conditions(log_file=log_file)
+    percentage_rmnet_by_condition_with_apps(log_file=log_file)
     nb_conns_by_app(log_file=log_file)
     fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=log_file)
     fog_plot_with_packs_wifi_rmnet_per_condition(log_file=log_file)
