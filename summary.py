@@ -760,6 +760,7 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
         # You can specify a rotation for the tick labels in degrees or with keywords.
         plt.xticks(x, xlabels, rotation='vertical')
         plt.ylabel("Fraction of bytes on rmnet", fontsize=16)
+        plt.ylim(ymin=0, ymax=1)
         # Pad margins so that markers don't get clipped by the axes
         plt.margins(0.5)
         # Tweak spacing to prevent clipping of tick-labels
@@ -811,6 +812,7 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
         # You can specify a rotation for the tick labels in degrees or with keywords.
         plt.xticks(x, xlabels, rotation='vertical')
         plt.ylabel("Fraction of packets on rmnet", fontsize=16)
+        plt.ylim(ymin=0, ymax=1)
         # Pad margins so that markers don't get clipped by the axes
         plt.margins(0.5)
         # Tweak spacing to prevent clipping of tick-labels
@@ -912,6 +914,7 @@ def percentage_rmnet_by_condition_with_apps(log_file=sys.stdout):
         # You can specify a rotation for the tick labels in degrees or with keywords.
         plt.xticks(x, xlabels, rotation='vertical')
         plt.ylabel("Fraction of bytes on rmnet", fontsize=16)
+        plt.ylim(ymin=0, ymax=1)
         # Pad margins so that markers don't get clipped by the axes
         plt.margins(0.5)
         # Tweak spacing to prevent clipping of tick-labels
@@ -961,6 +964,7 @@ def percentage_rmnet_by_condition_with_apps(log_file=sys.stdout):
         # You can specify a rotation for the tick labels in degrees or with keywords.
         plt.xticks(x, xlabels, rotation='vertical')
         plt.ylabel("Fraction of packets on rmnet", fontsize=16)
+        plt.ylim(ymin=0, ymax=1)
         # Pad margins so that markers don't get clipped by the axes
         plt.margins(0.5)
         # Tweak spacing to prevent clipping of tick-labels
