@@ -9,9 +9,10 @@ mptcptrace.log
 mptcptrace_info
 
 # Generated
-aggls/
-graphs/
-stats/
-traces/
+aggls*/
+graphs*/
+stats*/
+traces*/
+sums*/
+logs/
 pcap/
-tmp.pcap
