@@ -340,80 +340,46 @@ def interesting_graph(flow_name, is_reversed, connections):
     return False
 
 
-def prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp):
-    """ Return a gpl file name of a ready-to-use gpl file or None if an error
-        occurs
-    """
-    try:
-        gpl_fname_ok = gpl_fname[:-4] + '_ok.gpl'
-        gpl_file = open(gpl_fname, 'r')
-        gpl_file_ok = open(gpl_fname_ok, 'w')
-        data = gpl_file.readlines()
-        # Copy everything but the last 4 lines
-        for line in data[:-4]:
-            gpl_file_ok.write(line)
-        # Give the pdf filename where the graph will be stored
-        tsg_thgpt_dir = os.path.join(graph_dir_exp, co.TSG_THGPT_DIR)
-        pdf_fname = os.path.join(tsg_thgpt_dir,
-                                 gpl_fname[:-4] + '.pdf')
-
-        # Needed to give again the line with all data (5th line from the end)
-        # Better to reset the plot (to avoid potential bugs)
-        to_write = "set output '" + pdf_fname + "'\n" \
-            + "set terminal pdf\n" \
-            + data[-5] \
-            + "set terminal pdf\n" \
-            + "set output\n" \
-            + "reset\n"
-        gpl_file_ok.write(to_write)
-        # Don't forget to close files
-        gpl_file.close()
-        gpl_file_ok.close()
-        return gpl_fname_ok
-    except IOError:
-        print('IOError for graph file with ' +
-              gpl_fname + ': skip', file=sys.stderr)
-        return None
-
-
-def prepare_datasets_file(prefix_fname, connections, flow_name, relative_start):
+def prepare_xpl_file(xpl_fname, connections, flow_name, relative_start):
     """ Rewrite datasets file, set relative values of time for all connections in a pcap
         Return a list of lists to create a fully aggregated graph
     """
     connection = connections[flow_name]
-    datasets_fname = prefix_fname + '.datasets'
     try:
         # First read the file
-        datasets_file = open(datasets_fname, 'r')
+        xpl_file = open(xpl_fname, 'r')
     except IOError:
         # Sometimes, no datasets file; skip the file
         return
     try:
-        datasets = datasets_file.readlines()
-        datasets_file.close()
+        datasets = xpl_file.readlines()
+        xpl_file.close()
         # Then overwrite it
         time_offset = connection.flow.attr[co.START] - relative_start
-        datasets_file = open(datasets_fname, 'w')
+        xpl_file = open(xpl_fname, 'w')
         for line in datasets:
             split_line = line.split(" ")
-            if len(split_line) == 2:
-                time = float(split_line[0]) + time_offset
-                datasets_file.write(str(time) + " " + split_line[1])
+            if split_line[0] in co.XPL_ONE_POINT:
+                time = float(split_line[1]) + time_offset
+                xpl_file.write(split_line[0] + " " + str(time) + " " + str(int(split_line[2])) + "\n")
+            elif split_line[0] in co.XPL_TWO_POINTS:
+                time_1 = float(split_line[1]) + time_offset
+                time_2 = float(split_line[3]) + time_offset
+                xpl_file.write(split_line[0] + " " + str(time_1) + " " + str(int(split_line[2])) + " " + str(time_2) + " " + str(int(split_line[4])) + "\n")
             else:  # Not a data line, write it as it is
-                datasets_file.write(line)
+                xpl_file.write(line)
 
-        datasets_file.close()
+        xpl_file.close()
     except IOError as e:
         print(e, file=sys.stderr)
-        print("IOError in preparing datasets file of " + prefix_fname, file=sys.stderr)
+        print("IOError in preparing xpl file of " + xpl_fname, file=sys.stderr)
 
 
-def get_upper_packets_in_flight_and_adv_rwin(xpl_fname, connections, flow_name, relative_start):
+def get_upper_packets_in_flight_and_adv_rwin(xpl_fname, flow_name):
     """ Read the file with name xpl_fname and collect upper bound of packet in flight and advertised
         receiver window and return a tuple with a list ready to aggregate and the list of values of
         advertised window of receiver
     """
-    connection = connections[flow_name]
     is_adv_rwin = False
     aggregate_seq = []
     adv_rwin = []
@@ -424,22 +390,21 @@ def get_upper_packets_in_flight_and_adv_rwin(xpl_fname, connections, flow_name, 
         data = xpl_file.readlines()
         xpl_file.close()
         # Then collect all useful data
-        time_offset = connection.flow.attr[co.START] - relative_start
         for line in data:
             if line.startswith("uarrow") or line.startswith("diamond"):
                 is_adv_rwin = False
                 split_line = line.split(" ")
                 if ((not split_line[0] == "diamond") or (len(split_line) == 4 and "white" in split_line[3])):
-                    time = float(split_line[1]) + time_offset
+                    time = float(split_line[1])
                     aggregate_seq.append([time, int(split_line[2]), flow_name])
                     max_seq = max(max_seq, int(split_line[2]))
             elif line.startswith("yellow"):
                 is_adv_rwin = True
             elif is_adv_rwin and line.startswith("line"):
                 split_line = line.split(" ")
-                time_1 = float(split_line[1]) + time_offset
+                time_1 = float(split_line[1])
                 seq_1 = int(split_line[2])
-                time_2 = float(split_line[3]) + time_offset
+                time_2 = float(split_line[3])
                 seq_2 = int(split_line[4])
                 adv_rwin.append([time_1, seq_1])
                 adv_rwin.append([time_2, seq_2])
@@ -509,7 +474,7 @@ def append_as_third_to_all_elements(lst, element):
     return return_list
 
 
-def create_congestion_window_data(tsg, adv_rwin, prefix_fname, graph_dir_exp, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id):
+def create_congestion_window_data(tsg, adv_rwin, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id):
     """ With the time sequence data and the advertised receiver window, generate data of estimated
         congestion control
         Set the congestion data in the attr dictionary of the connection (TCP or MPTCP)
@@ -581,13 +546,13 @@ def plot_congestion_graphs(pcap_fname, graph_dir_exp, connections):
                 co.plot_line_graph([data], [interface], ['k'], "Time [s]", "Congestion window [Bytes]", "Congestion window", graph_fname, ymin=0)
 
 
-def process_tsg_gpl_file(xpl_fname, prefix_fname, graph_dir_exp, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id):
+def process_tsg_xpl_file(xpl_fname, graph_dir_exp, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id):
     """ Prepare gpl file for the (possible) plot and aggregate its content
         Also update connections or mptcp_connections with the processed data
     """
-    prepare_datasets_file(prefix_fname, connections, flow_name, relative_start)
-    aggregate_tsg, adv_rwin = get_upper_packets_in_flight_and_adv_rwin(xpl_fname, connections, flow_name, relative_start)
-    create_congestion_window_data(aggregate_tsg, adv_rwin, prefix_fname, graph_dir_exp, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id)
+    prepare_xpl_file(xpl_fname, connections, flow_name, relative_start)
+    aggregate_tsg, adv_rwin = get_upper_packets_in_flight_and_adv_rwin(xpl_fname, flow_name)
+    create_congestion_window_data(aggregate_tsg, adv_rwin, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id)
     interface = connections[flow_name].flow.attr[co.IF]
     if is_reversed:
         aggregate_dict[co.D2S][interface] += aggregate_tsg
@@ -667,45 +632,17 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_c
         if mptcp_connections:
             conn_id, flow_id = copy_info_to_mptcp_connections(connections[flow_name], mptcp_connections)
 
-        if interesting_graph(flow_name, is_reversed, connections):
-            cmd = ['xpl2gpl', xpl_fname]
-            if subprocess.call(cmd, stdout=print_out) != 0:
-                print("Error of xpl2gpl with " + xpl_fname +
-                      "; skip xpl file", file=sys.stderr)
-                continue
+        if interesting_graph(flow_name, is_reversed, connections) and 'tsg' in xpl_fname:
+            process_tsg_xpl_file(xpl_fname, graph_dir_exp, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id)
 
-            prefix_fname = os.path.basename(xpl_fname)[:-4]
-            gpl_fname = prefix_fname + '.gpl'
-            gpl_fname_ok = prepare_gpl_file(pcap_fname, gpl_fname, graph_dir_exp)
-            if gpl_fname_ok:
-                if 'tsg' in gpl_fname_ok:
-                    process_tsg_gpl_file(xpl_fname, prefix_fname, graph_dir_exp, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id)
-
-                if not mptcp_connections:
-                    if ((is_reversed and connections[flow_name].flow.attr[co.BYTES_D2S] >= min_bytes) or
-                        (not is_reversed and connections[flow_name].flow.attr[co.BYTES_S2D] >= min_bytes)):
-                        devnull = open(os.devnull, 'w')
-                        cmd = ['gnuplot', gpl_fname_ok]
-                        if subprocess.call(cmd, stdout=devnull) != 0:
-                            print(
-                                "Error of gnuplot with " + pcap_fname + "; skip process", file=sys.stderr)
-                            return
-                        devnull.close()
-
-            # Delete gpl, xpl and others files generated
-            try:
-                os.remove(gpl_fname)
-                os.remove(gpl_fname_ok)
-                try:
-                    os.remove(prefix_fname + '.datasets')
-                except OSError:
-                    # Throughput graphs have not .datasets file
-                    pass
-                os.remove(prefix_fname + '.labels')
-            except OSError as e:
-                print(str(e) + ": skipped", file=sys.stderr)
         try:
-            os.remove(xpl_fname)
+            if mptcp_connections:
+                # If mptcp, don't keep tcptrace plots
+                os.remove(xpl_fname)
+            else:
+                cmd = ['mv', xpl_fname, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR)]
+                if subprocess.call(cmd, stdout=print_out) != 0:
+                    print("Error when moving " + xpl_fname, file=sys.stderr)
         except OSError as e:
             print(str(e) + ": skipped", file=sys.stderr)
 
