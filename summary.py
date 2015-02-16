@@ -431,7 +431,7 @@ def bar_chart_packs_retrans(log_file=sys.stdout):
                     s2d += flow.attr[co.PACKS_RETRANS_S2D]
                     d2s += flow.attr[co.PACKS_RETRANS_D2S]
             elif isinstance(conn, tcp.TCPConnection):
-                here = [i for i in conn.flow.attr.keys() if i in [co.BYTES_S2D, co.BYTES_D2S]]
+                here = [i for i in conn.flow.attr.keys() if i in [co.PACKS_RETRANS_S2D, co.PACKS_RETRANS_D2S]]
                 if not len(here) == 2:
                     continue
 
