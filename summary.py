@@ -473,7 +473,7 @@ def bar_chart_packs_retrans_s2d_interface(log_file=sys.stdout):
                 # For compatibility reasons with old stat files
                 if co.PACKS_RETRANS_S2D not in conn.flow.attr:
                     # Will produce a graph with 0 values, result should be ignored (so break for no graph)
-                    print(co.PACKS_RETRANS_S2D + " not in " + conn_id + " of " + fname, file=sys.err)
+                    print(co.PACKS_RETRANS_S2D + " not in " + conn_id + " of " + fname, file=sys.stderr)
                     break
                 if conn.flow.attr[co.IF] == co.WIFI:
                     wifi_packs += conn.flow.attr[co.PACKS_RETRANS_S2D]
@@ -484,7 +484,7 @@ def bar_chart_packs_retrans_s2d_interface(log_file=sys.stdout):
                     # For compatibility reasons with old stat files
                     if co.PACKS_RETRANS_S2D not in flow.attr:
                         # Will produce a graph with 0 values, result should be ignored (so break for no graph)
-                        print(co.PACKS_RETRANS_S2D + " not in flow" + flow_id + " of connection " + conn_id + " of " + fname, file=sys.err)
+                        print(co.PACKS_RETRANS_S2D + " not in flow" + flow_id + " of connection " + conn_id + " of " + fname, file=sys.stderr)
                         break
                     if flow.attr[co.IF] == co.WIFI:
                         wifi_packs += flow.attr[co.PACKS_RETRANS_S2D]
@@ -526,7 +526,7 @@ def bar_chart_packs_retrans_d2s_interface(log_file=sys.stdout):
                 # For compatibility reasons with old stat files
                 if co.PACKS_RETRANS_D2S not in conn.flow.attr:
                     # Will produce a graph with 0 values, result should be ignored (so break for no graph)
-                    print(co.PACKS_RETRANS_D2S + " not in " + conn_id + " of " + fname, file=sys.err)
+                    print(co.PACKS_RETRANS_D2S + " not in " + conn_id + " of " + fname, file=sys.stderr)
                     break
                 if conn.flow.attr[co.IF] == co.WIFI:
                     wifi_packs += conn.flow.attr[co.PACKS_RETRANS_D2S]
@@ -537,7 +537,7 @@ def bar_chart_packs_retrans_d2s_interface(log_file=sys.stdout):
                     # For compatibility reasons with old stat files
                     if co.PACKS_RETRANS_D2S not in flow.attr:
                         # Will produce a graph with 0 values, result should be ignored (so break for no graph)
-                        print(co.PACKS_RETRANS_D2S + " not in flow" + flow_id + " of connection " + conn_id + " of " + fname, file=sys.err)
+                        print(co.PACKS_RETRANS_D2S + " not in flow" + flow_id + " of connection " + conn_id + " of " + fname, file=sys.stderr)
                         break
                     if flow.attr[co.IF] == co.WIFI:
                         wifi_packs += flow.attr[co.PACKS_RETRANS_D2S]
