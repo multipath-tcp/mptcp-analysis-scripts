@@ -676,7 +676,7 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
     x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     xlabels = ['dailymotion', 'drive', 'dropbox', 'facebook', 'firefox', 'firefoxspdy', 'messenger', 'shazam', 'spotify', 'youtube']
 
-    marks = {co.S2D: 'o', co.D2S: '*'}
+    marks = {co.S2D: 'o', co.D2S: 's'}
 
     y_datas_bytes = {co.S2D: {}, co.D2S: {}}
     y_datas_packs = {co.S2D: {}, co.D2S: {}}
@@ -830,7 +830,7 @@ def percentage_rmnet_by_condition_with_apps(log_file=sys.stdout):
     x = [1, 2, 3, 4, 5, 6, 7, 8]
     xlabels = ['both3', 'both4', 'both4TCD10m', 'both4TCD100m', 'both4TCD1000m', 'both4TCL5p', 'both4TCL15p', 'both4TCL5pD100m']
 
-    marks = {co.S2D: 'o', co.D2S: '*'}
+    marks = {co.S2D: 'o', co.D2S: 's'}
 
     y_datas_bytes = {co.S2D: {}, co.D2S: {}}
     y_datas_packs = {co.S2D: {}, co.D2S: {}}
