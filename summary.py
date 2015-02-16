@@ -835,7 +835,7 @@ def percentage_rmnet_by_condition_with_apps(log_file=sys.stdout):
     y_datas_bytes = {co.S2D: {}, co.D2S: {}}
     y_datas_packs = {co.S2D: {}, co.D2S: {}}
 
-    color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'g', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'y', 'messenger': 'b', 'shazam': 'gray', 'spotify': 'k', 'youtube': 'r'}
+    color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'y', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'g', 'messenger': 'b', 'shazam': 'gray', 'spotify': 'k', 'youtube': 'r'}
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
@@ -1033,7 +1033,7 @@ def nb_conns_by_app(log_file=sys.stdout):
 
 def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
     data = {co.S2D: {}, co.D2S: {}}
-    color = {'dailymotion': 'b', 'drive': 'g', 'dropbox': 'r', 'facebook': 'c', 'firefox': 'm', 'firefoxspdy': 'y', 'messenger': 'k', 'shazam':'purple', 'spotify':'brown', 'youtube': 'orange'}
+    color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'y', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'g', 'messenger': 'b', 'shazam': 'gray', 'spotify': 'k', 'youtube': 'r'}
 
     for fname, conns in connections.iteritems():
         condition = get_experiment_condition(fname)
@@ -1089,7 +1089,7 @@ def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
 
 def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
     data = {co.S2D: {}, co.D2S: {}}
-    color = {'dailymotion': 'b', 'drive': 'g', 'dropbox': 'r', 'facebook': 'c', 'firefox': 'm', 'firefoxspdy': 'y', 'messenger': 'k', 'shazam':'purple', 'spotify':'brown', 'youtube': 'orange'}
+    color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'y', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'g', 'messenger': 'b', 'shazam': 'gray', 'spotify': 'k', 'youtube': 'r'}
 
     for fname, conns in connections.iteritems():
         condition = get_experiment_condition(fname)
