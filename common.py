@@ -335,7 +335,7 @@ def get_date_as_int(pcap_fname):
 ##################################################
 
 
-def log_outliers(aggl_res, remove=False, m=2.0, log_file=sys.stdout):
+def log_outliers(aggl_res, remove=False, m=3.0, log_file=sys.stdout):
     """ Print on stderr outliers (value + filename), remove them from aggl_res if remove is True """
     for condition, data_label in aggl_res.iteritems():
         for label, data in data_label.iteritems():
