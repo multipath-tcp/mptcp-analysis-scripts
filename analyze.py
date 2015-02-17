@@ -76,7 +76,7 @@ parser.add_argument("-s",
 parser.add_argument("-a",
     "--aggl", help="directory where data of agglomerated graphs will be stored", default=co.DEF_AGGL_DIR)
 parser.add_argument("-p",
-    "--pcap", help="analyze only pcap files containing the given string (default lo)", default="_lo.")
+    "--pcap", help="analyze only pcap files containing the given string (default lo)", default="_"+co.DEF_IFACE+".")
 parser.add_argument("-j",
     "--threads", type=int, help="process the analyse separated threads", default=DEF_NB_THREADS)
 parser.add_argument("-l",

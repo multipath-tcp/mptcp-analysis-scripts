@@ -125,6 +125,8 @@ DEF_STAT_DIR = 'stats'
 DEF_AGGL_DIR = 'aggls'
 # The default sums directory
 DEF_SUMS_DIR = 'sums'
+# The default interface to analyse
+DEF_IFACE = 'any'
 
 # The time sequence and throughput graphs directory
 TSG_THGPT_DIR = 'tsg_thgpt'
