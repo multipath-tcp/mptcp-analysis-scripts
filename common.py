@@ -24,7 +24,6 @@ from __future__ import print_function
 ##################################################
 
 import os
-import Gnuplot
 import matplotlib
 # Do not use any X11 backend
 matplotlib.use('Agg')
@@ -37,7 +36,6 @@ import tempfile
 import threading
 import traceback
 
-Gnuplot.GnuplotOpts.default_term = 'pdf'
 
 # # This import must be done here, because of the internals of matplotlib
 # from matplotlib.backends.backend_pgf import FigureCanvasPgf
