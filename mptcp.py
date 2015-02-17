@@ -28,7 +28,6 @@ from __future__ import print_function
 
 import common as co
 import glob
-import Gnuplot
 import os
 import shutil
 import subprocess
