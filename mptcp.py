@@ -299,48 +299,6 @@ def rewrite_xpl(xpl_fname, xpl_data, begin_time, begin_seq, connections, conn_id
     xpl_file.close()
 
 
-def create_graph_csv(data_plot, acks_plot, pcap_fname, csv_fname, graph_dir_exp, connections):
-    """ Generate pdf for the csv file of the pcap file, if interesting
-    """
-    # See if there is a graph to plot (IOError or empty dataset)
-    if not data_plot or not acks_plot:
-        return
-
-    # First see if useful to show the graph
-    if not interesting_graph(csv_fname, connections):
-        return
-    # try:
-    #     csv_file = open(csv_fname)
-    #     data = csv_file.readlines()
-    # except IOError:
-    #     print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
-    #     return
-    #
-    # # If file was generated, the csv is not empty
-    # data_split = map(lambda x: x.split(','), data)
-    # data_plot = map(lambda x: map(lambda y: float(y), x), data_split)
-
-    # g = Gnuplot.Gnuplot(debug=0)
-    # g('set title "' + generate_title(csv_fname, connections) + '"')
-    # g('set style data linespoints')
-    # g.xlabel('Time [s]')
-    # g.ylabel('Sequence number')
-    # g.plot(data_plot, 'lt rgb blue')
-
-    tsg_thgpt_dir = os.path.join(graph_dir_exp, co.TSG_THGPT_DIR)
-    pdf_fname = os.path.join(tsg_thgpt_dir,
-                             os.path.basename(pcap_fname)[:-5] + "_" + csv_fname[:-4] + '.pdf')
-    # g.hardcopy(filename=pdf_fname, terminal='pdf')
-    # g.reset()
-
-    co.plot_line_graph(data_plot, ['0', '1', '2', '3', 'rf0', 'rf1', 'rf2', 'rf3'], ['r', 'b', 'g', 'k', 'r+', 'b+', 'g+', 'k+'], 'Time [s]', 'Sequence number [Bytes]', generate_title(csv_fname, connections), pdf_fname, titlesize=10)
-
-    pdf_fname = os.path.join(tsg_thgpt_dir,
-                             os.path.basename(pcap_fname)[:-5] + "_" + csv_fname[:-4] + "_acks" + '.pdf')
-    co.plot_line_graph(data_plot, ['0', '1', '2', '3'], ['r', 'b', 'g', 'k'], 'Time [s]', 'Sequence number [Bytes]', generate_title(csv_fname, connections), pdf_fname, titlesize=10)
-
-
-
 ##################################################
 ##               MPTCP PROCESSING               ##
 ##################################################
@@ -479,15 +437,14 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_byt
             cmd = ['mptcptrace', '-f', pcap_fname, '-s', '-S', '-w', '0']
             connections = process_mptcptrace_cmd(cmd, pcap_fname)
 
+            # Useful to count the number of reinjected bytes
             cmd = ['mptcptrace', '-f', pcap_fname, '-s', '-w', '2']
             devnull = open(os.devnull, 'w')
             if subprocess.call(cmd, stdout=devnull) != 0:
                 raise MPTCPTraceError("Error of mptcptrace with " + pcap_fname)
             devnull.close()
 
-            # csv_graph_tmp_dir = tempfile.mkdtemp(dir=graph_dir_exp)
             # The mptcptrace call will generate .xpl files to cope with
-
             # First see all xpl files, to detect the relative 0 of all connections
             # Also, compute the duration and number of bytes of the MPTCP connection
             relative_start = first_pass_on_files(connections)
@@ -500,17 +457,6 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_byt
                 if subprocess.call(cmd, stdout=sys.stderr) != 0:
                     print("Error when moving " + xpl_fname, file=sys.stderr)
 
-
-            # with co.cd(csv_graph_tmp_dir):
-            #     for csv_fname in glob.glob('*.csv'):
-            #         # No point to plot information on subflows (as many points as there are subflows)
-            #         if MPTCP_SF_FNAME not in csv_fname:
-            #             create_graph_csv(pcap_fname, csv_fname, graph_dir_exp, connections)
-            #         # Remove the csv file
-            #         os.remove(csv_fname)
-
-            # Remove temp dirs
-            # shutil.rmtree(csv_graph_tmp_dir)
     except MPTCPTraceError as e:
         print(str(e) + "; skip mptcp process", file=sys.stderr)
 
