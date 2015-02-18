@@ -115,7 +115,7 @@ class BasicConnection(object):
 ##               COMMON CONSTANTS               ##
 ##################################################
 # Lines in xpl files that starts with one of the words in XPL_ONE_POINT have one point
-XPL_ONE_POINT = ['darrow', 'uarrow', 'diamond', 'dot', 'atext', 'dtick', 'utick']
+XPL_ONE_POINT = ['darrow', 'uarrow', 'diamond', 'dot', 'atext', 'dtick', 'utick', 'atext']
 # Lines in xpl files that starts with one of the words in XPL_TWO_POINTS have two points
 XPL_TWO_POINTS = ['line']
 

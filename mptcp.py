@@ -188,82 +188,57 @@ def interesting_graph(csv_fname, connections):
     return False
 
 
-def get_begin_values(first_line):
-    split_line = first_line.split(',')
-    return float(split_line[0]), int(split_line[1])
+def get_begin_values(datasets):
+    """ Given an array with the content of a xpl file, return the first values of time and seq """
+    for line in datasets:
+        split_line = line.split(' ')
+        if split_line[0] in co.XPL_ONE_POINT or split_line[0] in co.XPL_TWO_POINTS:
+            return float(split_line[1]), int(split_line[2])
+
+    return None, None
 
 
-def get_data_csv(csv_graph_tmp_dir, csv_fname, data, begin_time, begin_seq, connections, conn_id, is_reversed):
-    """ Return a list of lists of data
-        Index 0: data of tsg of flow 0
-        Index 1: data of tsg of flow 1
-        ...
-        Index 4: data of reinjected segment that was first on flow 0
-        Index 5: data of reinjected segment that was first on flow 1
-    """
-    graph_data = [[], [], [], []]
-    reinject_data = [[], [], [], []]
-    acks_data = [[], [], [], []]
-    last_offset = 0
-    offsets = {0: 0, 1:0, 2:0, 3:0}
-    acks_offsets = {0: 0, 1:0, 2:0, 3:0}
+def process_and_delete_csv(csv_fname, connections, conn_id, is_reversed):
+    """ Process the csv given in argument and after delete the file """
+    try:
+        csv_file = open(csv_fname)
+        data = csv_file.readlines()
+        csv_file.close()
+    except IOError:
+        print('IOError for ' + csv_fname + ': no data extracted from csv', file=sys.stderr)
+
     reinject_offsets = {0: 0, 1:0, 2:0, 3:0}
-    last_acks_offset = 0
-    last_time = 0.0
+    reinject_nb = {0: 0, 1:0, 2:0, 3:0}
 
     for line in data:
         split_line = line.split(',')
-        time = float(split_line[0]) - begin_time
-        seq = int(split_line[1]) - begin_seq
-        if int(split_line[3]) == 0:
-            # Ack
-            seq_to_plot = seq - last_acks_offset + acks_offsets[int(split_line[2]) - 1]
-            acks_data[int(split_line[2])].append([time, seq_to_plot])
-            acks_offsets[int(split_line[2]) - 1] = seq_to_plot
-            last_acks_offset = seq
-        elif int(split_line[3]) == 1:
-            # Map
-            seq_to_plot = seq - last_offset + offsets[int(split_line[2]) - 1]
-            if int(split_line[5]) == -1:
-                # Not already seen on another flow
-                graph_data[int(split_line[2]) - 1].append([time, seq_to_plot])
-            else:
-                # Reinjected segment
-                graph_data[int(split_line[2]) - 1].append([time, seq_to_plot])
-                reinject_data[int(split_line[5]) - 1].append([time, seq_to_plot])
-                reinject_offsets[int(split_line[5]) - 1] += int(split_line[4]) - int(split_line[1])
-
-            offsets[int(split_line[2]) - 1] = seq_to_plot
-            last_offset = seq
-            last_time = time
-
-    for i in range(0, len(graph_data)):
-        graph_data[i].append([last_time, offsets[i]])
+        if split_line[3] == 1 and (not split_line[5] == -1):
+            # Map and reinjected
+            reinject_offsets[int(split_line[5]) - 1] += int(split_line[4]) - int(split_line[1])
+            reinject_nb[int(split_line[5] - 1)] += 1
 
     for i in range(0, len(connections[conn_id].flows)):
         if is_reversed:
-            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_PACKS_D2S] = len(reinject_data[i])
+            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_PACKS_D2S] = reinject_nb[i]
             connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_BYTES_D2S] = reinject_offsets[i]
         else:
-            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_PACKS_S2D] = len(reinject_data[i])
+            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_PACKS_S2D] = reinject_nb[i]
             connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_BYTES_S2D] = reinject_offsets[i]
 
-    return graph_data + reinject_data, acks_data
 
-
-def generate_title(csv_fname, connections):
+def generate_title(xpl_fname, connections):
     """ Generate the title for a mptcp connection """
 
-    connection_id = get_connection_id(csv_fname)
+    connection_id = get_connection_id(xpl_fname)
     title = "flows:" + str(len(connections[connection_id].flows)) + " "
 
     # If not reverse, correct order, otherwise reverse src and dst
-    reverse = is_reverse_connection(csv_fname)
+    reverse = is_reverse_connection(xpl_fname)
 
     # Show all details of the subflows
     for sub_flow_id, conn in connections[connection_id].flows.iteritems():
-        # \n must be interpreted as a raw type to works with GnuPlot.py
-        title += '\n' + "sf: " + sub_flow_id + " "
+        # Cannot have linebreak in xplot
+        title += ' ' + "sf: " + sub_flow_id + " "
         if reverse:
             title += "(" + conn.attr[co.WSCALEDST] + " " + conn.attr[co.WSCALESRC] + ") "
             title += conn.attr[co.DADDR] + ":" + conn.attr[co.DPORT] + \
@@ -275,6 +250,53 @@ def generate_title(csv_fname, connections):
         if co.IF in conn.attr:
             title += " [" + conn.attr[co.IF] + "]"
     return title
+
+
+def rewrite_xpl(xpl_fname, xpl_data, begin_time, begin_seq, connections, conn_id, is_reversed):
+    """ Rewrite the xpl file with filename xpl_fname in order to have the same relative time
+        Number 1 is wifi (green), number 2 is rmnet (red)
+    """
+    if len(connections[conn_id].flows) > 2:
+        print("WARNING: xpl plot only show two curves (green = wifi, red = cellular)", file=sys.stderr)
+
+    is_title = False
+    xpl_file = open(xpl_fname, 'w')
+
+    # Time rewriting could have bug because of the float in Python
+    for line in xpl_data:
+        split_line = line.split(' ')
+
+        if co.is_number(split_line[0]):
+            interface = connections[conn_id].flows[str(int(split_line[0]) - 1)].attr[co.IF]
+            number = 1 if interface == co.WIFI else 2 if interface == co.RMNET else 3
+            xpl_file.write(str(number) + "\n")
+
+        elif split_line[0] in co.XPL_ONE_POINT:
+            #time = float(split_line[1]) - begin_time
+            seq = int(split_line[2]) - begin_seq
+            xpl_file.write(split_line[0] + " " + split_line[1] + " " + str(seq) + "\n")
+
+        elif split_line[0] in co.XPL_TWO_POINTS:
+            # Map
+            #time_1 = float(split_line[1]) - begin_time
+            seq_1 = int(split_line[2]) - begin_seq
+            #time_2 = float(split_line[3]) - begin_time
+            seq_2 = int(split_line[4]) - begin_seq
+
+            xpl_file.write(split_line[0] + " " + split_line[1] + " " + str(seq_1) + " " + split_line[3] + " " + str(seq_2) + "\n")
+
+        elif is_title:
+            is_title = False
+            xpl_file.write(generate_title(xpl_fname, connections) + "\n")
+
+        elif 'title' in split_line[0]:
+            is_title = True
+            xpl_file.write(line)
+
+        else:
+            xpl_file.write(line)
+
+    xpl_file.close()
 
 
 def create_graph_csv(data_plot, acks_plot, pcap_fname, csv_fname, graph_dir_exp, connections):
@@ -360,72 +382,71 @@ def process_stats_csv(csv_fname, connections):
         return
 
 
-def first_pass_on_seq_csv(csv_fname, relative_start):
+def first_pass_on_seq_xpl(xpl_fname, relative_start):
     """ Return the smallest timestamp between the smallest one in csv_fname and relative_start"""
     minimum = relative_start
     try:
-        csv_file = open(csv_fname)
-        data = csv_file.readlines()
+        xpl_file = open(xpl_fname)
+        data = xpl_file.readlines()
         if not data == [] and len(data) > 1:
             try:
-                begin_time, begin_seq = get_begin_values(data[0])
+                begin_time, begin_seq = get_begin_values(data)
                 if begin_time < relative_start and not begin_time == 0.0:
                     minimum = begin_time
             except ValueError:
-                print('ValueError for ' + csv_fname + ': keep old value', file=sys.stderr)
+                print('ValueError for ' + xpl_fname + ': keep old value', file=sys.stderr)
 
-        csv_file.close()
+        xpl_file.close()
     except IOError:
-        print('IOError for ' + csv_fname + ': keep old value', file=sys.stderr)
+        print('IOError for ' + xpl_fname + ': keep old value', file=sys.stderr)
 
     return minimum
 
-def first_pass_on_csvs(connections):
-    """ Do a first pass on csvs in current directory, without modifying them
+def first_pass_on_files(connections):
+    """ Do a first pass on files generated by mptcptrace in current directory, without modifying them
         This returns the relative start of all connections and modify connections to add information
-        contained in the csvs
+        contained in the files
     """
-    relative_start = float("inf")
     for csv_fname in glob.glob('*.csv'):
         if csv_fname.startswith(MPTCP_STATS_PREFIX):
             process_stats_csv(csv_fname, connections)
 
-        elif MPTCP_SEQ_FNAME in csv_fname:
-            relative_start = first_pass_on_seq_csv(csv_fname, relative_start)
+    relative_start = float("inf")
+    for xpl_fname in glob.glob('*.xpl'):
+        if MPTCP_SEQ_FNAME in xpl_fname:
+            relative_start = first_pass_on_seq_xpl(xpl_fname, relative_start)
 
     return relative_start
 
 
-def process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, min_bytes):
+def process_seq_xpl(xpl_fname, connections, relative_start, min_bytes):
     """ If the csv is interesting, rewrite it in another folder csv_graph_tmp_dir
         Delete the csv given in argument
     """
-    graph_data, acks_data = None, None
     try:
-        conn_id = get_connection_id(csv_fname)
-        is_reversed = is_reverse_connection(csv_fname)
-        csv_file = open(csv_fname)
-        data = csv_file.readlines()
+        conn_id = get_connection_id(xpl_fname)
+        is_reversed = is_reverse_connection(xpl_fname)
+        xpl_file = open(xpl_fname)
+        data = xpl_file.readlines()
+        xpl_file.close()
         # Check if there is data in file (and not only one line of 0s)
         if not data == [] and len(data) > 1:
             if ((is_reversed and connections[conn_id].attr[co.BYTES_D2S] >= min_bytes) or
                 (not is_reversed and connections[conn_id].attr[co.BYTES_S2D] >= min_bytes)):
                 # Collect begin time and seq num to plot graph starting at 0
                 try:
-                    begin_time, begin_seq = get_begin_values(data[0])
-                    graph_data, acks_data = get_data_csv(csv_graph_tmp_dir, csv_fname, data, relative_start, begin_seq, connections, conn_id, is_reversed)
+                    begin_time, begin_seq = get_begin_values(data)
+                    csv_fname = xpl_fname[:-4] + '.csv'
+                    process_and_delete_csv(csv_fname, connections, conn_id, is_reversed)
+                    rewrite_xpl(xpl_fname, data, begin_time, begin_seq, connections, conn_id, is_reversed)
                 except ValueError:
                     print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
 
-        csv_file.close()
         # Remove the csv file
         os.remove(csv_fname)
 
-        return graph_data, acks_data
-
     except IOError:
         print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
-        return
 
 
 def plot_congestion_graphs(pcap_fname, graph_dir_exp, connections):
@@ -455,21 +476,29 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_byt
     try:
         with co.cd(csv_tmp_dir):
             # If segmentation faults, remove the -S option
-            cmd = ['mptcptrace', '-f', pcap_fname, '-s', '-S', '-w', '2']
+            cmd = ['mptcptrace', '-f', pcap_fname, '-s', '-S', '-w', '0']
             connections = process_mptcptrace_cmd(cmd, pcap_fname)
 
-            csv_graph_tmp_dir = tempfile.mkdtemp(dir=graph_dir_exp)
-            # The mptcptrace call will generate .csv files to cope with
+            cmd = ['mptcptrace', '-f', pcap_fname, '-s', '-w', '2']
+            devnull = open(os.devnull, 'w')
+            if subprocess.call(cmd, stdout=devnull) != 0:
+                raise MPTCPTraceError("Error of mptcptrace with " + pcap_fname)
+            devnull.close()
 
-            # First see all csv files, to detect the relative 0 of all connections
+            # csv_graph_tmp_dir = tempfile.mkdtemp(dir=graph_dir_exp)
+            # The mptcptrace call will generate .xpl files to cope with
+
+            # First see all xpl files, to detect the relative 0 of all connections
             # Also, compute the duration and number of bytes of the MPTCP connection
-            relative_start = first_pass_on_csvs(connections)
+            relative_start = first_pass_on_files(connections)
 
             # Then really process csv files
-            for csv_fname in glob.glob('*.csv'):
-                if MPTCP_SEQ_FNAME in csv_fname:
-                    graph_data, acks_data = process_seq_csv(csv_fname, csv_graph_tmp_dir, connections, relative_start, min_bytes)
-                    create_graph_csv(graph_data, acks_data, pcap_fname, csv_fname, graph_dir_exp, connections)
+            for xpl_fname in glob.glob('*.xpl'):
+                if MPTCP_SEQ_FNAME in xpl_fname:
+                    process_seq_xpl(xpl_fname, connections, relative_start, min_bytes)
+                cmd = ['mv', xpl_fname, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_fname[:-5]) + "_" + xpl_fname)]
+                if subprocess.call(cmd, stdout=sys.stderr) != 0:
+                    print("Error when moving " + xpl_fname, file=sys.stderr)
 
 
             # with co.cd(csv_graph_tmp_dir):
@@ -481,7 +510,7 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_byt
             #         os.remove(csv_fname)
 
             # Remove temp dirs
-            shutil.rmtree(csv_graph_tmp_dir)
+            # shutil.rmtree(csv_graph_tmp_dir)
     except MPTCPTraceError as e:
         print(str(e) + "; skip mptcp process", file=sys.stderr)
 
