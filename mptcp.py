@@ -434,7 +434,7 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_byt
     try:
         with co.cd(csv_tmp_dir):
             # If segmentation faults, remove the -S option
-            cmd = ['mptcptrace', '-f', pcap_fname, '-s', '-S', '-w', '0']
+            cmd = ['mptcptrace', '-f', pcap_fname, '-s', '-S', '-G', '-w', '0']
             connections = process_mptcptrace_cmd(cmd, pcap_fname)
 
             # Useful to count the number of reinjected bytes
