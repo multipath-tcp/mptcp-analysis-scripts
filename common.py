@@ -57,6 +57,7 @@ import traceback
 ##################################################
 
 class cd:
+
     """Context manager for changing the current working directory"""
 
     def __init__(self, newPath):
@@ -75,6 +76,7 @@ class cd:
 
 
 class BasicFlow(object):
+
     """ Represent a flow between two hosts at transport layer """
     attr = {}
 
@@ -88,7 +90,6 @@ class BasicFlow(object):
         else:
             self.attr[IF] = RMNET
 
-
     def detect_ipv4(self):
         """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
         saddr = self.attr[SADDR]
@@ -100,6 +101,7 @@ class BasicFlow(object):
 
 
 class BasicConnection(object):
+
     """ Represent a connection between two hosts at high level """
     conn_id = ""
     attr = {}
@@ -236,6 +238,7 @@ def check_directory_exists(directory):
     else:
         os.makedirs(directory)
 
+
 def get_dir_from_arg(directory, end=''):
     """ Get the abspath of the dir given by the user and append 'end' """
     if end.endswith('.'):
@@ -244,6 +247,7 @@ def get_dir_from_arg(directory, end=''):
         directory = directory[:-1]
     return os.path.abspath(os.path.expanduser(directory)) + end
 
+
 def is_number(s):
     """ Check if the str s is a number """
     try:
@@ -251,6 +255,7 @@ def is_number(s):
         return True
     except ValueError:
         return False
+
 
 def count_mptcp_subflows(data):
     """ Count the number of subflows of a MPTCP connection """
@@ -290,17 +295,17 @@ def save_data(filepath, dir_exp, data):
         print(str(e) + ': no data file for ' + filepath, file=sys.stderr)
 
 
-def clean_loopback_pcap(pcap_fname, print_out=sys.stdout):
+def clean_loopback_pcap(pcap_filepath, print_out=sys.stdout):
     """ Remove noisy traffic (port 1984), see netstat """
     tmp_pcap = tempfile.mkstemp(suffix='.pcap')[1]
     cmd = ['tshark', '-Y', '!(tcp.dstport==1984||tcp.srcport==1984)&&!((ip.src==127.0.0.1)&&(ip.dst==127.0.0.1))', '-r',
-           pcap_fname, '-w', tmp_pcap, '-F', 'pcap']
+           pcap_filepath, '-w', tmp_pcap, '-F', 'pcap']
     if subprocess.call(cmd, stdout=print_out) != 0:
-        print("Error in cleaning " + pcap_fname, file=sys.stderr)
+        print("Error in cleaning " + pcap_filepath, file=sys.stderr)
         return
-    cmd = ['mv', tmp_pcap, pcap_fname]
+    cmd = ['mv', tmp_pcap, pcap_filepath]
     if subprocess.call(cmd, stdout=print_out) != 0:
-        print("Error in moving " + tmp_pcap + " to " + pcap_fname, file=sys.stderr)
+        print("Error in moving " + tmp_pcap + " to " + pcap_filepath, file=sys.stderr)
 
 
 def indicates_wifi_or_rmnet(data):
@@ -328,7 +333,7 @@ def get_date_as_int(pcap_fname):
     dash_index = pcap_fname.index("-")
     start_index = pcap_fname[:dash_index].rindex("_")
     try:
-        return int(pcap_fname[start_index+1:dash_index])
+        return int(pcap_fname[start_index + 1:dash_index])
     except ValueError as e:
         print(str(e) + ": get date as int for " + pcap_fname, file=sys.stderr)
         return None
@@ -347,7 +352,7 @@ def log_outliers(aggl_res, remove=False, m=3.0, log_file=sys.stdout):
             np_data = np.array(num_data)
             d = np.abs(np_data - np.median(np_data))
             mdev = np.median(d)
-            s = d/mdev if mdev else 0.0
+            s = d / mdev if mdev else 0.0
 
             if isinstance(s, float) and s == 0.0:
                 aggl_res[condition][label] = num_data
@@ -355,7 +360,8 @@ def log_outliers(aggl_res, remove=False, m=3.0, log_file=sys.stdout):
             new_list = []
             for index in range(0, len(data)):
                 if s[index] >= m:
-                    print("Outlier " + str(data[index][0]) + " of file " + data[index][1] + "; median = " + str(np.median(np_data)) + ", mstd = " + str(mdev) + " and s = " + str(s[index]), file=log_file)
+                    print("Outlier " + str(data[index][0]) + " of file " + data[index][1] + "; median = " +
+                          str(np.median(np_data)) + ", mstd = " + str(mdev) + " and s = " + str(s[index]), file=log_file)
                     if remove:
                         continue
                 new_list.append(data[index][0])
@@ -460,7 +466,6 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
         label_names.pop(index)
         formatting.pop(index)
 
-
     if not data:
         print("No data for " + title + ": skip", file=sys.stderr)
         return
@@ -468,13 +473,15 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
     plt_lock.acquire()
 
     try:
-        critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_filepath, ymin=ymin, titlesize=titlesize)
+        critical_plot_line_graph(
+            data, label_names, formatting, xlabel, ylabel, title, graph_filepath, ymin=ymin, titlesize=titlesize)
     except Exception as e:
         print("UNCATCHED EXCEPTION IN critical_plot_line_graph for " + graph_filepath, file=sys.stderr)
         print(str(e), file=sys.stderr)
         print(traceback.format_exc(), file=sys.stderr)
 
     plt_lock.release()
+
 
 def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname):
     """ Plot a bar chart with aggl_res """
@@ -523,7 +530,6 @@ def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fn
     ax.set_xticklabels(labels)
 
     ax.legend(zero_bars, labels_names)
-
 
     def autolabel(rects):
         # attach some text labels
