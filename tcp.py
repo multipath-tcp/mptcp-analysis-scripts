@@ -366,7 +366,8 @@ def prepare_xpl_file(xpl_filepath, connections, flow_name, relative_start):
             elif split_line[0] in co.XPL_TWO_POINTS:
                 time_1 = float(split_line[1]) + time_offset
                 time_2 = float(split_line[3]) + time_offset
-                xpl_file.write(split_line[0] + " " + str(time_1) + " " + str(int(split_line[2])) + " " + str(time_2) + " " + str(int(split_line[4])) + "\n")
+                xpl_file.write(split_line[0] + " " + str(time_1) + " " + str(
+                    int(split_line[2])) + " " + str(time_2) + " " + str(int(split_line[4])) + "\n")
             else:  # Not a data line, write it as it is
                 xpl_file.write(line)
 
@@ -456,10 +457,14 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections):
         mptcp_connections[conn_id].flows[flow_id].attr[co.DURATION] = connection.flow.attr[co.DURATION]
         mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_S2D] = connection.flow.attr[co.PACKS_S2D]
         mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_D2S] = connection.flow.attr[co.PACKS_D2S]
-        mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_RETRANS_S2D] = connection.flow.attr[co.PACKS_RETRANS_S2D]
-        mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_RETRANS_D2S] = connection.flow.attr[co.PACKS_RETRANS_D2S]
-        mptcp_connections[conn_id].flows[flow_id].attr[co.BYTES_RETRANS_S2D] = connection.flow.attr[co.BYTES_RETRANS_S2D]
-        mptcp_connections[conn_id].flows[flow_id].attr[co.BYTES_RETRANS_D2S] = connection.flow.attr[co.BYTES_RETRANS_D2S]
+        mptcp_connections[conn_id].flows[flow_id].attr[
+            co.PACKS_RETRANS_S2D] = connection.flow.attr[co.PACKS_RETRANS_S2D]
+        mptcp_connections[conn_id].flows[flow_id].attr[
+            co.PACKS_RETRANS_D2S] = connection.flow.attr[co.PACKS_RETRANS_D2S]
+        mptcp_connections[conn_id].flows[flow_id].attr[
+            co.BYTES_RETRANS_S2D] = connection.flow.attr[co.BYTES_RETRANS_S2D]
+        mptcp_connections[conn_id].flows[flow_id].attr[
+            co.BYTES_RETRANS_D2S] = connection.flow.attr[co.BYTES_RETRANS_D2S]
         mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_OOO_S2D] = connection.flow.attr[co.PACKS_OOO_S2D]
         mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_OOO_D2S] = connection.flow.attr[co.PACKS_OOO_D2S]
     return conn_id, flow_id
@@ -495,7 +500,6 @@ def create_congestion_window_data(tsg, adv_rwin, is_reversed, connections, flow_
         offsets[elem[2]] = elem[1]
         congestion_list.append([elem[0], congestion_value])
 
-
     if mptcp_connections:
         if not conn_id:
             return
@@ -505,11 +509,11 @@ def create_congestion_window_data(tsg, adv_rwin, is_reversed, connections, flow_
         if is_reversed:
             if co.D2S not in mptcp_connections[conn_id].attr[co.CWIN_DATA].keys():
                 mptcp_connections[conn_id].attr[co.CWIN_DATA][co.D2S] = {}
-            mptcp_connections[conn_id].attr[co.CWIN_DATA][co.D2S][interface + '-' + flow_id] =  congestion_list
+            mptcp_connections[conn_id].attr[co.CWIN_DATA][co.D2S][interface + '-' + flow_id] = congestion_list
         else:
             if co.S2D not in mptcp_connections[conn_id].attr[co.CWIN_DATA].keys():
                 mptcp_connections[conn_id].attr[co.CWIN_DATA][co.S2D] = {}
-            mptcp_connections[conn_id].attr[co.CWIN_DATA][co.S2D][interface + '-' + flow_id] =  congestion_list
+            mptcp_connections[conn_id].attr[co.CWIN_DATA][co.S2D][interface + '-' + flow_id] = congestion_list
     else:
         if co.CWIN_DATA not in connections[flow_name].attr.keys():
             connections[flow_name].attr[co.CWIN_DATA] = {}
@@ -538,13 +542,14 @@ def plot_congestion_graphs(pcap_filepath, graph_dir_exp, connections):
             for interface, data in data_if.iteritems():
                 graph_fname = base_dir_graph_fname + '_' + interface
                 graph_fname += '_' + conn.flow.attr[co.SADDR].replace('.', '-') \
-                            + '_' + conn.flow.attr[co.SPORT] \
-                            + '_' + conn.flow.attr[co.DADDR].replace('.', '-') \
-                            + '_' + conn.flow.attr[co.DPORT]
+                    + '_' + conn.flow.attr[co.SPORT] \
+                    + '_' + conn.flow.attr[co.DADDR].replace('.', '-') \
+                    + '_' + conn.flow.attr[co.DPORT]
 
                 graph_fname += '.pdf'
                 graph_filepath = os.path.join(cwin_graph_dir, graph_fname)
-                co.plot_line_graph([data], [interface], ['k'], "Time [s]", "Congestion window [Bytes]", "Congestion window", graph_filepath, ymin=0)
+                co.plot_line_graph([data], [interface], ['k'], "Time [s]",
+                                   "Congestion window [Bytes]", "Congestion window", graph_filepath, ymin=0)
 
 
 def process_tsg_xpl_file(xpl_filepath, graph_dir_exp, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id):
@@ -553,7 +558,8 @@ def process_tsg_xpl_file(xpl_filepath, graph_dir_exp, connections, aggregate_dic
     """
     prepare_xpl_file(xpl_filepath, connections, flow_name, relative_start)
     aggregate_tsg, adv_rwin = get_upper_packets_in_flight_and_adv_rwin(xpl_filepath, flow_name)
-    create_congestion_window_data(aggregate_tsg, adv_rwin, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id)
+    create_congestion_window_data(
+        aggregate_tsg, adv_rwin, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id)
     interface = connections[flow_name].flow.attr[co.IF]
     if is_reversed:
         aggregate_dict[co.D2S][interface] += aggregate_tsg
@@ -592,13 +598,15 @@ def plot_aggregated_results(pcap_filepath, graph_dir_exp, aggregate_dict):
     aggl_dir = os.path.join(graph_dir_exp, co.AGGL_DIR)
     for direction, interfaces in aggregate_dict.iteritems():
         for interface, aggr_list in interfaces.iteritems():
-            aggregate_dict[direction][
-                interface] = co.sort_and_aggregate(aggr_list)
-            co.plot_line_graph([aggregate_dict[direction][interface]], [interface], ['k'], "Time [s]", "Sequence number", "Agglomeration of " + interface + " connections", os.path.join(
-                aggl_dir, os.path.basename(pcap_filepath)[:-5] + "_" + direction + "_" + interface + '.pdf'))
+            aggregate_dict[direction][interface] = co.sort_and_aggregate(aggr_list)
+            co.plot_line_graph([aggregate_dict[direction][interface]], [interface], ['k'], "Time [s]",
+                               "Sequence number", "Agglomeration of " + interface + " connections", os.path.join(
+                               aggl_dir, os.path.basename(pcap_filepath)[:-5] + "_" + direction + "_" + interface
+                               + '.pdf'))
 
-        co.plot_line_graph(aggregate_dict[direction].values(), aggregate_dict[direction].keys(), [
-                           'r:', 'b--'], "Time [s]", "Sequence number", "Agglomeration of all connections", os.path.join(aggl_dir, os.path.basename(pcap_filepath)[:-5] + "_" + direction + "_all.pdf"))
+        co.plot_line_graph(aggregate_dict[direction].values(), aggregate_dict[direction].keys(), ['r:', 'b--'],
+                           "Time [s]", "Sequence number", "Agglomeration of all connections", os.path.join(
+                           aggl_dir, os.path.basename(pcap_filepath)[:-5] + "_" + direction + "_all.pdf"))
 
 
 def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
@@ -634,7 +642,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptc
             conn_id, flow_id = copy_info_to_mptcp_connections(connections[flow_name], mptcp_connections)
 
         if interesting_graph(flow_name, is_reversed, connections) and 'tsg' in os.path.basename(xpl_filepath):
-            process_tsg_xpl_file(xpl_filepath, graph_dir_exp, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id)
+            process_tsg_xpl_file(xpl_filepath, graph_dir_exp, connections, aggregate_dict,
+                                 flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id)
 
         try:
             if mptcp_connections:
