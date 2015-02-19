@@ -64,52 +64,52 @@ DEF_NB_THREADS = 1
 parser = argparse.ArgumentParser(
     description="Analyze pcap files of TCP or MPTCP connections")
 parser.add_argument("-i",
-    "--input", help="input directory/file of the (possibly compressed) pcap files", default=DEF_IN_DIR)
+                    "--input", help="input directory/file of the (possibly compressed) pcap files", default=DEF_IN_DIR)
 parser.add_argument("-t",
-    "--trace", help="temporary directory that will be used to store uncompressed "
+                    "--trace", help="temporary directory that will be used to store uncompressed "
                     + "pcap files", default=DEF_TRACE_DIR)
 parser.add_argument("-g",
-    "--graph", help="directory where the graphs of the pcap files will be stored", default=DEF_GRAPH_DIR)
+                    "--graph", help="directory where the graphs of the pcap files will be stored", default=DEF_GRAPH_DIR)
 parser.add_argument("-s",
-    "--stat", help="directory where the stats of the pcap files will be stored", default=co.DEF_STAT_DIR)
+                    "--stat", help="directory where the stats of the pcap files will be stored", default=co.DEF_STAT_DIR)
 parser.add_argument("-a",
-    "--aggl", help="directory where data of agglomerated graphs will be stored", default=co.DEF_AGGL_DIR)
+                    "--aggl", help="directory where data of agglomerated graphs will be stored", default=co.DEF_AGGL_DIR)
 parser.add_argument("-p",
-    "--pcap", help="analyze only pcap files containing the given string (default lo)", default="_"+co.DEF_IFACE+".")
+                    "--pcap", help="analyze only pcap files containing the given string (default lo)", default="_" + co.DEF_IFACE + ".")
 parser.add_argument("-j",
-    "--threads", type=int, help="process the analyse separated threads", default=DEF_NB_THREADS)
+                    "--threads", type=int, help="process the analyse separated threads", default=DEF_NB_THREADS)
 parser.add_argument("-l",
-    "--stderr", help="log to stderr", action="store_true")
+                    "--stderr", help="log to stderr", action="store_true")
 parser.add_argument("-k",
-    "--keep", help="keep the original file with -k option of gunzip, if it exists",
+                    "--keep", help="keep the original file with -k option of gunzip, if it exists",
                     action="store_true")
 parser.add_argument("-c",
-    "--clean", help="remove noisy traffic on lo", action="store_true")
+                    "--clean", help="remove noisy traffic on lo", action="store_true")
 parser.add_argument("-C",
-    "--not-correct", help="do not correct traces, implies no preprocessing", action="store_true")
+                    "--not-correct", help="do not correct traces, implies no preprocessing", action="store_true")
 parser.add_argument("-G",
-    "--not-graph", help="do not produce graphes and keep corrected traces, implies -P", action="store_true")
+                    "--not-graph", help="do not produce graphes and keep corrected traces, implies -P", action="store_true")
 parser.add_argument("-P",
-    "--not-purge", help="do not remove corrected traces", action="store_true")
+                    "--not-purge", help="do not remove corrected traces", action="store_true")
 parser.add_argument("-b",
-    "--min-bytes", help="only plot graphs of connections with at least a given amount of bytes", default=0)
+                    "--min-bytes", help="only plot graphs of connections with at least a given amount of bytes", default=0)
 args = parser.parse_args()
 
 in_dir_exp = os.path.abspath(os.path.expanduser(args.input))
 # ~/graphs -> /home/mptcp/graphs_lo ; ../graphs/ -> /home/mptcp/graphs_lo
 trace_dir_exp = co.get_dir_from_arg(args.trace, args.pcap)
 graph_dir_exp = co.get_dir_from_arg(args.graph, args.pcap)
-stat_dir_exp  = co.get_dir_from_arg(args.stat,  args.pcap)
-aggl_dir_exp  = co.get_dir_from_arg(args.aggl,  args.pcap)
+stat_dir_exp = co.get_dir_from_arg(args.stat,  args.pcap)
+aggl_dir_exp = co.get_dir_from_arg(args.aggl,  args.pcap)
 
 if os.path.isdir(in_dir_exp):
     # add the basename of the input dir
-    base_dir = os.path.basename(in_dir_exp) # 20150215-013001_d8cac271ad6d544930b0e804383c19378ed4908c
-    parent_dir = os.path.basename(os.path.dirname(in_dir_exp)) # TCPDump or TCPDump_bad_simulation
+    base_dir = os.path.basename(in_dir_exp)  # 20150215-013001_d8cac271ad6d544930b0e804383c19378ed4908c
+    parent_dir = os.path.basename(os.path.dirname(in_dir_exp))  # TCPDump or TCPDump_bad_simulation
     trace_dir_exp = os.path.join(trace_dir_exp, parent_dir, base_dir)
     graph_dir_exp = os.path.join(graph_dir_exp, parent_dir, base_dir)
-    stat_dir_exp  = os.path.join(stat_dir_exp,  parent_dir, base_dir)
-    aggl_dir_exp  = os.path.join(aggl_dir_exp,  parent_dir, base_dir)
+    stat_dir_exp = os.path.join(stat_dir_exp,  parent_dir, base_dir)
+    aggl_dir_exp = os.path.join(aggl_dir_exp,  parent_dir, base_dir)
 
 if args.stderr:
     print_out = sys.stderr
@@ -119,6 +119,7 @@ else:
 ##################################################
 ##                 PREPROCESSING                ##
 ##################################################
+
 
 def uncompress_file(filename, dirpath):
     if args.pcap in filename:
@@ -161,6 +162,7 @@ def uncompress_file(filename, dirpath):
             print(filename + ": not in a valid format, skipped", file=sys.stderr)
     return False
 
+
 def add_if_valid(list, item):
     if item:
         list.append(item)
@@ -193,27 +195,30 @@ def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge):
             tcp.correct_trace(pcap_filepath, print_out=print_out)
         # we need to change dir, do that in a new process
         if graph:
-            p = Process(target=mptcp.process_trace, args=(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp,), kwargs={'min_bytes': args.min_bytes})
+            p = Process(target=mptcp.process_trace, args=(
+                pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp,), kwargs={'min_bytes': args.min_bytes})
             p.start()
             p.join()
     elif pcap_filename.startswith('tcp'):
         if correct:
             tcp.correct_trace(pcap_filepath, print_out=print_out)
         if graph:
-            tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, print_out=print_out, min_bytes=args.min_bytes)
+            tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp,
+                              print_out=print_out, min_bytes=args.min_bytes)
     else:
         print(pcap_filepath + ": don't know the protocol used; skipped", file=sys.stderr)
 
     print('End for file ' + pcap_filepath, file=print_out)
-    if purge and graph: # if we just want to correct traces, do not remove them
+    if purge and graph:  # if we just want to correct traces, do not remove them
         os.remove(pcap_filepath)
+
 
 def thread_launch(thread_id, clean, correct, graph, purge):
     global pcap_list
     while True:
         try:
             pcap_filepath = pcap_list.pop()
-        except IndexError: # no more thread
+        except IndexError:  # no more thread
             break
         analyze_no = str(pcap_list_len - len(pcap_list)) + "/" + str(pcap_list_len)
         print("Thread " + str(thread_id) + ": Analyze: " + pcap_filepath + " (" + analyze_no + ")", file=print_out)
@@ -235,7 +240,7 @@ co.check_directory_exists(os.path.join(graph_dir_exp, co.AGGL_DIR))
 co.check_directory_exists(stat_dir_exp)
 co.check_directory_exists(aggl_dir_exp)
 # If file is a .pcap, use it for (mp)tcptrace
-pcap_list.reverse() # we will use pop: use the natural order
+pcap_list.reverse()  # we will use pop: use the natural order
 
 threads = []
 args.threads = min(args.threads, pcap_list_len)
@@ -243,8 +248,8 @@ if args.threads > 1:
     # Launch new thread
     for thread_id in range(args.threads):
         thread = threading.Thread(target=thread_launch,
-            args=(thread_id, args.clean,
-                  not args.not_correct, not args.not_graph, not args.not_purge))
+                                  args=(thread_id, args.clean,
+                                        not args.not_correct, not args.not_graph, not args.not_purge))
         thread.start()
         threads.append(thread)
     # Wait
