@@ -150,20 +150,20 @@ def is_reverse_connection(csv_fname):
 ##################################################
 
 
-def process_mptcptrace_cmd(cmd, pcap_fname):
+def process_mptcptrace_cmd(cmd, pcap_filepath):
     """ Launch the command cmd given in argument, and return a dictionary containing information
         about connections of the pcap file analyzed
         Raise a MPTCPTraceError if mptcptrace encounters problems
     """
-    pcap_flow_data = pcap_fname[:-5] + '.out'
-    flow_data_file = open(pcap_flow_data, 'w+')
+    pcap_flow_data_path = pcap_filepath[:-5] + '.out'
+    flow_data_file = open(pcap_flow_data_path, 'w+')
     if subprocess.call(cmd, stdout=flow_data_file) != 0:
-        raise MPTCPTraceError("Error of mptcptrace with " + pcap_fname)
+        raise MPTCPTraceError("Error of mptcptrace with " + pcap_filepath)
 
     connections = extract_flow_data(flow_data_file)
     # Don't forget to close and remove pcap_flow_data
     flow_data_file.close()
-    os.remove(pcap_flow_data)
+    os.remove(pcap_flow_data_path)
     return connections
 
 
@@ -272,15 +272,15 @@ def rewrite_xpl(xpl_fname, xpl_data, begin_time, begin_seq, connections, conn_id
             xpl_file.write(str(number) + "\n")
 
         elif split_line[0] in co.XPL_ONE_POINT:
-            #time = float(split_line[1]) - begin_time
+            # time = float(split_line[1]) - begin_time
             seq = int(split_line[2]) - begin_seq
             xpl_file.write(split_line[0] + " " + split_line[1] + " " + str(seq) + "\n")
 
         elif split_line[0] in co.XPL_TWO_POINTS:
             # Map
-            #time_1 = float(split_line[1]) - begin_time
+            # time_1 = float(split_line[1]) - begin_time
             seq_1 = int(split_line[2]) - begin_seq
-            #time_2 = float(split_line[3]) - begin_time
+            # time_2 = float(split_line[3]) - begin_time
             seq_2 = int(split_line[4]) - begin_seq
 
             xpl_file.write(split_line[0] + " " + split_line[1] + " " + str(seq_1) + " " + split_line[3] + " " + str(seq_2) + "\n")
@@ -407,41 +407,41 @@ def process_seq_xpl(xpl_fname, connections, relative_start, min_bytes):
         print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
 
 
-def plot_congestion_graphs(pcap_fname, graph_dir_exp, connections):
+def plot_congestion_graphs(pcap_filepath, graph_dir_exp, connections):
     """ Given MPTCPConnections (in connections), plot their congestion graph """
     cwin_graph_dir = os.path.join(graph_dir_exp, co.CWIN_DIR)
 
     formatting = ['b', 'r', 'g', 'p']
 
     for conn_id, conn in connections.iteritems():
-        base_graph_fname = os.path.basename(pcap_fname[:-5]) + '_' + conn.conn_id + '_cwin'
+        base_graph_fname = os.path.basename(pcap_filepath[:-5]) + '_' + conn.conn_id + '_cwin'
 
         for direction, data_if in conn.attr[co.CWIN_DATA].iteritems():
             dir_abr = 'd2s' if direction == co.D2S else 's2d' if direction == co.S2D else '?'
             graph_fname = base_graph_fname + '_' + dir_abr
             graph_fname += '.pdf'
-            graph_fname = os.path.join(cwin_graph_dir, graph_fname)
+            graph_filepath = os.path.join(cwin_graph_dir, graph_fname)
 
             nb_curves = len(data_if)
-            co.plot_line_graph(data_if.values(), data_if.keys(), formatting[:nb_curves], "Time [s]", "Congestion window [Bytes]", "Congestion window", graph_fname, ymin=0)
+            co.plot_line_graph(data_if.values(), data_if.keys(), formatting[:nb_curves], "Time [s]", "Congestion window [Bytes]", "Congestion window", graph_filepath, ymin=0)
 
 
 # We can't change dir per thread, we should use processes
-def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_bytes=0):
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_bytes=0):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     csv_tmp_dir = tempfile.mkdtemp(dir=os.getcwd())
     connections = None
     try:
         with co.cd(csv_tmp_dir):
             # If segmentation faults, remove the -S option
-            cmd = ['mptcptrace', '-f', pcap_fname, '-s', '-S', '-G', 250, '-w', '0']
-            connections = process_mptcptrace_cmd(cmd, pcap_fname)
+            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-S', '-G', '250', '-w', '0']
+            connections = process_mptcptrace_cmd(cmd, pcap_filepath)
 
             # Useful to count the number of reinjected bytes
-            cmd = ['mptcptrace', '-f', pcap_fname, '-s', '-w', '2']
+            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-w', '2']
             devnull = open(os.devnull, 'w')
             if subprocess.call(cmd, stdout=devnull) != 0:
-                raise MPTCPTraceError("Error of mptcptrace with " + pcap_fname)
+                raise MPTCPTraceError("Error of mptcptrace with " + pcap_filepath)
             devnull.close()
 
             # The mptcptrace call will generate .xpl files to cope with
@@ -453,7 +453,7 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_byt
             for xpl_fname in glob.glob('*.xpl'):
                 if MPTCP_SEQ_FNAME in xpl_fname:
                     process_seq_xpl(xpl_fname, connections, relative_start, min_bytes)
-                cmd = ['mv', xpl_fname, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_fname[:-5]) + "_" + xpl_fname)]
+                cmd = ['mv', xpl_fname, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + xpl_fname)]
                 if subprocess.call(cmd, stdout=sys.stderr) != 0:
                     print("Error when moving " + xpl_fname, file=sys.stderr)
 
@@ -465,5 +465,5 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_byt
     # Create aggregated graphes and add per interface information on MPTCPConnection
     # This will save the mptcp connections
     if connections:
-        tcp.process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_connections=connections)
-        plot_congestion_graphs(pcap_fname, graph_dir_exp, connections)
+        tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_connections=connections)
+        plot_congestion_graphs(pcap_filepath, graph_dir_exp, connections)
