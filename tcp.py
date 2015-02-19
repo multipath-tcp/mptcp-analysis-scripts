@@ -163,10 +163,11 @@ def convert_number_to_name(nb_conn):
         return convert_number_to_letter(2 * nb_conn) + '2' + convert_number_to_letter(2 * nb_conn + 1)
 
 
-def get_flow_name(xpl_fname):
-    """ Return the flow name in the form 'a2b' (and not 'b2a'), reverse is True iff in xpl_fname,
+def get_flow_name(xpl_filepath):
+    """ Return the flow name in the form 'a2b' (and not 'b2a'), reverse is True iff in xpl_filepath,
         it contains 'b2a' instead of 'a2b'
     """
+    xpl_fname = os.path.basename(xpl_filepath)
     # Basic information is contained between the two last '_'
     last_us_index = xpl_fname.rindex("_")
     nearly_last_us_index = xpl_fname.rindex("_", 0, last_us_index)
@@ -191,22 +192,22 @@ def get_flow_name(xpl_fname):
 ##################################################
 
 
-def process_tcptrace_cmd(cmd, pcap_fname):
+def process_tcptrace_cmd(cmd, pcap_filepath):
     """ Launch the command cmd given in argument, and return a dictionary containing information
         about connections of the pcap file analyzed
         Options -n, -l and --csv should be set
         Raise a TCPTraceError if tcptrace encounters problems
     """
-    pcap_flow_data = pcap_fname[:-5] + '.out'
-    flow_data_file = open(pcap_flow_data, 'w+')
+    pcap_flow_data_path = pcap_filepath[:-5] + '.out'
+    flow_data_file = open(pcap_flow_data_path, 'w+')
     if subprocess.call(cmd, stdout=flow_data_file) != 0:
-        raise TCPTraceError("Error of tcptrace with " + pcap_fname)
+        raise TCPTraceError("Error of tcptrace with " + pcap_filepath)
 
     connections = extract_flow_data(flow_data_file)
 
     # Don't forget to close and remove pcap_flow_data
     flow_data_file.close()
-    os.remove(pcap_flow_data)
+    os.remove(pcap_flow_data_path)
     return connections
 
 ##################################################
@@ -227,23 +228,23 @@ def get_connection_data_with_ip_port(connections, ip, port, dst=True):
     return None
 
 
-def merge_and_clean_sub_pcap(pcap_fname, print_out=sys.stdout):
-    """ Merge pcap files with name beginning with pcap_fname followed by two underscores and delete
-        them
+def merge_and_clean_sub_pcap(pcap_filepath, print_out=sys.stdout):
+    """ Merge pcap files with name beginning with pcap_filepath (without extension) followed by two
+        underscores and delete them
     """
-    cmd = ['mergecap', '-w', pcap_fname]
-    for subpcap_fname in glob.glob(pcap_fname[:-5] + '__*.pcap'):
-        cmd.append(subpcap_fname)
+    cmd = ['mergecap', '-w', pcap_filepath]
+    for subpcap_filepath in glob.glob(pcap_filepath[:-5] + '__*.pcap'):
+        cmd.append(subpcap_filepath)
 
     if subprocess.call(cmd, stdout=print_out) != 0:
-        raise MergecapError("Error with mergecap " + pcap_fname)
+        raise MergecapError("Error with mergecap " + pcap_filepath)
 
-    for subpcap_fname in cmd[3:]:
-        os.remove(subpcap_fname)
+    for subpcap_filepath in cmd[3:]:
+        os.remove(subpcap_filepath)
 
 
-def split_and_replace(pcap_fname, remain_pcap_fname, conn, other_conn, num, print_out=sys.stdout):
-    """ Split remain_pcap_fname and replace DADDR and DPORT of conn by SADDR and DADDR of other_conn
+def split_and_replace(pcap_filepath, remain_pcap_filepath, conn, other_conn, num, print_out=sys.stdout):
+    """ Split remain_pcap_filepath and replace DADDR and DPORT of conn by SADDR and DADDR of other_conn
         num will be the numerotation of the splitted file
         Can raise TSharkError, IOError or TCPRewriteError
     """
@@ -251,52 +252,52 @@ def split_and_replace(pcap_fname, remain_pcap_fname, conn, other_conn, num, prin
     condition = '(tcp.srcport==' + \
         conn.flow.attr[co.SPORT] + \
         ')or(tcp.dstport==' + conn.flow.attr[co.SPORT] + ')'
-    tmp_split_fname = pcap_fname[:-5] + "__tmp.pcap"
-    cmd = ['tshark', '-r', remain_pcap_fname,
-           '-Y', condition, '-w', tmp_split_fname]
+    tmp_split_filepath = pcap_filepath[:-5] + "__tmp.pcap"
+    cmd = ['tshark', '-r', remain_pcap_filepath,
+           '-Y', condition, '-w', tmp_split_filepath]
     if subprocess.call(cmd, stdout=print_out) != 0:
         raise TSharkError("Error when tshark port " + conn.flow.attr[co.SPORT])
 
-    tmp_remain_fname = pcap_fname[:-5] + "__tmprem.pcap"
+    tmp_remain_filepath = pcap_filepath[:-5] + "__tmprem.pcap"
     cmd[4] = "!(" + condition + ")"
-    cmd[6] = tmp_remain_fname
+    cmd[6] = tmp_remain_filepath
     if subprocess.call(cmd, stdout=print_out) != 0:
         raise TSharkError("Error when tshark port !" + conn.flow.attr[co.SPORT])
 
-    cmd = ['mv', tmp_remain_fname, remain_pcap_fname]
+    cmd = ['mv', tmp_remain_filepath, remain_pcap_filepath]
     if subprocess.call(cmd, stdout=print_out) != 0:
-        raise IOError("Error when moving " + tmp_remain_fname + " to " + remain_pcap_fname)
+        raise IOError("Error when moving " + tmp_remain_filepath + " to " + remain_pcap_filepath)
 
     # Replace meaningless IP and port with the "real" values
-    split_fname = pcap_fname[:-5] + "__" + str(num) + ".pcap"
+    split_filepath = pcap_filepath[:-5] + "__" + str(num) + ".pcap"
     cmd = ['tcprewrite',
            "--portmap=" +
            conn.flow.attr[co.DPORT] + ":" + other_conn.flow.attr[co.SPORT],
            "--pnat=" + conn.flow.attr[co.DADDR] +
            ":" + other_conn.flow.attr[co.SADDR],
-           "--infile=" + tmp_split_fname,
-           "--outfile=" + split_fname]
+           "--infile=" + tmp_split_filepath,
+           "--outfile=" + split_filepath]
     if subprocess.call(cmd, stdout=print_out) != 0:
         raise TCPRewriteError("Error with tcprewrite " + conn.flow.attr[co.SPORT])
 
-    os.remove(tmp_split_fname)
+    os.remove(tmp_split_filepath)
 
 
-def correct_trace(pcap_fname, print_out=sys.stdout):
+def correct_trace(pcap_filepath, print_out=sys.stdout):
     """ Make the link between two unidirectional connections that form one bidirectional one
         Do this also for mptcp, because mptcptrace will not be able to find all conversations
     """
-    cmd = ['tcptrace', '-n', '-l', '--csv', pcap_fname]
+    cmd = ['tcptrace', '-n', '-l', '--csv', pcap_filepath]
     try:
-        connections = process_tcptrace_cmd(cmd, pcap_fname)
+        connections = process_tcptrace_cmd(cmd, pcap_filepath)
     except TCPTraceError as e:
         print(str(e) + ": skip tcp correction", file=sys.stderr)
-        print(str(e) + ": stop correcting trace " + pcap_fname, file=print_out)
+        print(str(e) + ": stop correcting trace " + pcap_filepath, file=print_out)
         return
     # Create the remaining_file
-    remain_pcap_fname = co.copy_remain_pcap_file(
-        pcap_fname, print_out=print_out)
-    if not remain_pcap_fname:
+    remain_pcap_filepath = co.copy_remain_pcap_file(
+        pcap_filepath, print_out=print_out)
+    if not remain_pcap_filepath:
         return
 
     num = 0
@@ -306,21 +307,21 @@ def correct_trace(pcap_fname, print_out=sys.stdout):
                 connections, conn.flow.attr[co.SADDR], conn.flow.attr[co.SPORT])
             if other_conn:
                 try:
-                    split_and_replace(pcap_fname, remain_pcap_fname, conn, other_conn, num, print_out=print_out)
+                    split_and_replace(pcap_filepath, remain_pcap_filepath, conn, other_conn, num, print_out=print_out)
                 except Exception as e:
                     print(str(e) + ": skip tcp correction", file=sys.stderr)
-                    print(str(e) + ": stop correcting trace " + pcap_fname, file=print_out)
+                    print(str(e) + ": stop correcting trace " + pcap_filepath, file=print_out)
                     return
         num += 1
-        print(os.path.basename(pcap_fname) + ": Corrected: " +
+        print(os.path.basename(pcap_filepath) + ": Corrected: " +
               str(num) + "/" + str(len(connections)), file=print_out)
 
     # Merge small pcap files into a unique one
     try:
-        merge_and_clean_sub_pcap(pcap_fname, print_out=print_out)
+        merge_and_clean_sub_pcap(pcap_filepath, print_out=print_out)
     except MergecapError as e:
         print(str(e) + ": skip tcp correction", file=sys.stderr)
-        print(str(e) + ": stop correcting trace " + pcap_fname, file=print_out)
+        print(str(e) + ": stop correcting trace " + pcap_filepath, file=print_out)
 
 ##################################################
 ##                   TCPTRACE                   ##
@@ -330,7 +331,7 @@ def correct_trace(pcap_fname, print_out=sys.stdout):
 def interesting_graph(flow_name, is_reversed, connections):
     """ Return True if the MPTCP graph is worthy, else False
         This function assumes that a graph is interesting if it has at least one connection that
-        if not 127.0.0.1 -> 127.0.0.1 and if there are data packets sent
+        is not 127.0.0.1 -> 127.0.0.1 and if there are data packets sent
     """
     if (not connections[flow_name].flow.attr[co.TYPE] == 'IPv4' or connections[flow_name].flow.attr[co.IF]):
         if is_reversed:
@@ -340,14 +341,14 @@ def interesting_graph(flow_name, is_reversed, connections):
     return False
 
 
-def prepare_xpl_file(xpl_fname, connections, flow_name, relative_start):
-    """ Rewrite datasets file, set relative values of time for all connections in a pcap
+def prepare_xpl_file(xpl_filepath, connections, flow_name, relative_start):
+    """ Rewrite xpl file, set relative values of time for all connections in a pcap
         Return a list of lists to create a fully aggregated graph
     """
     connection = connections[flow_name]
     try:
         # First read the file
-        xpl_file = open(xpl_fname, 'r')
+        xpl_file = open(xpl_filepath, 'r')
     except IOError:
         # Sometimes, no datasets file; skip the file
         return
@@ -356,7 +357,7 @@ def prepare_xpl_file(xpl_fname, connections, flow_name, relative_start):
         xpl_file.close()
         # Then overwrite it
         time_offset = connection.flow.attr[co.START] - relative_start
-        xpl_file = open(xpl_fname, 'w')
+        xpl_file = open(xpl_filepath, 'w')
         for line in datasets:
             split_line = line.split(" ")
             if split_line[0] in co.XPL_ONE_POINT:
@@ -372,11 +373,11 @@ def prepare_xpl_file(xpl_fname, connections, flow_name, relative_start):
         xpl_file.close()
     except IOError as e:
         print(e, file=sys.stderr)
-        print("IOError in preparing xpl file of " + xpl_fname, file=sys.stderr)
+        print("IOError in preparing xpl file of " + xpl_filepath, file=sys.stderr)
 
 
-def get_upper_packets_in_flight_and_adv_rwin(xpl_fname, flow_name):
-    """ Read the file with name xpl_fname and collect upper bound of packet in flight and advertised
+def get_upper_packets_in_flight_and_adv_rwin(xpl_filepath, flow_name):
+    """ Read the file with path xpl_filepath and collect upper bound of packet in flight and advertised
         receiver window and return a tuple with a list ready to aggregate and the list of values of
         advertised window of receiver
     """
@@ -386,7 +387,7 @@ def get_upper_packets_in_flight_and_adv_rwin(xpl_fname, flow_name):
     max_seq = 0
     try:
         # First read the file
-        xpl_file = open(xpl_fname, 'r')
+        xpl_file = open(xpl_filepath, 'r')
         data = xpl_file.readlines()
         xpl_file.close()
         # Then collect all useful data
@@ -413,7 +414,7 @@ def get_upper_packets_in_flight_and_adv_rwin(xpl_fname, flow_name):
 
     except IOError as e:
         print(e, file=sys.stderr)
-        print("IOError in reading file " + xpl_fname, file=sys.stderr)
+        print("IOError in reading file " + xpl_filepath, file=sys.stderr)
     return aggregate_seq, adv_rwin
 
 
@@ -523,12 +524,12 @@ def create_congestion_window_data(tsg, adv_rwin, is_reversed, connections, flow_
             connections[flow_name].attr[co.CWIN_DATA][co.S2D][interface] = congestion_list
 
 
-def plot_congestion_graphs(pcap_fname, graph_dir_exp, connections):
+def plot_congestion_graphs(pcap_filepath, graph_dir_exp, connections):
     """ Given a TCPConnections (in connections), plot their congestion graph """
     cwin_graph_dir = os.path.join(graph_dir_exp, co.CWIN_DIR)
 
     for flow_id, conn in connections.iteritems():
-        base_graph_fname = os.path.basename(pcap_fname[:-5]) + '_' + conn.conn_id + '_cwin'
+        base_graph_fname = os.path.basename(pcap_filepath[:-5]) + '_' + conn.conn_id + '_cwin'
 
         for direction, data_if in conn.attr[co.CWIN_DATA].iteritems():
             dir_abr = 'd2s' if direction == co.D2S else 's2d' if direction == co.S2D else '?'
@@ -542,16 +543,16 @@ def plot_congestion_graphs(pcap_fname, graph_dir_exp, connections):
                             + '_' + conn.flow.attr[co.DPORT]
 
                 graph_fname += '.pdf'
-                graph_fname = os.path.join(cwin_graph_dir, graph_fname)
-                co.plot_line_graph([data], [interface], ['k'], "Time [s]", "Congestion window [Bytes]", "Congestion window", graph_fname, ymin=0)
+                graph_filepath = os.path.join(cwin_graph_dir, graph_fname)
+                co.plot_line_graph([data], [interface], ['k'], "Time [s]", "Congestion window [Bytes]", "Congestion window", graph_filepath, ymin=0)
 
 
-def process_tsg_xpl_file(xpl_fname, graph_dir_exp, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id):
+def process_tsg_xpl_file(xpl_filepath, graph_dir_exp, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id):
     """ Prepare gpl file for the (possible) plot and aggregate its content
         Also update connections or mptcp_connections with the processed data
     """
-    prepare_xpl_file(xpl_fname, connections, flow_name, relative_start)
-    aggregate_tsg, adv_rwin = get_upper_packets_in_flight_and_adv_rwin(xpl_fname, flow_name)
+    prepare_xpl_file(xpl_filepath, connections, flow_name, relative_start)
+    aggregate_tsg, adv_rwin = get_upper_packets_in_flight_and_adv_rwin(xpl_filepath, flow_name)
     create_congestion_window_data(aggregate_tsg, adv_rwin, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id)
     interface = connections[flow_name].flow.attr[co.IF]
     if is_reversed:
@@ -586,7 +587,7 @@ def process_tsg_xpl_file(xpl_fname, graph_dir_exp, connections, aggregate_dict, 
                 flow_name].flow.attr[co.BYTES_S2D]
 
 
-def plot_aggregated_results(pcap_fname, graph_dir_exp, aggregate_dict):
+def plot_aggregated_results(pcap_filepath, graph_dir_exp, aggregate_dict):
     """ Create graphs for aggregated results """
     aggl_dir = os.path.join(graph_dir_exp, co.AGGL_DIR)
     for direction, interfaces in aggregate_dict.iteritems():
@@ -594,13 +595,13 @@ def plot_aggregated_results(pcap_fname, graph_dir_exp, aggregate_dict):
             aggregate_dict[direction][
                 interface] = co.sort_and_aggregate(aggr_list)
             co.plot_line_graph([aggregate_dict[direction][interface]], [interface], ['k'], "Time [s]", "Sequence number", "Agglomeration of " + interface + " connections", os.path.join(
-                aggl_dir, os.path.basename(pcap_fname)[:-5] + "_" + direction + "_" + interface + '.pdf'))
+                aggl_dir, os.path.basename(pcap_filepath)[:-5] + "_" + direction + "_" + interface + '.pdf'))
 
         co.plot_line_graph(aggregate_dict[direction].values(), aggregate_dict[direction].keys(), [
-                           'r:', 'b--'], "Time [s]", "Sequence number", "Agglomeration of all connections", os.path.join(aggl_dir, os.path.basename(pcap_fname)[:-5] + "_" + direction + "_all.pdf"))
+                           'r:', 'b--'], "Time [s]", "Sequence number", "Agglomeration of all connections", os.path.join(aggl_dir, os.path.basename(pcap_filepath)[:-5] + "_" + direction + "_all.pdf"))
 
 
-def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0
@@ -610,11 +611,11 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_c
     # --csv for csv file
     cmd = ['tcptrace', '--output_dir=' + os.getcwd(),
            '--output_prefix=' +
-           os.path.basename(pcap_fname[:-5]) + '_', '-C', '-S', '-T', '-zxy',
-           '-n', '-y', '-l', '--csv', pcap_fname]
+           os.path.basename(pcap_filepath[:-5]) + '_', '-C', '-S', '-T', '-zxy',
+           '-n', '-y', '-l', '--csv', pcap_filepath]
 
     try:
-        connections = process_tcptrace_cmd(cmd, pcap_fname)
+        connections = process_tcptrace_cmd(cmd, pcap_filepath)
     except TCPTraceError as e:
         print(str(e) + ": skip process", file=sys.stderr)
         return
@@ -626,34 +627,34 @@ def process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_c
     prepare_connections_objects(connections, mptcp_connections)
 
     # The tcptrace call will generate .xpl files to cope with
-    for xpl_fname in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_fname[:-5]) + '*.xpl')):
+    for xpl_filepath in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_filepath[:-5]) + '*.xpl')):
         conn_id, flow_id = None, None
-        flow_name, is_reversed = get_flow_name(xpl_fname)
+        flow_name, is_reversed = get_flow_name(xpl_filepath)
         if mptcp_connections:
             conn_id, flow_id = copy_info_to_mptcp_connections(connections[flow_name], mptcp_connections)
 
-        if interesting_graph(flow_name, is_reversed, connections) and 'tsg' in xpl_fname:
-            process_tsg_xpl_file(xpl_fname, graph_dir_exp, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id)
+        if interesting_graph(flow_name, is_reversed, connections) and 'tsg' in os.path.basename(xpl_filepath):
+            process_tsg_xpl_file(xpl_filepath, graph_dir_exp, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id)
 
         try:
             if mptcp_connections:
                 # If mptcp, don't keep tcptrace plots
-                os.remove(xpl_fname)
+                os.remove(xpl_filepath)
             else:
-                cmd = ['mv', xpl_fname, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR)]
+                cmd = ['mv', xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR)]
                 if subprocess.call(cmd, stdout=print_out) != 0:
-                    print("Error when moving " + xpl_fname, file=sys.stderr)
+                    print("Error when moving " + xpl_filepath, file=sys.stderr)
         except OSError as e:
             print(str(e) + ": skipped", file=sys.stderr)
 
-    plot_aggregated_results(pcap_fname, graph_dir_exp, aggregate_dict)
+    plot_aggregated_results(pcap_filepath, graph_dir_exp, aggregate_dict)
 
     # Save connections info
     if mptcp_connections:
-        co.save_data(pcap_fname, stat_dir_exp, mptcp_connections)
+        co.save_data(pcap_filepath, stat_dir_exp, mptcp_connections)
     else:
-        plot_congestion_graphs(pcap_fname, graph_dir_exp, connections)
-        co.save_data(pcap_fname, stat_dir_exp, connections)
+        plot_congestion_graphs(pcap_filepath, graph_dir_exp, connections)
+        co.save_data(pcap_filepath, stat_dir_exp, connections)
 
     # And save aggregated graphs (even it's not connections)
-    co.save_data(pcap_fname, aggl_dir_exp, aggregate_dict)
+    co.save_data(pcap_filepath, aggl_dir_exp, aggregate_dict)

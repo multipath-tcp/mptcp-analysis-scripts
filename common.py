@@ -268,26 +268,26 @@ def count_mptcp_subflows(data):
 ##################################################
 
 
-def copy_remain_pcap_file(pcap_fname, print_out=sys.stdout):
-    """ Given a pcap filename, return the filename of a copy, used for correction of traces """
-    remain_pcap_fname = pcap_fname[:-5] + "__rem.pcap"
-    cmd = ['cp', pcap_fname, remain_pcap_fname]
+def copy_remain_pcap_file(pcap_filepath, print_out=sys.stdout):
+    """ Given a pcap file path, return the file path of a copy, used for correction of traces """
+    remain_pcap_filepath = pcap_filepath[:-5] + "__rem.pcap"
+    cmd = ['cp', pcap_filepath, remain_pcap_filepath]
     if subprocess.call(cmd, stdout=print_out) != 0:
-        print("Error when copying " + pcap_fname + ": skip tcp correction", file=sys.stderr)
+        print("Error when copying " + pcap_filepath + ": skip tcp correction", file=sys.stderr)
         return None
-    return remain_pcap_fname
+    return remain_pcap_filepath
 
 
-def save_data(fname, dir_exp, data):
+def save_data(filepath, dir_exp, data):
     """ Using the name pcap_fname, save data in a file with filename fname in dir dir_exp """
     path_name = os.path.join(
-        dir_exp, os.path.basename(fname)[:-5])
+        dir_exp, os.path.basename(filepath)[:-5])
     try:
         data_file = open(path_name, 'w')
         pickle.dump(data, data_file)
         data_file.close()
     except IOError as e:
-        print(str(e) + ': no data file for ' + fname, file=sys.stderr)
+        print(str(e) + ': no data file for ' + filepath, file=sys.stderr)
 
 
 def clean_loopback_pcap(pcap_fname, print_out=sys.stdout):
@@ -391,7 +391,7 @@ def sort_and_aggregate(aggr_list):
 plt_lock = threading.Lock()
 
 
-def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_fname, ymin=None, titlesize=20):
+def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_filepath, ymin=None, titlesize=20):
     """ Critical part to plot a line graph """
     count = 0
     fig = plt.figure()
@@ -406,7 +406,7 @@ def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, titl
 
         legend = plt.legend(loc='upper left', shadow=True, fontsize='x-large')
     except ValueError as e:
-        print(str(e) + ": create plots: skip " + graph_fname, file=sys.stderr)
+        print(str(e) + ": create plots: skip " + graph_filepath, file=sys.stderr)
         return
 
     try:
@@ -414,7 +414,7 @@ def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, titl
         legend.get_frame().set_facecolor('#00FFCC')
     except AttributeError as e:
         # if we have no frame, it means we have no object...
-        print(str(e) + ": change legend: skip " + graph_fname, file=sys.stderr)
+        print(str(e) + ": change legend: skip " + graph_filepath, file=sys.stderr)
         print('label_names: ' + str(label_names), file=sys.stderr)
         print('formatting: ' + str(formatting), file=sys.stderr)
         print('data: ' + str(data), file=sys.stderr)
@@ -428,9 +428,9 @@ def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, titl
         plt.ylim(ymin=ymin)
 
     try:
-        plt.savefig(graph_fname)
+        plt.savefig(graph_filepath)
     except:
-        print('ERROR when creating graph for ' + graph_fname, file=sys.stderr)
+        print('ERROR when creating graph for ' + graph_filepath, file=sys.stderr)
         print(traceback.format_exc(), file=sys.stderr)
         return
 
@@ -438,11 +438,11 @@ def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, titl
     try:
         plt.clf()
     except KeyError as e:
-        print(str(e) + ": when cleaning graph " + graph_fname, file=sys.stderr)
+        print(str(e) + ": when cleaning graph " + graph_filepath, file=sys.stderr)
     plt.close()
 
 
-def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_fname, ymin=None, titlesize=20):
+def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_filepath, ymin=None, titlesize=20):
     """ Plot a line graph with data """
     # no data, skip
     pop_index = []
@@ -468,9 +468,9 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
     plt_lock.acquire()
 
     try:
-        critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_fname, ymin=ymin, titlesize=titlesize)
+        critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_filepath, ymin=ymin, titlesize=titlesize)
     except Exception as e:
-        print("UNCATCHED EXCEPTION IN critical_plot_line_graph for " + graph_fname, file=sys.stderr)
+        print("UNCATCHED EXCEPTION IN critical_plot_line_graph for " + graph_filepath, file=sys.stderr)
         print(str(e), file=sys.stderr)
         print(traceback.format_exc(), file=sys.stderr)
 
