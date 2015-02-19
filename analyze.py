@@ -120,45 +120,45 @@ else:
 ##                 PREPROCESSING                ##
 ##################################################
 
-def uncompress_file(fname, dirpath):
-    if args.pcap in fname:
+def uncompress_file(filename, dirpath):
+    if args.pcap in filename:
         # Files from UI tests will be compressed; unzip them
-        if fname.endswith('.gz'):
-            output_file = os.path.join(trace_dir_exp, fname[:-3])
+        if filename.endswith('.gz'):
+            output_filepath = os.path.join(trace_dir_exp, filename[:-3])
             if args.not_correct:
-                return output_file
-            elif os.path.exists(output_file):
-                print("Do no uncompress file: already exists " + fname, file=sys.stderr)
-                return output_file
+                return output_filepath
+            elif os.path.exists(output_filepath):
+                print("Do no uncompress file: already exists " + filename, file=sys.stderr)
+                return output_filepath
             else:
-                print("Uncompressing " + fname + " to " + trace_dir_exp, file=print_out)
-                output = open(output_file, 'w')
-                cmd = ['gunzip', '-c', '-9', os.path.join(dirpath, fname)]
+                print("Uncompressing " + filename + " to " + trace_dir_exp, file=print_out)
+                output = open(output_filepath, 'w')
+                cmd = ['gunzip', '-c', '-9', os.path.join(dirpath, filename)]
                 if args.keep:
                     cmd.insert(1, '-k')
                 if subprocess.call(cmd, stdout=output) != 0:
-                    print("Error when uncompressing " + fname, file=sys.stderr)
+                    print("Error when uncompressing " + filename, file=sys.stderr)
                     output.close()
                 else:
                     output.close()
-                    return output_file
-        elif fname.endswith('.pcap'):
-            output_file = os.path.join(trace_dir_exp, fname)
+                    return output_filepath
+        elif filename.endswith('.pcap'):
+            output_filepath = os.path.join(trace_dir_exp, filename)
             if args.not_correct:
-                return output_file
-            elif os.path.exists(output_file):
-                print("Do no copy file: already exists " + fname, file=sys.stderr)
-                return output_file
+                return output_filepath
+            elif os.path.exists(output_filepath):
+                print("Do no copy file: already exists " + filename, file=sys.stderr)
+                return output_filepath
             else:
                 # Move the file to out_dir_exp
-                print("Copying " + fname + " to " + trace_dir_exp, file=print_out)
-                cmd = ['cp', os.path.join(dirpath, fname), output_file]
+                print("Copying " + filename + " to " + trace_dir_exp, file=print_out)
+                cmd = ['cp', os.path.join(dirpath, filename), output_filepath]
                 if subprocess.call(cmd, stdout=print_out) != 0:
-                    print("Error when moving " + fname, file=sys.stderr)
+                    print("Error when moving " + filename, file=sys.stderr)
                 else:
-                    return output_file
+                    return output_filepath
         else:
-            print(fname + ": not in a valid format, skipped", file=sys.stderr)
+            print(filename + ": not in a valid format, skipped", file=sys.stderr)
     return False
 
 def add_if_valid(list, item):
@@ -169,8 +169,8 @@ pcap_list = []
 co.check_directory_exists(trace_dir_exp)
 if os.path.isdir(in_dir_exp):
     for dirpath, dirnames, filenames in os.walk(in_dir_exp):
-        for fname in filenames:
-            add_if_valid(pcap_list, uncompress_file(fname, dirpath))
+        for filename in filenames:
+            add_if_valid(pcap_list, uncompress_file(filename, dirpath))
 else:
     add_if_valid(pcap_list, uncompress_file(os.path.basename(in_dir_exp),
                                             os.path.dirname(in_dir_exp)))
@@ -182,46 +182,46 @@ pcap_list_len = len(pcap_list)
 ##                   THREADS                    ##
 ##################################################
 
-def launch_analyze_pcap(pcap_fname, clean, correct, graph, purge):
-    pcap_filename = os.path.basename(pcap_fname)
+def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge):
+    pcap_filename = os.path.basename(pcap_filepath)
     # Cleaning, if needed (in future pcap, tcpdump should do the job)
     if clean:
-        co.clean_loopback_pcap(pcap_fname, print_out=print_out)
+        co.clean_loopback_pcap(pcap_filepath, print_out=print_out)
     # Prefix of the name determine the protocol used
     if pcap_filename.startswith('mptcp'):
         if correct:
-            tcp.correct_trace(pcap_fname, print_out=print_out)
+            tcp.correct_trace(pcap_filepath, print_out=print_out)
         # we need to change dir, do that in a new process
         if graph:
-            p = Process(target=mptcp.process_trace, args=(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp,), kwargs={'min_bytes': args.min_bytes})
+            p = Process(target=mptcp.process_trace, args=(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp,), kwargs={'min_bytes': args.min_bytes})
             p.start()
             p.join()
     elif pcap_filename.startswith('tcp'):
         if correct:
-            tcp.correct_trace(pcap_fname, print_out=print_out)
+            tcp.correct_trace(pcap_filepath, print_out=print_out)
         if graph:
-            tcp.process_trace(pcap_fname, graph_dir_exp, stat_dir_exp, aggl_dir_exp, print_out=print_out, min_bytes=args.min_bytes)
+            tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, print_out=print_out, min_bytes=args.min_bytes)
     else:
-        print(pcap_fname + ": don't know the protocol used; skipped", file=sys.stderr)
+        print(pcap_filepath + ": don't know the protocol used; skipped", file=sys.stderr)
 
-    print('End for file ' + pcap_fname, file=print_out)
+    print('End for file ' + pcap_filepath, file=print_out)
     if purge and graph: # if we just want to correct traces, do not remove them
-        os.remove(pcap_fname)
+        os.remove(pcap_filepath)
 
 def thread_launch(thread_id, clean, correct, graph, purge):
     global pcap_list
     while True:
         try:
-            pcap_fname = pcap_list.pop()
+            pcap_filepath = pcap_list.pop()
         except IndexError: # no more thread
             break
         analyze_no = str(pcap_list_len - len(pcap_list)) + "/" + str(pcap_list_len)
-        print("Thread " + str(thread_id) + ": Analyze: " + pcap_fname + " (" + analyze_no + ")", file=print_out)
+        print("Thread " + str(thread_id) + ": Analyze: " + pcap_filepath + " (" + analyze_no + ")", file=print_out)
         try:
-            launch_analyze_pcap(pcap_fname, clean, correct, graph, purge)
+            launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge)
         except:
             print(traceback.format_exc(), file=sys.stderr)
-            print('Error when analyzing ' + pcap_fname + ': skip', file=sys.stderr)
+            print('Error when analyzing ' + pcap_filepath + ': skip', file=sys.stderr)
     print("Thread " + str(thread_id) + ": End", file=print_out)
 
 ##################################################
