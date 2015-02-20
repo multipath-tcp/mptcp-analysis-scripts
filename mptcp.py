@@ -303,6 +303,40 @@ def rewrite_xpl(xpl_fname, xpl_data, begin_time, begin_seq, connections, conn_id
 
 
 ##################################################
+##                    CHECKS                    ##
+##################################################
+
+
+def check_mptcp_joins(pcap_fullpath, print_out=sys.stdout):
+    """ Check if the pcap given in argument has mp joins in a SYN->SYN/ACK->ACK fashion (only for both scenarios) """
+    if 'both' not in os.path.basename(pcap_fullpath):
+        return True
+    mp_joins_fname = os.path.basename(pcap_fullpath[:-5]) + "_joins"
+    cmd = ['tshark', '-r', pcap_fullpath, '-Y', 'tcp.options.mptcp.subtype==1', '-w', mp_joins_fname]
+    if subprocess.call(cmd, stdout=print_out) != 0:
+        raise co.TSharkError("Error with tshark mptcp join " + pcap_fullpath)
+    mp_joins_file = open(mp_joins_fname)
+    mp_joins_data = mp_joins_file.readlines()
+    mp_joins_file.close()
+
+    os.remove(mp_joins_fname)
+
+    mp_joins = {}
+
+    for line in mp_joins_data:
+        split_line = line.split(' ')
+
+        if split_line[10] == '[SYN]':
+            mp_joins[(split_line[7], split_line[9])] = 1
+        elif split_line[10] == '[SYN, ACK]' and mp_joins.get((split_line[9], split_line[7]), 0) == 1:
+            mp_joins[(split_line[9], split_line[7])] = 2
+        elif split_line[10] == '[ACK]' and mp_joins.get((split_line[7], split_line[9]), 0) == 2:
+            return True
+
+    return False
+
+
+##################################################
 ##               MPTCP PROCESSING               ##
 ##################################################
 
@@ -435,6 +469,8 @@ def plot_congestion_graphs(pcap_filepath, graph_dir_exp, connections):
 # We can't change dir per thread, we should use processes
 def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_bytes=0):
     """ Process a mptcp pcap file and generate graphs of its subflows """
+    if not check_mptcp_joins(pcap_filepath):
+        print("WARNING: no mptcp joins on " + pcap_filepath, file=sys.stderr)
     csv_tmp_dir = tempfile.mkdtemp(dir=os.getcwd())
     connections = None
     try:

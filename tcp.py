@@ -45,10 +45,6 @@ class MergecapError(Exception):
     pass
 
 
-class TSharkError(Exception):
-    pass
-
-
 class TCPRewriteError(Exception):
     pass
 
@@ -256,13 +252,13 @@ def split_and_replace(pcap_filepath, remain_pcap_filepath, conn, other_conn, num
     cmd = ['tshark', '-r', remain_pcap_filepath,
            '-Y', condition, '-w', tmp_split_filepath]
     if subprocess.call(cmd, stdout=print_out) != 0:
-        raise TSharkError("Error when tshark port " + conn.flow.attr[co.SPORT])
+        raise co.TSharkError("Error when tshark port " + conn.flow.attr[co.SPORT])
 
     tmp_remain_filepath = pcap_filepath[:-5] + "__tmprem.pcap"
     cmd[4] = "!(" + condition + ")"
     cmd[6] = tmp_remain_filepath
     if subprocess.call(cmd, stdout=print_out) != 0:
-        raise TSharkError("Error when tshark port !" + conn.flow.attr[co.SPORT])
+        raise co.TSharkError("Error when tshark port !" + conn.flow.attr[co.SPORT])
 
     cmd = ['mv', tmp_remain_filepath, remain_pcap_filepath]
     if subprocess.call(cmd, stdout=print_out) != 0:
