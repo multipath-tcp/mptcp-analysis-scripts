@@ -312,9 +312,11 @@ def check_mptcp_joins(pcap_fullpath, print_out=sys.stdout):
     if 'both' not in os.path.basename(pcap_fullpath):
         return True
     mp_joins_fname = os.path.basename(pcap_fullpath[:-5]) + "_joins"
-    cmd = ['tshark', '-r', pcap_fullpath, '-Y', 'tcp.options.mptcp.subtype==1', '-w', mp_joins_fname]
-    if subprocess.call(cmd, stdout=print_out) != 0:
+    mp_joins_file = open(mp_joins_fname, 'w')
+    cmd = ['tshark', '-r', pcap_fullpath, '-Y', 'tcp.options.mptcp.subtype==1']
+    if subprocess.call(cmd, stdout=mp_joins_file) != 0:
         raise co.TSharkError("Error with tshark mptcp join " + pcap_fullpath)
+    mp_joins_file.close()
     mp_joins_file = open(mp_joins_fname)
     mp_joins_data = mp_joins_file.readlines()
     mp_joins_file.close()
@@ -325,10 +327,11 @@ def check_mptcp_joins(pcap_fullpath, print_out=sys.stdout):
 
     for line in mp_joins_data:
         split_line = line.split(' ')
-
+        if len(split_line) < 12:
+            continue
         if split_line[10] == '[SYN]':
             mp_joins[(split_line[7], split_line[9])] = 1
-        elif split_line[10] == '[SYN, ACK]' and mp_joins.get((split_line[9], split_line[7]), 0) == 1:
+        elif split_line[10] == '[SYN,' and split_line[11] == 'ACK]' and mp_joins.get((split_line[9], split_line[7]), 0) == 1:
             mp_joins[(split_line[9], split_line[7])] = 2
         elif split_line[10] == '[ACK]' and mp_joins.get((split_line[7], split_line[9]), 0) == 2:
             return True
