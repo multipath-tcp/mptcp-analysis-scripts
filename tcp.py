@@ -476,10 +476,10 @@ def append_as_third_to_all_elements(lst, element):
     return return_list
 
 
-def create_congestion_window_data(tsg, adv_rwin, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id):
+def create_congestion_window_data(tsg, adv_rwin, pcap_filepath, cwin_data_all, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id):
     """ With the time sequence data and the advertised receiver window, generate data of estimated
         congestion control
-        Set the congestion data in the attr dictionary of the connection (TCP or MPTCP)
+        Set the congestion data in the cwin_data_all dictionary
     """
     tsg_list = append_as_third_to_all_elements(tsg, 'tsg')
     adv_rwin_list = append_as_third_to_all_elements(adv_rwin, 'adv_rwin')
@@ -496,66 +496,57 @@ def create_congestion_window_data(tsg, adv_rwin, is_reversed, connections, flow_
         offsets[elem[2]] = elem[1]
         congestion_list.append([elem[0], congestion_value])
 
+    pcap_filename = os.path.basename(pcap_filepath[:-5])
+
     if mptcp_connections:
         if not conn_id:
             return
-        if co.CWIN_DATA not in mptcp_connections[conn_id].attr.keys():
-            mptcp_connections[conn_id].attr[co.CWIN_DATA] = {}
-        interface = mptcp_connections[conn_id].flows[flow_id].attr[co.IF]
-        if is_reversed:
-            if co.D2S not in mptcp_connections[conn_id].attr[co.CWIN_DATA].keys():
-                mptcp_connections[conn_id].attr[co.CWIN_DATA][co.D2S] = {}
-            mptcp_connections[conn_id].attr[co.CWIN_DATA][co.D2S][interface + '-' + flow_id] = congestion_list
-        else:
-            if co.S2D not in mptcp_connections[conn_id].attr[co.CWIN_DATA].keys():
-                mptcp_connections[conn_id].attr[co.CWIN_DATA][co.S2D] = {}
-            mptcp_connections[conn_id].attr[co.CWIN_DATA][co.S2D][interface + '-' + flow_id] = congestion_list
+        cwin_name = pcap_filename + "_" + conn_id
+        interface = mptcp_connections[conn_id].flows[flow_id].attr[co.IF] + '-' + flow_id
     else:
-        if co.CWIN_DATA not in connections[flow_name].attr.keys():
-            connections[flow_name].attr[co.CWIN_DATA] = {}
+        cwin_name = pcap_filename + "_" + flow_name
         interface = connections[flow_name].flow.attr[co.IF]
-        if is_reversed:
-            if co.D2S not in connections[flow_name].attr[co.CWIN_DATA].keys():
-                connections[flow_name].attr[co.CWIN_DATA][co.D2S] = {}
-            connections[flow_name].attr[co.CWIN_DATA][co.D2S][interface] = congestion_list
-        else:
-            if co.S2D not in connections[flow_name].attr[co.CWIN_DATA].keys():
-                connections[flow_name].attr[co.CWIN_DATA][co.S2D] = {}
-            connections[flow_name].attr[co.CWIN_DATA][co.S2D][interface] = congestion_list
+
+    if cwin_name not in cwin_data_all.keys():
+        cwin_data_all[cwin_name] = {}
+
+    if is_reversed:
+        if co.D2S not in cwin_data_all[cwin_name].keys():
+            cwin_data_all[cwin_name][co.D2S] = {}
+        cwin_data_all[cwin_name][co.D2S][interface] = congestion_list
+    else:
+        if co.S2D not in cwin_data_all[cwin_name].keys():
+            cwin_data_all[cwin_name][co.S2D] = {}
+        cwin_data_all[cwin_name][co.S2D][interface] = congestion_list
 
 
-def plot_congestion_graphs(pcap_filepath, graph_dir_exp, connections):
-    """ Given a TCPConnections (in connections), plot their congestion graph """
+def plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all):
+    """ Given cwin data of all connections, plot their congestion graph """
     cwin_graph_dir = os.path.join(graph_dir_exp, co.CWIN_DIR)
 
-    for flow_id, conn in connections.iteritems():
-        base_graph_fname = os.path.basename(pcap_filepath[:-5]) + '_' + conn.conn_id + '_cwin'
+    for cwin_name, cwin_data in cwin_data_all.iteritems():
+        base_graph_fname = cwin_name + '_cwin'
 
-        for direction, data_if in conn.attr[co.CWIN_DATA].iteritems():
+        for direction, data_if in cwin_data.iteritems():
             dir_abr = 'd2s' if direction == co.D2S else 's2d' if direction == co.S2D else '?'
             base_dir_graph_fname = base_graph_fname + '_' + dir_abr
 
             for interface, data in data_if.iteritems():
                 graph_fname = base_dir_graph_fname + '_' + interface
-                graph_fname += '_' + conn.flow.attr[co.SADDR].replace('.', '-') \
-                    + '_' + conn.flow.attr[co.SPORT] \
-                    + '_' + conn.flow.attr[co.DADDR].replace('.', '-') \
-                    + '_' + conn.flow.attr[co.DPORT]
-
                 graph_fname += '.pdf'
                 graph_filepath = os.path.join(cwin_graph_dir, graph_fname)
                 co.plot_line_graph([data], [interface], ['k'], "Time [s]",
                                    "Congestion window [Bytes]", "Congestion window", graph_filepath, ymin=0)
 
 
-def process_tsg_xpl_file(xpl_filepath, graph_dir_exp, connections, aggregate_dict, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id):
+def process_tsg_xpl_file(pcap_filepath, xpl_filepath, graph_dir_exp, connections, aggregate_dict, cwin_data_all, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id):
     """ Prepare gpl file for the (possible) plot and aggregate its content
         Also update connections or mptcp_connections with the processed data
     """
     prepare_xpl_file(xpl_filepath, connections, flow_name, relative_start)
     aggregate_tsg, adv_rwin = get_upper_packets_in_flight_and_adv_rwin(xpl_filepath, flow_name)
     create_congestion_window_data(
-        aggregate_tsg, adv_rwin, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id)
+        aggregate_tsg, adv_rwin, pcap_filepath, cwin_data_all, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id)
     interface = connections[flow_name].flow.attr[co.IF]
     if is_reversed:
         aggregate_dict[co.D2S][interface] += aggregate_tsg
@@ -629,6 +620,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptc
         co.S2D: {co.WIFI: [], co.RMNET: []}, co.D2S: {co.WIFI: [], co.RMNET: []}}
 
     prepare_connections_objects(connections, mptcp_connections)
+    # The dictionary where all cwin data of the scenario will be stored
+    cwin_data_all = {}
 
     # The tcptrace call will generate .xpl files to cope with
     for xpl_filepath in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_filepath[:-5]) + '*.xpl')):
@@ -638,7 +631,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptc
             conn_id, flow_id = copy_info_to_mptcp_connections(connections[flow_name], mptcp_connections)
 
         if interesting_graph(flow_name, is_reversed, connections) and 'tsg' in os.path.basename(xpl_filepath):
-            process_tsg_xpl_file(xpl_filepath, graph_dir_exp, connections, aggregate_dict,
+            process_tsg_xpl_file(pcap_filepath, xpl_filepath, graph_dir_exp, connections, aggregate_dict, cwin_data_all,
                                  flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id)
 
         try:
@@ -654,12 +647,13 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptc
 
     plot_aggregated_results(pcap_filepath, graph_dir_exp, aggregate_dict)
 
+    # Save aggregated graphs (even it's not connections)
+    co.save_data(pcap_filepath, aggl_dir_exp, aggregate_dict)
+
     # Save connections info
     if mptcp_connections:
-        co.save_data(pcap_filepath, stat_dir_exp, mptcp_connections)
+        # Returns to the caller the data to plot cwin
+        return cwin_data_all
     else:
-        plot_congestion_graphs(pcap_filepath, graph_dir_exp, connections)
+        plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all)
         co.save_data(pcap_filepath, stat_dir_exp, connections)
-
-    # And save aggregated graphs (even it's not connections)
-    co.save_data(pcap_filepath, aggl_dir_exp, aggregate_dict)

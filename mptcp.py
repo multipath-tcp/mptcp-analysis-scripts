@@ -448,16 +448,16 @@ def process_seq_xpl(xpl_fname, connections, relative_start, min_bytes):
         print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
 
 
-def plot_congestion_graphs(pcap_filepath, graph_dir_exp, connections):
-    """ Given MPTCPConnections (in connections), plot their congestion graph """
+def plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all):
+    """ Given the cwin data of all connections, plot their congestion graph """
     cwin_graph_dir = os.path.join(graph_dir_exp, co.CWIN_DIR)
 
     formatting = ['b', 'r', 'g', 'p']
 
-    for conn_id, conn in connections.iteritems():
-        base_graph_fname = os.path.basename(pcap_filepath[:-5]) + '_' + conn.conn_id + '_cwin'
+    for cwin_name, cwin_data in cwin_data_all.iteritems():
+        base_graph_fname = cwin_name + '_cwin'
 
-        for direction, data_if in conn.attr[co.CWIN_DATA].iteritems():
+        for direction, data_if in cwin_data.iteritems():
             dir_abr = 'd2s' if direction == co.D2S else 's2d' if direction == co.S2D else '?'
             graph_fname = base_graph_fname + '_' + dir_abr
             graph_fname += '.pdf'
@@ -511,5 +511,6 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_
     # Create aggregated graphes and add per interface information on MPTCPConnection
     # This will save the mptcp connections
     if connections:
-        tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_connections=connections)
-        plot_congestion_graphs(pcap_filepath, graph_dir_exp, connections)
+        cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_connections=connections)
+        co.save_data(pcap_filepath, stat_dir_exp, connections)
+        plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all)
