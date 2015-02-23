@@ -30,6 +30,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
+import statsmodels.api as sm
 import subprocess
 import sys
 import tempfile
@@ -403,7 +404,7 @@ def sort_and_aggregate(aggr_list):
 
 # Initialize lock semaphore for matplotlib
 # This is needed to avoid race conditions inside matplotlib
-plt_lock = threading.Lock()
+plt_lock = threading.RLock()
 
 
 def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_filepath, ymin=None, titlesize=20):
@@ -553,3 +554,45 @@ def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fn
     plt.savefig(graph_fname)
 
     plt_lock.release()
+
+
+def plot_cdfs(aggl_res, color, xlabel, base_graph_fname):
+    """ Plot all possible CDFs based on aggl_res.
+        aggl_res is a dictionary with the structure aggl_res[condition][element] = list of data
+        base_graph_fname does not have any extension
+        WARNING: this function assumes that the list of elements will remain the same for all conditions
+    """
+    plt.clf()
+
+    if len(aggl_res) < 1:
+        return
+
+    cond_init = aggl_res.keys()[0]
+
+    for element in aggl_res[cond_init].keys():
+        graph_fname = os.path.splitext(base_graph_fname)[0] + "_cdf_" + element + ".pdf"
+
+        for cond in aggl_res.keys():
+            sample = np.array(sorted(aggl_res[cond][element]))
+
+            ecdf = sm.distributions.ECDF(sample)
+
+            x = np.linspace(min(sample), max(sample))
+            y = ecdf(x)
+            plt.step(x, y, color=color[aggl_res.keys().index(cond)], label=cond)
+
+        plt.legend(loc='lower right', shadow=True, fontsize='x-large')
+        plt.xlabel(xlabel, fontsize=18)
+        plt.savefig(graph_fname)
+        plt.close()
+
+
+def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname):
+    """ Plot all possible CDFs based on aggl_res.
+        aggl_res is a dictionary with the structure aggl_res[direction][condition][element] = list of data
+        WARNING: this function assumes that the list of elements will remain the same for all conditions
+    """
+    if len(aggl_res) < 1:
+        return
+    for direction in aggl_res.keys():
+        plot_cdfs(aggl_res[direction], color, xlabel, os.path.splitext(base_graph_fname)[0] + '_' + direction)
