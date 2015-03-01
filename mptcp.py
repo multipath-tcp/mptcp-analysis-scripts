@@ -200,7 +200,7 @@ def get_begin_values(datasets):
     return None, None
 
 
-def process_and_delete_csv(csv_fname, connections, conn_id, is_reversed):
+def process_csv(csv_fname, connections, conn_id, is_reversed):
     """ Process the csv given in argument and after delete the file """
     try:
         csv_file = open(csv_fname)
@@ -371,7 +371,7 @@ def process_stats_csv(csv_fname, connections):
         csv_file.close()
 
         # Remove now stats files
-        os.remove(csv_fname)
+        # os.remove(csv_fname)
     except IOError:
         print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
         return
@@ -420,7 +420,6 @@ def first_pass_on_files(connections):
 
 def process_seq_xpl(xpl_fname, connections, relative_start, min_bytes):
     """ If the csv is interesting, rewrite it in another folder csv_graph_tmp_dir
-        Delete the csv given in argument
     """
     try:
         conn_id = get_connection_id(xpl_fname)
@@ -436,13 +435,13 @@ def process_seq_xpl(xpl_fname, connections, relative_start, min_bytes):
                 try:
                     begin_time, begin_seq = get_begin_values(data)
                     csv_fname = xpl_fname[:-4] + '.csv'
-                    process_and_delete_csv(csv_fname, connections, conn_id, is_reversed)
+                    process_csv(csv_fname, connections, conn_id, is_reversed)
                     rewrite_xpl(xpl_fname, data, begin_time, begin_seq, connections, conn_id, is_reversed)
                 except ValueError:
                     print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
 
         # Remove the csv file
-        os.remove(csv_fname)
+        # os.remove(csv_fname)
 
     except IOError:
         print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
@@ -479,11 +478,11 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_
     try:
         with co.cd(csv_tmp_dir):
             # If segmentation faults, remove the -S option
-            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-S', '-G', '250', '-w', '0']
+            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-S', '-G', '250',  '-w', '0']
             connections = process_mptcptrace_cmd(cmd, pcap_filepath)
 
             # Useful to count the number of reinjected bytes
-            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-w', '2']
+            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-G', '250', '-w', '2']
             devnull = open(os.devnull, 'w')
             if subprocess.call(cmd, stdout=devnull) != 0:
                 raise MPTCPTraceError("Error of mptcptrace with " + pcap_filepath)
@@ -494,7 +493,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_
             # Also, compute the duration and number of bytes of the MPTCP connection
             relative_start = first_pass_on_files(connections)
 
-            # Then really process csv files
+            # Then really process xpl files
             for xpl_fname in glob.glob('*.xpl'):
                 if MPTCP_SEQ_FNAME in xpl_fname:
                     process_seq_xpl(xpl_fname, connections, relative_start, min_bytes)
@@ -502,6 +501,13 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_
                     graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + xpl_fname)]
                 if subprocess.call(cmd, stdout=sys.stderr) != 0:
                     print("Error when moving " + xpl_fname, file=sys.stderr)
+
+            # And by default, save all csv files
+            for csv_fname in glob.glob('*.csv'):
+                cmd = ['mv', csv_fname, os.path.join(
+                    graph_dir_exp, co.CSV_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname)]
+                if subprocess.call(cmd, stdout=sys.stderr) != 0:
+                    print("Error when moving " + csv_fname, file=sys.stderr)
 
     except MPTCPTraceError as e:
         print(str(e) + "; skip mptcp process", file=sys.stderr)

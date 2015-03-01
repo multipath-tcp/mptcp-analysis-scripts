@@ -142,8 +142,10 @@ DEF_IFACE = 'any'
 TSG_THGPT_DIR = 'tsg_thgpt'
 # The congestion window graphs directory
 CWIN_DIR = 'cwin'
-# THe agglomerated graphs directory
+# The agglomerated graphs directory
 AGGL_DIR = 'aggl'
+# The directory of csv files
+CSV_DIR = 'csv'
 
 # Following constants are used to make the code cleaner and more robust (for dictionary)
 # Those are mainly determined by the output of mptcptrace
