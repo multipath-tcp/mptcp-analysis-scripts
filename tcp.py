@@ -188,13 +188,13 @@ def get_flow_name(xpl_filepath):
 ##################################################
 
 
-def process_tcptrace_cmd(cmd, pcap_filepath):
+def process_tcptrace_cmd(cmd, pcap_filepath, keep_csv=False, graph_dir_exp=None):
     """ Launch the command cmd given in argument, and return a dictionary containing information
         about connections of the pcap file analyzed
         Options -n, -l and --csv should be set
         Raise a TCPTraceError if tcptrace encounters problems
     """
-    pcap_flow_data_path = pcap_filepath[:-5] + '.out'
+    pcap_flow_data_path = pcap_filepath[:-5] + '_tcptrace.csv'
     flow_data_file = open(pcap_flow_data_path, 'w+')
     if subprocess.call(cmd, stdout=flow_data_file) != 0:
         raise TCPTraceError("Error of tcptrace with " + pcap_filepath)
@@ -203,7 +203,13 @@ def process_tcptrace_cmd(cmd, pcap_filepath):
 
     # Don't forget to close and remove pcap_flow_data
     flow_data_file.close()
-    os.remove(pcap_flow_data_path)
+    if keep_csv:
+        cmd = ['mv', pcap_flow_data_path, os.path.join(
+            graph_dir_exp, co.CSV_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + pcap_flow_data_path)]
+        if subprocess.call(cmd, stdout=sys.stderr) != 0:
+            print("Error when moving " + pcap_flow_data_path, file=sys.stderr)
+    else:
+        os.remove(pcap_flow_data_path)
     return connections
 
 ##################################################
@@ -610,7 +616,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptc
            '-n', '-y', '-l', '--csv', pcap_filepath]
 
     try:
-        connections = process_tcptrace_cmd(cmd, pcap_filepath)
+        connections = process_tcptrace_cmd(cmd, pcap_filepath, keep_csv=True, graph_dir_exp=graph_dir_exp)
     except TCPTraceError as e:
         print(str(e) + ": skip process", file=sys.stderr)
         return
