@@ -285,14 +285,14 @@ def count_mptcp_subflows(data):
     return count
 
 
-def move_file(from_path, to_path):
+def move_file(from_path, to_path, print_out=sys.stderr):
     """ Move a file, raise an IOError if it fails """
     cmd = ['mv', from_path, to_path]
     if subprocess.call(cmd, stdout=print_out) != 0:
         raise IOError("Error when moving " + from_path + " to " + to_path)
 
 
-def tshark_filter(condition, src_path, dst_path):
+def tshark_filter(condition, src_path, dst_path, print_out=sys.stderr):
     """ Filter src_path using the condition and write the result to dst_path
         Raise a TSharkError in case of failure
     """

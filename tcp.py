@@ -256,13 +256,13 @@ def split_and_replace(pcap_filepath, remain_pcap_filepath, conn, other_conn, num
         conn.flow.attr[co.SPORT] + \
         ')or(tcp.dstport==' + conn.flow.attr[co.SPORT] + ')'
     tmp_split_filepath = pcap_filepath[:-5] + "__tmp.pcap"
-    co.tshark_filter(condition, remain_pcap_filepath, tmp_split_filepath)
+    co.tshark_filter(condition, remain_pcap_filepath, tmp_split_filepath, print_out=print_out)
 
     tmp_remain_filepath = pcap_filepath[:-5] + "__tmprem.pcap"
     condition = "!(" + condition + ")"
-    co.tshark_filter(condition, remain_pcap_filepath, tmp_remain_filepath)
+    co.tshark_filter(condition, remain_pcap_filepath, tmp_remain_filepath, print_out=print_out)
 
-    co.move_file(tmp_remain_filepath, remain_pcap_filepath)
+    co.move_file(tmp_remain_filepath, remain_pcap_filepath, print_out=print_out)
 
     # Replace meaningless IP and port with the "real" values
     split_filepath = pcap_filepath[:-5] + "__" + str(num) + ".pcap"
@@ -325,8 +325,8 @@ def correct_trace(pcap_filepath, print_out=sys.stdout):
         condition = '(ip.src==' + co.IP_PROXY + ')or(ip.dst==' + co.IP_PROXY + ')'
         tmp_filter_filepath = pcap_filepath[:-5] + "__tmp_any.pcap"
         try:
-            co.tshark_filter(condition, pcap_filepath, tmp_filter_filepath)
-            co.move_path(tmp_filter_filepath, pcap_filepath)
+            co.tshark_filter(condition, pcap_filepath, tmp_filter_filepath, print_out=print_out)
+            co.move_path(tmp_filter_filepath, pcap_filepath, print_out=print_out)
         except Exception as e:
             print(str(e) + ": clean skipped", file=sys.stderr)
 
@@ -650,7 +650,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptc
                 # If mptcp, don't keep tcptrace plots
                 os.remove(xpl_filepath)
             else:
-                co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR))
+                co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR), print_out=print_out)
         except OSError as e:
             print(str(e) + ": skipped", file=sys.stderr)
         except IOError as e:
