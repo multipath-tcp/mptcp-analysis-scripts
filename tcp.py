@@ -326,7 +326,7 @@ def correct_trace(pcap_filepath, print_out=sys.stdout):
         tmp_filter_filepath = pcap_filepath[:-5] + "__tmp_any.pcap"
         try:
             co.tshark_filter(condition, pcap_filepath, tmp_filter_filepath, print_out=print_out)
-            co.move_path(tmp_filter_filepath, pcap_filepath, print_out=print_out)
+            co.move_file(tmp_filter_filepath, pcap_filepath, print_out=print_out)
         except Exception as e:
             print(str(e) + ": clean skipped", file=sys.stderr)
 
