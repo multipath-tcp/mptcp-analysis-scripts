@@ -223,7 +223,7 @@ def bar_chart_count_connections(log_file=sys.stdout):
                 tot_lbl: [(len(data), fname)], tot_flw_lbl: [(tot_flow, fname)], tot_int_lbl: [(tot_int, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_cdfs(aggl_res, ['red', 'blue'], 'Number of connections', graph_full_path)
+    co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Number of connections', graph_full_path)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
@@ -271,7 +271,7 @@ def bar_chart_bytes(log_file=sys.stdout):
                 tot_lbl: [(s2d, fname)], tot_flw_lbl: [(d2s, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_cdfs(aggl_res, ['red', 'blue'], 'Bytes', graph_full_path)
+    co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Bytes', graph_full_path)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
@@ -357,7 +357,7 @@ def bar_chart_bytes_s2d_interface(log_file=sys.stdout):
                 wifi: [(wifi_bytes, fname)], rmnet: [(rmnet_bytes, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_cdfs(aggl_res, ['red', 'blue'], 'Bytes', graph_full_path)
+    co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Bytes', graph_full_path)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
@@ -406,7 +406,7 @@ def bar_chart_bytes_d2s_interface(log_file=sys.stdout):
                 wifi: [(wifi_bytes, fname)], rmnet: [(rmnet_bytes, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_cdfs(aggl_res, ['red', 'blue'], 'Bytes', graph_full_path)
+    co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Bytes', graph_full_path)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
@@ -454,7 +454,7 @@ def bar_chart_packs_retrans(log_file=sys.stdout):
                 tot_lbl: [(s2d, fname)], tot_flw_lbl: [(d2s, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_cdfs(aggl_res, ['red', 'blue'], 'Number of retransmitted packets', graph_full_path)
+    co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Number of retransmitted packets', graph_full_path)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
@@ -508,7 +508,7 @@ def bar_chart_packs_retrans_s2d_interface(log_file=sys.stdout):
                 wifi: [(wifi_packs, fname)], rmnet: [(rmnet_packs, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_cdfs(aggl_res, ['red', 'blue'], 'Number of retransmitted packets', graph_full_path)
+    co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Number of retransmitted packets', graph_full_path)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
@@ -562,7 +562,7 @@ def bar_chart_packs_retrans_d2s_interface(log_file=sys.stdout):
                 wifi: [(wifi_packs, fname)], rmnet: [(rmnet_packs, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_cdfs(aggl_res, ['red', 'blue'], 'Number of retransmitted packets', graph_full_path)
+    co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Number of retransmitted packets', graph_full_path)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
@@ -594,7 +594,7 @@ def bar_chart_duration(log_file=sys.stdout):
                 aggl_res[condition] = {tot_int_lbl: [(data[co.DURATION], fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_cdfs(aggl_res, ['red', 'blue'], 'Seconds', graph_full_path)
+    co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Seconds', graph_full_path)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 
@@ -637,7 +637,7 @@ def bar_chart_duration_all(log_file=sys.stdout):
                 aggl_res[condition] = {tot_int_lbl: [(stop - start, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_cdfs(aggl_res, ['red', 'blue'], 'Seconds', graph_full_path)
+    co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Seconds', graph_full_path)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
 def line_graph_aggl():
