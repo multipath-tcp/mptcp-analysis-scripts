@@ -16,3 +16,6 @@ traces*/
 sums*/
 logs/
 pcap/
+
+# Critical
+config.py

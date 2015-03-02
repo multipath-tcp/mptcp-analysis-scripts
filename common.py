@@ -214,6 +214,11 @@ PORT_RSOCKS = '8123'
 PREFIX_WIFI_IF = '192.168.'
 # Size of Latin alphabet
 SIZE_LAT_ALPH = 26
+# IP address of the proxy
+IP_PROXY = False
+
+if os.path.isfile('config.py'):
+    from config import *
 
 ##################################################
 ##         (DE)SERIALIZATION OF OBJECTS         ##

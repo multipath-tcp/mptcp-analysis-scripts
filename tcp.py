@@ -325,6 +325,21 @@ def correct_trace(pcap_filepath, print_out=sys.stdout):
         print(str(e) + ": skip tcp correction", file=sys.stderr)
         print(str(e) + ": stop correcting trace " + pcap_filepath, file=print_out)
 
+    # For any traces, filter all connections that are not to proxy
+    if 'any' in os.path.basename(pcap_filepath):
+        # Split on the port criterion
+        condition = '(ip.src==' + \
+            co.IP_PROXY + \
+            ')or(ip.dst==' + co.IP_PROXY + ')'
+        tmp_filter_filepath = pcap_filepath[:-5] + "__tmp_any.pcap"
+        cmd = ['tshark', '-r', pcap_filepath, '-Y', condition, '-w', tmp_filter_filepath]
+        if subprocess.call(cmd, stdout=print_out) != 0:
+            raise co.TSharkError("Error when tshark port " + conn.flow.attr[co.SPORT])
+
+        cmd = ['mv', tmp_filter_filepath, pcap_filepath]
+        if subprocess.call(cmd, stdout=print_out) != 0:
+            raise IOError("Error when moving " + tmp_filter_filepath + " to " + pcap_filepath)
+
 ##################################################
 ##                   TCPTRACE                   ##
 ##################################################
