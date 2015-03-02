@@ -292,6 +292,16 @@ def move_file(from_path, to_path):
         raise IOError("Error when moving " + from_path + " to " + to_path)
 
 
+def tshark_filter(condition, src_path, dst_path):
+    """ Filter src_path using the condition and write the result to dst_path
+        Raise a TSharkError in case of failure
+    """
+    cmd = ['tshark', '-r', src_path, '-Y', condition, '-w', dst_path]
+    if subprocess.call(cmd, stdout=print_out) != 0:
+        raise co.TSharkError("Error with condition " + condition + " for source " + src_path + " and destination "
+                             + dst_path)
+
+
 ##################################################
 ##                   PCAP                       ##
 ##################################################

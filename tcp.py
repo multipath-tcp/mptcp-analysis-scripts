@@ -256,16 +256,11 @@ def split_and_replace(pcap_filepath, remain_pcap_filepath, conn, other_conn, num
         conn.flow.attr[co.SPORT] + \
         ')or(tcp.dstport==' + conn.flow.attr[co.SPORT] + ')'
     tmp_split_filepath = pcap_filepath[:-5] + "__tmp.pcap"
-    cmd = ['tshark', '-r', remain_pcap_filepath,
-           '-Y', condition, '-w', tmp_split_filepath]
-    if subprocess.call(cmd, stdout=print_out) != 0:
-        raise co.TSharkError("Error when tshark port " + conn.flow.attr[co.SPORT])
+    co.tshark_filter(condition, remain_pcap_filepath, tmp_split_filepath)
 
     tmp_remain_filepath = pcap_filepath[:-5] + "__tmprem.pcap"
-    cmd[4] = "!(" + condition + ")"
-    cmd[6] = tmp_remain_filepath
-    if subprocess.call(cmd, stdout=print_out) != 0:
-        raise co.TSharkError("Error when tshark port !" + conn.flow.attr[co.SPORT])
+    condition = "!(" + condition + ")"
+    co.tshark_filter(condition, remain_pcap_filepath, tmp_remain_filepath)
 
     co.move_file(tmp_remain_filepath, remain_pcap_filepath)
 
@@ -327,15 +322,13 @@ def correct_trace(pcap_filepath, print_out=sys.stdout):
     # For any traces, filter all connections that are not to proxy
     if 'any' in os.path.basename(pcap_filepath):
         # Split on the port criterion
-        condition = '(ip.src==' + \
-            co.IP_PROXY + \
-            ')or(ip.dst==' + co.IP_PROXY + ')'
+        condition = '(ip.src==' + co.IP_PROXY + ')or(ip.dst==' + co.IP_PROXY + ')'
         tmp_filter_filepath = pcap_filepath[:-5] + "__tmp_any.pcap"
-        cmd = ['tshark', '-r', pcap_filepath, '-Y', condition, '-w', tmp_filter_filepath]
-        if subprocess.call(cmd, stdout=print_out) != 0:
-            raise co.TSharkError("Error when tshark port " + conn.flow.attr[co.SPORT])
-
-        co.move_path(tmp_filter_filepath, pcap_filepath)
+        try:
+            co.tshark_filter(condition, pcap_filepath, tmp_filter_filepath)
+            co.move_path(tmp_filter_filepath, pcap_filepath)
+        except Exception as e:
+            print(str(e) + ": clean skipped", file=sys.stderr)
 
 ##################################################
 ##                   TCPTRACE                   ##
