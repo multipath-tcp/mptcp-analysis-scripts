@@ -541,12 +541,14 @@ def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fn
     ax.set_xticks(ind + width)
     ax.set_xticklabels(labels)
 
-    # Shrink current axis by 20%
+    # Shrink current axis's height by 10% on the bottom
     box = ax.get_position()
-    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                     box.width, box.height * 0.9])
 
-    # Put a legend to the right of the current axis
-    ax.legend(zero_bars, label_names, loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small')
+    # Put a legend below current axis
+    ax.legend(zero_bars, label_names, loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True,
+              ncol=len(zero_bars))
 
     def autolabel(rects):
         # attach some text labels
@@ -591,12 +593,13 @@ def plot_cdfs(aggl_res, color, xlabel, base_graph_fname):
             y = ecdf(x)
             ax.step(x, y, color=color[aggl_res.keys().index(cond)], label=cond)
 
-        # Shrink current axis by 20%
+        # Shrink current axis's height by 10% on the bottom
         box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+        ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                         box.width, box.height * 0.9])
 
-        # Put a legend to the right of the current axis
-        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small')
+        # Put a legend below current axis
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=len(aggl_res))
 
         plt.xlabel(xlabel, fontsize=18)
         plt.savefig(graph_fname)
