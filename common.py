@@ -541,7 +541,12 @@ def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fn
     ax.set_xticks(ind + width)
     ax.set_xticklabels(labels)
 
-    ax.legend(zero_bars, labels_names)
+    # Shrink current axis by 20%
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+    # Put a legend to the right of the current axis
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small')
 
     def autolabel(rects):
         # attach some text labels
@@ -564,14 +569,16 @@ def plot_cdfs(aggl_res, color, xlabel, base_graph_fname):
         base_graph_fname does not have any extension
         WARNING: this function assumes that the list of elements will remain the same for all conditions
     """
-    plt.clf()
-
     if len(aggl_res) < 1:
         return
 
     cond_init = aggl_res.keys()[0]
 
     for element in aggl_res[cond_init].keys():
+        plt.figure()
+        plt.clf()
+        fig, ax = plt.subplots()
+
         graph_fname = os.path.splitext(base_graph_fname)[0] + "_cdf_" + element + ".pdf"
 
         for cond in aggl_res.keys():
@@ -581,9 +588,15 @@ def plot_cdfs(aggl_res, color, xlabel, base_graph_fname):
 
             x = np.linspace(min(sample), max(sample))
             y = ecdf(x)
-            plt.step(x, y, color=color[aggl_res.keys().index(cond)], label=cond)
+            ax.step(x, y, color=color[aggl_res.keys().index(cond)], label=cond)
 
-        plt.legend(loc='lower right', shadow=True, fontsize='x-large')
+        # Shrink current axis by 20%
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+        # Put a legend to the right of the current axis
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small')
+
         plt.xlabel(xlabel, fontsize=18)
         plt.savefig(graph_fname)
         plt.close()
