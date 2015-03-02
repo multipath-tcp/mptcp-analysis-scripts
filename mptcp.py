@@ -497,17 +497,19 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_
             for xpl_fname in glob.glob('*.xpl'):
                 if MPTCP_SEQ_FNAME in xpl_fname:
                     process_seq_xpl(xpl_fname, connections, relative_start, min_bytes)
-                cmd = ['mv', xpl_fname, os.path.join(
-                    graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + xpl_fname)]
-                if subprocess.call(cmd, stdout=sys.stderr) != 0:
-                    print("Error when moving " + xpl_fname, file=sys.stderr)
+                try:
+                    co.move_file(xpl_fname, os.path.join(
+                        graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + xpl_fname))
+                except IOError as e:
+                    print(str(e), file=sys.stderr)
 
             # And by default, save all csv files
             for csv_fname in glob.glob('*.csv'):
-                cmd = ['mv', csv_fname, os.path.join(
-                    graph_dir_exp, co.CSV_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname)]
-                if subprocess.call(cmd, stdout=sys.stderr) != 0:
-                    print("Error when moving " + csv_fname, file=sys.stderr)
+                try:
+                    co.move_file(xpl_fname, os.path.join(
+                        graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + xpl_fname))
+                except IOError as e:
+                    print(str(e), file=sys.stderr)
 
     except MPTCPTraceError as e:
         print(str(e) + "; skip mptcp process", file=sys.stderr)

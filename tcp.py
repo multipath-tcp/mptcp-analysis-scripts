@@ -204,10 +204,11 @@ def process_tcptrace_cmd(cmd, pcap_filepath, keep_csv=False, graph_dir_exp=None)
     # Don't forget to close and remove pcap_flow_data
     flow_data_file.close()
     if keep_csv:
-        cmd = ['mv', pcap_flow_data_path, os.path.join(
-            graph_dir_exp, co.CSV_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + pcap_flow_data_path)]
-        if subprocess.call(cmd, stdout=sys.stderr) != 0:
-            print("Error when moving " + pcap_flow_data_path, file=sys.stderr)
+        try:
+            co.move_file(pcap_flow_data_path, os.path.join(
+                graph_dir_exp, co.CSV_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + pcap_flow_data_path))
+        except IOError as e:
+            print(str(e), file=sys.stderr)
     else:
         os.remove(pcap_flow_data_path)
     return connections
@@ -266,9 +267,7 @@ def split_and_replace(pcap_filepath, remain_pcap_filepath, conn, other_conn, num
     if subprocess.call(cmd, stdout=print_out) != 0:
         raise co.TSharkError("Error when tshark port !" + conn.flow.attr[co.SPORT])
 
-    cmd = ['mv', tmp_remain_filepath, remain_pcap_filepath]
-    if subprocess.call(cmd, stdout=print_out) != 0:
-        raise IOError("Error when moving " + tmp_remain_filepath + " to " + remain_pcap_filepath)
+    co.move_file(tmp_remain_filepath, remain_pcap_filepath)
 
     # Replace meaningless IP and port with the "real" values
     split_filepath = pcap_filepath[:-5] + "__" + str(num) + ".pcap"
@@ -336,9 +335,7 @@ def correct_trace(pcap_filepath, print_out=sys.stdout):
         if subprocess.call(cmd, stdout=print_out) != 0:
             raise co.TSharkError("Error when tshark port " + conn.flow.attr[co.SPORT])
 
-        cmd = ['mv', tmp_filter_filepath, pcap_filepath]
-        if subprocess.call(cmd, stdout=print_out) != 0:
-            raise IOError("Error when moving " + tmp_filter_filepath + " to " + pcap_filepath)
+        co.move_path(tmp_filter_filepath, pcap_filepath)
 
 ##################################################
 ##                   TCPTRACE                   ##
@@ -660,10 +657,10 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptc
                 # If mptcp, don't keep tcptrace plots
                 os.remove(xpl_filepath)
             else:
-                cmd = ['mv', xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR)]
-                if subprocess.call(cmd, stdout=print_out) != 0:
-                    print("Error when moving " + xpl_filepath, file=sys.stderr)
+                co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR))
         except OSError as e:
+            print(str(e) + ": skipped", file=sys.stderr)
+        except IOError as e:
             print(str(e) + ": skipped", file=sys.stderr)
 
     plot_aggregated_results(pcap_filepath, graph_dir_exp, aggregate_dict)

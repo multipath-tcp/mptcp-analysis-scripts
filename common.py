@@ -285,6 +285,13 @@ def count_mptcp_subflows(data):
     return count
 
 
+def move_file(from_path, to_path):
+    """ Move a file, raise an IOError if it fails """
+    cmd = ['mv', from_path, to_path]
+    if subprocess.call(cmd, stdout=print_out) != 0:
+        raise IOError("Error when moving " + from_path + " to " + to_path)
+
+
 ##################################################
 ##                   PCAP                       ##
 ##################################################
