@@ -546,7 +546,7 @@ def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fn
     ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
     # Put a legend to the right of the current axis
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small')
+    ax.legend(zero_bars, label_names, loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small')
 
     def autolabel(rects):
         # attach some text labels
@@ -559,6 +559,7 @@ def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fn
         autolabel(bar)
 
     plt.savefig(graph_fname)
+    plt.close()
 
     plt_lock.release()
 
