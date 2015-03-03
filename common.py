@@ -202,6 +202,18 @@ REINJ_ORIG_BYTES_S2D = 'reinjected_orig_bytes_source2destination'
 # Reinjected bytes from destination to source
 REINJ_ORIG_BYTES_D2S = 'reinjected_orig_bytes_destination2source'
 
+# RTT info
+RTT_SAMPLES_S2D = 'rtt_samples_s2d'
+RTT_SAMPLES_D2S = 'rtt_samples_d2s'
+RTT_MIN_S2D = 'rtt_min_s2d'
+RTT_MIN_D2S = 'rtt_min_d2s'
+RTT_MAX_S2D = 'rtt_max_s2d'
+RTT_MAX_D2S = 'rtt_max_d2s'
+RTT_AVG_S2D = 'rtt_avg_s2d'
+RTT_AVG_D2S = 'rtt_avg_d2s'
+RTT_STDEV_S2D = 'rtt_stdev_s2d'
+RTT_STDEV_D2S = 'rtt_stdev_d2s'
+
 # For aggregation
 S2D = 'source2destination'
 D2S = 'destination2source'

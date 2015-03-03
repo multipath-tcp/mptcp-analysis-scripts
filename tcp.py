@@ -121,6 +121,20 @@ def extract_flow_data(out_file):
 
                 connection.flow.attr[co.PACKS_OOO_S2D] = int(info[35])
                 connection.flow.attr[co.PACKS_OOO_D2S] = int(info[36])
+
+                # Caution: -r must be set here!!
+                if len(info) >= 99:
+                    connection.flow.attr[co.RTT_SAMPLES_S2D] = int(info[89])
+                    connection.flow.attr[co.RTT_SAMPLES_D2S] = int(info[90])
+                    connection.flow.attr[co.RTT_MIN_S2D] = float(info[91])
+                    connection.flow.attr[co.RTT_MIN_D2S] = float(info[92])
+                    connection.flow.attr[co.RTT_MAX_S2D] = float(info[93])
+                    connection.flow.attr[co.RTT_MAX_D2S] = float(info[94])
+                    connection.flow.attr[co.RTT_AVG_S2D] = float(info[95])
+                    connection.flow.attr[co.RTT_AVG_D2S] = float(info[96])
+                    connection.flow.attr[co.RTT_STDEV_S2D] = float(info[97])
+                    connection.flow.attr[co.RTT_STDEV_D2S] = float(info[98])
+
                 # TODO maybe extract more information
 
                 connections[conn] = connection
@@ -476,6 +490,19 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections):
             co.BYTES_RETRANS_D2S] = connection.flow.attr[co.BYTES_RETRANS_D2S]
         mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_OOO_S2D] = connection.flow.attr[co.PACKS_OOO_S2D]
         mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_OOO_D2S] = connection.flow.attr[co.PACKS_OOO_D2S]
+
+        if co.RTT_SAMPLES_S2D in connection.flow.attr:
+            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_SAMPLES_S2D] = connection.flow.attr[co.RTT_SAMPLES_S2D]
+            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_SAMPLES_D2S] = connection.flow.attr[co.RTT_SAMPLES_D2S]
+            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_MIN_S2D] = connection.flow.attr[co.RTT_MIN_S2D]
+            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_MIN_D2S] = connection.flow.attr[co.RTT_MIN_D2S]
+            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_MAX_S2D] = connection.flow.attr[co.RTT_MAX_S2D]
+            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_MAX_D2S] = connection.flow.attr[co.RTT_MAX_D2S]
+            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_AVG_S2D] = connection.flow.attr[co.RTT_AVG_S2D]
+            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_AVG_D2S] = connection.flow.attr[co.RTT_AVG_D2S]
+            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_STDEV_S2D] = connection.flow.attr[co.RTT_STDEV_S2D]
+            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_STDEV_D2S] = connection.flow.attr[co.RTT_STDEV_D2S]
+
     return conn_id, flow_id
 
 
@@ -620,7 +647,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
     cmd = ['tcptrace', '--output_dir=' + os.getcwd(),
            '--output_prefix=' +
            os.path.basename(pcap_filepath[:-5]) + '_', '-C', '-S', '-T', '-zxy',
-           '-n', '-y', '-l', '--csv', pcap_filepath]
+           '-n', '-y', '-l', '--csv', '-r', pcap_filepath]
 
     try:
         connections = process_tcptrace_cmd(cmd, pcap_filepath, keep_csv=True, graph_dir_exp=graph_dir_exp)
