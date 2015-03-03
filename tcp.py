@@ -304,13 +304,13 @@ def correct_trace(pcap_filepath, print_out=sys.stdout):
             if other_conn:
                 try:
                     split_and_replace(pcap_filepath, remain_pcap_filepath, conn, other_conn, num, print_out=print_out)
+                    print(os.path.basename(pcap_filepath) + ": Corrected: " +
+                          str(num) + "/" + str(len(connections)), file=print_out)
                 except Exception as e:
                     print(str(e) + ": skip tcp correction", file=sys.stderr)
                     print(str(e) + ": stop correcting trace " + pcap_filepath, file=print_out)
                     return
         num += 1
-        print(os.path.basename(pcap_filepath) + ": Corrected: " +
-              str(num) + "/" + str(len(connections)), file=print_out)
 
     # Merge small pcap files into a unique one
     try:
@@ -329,6 +329,8 @@ def correct_trace(pcap_filepath, print_out=sys.stdout):
             co.move_file(tmp_filter_filepath, pcap_filepath, print_out=print_out)
         except Exception as e:
             print(str(e) + ": clean skipped", file=sys.stderr)
+
+    print(pcap_filepath + ": cleaning done")
 
 ##################################################
 ##                   TCPTRACE                   ##
