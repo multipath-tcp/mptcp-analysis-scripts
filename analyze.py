@@ -74,8 +74,9 @@ parser.add_argument("-s",
                     "--stat", help="directory where the stats of the pcap files will be stored", default=co.DEF_STAT_DIR)
 parser.add_argument("-a",
                     "--aggl", help="directory where data of agglomerated graphs will be stored", default=co.DEF_AGGL_DIR)
-parser.add_argument("-p",
-                    "--pcap", help="analyze only pcap files containing the given string (default lo)", default="_" + co.DEF_IFACE + ".")
+parser.add_argument("-p", "--pcap",
+                    help="analyze only pcap files containing the given string (default any, wlan0 and rmnet0)",
+                    nargs="+", default=["_" + co.DEF_IFACE + ".", "_wlan0.", "_rmnet0."])
 parser.add_argument("-j",
                     "--threads", type=int, help="process the analyse separated threads", default=DEF_NB_THREADS)
 parser.add_argument("-l",
@@ -100,10 +101,10 @@ args = parser.parse_args()
 
 in_dir_exp = os.path.abspath(os.path.expanduser(args.input))
 # ~/graphs -> /home/mptcp/graphs_lo ; ../graphs/ -> /home/mptcp/graphs_lo
-trace_dir_exp = co.get_dir_from_arg(args.trace, args.pcap)
-graph_dir_exp = co.get_dir_from_arg(args.graph, args.pcap)
-stat_dir_exp = co.get_dir_from_arg(args.stat,  args.pcap)
-aggl_dir_exp = co.get_dir_from_arg(args.aggl,  args.pcap)
+trace_dir_exp = co.get_dir_from_arg(args.trace, args.pcap[0])
+graph_dir_exp = co.get_dir_from_arg(args.graph, args.pcap[0])
+stat_dir_exp = co.get_dir_from_arg(args.stat,  args.pcap[0])
+aggl_dir_exp = co.get_dir_from_arg(args.aggl,  args.pcap[0])
 
 if os.path.isdir(in_dir_exp):
     # add the basename of the input dir
@@ -125,7 +126,7 @@ else:
 
 
 def uncompress_file(filename, dirpath):
-    if args.pcap in filename:
+    if any(match in filename for match in args.pcap):
         # Files from UI tests will be compressed; unzip them
         if filename.endswith('.gz'):
             output_filepath = os.path.join(trace_dir_exp, filename[:-3])
