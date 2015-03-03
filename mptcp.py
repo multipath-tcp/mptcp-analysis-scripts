@@ -469,7 +469,7 @@ def plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all):
 
 
 # We can't change dir per thread, we should use processes
-def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_bytes=0):
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot_cwin, min_bytes=0):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     if not check_mptcp_joins(pcap_filepath):
         print("WARNING: no mptcp joins on " + pcap_filepath, file=sys.stderr)
@@ -519,6 +519,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_
     # Create aggregated graphes and add per interface information on MPTCPConnection
     # This will save the mptcp connections
     if connections:
-        cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_connections=connections)
+        cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot_cwin, mptcp_connections=connections)
         co.save_data(pcap_filepath, stat_dir_exp, connections)
-        plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all)
+        if plot_cwin:
+            plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all)

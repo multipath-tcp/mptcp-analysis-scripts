@@ -93,6 +93,9 @@ parser.add_argument("-P",
                     "--not-purge", help="do not remove corrected traces", action="store_true")
 parser.add_argument("-b",
                     "--min-bytes", help="only plot graphs of connections with at least a given amount of bytes", default=0)
+parser.add_argument("-W",
+                    "--not-cwin", help="don't plot congestion window graphs", action="store_true")
+
 args = parser.parse_args()
 
 in_dir_exp = os.path.abspath(os.path.expanduser(args.input))
@@ -184,7 +187,7 @@ pcap_list_len = len(pcap_list)
 ##                   THREADS                    ##
 ##################################################
 
-def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge):
+def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge, cwin):
     pcap_filename = os.path.basename(pcap_filepath)
     # Cleaning, if needed (in future pcap, tcpdump should do the job)
     if clean:
@@ -196,14 +199,14 @@ def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge):
         # we need to change dir, do that in a new process
         if graph:
             p = Process(target=mptcp.process_trace, args=(
-                pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp,), kwargs={'min_bytes': args.min_bytes})
+                pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, cwin,), kwargs={'min_bytes': args.min_bytes})
             p.start()
             p.join()
     elif pcap_filename.startswith('tcp'):
         if correct:
             tcp.correct_trace(pcap_filepath, print_out=print_out)
         if graph:
-            tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp,
+            tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, cwin,
                               print_out=print_out, min_bytes=args.min_bytes)
     else:
         print(pcap_filepath + ": don't know the protocol used; skipped", file=sys.stderr)
@@ -213,7 +216,7 @@ def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge):
         os.remove(pcap_filepath)
 
 
-def thread_launch(thread_id, clean, correct, graph, purge):
+def thread_launch(thread_id, clean, correct, graph, purge, cwin):
     global pcap_list
     while True:
         try:
@@ -223,7 +226,7 @@ def thread_launch(thread_id, clean, correct, graph, purge):
         analyze_no = str(pcap_list_len - len(pcap_list)) + "/" + str(pcap_list_len)
         print("Thread " + str(thread_id) + ": Analyze: " + pcap_filepath + " (" + analyze_no + ")", file=print_out)
         try:
-            launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge)
+            launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge, cwin)
         except:
             print(traceback.format_exc(), file=sys.stderr)
             print('Error when analyzing ' + pcap_filepath + ': skip', file=sys.stderr)
@@ -250,14 +253,14 @@ if args.threads > 1:
     for thread_id in range(args.threads):
         thread = threading.Thread(target=thread_launch,
                                   args=(thread_id, args.clean,
-                                        not args.not_correct, not args.not_graph, not args.not_purge))
+                                        not args.not_correct, not args.not_graph, not args.not_purge, not args.not_cwin))
         thread.start()
         threads.append(thread)
     # Wait
     for thread in threads:
         thread.join()
 else:
-    thread_launch(0, args.clean, not args.not_correct, not args.not_graph, not args.not_purge)
+    thread_launch(0, args.clean, not args.not_correct, not args.not_graph, not args.not_purge, not args.not_cwin)
 
 
 print('End of analyze', file=print_out)

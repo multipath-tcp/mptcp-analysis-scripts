@@ -609,7 +609,7 @@ def plot_aggregated_results(pcap_filepath, graph_dir_exp, aggregate_dict):
                            aggl_dir, os.path.basename(pcap_filepath)[:-5] + "_" + direction + "_all.pdf"))
 
 
-def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot_cwin, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0
@@ -668,5 +668,6 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, mptc
         # Returns to the caller the data to plot cwin
         return cwin_data_all
     else:
-        plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all)
+        if plot_cwin:
+            plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all)
         co.save_data(pcap_filepath, stat_dir_exp, connections)
