@@ -506,8 +506,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, min_
             # And by default, save all csv files
             for csv_fname in glob.glob('*.csv'):
                 try:
-                    co.move_file(xpl_fname, os.path.join(
-                        graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + xpl_fname))
+                    co.move_file(csv_fname, os.path.join(
+                        graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
                 except IOError as e:
                     print(str(e), file=sys.stderr)
 
