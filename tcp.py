@@ -685,7 +685,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
         except IOError as e:
             print(str(e) + ": skipped", file=sys.stderr)
 
-    plot_aggregated_results(pcap_filepath, graph_dir_exp, aggregate_dict)
+    if plot_cwin:
+        plot_aggregated_results(pcap_filepath, graph_dir_exp, aggregate_dict)
 
     # Save aggregated graphs (even it's not connections)
     co.save_data(pcap_filepath, aggl_dir_exp, aggregate_dict)

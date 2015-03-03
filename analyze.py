@@ -95,7 +95,7 @@ parser.add_argument("-P",
 parser.add_argument("-b",
                     "--min-bytes", help="only plot graphs of connections with at least a given amount of bytes", default=0)
 parser.add_argument("-W",
-                    "--not-cwin", help="don't plot congestion window graphs", action="store_true")
+                    "--not-cwin", help="don't plot congestion window graphs or aggregation graphs", action="store_true")
 
 args = parser.parse_args()
 
