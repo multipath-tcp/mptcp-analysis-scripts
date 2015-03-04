@@ -619,13 +619,16 @@ def plot_cdfs(aggl_res, color, xlabel, base_graph_fname):
         graph_fname = os.path.splitext(base_graph_fname)[0] + "_cdf_" + element + ".pdf"
 
         for cond in aggl_res.keys():
-            sample = np.array(sorted(aggl_res[cond][element]))
+            try:
+                sample = np.array(sorted(aggl_res[cond][element]))
 
-            ecdf = sm.distributions.ECDF(sample)
+                ecdf = sm.distributions.ECDF(sample)
 
-            x = np.linspace(min(sample), max(sample))
-            y = ecdf(x)
-            ax.step(x, y, color=color[aggl_res.keys().index(cond)], label=cond)
+                x = np.linspace(min(sample), max(sample))
+                y = ecdf(x)
+                ax.step(x, y, color=color[aggl_res.keys().index(cond)], label=cond)
+            except ZeroDivisionError as e:
+                print(str(e))
 
         # Shrink current axis's height by 10% on the bottom
         box = ax.get_position()
