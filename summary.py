@@ -677,7 +677,7 @@ def bar_chart_rtt_average_s2d_interface(log_file=sys.stdout):
     for condition in aggl_res:
         for interface in aggl_res[condition]:
             if len(aggl_res[condition][interface]) == 0:
-                aggl_res[condition][interface] += 0
+                aggl_res[condition][interface] += [0]
 
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
@@ -718,7 +718,7 @@ def bar_chart_rtt_average_d2s_interface(log_file=sys.stdout):
     for condition in aggl_res:
         for interface in aggl_res[condition]:
             if len(aggl_res[condition][interface]) == 0:
-                aggl_res[condition][interface] += 0
+                aggl_res[condition][interface] += [0]
 
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
@@ -759,7 +759,7 @@ def bar_chart_rtt_stdev_s2d_interface(log_file=sys.stdout):
     for condition in aggl_res:
         for interface in aggl_res[condition]:
             if len(aggl_res[condition][interface]) == 0:
-                aggl_res[condition][interface] += 0
+                aggl_res[condition][interface] += [0]
 
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
@@ -800,7 +800,7 @@ def bar_chart_rtt_stdev_d2s_interface(log_file=sys.stdout):
     for condition in aggl_res:
         for interface in aggl_res[condition]:
             if len(aggl_res[condition][interface]) == 0:
-                aggl_res[condition][interface] += 0
+                aggl_res[condition][interface] += [0]
 
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
