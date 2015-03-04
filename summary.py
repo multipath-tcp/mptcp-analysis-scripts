@@ -671,6 +671,11 @@ def bar_chart_rtt_average_s2d_interface(log_file=sys.stdout):
                 if conn.flow.attr[co.RTT_SAMPLES_S2D] > 0:
                     aggl_res[condition][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
 
+    for condition in aggl_res:
+        for interface in aggl_res[condition]:
+            if len(aggl_res[condition][interface]) == 0:
+                aggl_res[condition][interface] += 0
+
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Bytes', graph_full_path)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
@@ -706,6 +711,10 @@ def bar_chart_rtt_average_d2s_interface(log_file=sys.stdout):
                 if conn.flow.attr[co.RTT_SAMPLES_D2S] > 0:
                     aggl_res[condition][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
 
+    for condition in aggl_res:
+        for interface in aggl_res[condition]:
+            if len(aggl_res[condition][interface]) == 0:
+                aggl_res[condition][interface] += 0
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Bytes', graph_full_path)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
@@ -741,6 +750,11 @@ def bar_chart_rtt_stdev_s2d_interface(log_file=sys.stdout):
                 if conn.flow.attr[co.RTT_SAMPLES_S2D] > 1:
                     aggl_res[condition][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.RTT_STDEV_S2D], fname)]
 
+    for condition in aggl_res:
+        for interface in aggl_res[condition]:
+            if len(aggl_res[condition][interface]) == 0:
+                aggl_res[condition][interface] += 0
+
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Bytes', graph_full_path)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
@@ -775,6 +789,11 @@ def bar_chart_rtt_stdev_d2s_interface(log_file=sys.stdout):
                     break
                 if conn.flow.attr[co.RTT_SAMPLES_D2S] > 1:
                     aggl_res[condition][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.RTT_STDEV_D2S], fname)]
+
+    for condition in aggl_res:
+        for interface in aggl_res[condition]:
+            if len(aggl_res[condition][interface]) == 0:
+                aggl_res[condition][interface] += 0
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Bytes', graph_full_path)
