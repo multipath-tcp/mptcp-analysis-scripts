@@ -640,6 +640,147 @@ def bar_chart_duration_all(log_file=sys.stdout):
     co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Seconds', graph_full_path)
     co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
 
+
+def bar_chart_rtt_average_s2d_interface(log_file=sys.stdout):
+    aggl_res = {}
+    wifi = "wifi"
+    rmnet = "rmnet"
+    label_names = [wifi, rmnet]
+    color = ['r', 'b']
+    ecolor = ['b', 'r']
+    ylabel = "RTT (ms)"
+    title = "Average RTT from source to destination of" + args.app
+    graph_fname = "rtt_avg_s2d_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if condition not in aggl_res:
+            aggl_res[condition] = {wifi: [], rmnet: []}
+
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    if co.RTT_SAMPLES_S2D not in flow.attr:
+                        break
+                    if flow.attr[co.RTT_SAMPLES_S2D] > 0:
+                        aggl_res[condition][flow.attr[co.IF]] += [(flow.attr[co.RTT_AVG_S2D], fname)]
+            elif isinstance(conn, tcp.TCPConnection):
+                if co.RTT_SAMPLES_S2D not in conn.flow.attr:
+                    break
+                if conn.flow.attr[co.RTT_SAMPLES_S2D] > 0:
+                    aggl_res[condition][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
+
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
+    co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Bytes', graph_full_path)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
+
+
+def bar_chart_rtt_average_d2s_interface(log_file=sys.stdout):
+    aggl_res = {}
+    wifi = "wifi"
+    rmnet = "rmnet"
+    label_names = [wifi, rmnet]
+    color = ['r', 'b']
+    ecolor = ['b', 'r']
+    ylabel = "RTT (ms)"
+    title = "Average RTT from destination to source of" + args.app
+    graph_fname = "rtt_avg_d2s_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if condition not in aggl_res:
+            aggl_res[condition] = {wifi: [], rmnet: []}
+
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    if co.RTT_SAMPLES_D2S not in flow.attr:
+                        break
+                    if flow.attr[co.RTT_SAMPLES_D2S] > 0:
+                        aggl_res[condition][flow.attr[co.IF]] += [(flow.attr[co.RTT_AVG_D2S], fname)]
+            elif isinstance(conn, tcp.TCPConnection):
+                if co.RTT_SAMPLES_D2S not in conn.flow.attr:
+                    break
+                if conn.flow.attr[co.RTT_SAMPLES_D2S] > 0:
+                    aggl_res[condition][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
+
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
+    co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Bytes', graph_full_path)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
+
+
+def bar_chart_rtt_stdev_s2d_interface(log_file=sys.stdout):
+    aggl_res = {}
+    wifi = "wifi"
+    rmnet = "rmnet"
+    label_names = [wifi, rmnet]
+    color = ['r', 'b']
+    ecolor = ['b', 'r']
+    ylabel = "RTT (ms)"
+    title = "RTT standard deviation from source to destination of" + args.app
+    graph_fname = "rtt_std_s2d_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if condition not in aggl_res:
+            aggl_res[condition] = {wifi: [], rmnet: []}
+
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    if co.RTT_SAMPLES_S2D not in flow.attr:
+                        break
+                    if flow.attr[co.RTT_SAMPLES_S2D] > 1:
+                        aggl_res[condition][flow.attr[co.IF]] += [(flow.attr[co.RTT_STDEV_S2D], fname)]
+            elif isinstance(conn, tcp.TCPConnection):
+                if co.RTT_SAMPLES_S2D not in conn.flow.attr:
+                    break
+                if conn.flow.attr[co.RTT_SAMPLES_S2D] > 1:
+                    aggl_res[condition][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.RTT_STDEV_S2D], fname)]
+
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
+    co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Bytes', graph_full_path)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
+
+
+def bar_chart_rtt_stdev_d2s_interface(log_file=sys.stdout):
+    aggl_res = {}
+    wifi = "wifi"
+    rmnet = "rmnet"
+    label_names = [wifi, rmnet]
+    color = ['r', 'b']
+    ecolor = ['b', 'r']
+    ylabel = "RTT (ms)"
+    title = "RTT standard deviation from destination to source of" + args.app
+    graph_fname = "rtt_std_d2s_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if condition not in aggl_res:
+            aggl_res[condition] = {wifi: [], rmnet: []}
+
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    if co.RTT_SAMPLES_D2S not in flow.attr:
+                        break
+                    if flow.attr[co.RTT_SAMPLES_D2S] > 1:
+                        aggl_res[condition][flow.attr[co.IF]] += [(flow.attr[co.RTT_STDEV_D2S], fname)]
+            elif isinstance(conn, tcp.TCPConnection):
+                if co.RTT_SAMPLES_D2S not in conn.flow.attr:
+                    break
+                if conn.flow.attr[co.RTT_SAMPLES_D2S] > 1:
+                    aggl_res[condition][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.RTT_STDEV_D2S], fname)]
+
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
+    co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Bytes', graph_full_path)
+    co.plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_full_path)
+
+
 def line_graph_aggl():
     aggl_res = {}
     xlabel = "Time [s]"
@@ -1193,6 +1334,14 @@ if args.app:
     bar_chart_packs_retrans_d2s_interface(log_file=log_file)
     print("Plot line graph aggl", file=log_file)
     line_graph_aggl()
+    print("Plot rtt average s2d", file=log_file)
+    bar_chart_rtt_average_s2d_interface(log_file=log_file)
+    print("Plot rtt average d2s", file=log_file)
+    bar_chart_rtt_average_d2s_interface(log_file=log_file)
+    print("Plot rtt stdev s2d", file=log_file)
+    bar_chart_rtt_stdev_s2d_interface(log_file=log_file)
+    print("Plot rtt stdev d2s", file=log_file)
+    bar_chart_rtt_stdev_d2s_interface(log_file=log_file)
 elif args.cond:
     print("To be implemented after", file=log_file)
 else:
