@@ -824,7 +824,7 @@ def line_graph_aggl():
 
 
 def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
-    x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    x = [1, 2, 3, 4, 5, 6, 7, 8, 9]
     xlabels = ['dailymotion', 'drive', 'dropbox', 'facebook', 'firefox', 'firefoxspdy', 'messenger', 'spotify', 'youtube']
 
     marks = {co.S2D: 'o', co.D2S: 's'}
@@ -978,7 +978,7 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
 
 
 def percentage_rmnet_by_condition_with_apps(log_file=sys.stdout):
-    x = [1, 2, 3, 4, 5, 6, 7, 8]
+    x = [1, 2]
     xlabels = ['both3', 'both4']
 
     marks = {co.S2D: 'o', co.D2S: 's'}
