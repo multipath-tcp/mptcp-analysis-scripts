@@ -643,6 +643,47 @@ def plot_cdfs(aggl_res, color, xlabel, base_graph_fname):
         plt.close()
 
 
+def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname):
+    """ Plot all possible CDFs based on aggl_res.
+        aggl_res is a dictionary with the structure aggl_res[condition][element] = list of data
+        base_graph_fname does not have any extension
+        WARNING: this function assumes that the list of elements will remain the same for all conditions
+    """
+    if len(aggl_res) < 1:
+        return
+
+    for cond in aggl_res.keys():
+        plt.figure()
+        plt.clf()
+        fig, ax = plt.subplots()
+
+        graph_fname = os.path.splitext(base_graph_fname)[0] + "_cdf_" + cond + ".pdf"
+
+        for element in aggl_res[cond].keys():
+            try:
+                sample = np.array(sorted(aggl_res[cond][element]))
+
+                ecdf = sm.distributions.ECDF(sample)
+
+                x = np.linspace(min(sample), max(sample))
+                y = ecdf(x)
+                ax.step(x, y, color=color[aggl_res[condition].keys().index(cond)], label=cond)
+            except ZeroDivisionError as e:
+                print(str(e))
+
+        # Shrink current axis's height by 10% on the bottom
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                         box.width, box.height * 0.9])
+
+        # Put a legend below current axis
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=len(aggl_res))
+
+        plt.xlabel(xlabel, fontsize=18)
+        plt.savefig(graph_fname)
+        plt.close()
+
+
 def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname):
     """ Plot all possible CDFs based on aggl_res.
         aggl_res is a dictionary with the structure aggl_res[direction][condition][element] = list of data
