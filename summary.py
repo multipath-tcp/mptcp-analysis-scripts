@@ -825,14 +825,14 @@ def line_graph_aggl():
 
 def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
     x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    xlabels = ['dailymotion', 'drive', 'dropbox', 'facebook', 'firefox', 'firefoxspdy', 'messenger', 'shazam', 'spotify', 'youtube']
+    xlabels = ['dailymotion', 'drive', 'dropbox', 'facebook', 'firefox', 'firefoxspdy', 'messenger', 'spotify', 'youtube']
 
     marks = {co.S2D: 'o', co.D2S: 's'}
 
     y_datas_bytes = {co.S2D: {}, co.D2S: {}}
     y_datas_packs = {co.S2D: {}, co.D2S: {}}
 
-    color = {'both3': 'b', 'both4': 'g', 'both4TCD10m': 'r', 'both4TCD100m': 'c', 'both4TCD1000m': 'm', 'both4TCL5p': 'y', 'both4TCL5pD100m': 'k', 'both4TCL15p': 'orange'}
+    color = {'both3': 'b', 'both4': 'g'}
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         if 'both' in condition and 'mptcp_fm_' in condition:
@@ -840,8 +840,8 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
             for conn_id, conn in data.iteritems():
                 if condition not in y_datas_bytes[co.S2D]:
                     for direction in y_datas_bytes.keys():
-                        y_datas_bytes[direction][condition] = {'dailymotion': {}, 'drive': {}, 'dropbox': {}, 'facebook': {}, 'firefox': {}, 'firefoxspdy': {}, 'messenger': {}, 'shazam':{}, 'spotify':{}, 'youtube': {}}
-                        y_datas_packs[direction][condition] = {'dailymotion': {}, 'drive': {}, 'dropbox': {}, 'facebook': {}, 'firefox': {}, 'firefoxspdy': {}, 'messenger': {}, 'shazam':{}, 'spotify':{}, 'youtube': {}}
+                        y_datas_bytes[direction][condition] = {'dailymotion': {}, 'drive': {}, 'dropbox': {}, 'facebook': {}, 'firefox': {}, 'firefoxspdy': {}, 'messenger': {}, 'spotify':{}, 'youtube': {}}
+                        y_datas_packs[direction][condition] = {'dailymotion': {}, 'drive': {}, 'dropbox': {}, 'facebook': {}, 'firefox': {}, 'firefoxspdy': {}, 'messenger': {}, 'spotify':{}, 'youtube': {}}
                         for app_name in y_datas_bytes[direction][condition].keys():
                             y_datas_bytes[direction][condition][app_name] = {co.WIFI: 0, co.RMNET: 0}
                             y_datas_packs[direction][condition][app_name] = {co.WIFI: 0, co.RMNET: 0}
@@ -979,14 +979,14 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
 
 def percentage_rmnet_by_condition_with_apps(log_file=sys.stdout):
     x = [1, 2, 3, 4, 5, 6, 7, 8]
-    xlabels = ['both3', 'both4', 'both4TCD10m', 'both4TCD100m', 'both4TCD1000m', 'both4TCL5p', 'both4TCL15p', 'both4TCL5pD100m']
+    xlabels = ['both3', 'both4']
 
     marks = {co.S2D: 'o', co.D2S: 's'}
 
     y_datas_bytes = {co.S2D: {}, co.D2S: {}}
     y_datas_packs = {co.S2D: {}, co.D2S: {}}
 
-    color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'y', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'g', 'messenger': 'b', 'shazam': 'gray', 'spotify': 'k', 'youtube': 'r'}
+    color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'y', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'g', 'messenger': 'b', 'spotify': 'k', 'youtube': 'r'}
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
@@ -996,8 +996,8 @@ def percentage_rmnet_by_condition_with_apps(log_file=sys.stdout):
             for conn_id, conn in data.iteritems():
                 if app not in y_datas_bytes[co.S2D]:
                     for direction in y_datas_bytes.keys():
-                        y_datas_bytes[direction][app] = {'both3': {}, 'both4': {}, 'both4TCD10m': {}, 'both4TCD100m': {}, 'both4TCD1000m': {}, 'both4TCL5p': {}, 'both4TCL15p': {}, 'both4TCL5pD100m': {}}
-                        y_datas_packs[direction][app] = {'both3': {}, 'both4': {}, 'both4TCD10m': {}, 'both4TCD100m': {}, 'both4TCD1000m': {}, 'both4TCL5p': {}, 'both4TCL15p': {}, 'both4TCL5pD100m': {}}
+                        y_datas_bytes[direction][app] = {'both3': {}, 'both4': {}}
+                        y_datas_packs[direction][app] = {'both3': {}, 'both4': {}}
                         for cond_name in y_datas_bytes[direction][app].keys():
                             y_datas_bytes[direction][app][cond_name] = {co.WIFI: 0, co.RMNET: 0}
                             y_datas_packs[direction][app][cond_name] = {co.WIFI: 0, co.RMNET: 0}
@@ -1130,7 +1130,7 @@ def percentage_rmnet_by_condition_with_apps(log_file=sys.stdout):
 
 
 def nb_conns_by_app(log_file=sys.stdout):
-    xlabels = ['dailymotion', 'drive', 'dropbox', 'facebook', 'firefox', 'firefoxspdy', 'messenger', 'shazam', 'spotify', 'youtube']
+    xlabels = ['dailymotion', 'drive', 'dropbox', 'facebook', 'firefox', 'firefoxspdy', 'messenger', 'spotify', 'youtube']
     data = {}
 
     for fname, conns in connections.iteritems():
@@ -1184,7 +1184,7 @@ def nb_conns_by_app(log_file=sys.stdout):
 
 def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
     data = {co.S2D: {}, co.D2S: {}}
-    color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'y', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'g', 'messenger': 'b', 'shazam': 'gray', 'spotify': 'k', 'youtube': 'r'}
+    color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'y', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'g', 'messenger': 'b', 'spotify': 'k', 'youtube': 'r'}
 
     for fname, conns in connections.iteritems():
         condition = get_experiment_condition(fname)
@@ -1240,7 +1240,7 @@ def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
 
 def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
     data = {co.S2D: {}, co.D2S: {}}
-    color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'y', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'g', 'messenger': 'b', 'shazam': 'gray', 'spotify': 'k', 'youtube': 'r'}
+    color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'y', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'g', 'messenger': 'b', 'spotify': 'k', 'youtube': 'r'}
 
     for fname, conns in connections.iteritems():
         condition = get_experiment_condition(fname)
