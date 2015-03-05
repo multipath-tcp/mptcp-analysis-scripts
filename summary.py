@@ -1334,7 +1334,7 @@ def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
 
 millis = int(round(time.time() * 1000))
 
-log_file = open('log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt', 'w')
+log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
 if args.app:
     print("Remove option is " + str(args.remove), file=log_file)
     print("Plot count", file=log_file)
