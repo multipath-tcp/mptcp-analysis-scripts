@@ -95,7 +95,7 @@ class BasicFlow(object):
 
     def indicates_wifi_or_rmnet(self):
         """ Given data of a mptcp connection subflow, indicates if comes from wifi or rmnet """
-        if self.attr[SADDR].startswith(PREFIX_WIFI_IF) or self.attr[DADDR].startswith(PREFIX_WIFI_IF) or self.attr[SADDR] == IP_WIFI or self.attr[DADDR] == IP_WIFI:
+        if self.attr[SADDR].startswith(PREFIX_WIFI_IF) or self.attr[DADDR].startswith(PREFIX_WIFI_IF) or self.attr[SADDR].startswith(PREFIX_IP_WIFI) or self.attr[DADDR].startswith(PREFIX_IP_WIFI):
             self.attr[IF] = WIFI
         else:
             self.attr[IF] = RMNET
@@ -229,7 +229,7 @@ SIZE_LAT_ALPH = 26
 # IP address of the proxy
 IP_PROXY = False
 
-IP_WIFI = False
+PREFIX_IP_WIFI = False
 
 if os.path.isfile('config.py'):
     from config import *
