@@ -564,7 +564,9 @@ def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fn
     labels_names = []
     zero_bars = []
     count = 0
-    for label_name, (mean, std) in values.iteritems():
+
+    for label_name in label_names:
+        (mean, std) = values[label_name]
         bar = ax.bar(ind + (count * width), mean, width, color=color[count], yerr=std, ecolor=ecolor[count])
         bars.append(bar)
         zero_bars.append(bar[0])
