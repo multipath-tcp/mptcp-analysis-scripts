@@ -63,12 +63,24 @@ class TCPConnection(co.BasicConnection):
         self.flow = co.BasicFlow()
 
 
+def fix_tcptrace_time_bug(tcptrace_time):
+    """ Given a string representing a time, correct the bug of TCPTrace (0 are skipped if just next to the dot)
+        Return a string representing the correct time
+    """
+    [sec, usec] = tcptrace_time.split('.')
+    if len(usec) < 6:
+        for i in range(6 - len(usec)):
+            usec = '0' + usec
+
+    return sec + '.' + usec
+
+
 def compute_duration(info):
     """ Given the output of tcptrace as an array, compute the duration of a tcp connection
         The computation done (in term of tcptrace's attributes) is last_packet - first_packet
     """
-    first_packet = float(info[5])
-    last_packet = float(info[6])
+    first_packet = float(fix_tcptrace_time_bug(info[5]))
+    last_packet = float(fix_tcptrace_time_bug(info[6]))
     return last_packet - first_packet
 
 
@@ -106,7 +118,7 @@ def extract_flow_data(out_file):
                 connection.flow.attr[co.DPORT] = info[4]
                 connection.flow.detect_ipv4()
                 connection.flow.indicates_wifi_or_rmnet()
-                connection.flow.attr[co.START] = float(info[5])
+                connection.flow.attr[co.START] = float(fix_tcptrace_time_bug(info[5]))
                 connection.flow.attr[co.DURATION] = compute_duration(info)
                 connection.flow.attr[co.PACKS_S2D] = int(info[7])
                 connection.flow.attr[co.PACKS_D2S] = int(info[8])
