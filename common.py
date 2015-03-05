@@ -644,7 +644,7 @@ def plot_cdfs(aggl_res, color, xlabel, base_graph_fname):
 
         plt.xlabel(xlabel, fontsize=18)
         plt.savefig(graph_fname)
-        plt.close()
+        plt.close('all')
 
 
 def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname):
@@ -685,7 +685,7 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname):
 
         plt.xlabel(xlabel, fontsize=18)
         plt.savefig(graph_fname)
-        plt.close()
+        plt.close('all')
 
 
 def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname):
