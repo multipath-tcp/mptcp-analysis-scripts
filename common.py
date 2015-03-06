@@ -80,46 +80,6 @@ class cd:
 class TSharkError(Exception):
     pass
 
-##################################################
-##             CONNECTION RELATED               ##
-##################################################
-
-
-class BasicFlow(object):
-
-    """ Represent a flow between two hosts at transport layer """
-    attr = {}
-
-    def __init__(self):
-        self.attr = {}
-
-    def indicates_wifi_or_rmnet(self):
-        """ Given data of a mptcp connection subflow, indicates if comes from wifi or rmnet """
-        if self.attr[SADDR].startswith(PREFIX_WIFI_IF) or self.attr[DADDR].startswith(PREFIX_WIFI_IF) or self.attr[SADDR].startswith(PREFIX_IP_WIFI) or self.attr[DADDR].startswith(PREFIX_IP_WIFI):
-            self.attr[IF] = WIFI
-        else:
-            self.attr[IF] = RMNET
-
-    def detect_ipv4(self):
-        """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
-        saddr = self.attr[SADDR]
-        daddr = self.attr[DADDR]
-        num_saddr = saddr.split('.')
-        num_daddr = daddr.split('.')
-        if len(num_saddr) == 4 and len(num_daddr) == 4:
-            self.attr[TYPE] = 'IPv4'
-
-
-class BasicConnection(object):
-
-    """ Represent a connection between two hosts at high level """
-    conn_id = ""
-    attr = {}
-
-    def __init__(self, cid):
-        self.conn_id = cid
-        self.attr = {}
-
 
 ##################################################
 ##               COMMON CONSTANTS               ##
@@ -233,6 +193,48 @@ PREFIX_IP_WIFI = False
 
 if os.path.isfile('config.py'):
     from config import *
+
+
+##################################################
+##             CONNECTION RELATED               ##
+##################################################
+
+
+class BasicFlow(object):
+
+    """ Represent a flow between two hosts at transport layer """
+    attr = {}
+
+    def __init__(self):
+        self.attr = {}
+
+    def indicates_wifi_or_rmnet(self):
+        """ Given data of a mptcp connection subflow, indicates if comes from wifi or rmnet """
+        if self.attr[SADDR].startswith(PREFIX_WIFI_IF) or self.attr[DADDR].startswith(PREFIX_WIFI_IF) or self.attr[SADDR].startswith(PREFIX_IP_WIFI) or self.attr[DADDR].startswith(PREFIX_IP_WIFI):
+            self.attr[IF] = WIFI
+        else:
+            self.attr[IF] = RMNET
+
+    def detect_ipv4(self):
+        """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
+        saddr = self.attr[SADDR]
+        daddr = self.attr[DADDR]
+        num_saddr = saddr.split('.')
+        num_daddr = daddr.split('.')
+        if len(num_saddr) == 4 and len(num_daddr) == 4:
+            self.attr[TYPE] = 'IPv4'
+
+
+class BasicConnection(object):
+
+    """ Represent a connection between two hosts at high level """
+    conn_id = ""
+    attr = {}
+
+    def __init__(self, cid):
+        self.conn_id = cid
+        self.attr = {}
+
 
 ##################################################
 ##         (DE)SERIALIZATION OF OBJECTS         ##
