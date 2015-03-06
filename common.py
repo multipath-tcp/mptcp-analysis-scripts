@@ -703,7 +703,7 @@ def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname):
         plot_cdfs(aggl_res[direction], color, xlabel, os.path.splitext(base_graph_fname)[0] + '_' + direction)
 
 
-def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name):
+def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plot_identity=True):
     """ Plot a scatter plot for each condition inside data (points are for apps)
         base_graph_name is given without extension
     """
@@ -718,8 +718,10 @@ def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name):
             y_val = [x[1] for x in data_app]
             ax.plot(x_val, y_val, 'o', label=app_name, color=color[app_name])
 
-        identity = np.arange(0, 100000000, 1000000)
-        ax.plot(identity, identity, 'k--')
+        if plot_identity:
+            identity = np.arange(0, 100000000, 1000000)
+            ax.plot(identity, identity, 'k--')
+
         # Shrink current axis by 20%
         box = ax.get_position()
         ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
@@ -741,8 +743,8 @@ def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name):
         plt.close('all')
 
 
-def scatter_plot_with_direction(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name):
+def scatter_plot_with_direction(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plot_identity=True):
     """ Plot a scatter plot for each direction and condition inside data (points are for apps)
     """
     for direction, data_dir in data.iteritems():
-        scatter_plot(data_dir, xlabel, ylabel, color, sums_dir_exp, os.path.splitext(base_graph_name)[0] + "_" + direction)
+        scatter_plot(data_dir, xlabel, ylabel, color, sums_dir_exp, os.path.splitext(base_graph_name)[0] + "_" + direction, plot_identity=plot_identity)
