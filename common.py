@@ -192,7 +192,9 @@ IP_PROXY = False
 PREFIX_IP_WIFI = False
 
 if os.path.isfile('config.py'):
-    from config import *
+    import config as conf
+    IP_PROXY = conf.IP_PROXY
+    PREFIX_IP_WIFI = conf.PREFIX_IP_WIFI
 
 
 ##################################################
