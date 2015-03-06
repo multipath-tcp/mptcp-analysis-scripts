@@ -1189,7 +1189,7 @@ def nb_conns_by_app(log_file=sys.stdout):
         plt.clf()
         width = 0.35
         ind = np.arange(len(to_plot_mean))
-        plt.bar(ind, to_plot_mean, width, yerr=to_plot_std, ecolor="r")
+        plt.bar(ind, to_plot_mean, width, yerr=to_plot_std, ecolor="r", log=True)
         plt.xticks(ind + width / 2, xlabels_loc, rotation='vertical')
         plt.ylabel("Total number of connections", fontsize=16)
         # Pad margins so that markers don't get clipped by the axes
