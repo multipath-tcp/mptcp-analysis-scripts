@@ -692,7 +692,7 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname):
         plt.close('all')
 
 
-def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname):
+def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname, natural=False):
     """ Plot all possible CDFs based on aggl_res.
         aggl_res is a dictionary with the structure aggl_res[direction][condition][element] = list of data
         WARNING: this function assumes that the list of elements will remain the same for all conditions
@@ -700,7 +700,10 @@ def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname):
     if len(aggl_res) < 1:
         return
     for direction in aggl_res.keys():
-        plot_cdfs(aggl_res[direction], color, xlabel, os.path.splitext(base_graph_fname)[0] + '_' + direction)
+        if natural:
+            plot_cdfs_natural(aggl_res[direction], color, xlabel, os.path.splitext(base_graph_fname)[0] + '_' + direction)
+        else:
+            plot_cdfs(aggl_res[direction], color, xlabel, os.path.splitext(base_graph_fname)[0] + '_' + direction)
 
 
 def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plot_identity=True):
