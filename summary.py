@@ -1196,7 +1196,7 @@ def nb_conns_by_app(log_file=sys.stdout):
         plt.margins(0.2)
         # Tweak spacing to prevent clipping of tick-labels
         plt.subplots_adjust(bottom=0.2)
-        graph_fname = "summary_connection_" + condition + start_time + '_' + stop_time + ".pdf"
+        graph_fname = "summary_connection_" + condition + '_' + start_time + '_' + stop_time + ".pdf"
         graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
         plt.savefig(graph_full_path)
