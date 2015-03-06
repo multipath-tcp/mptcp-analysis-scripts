@@ -1283,8 +1283,12 @@ def fog_duration_bytes(log_file=sys.stdout):
             data[condition][app] = []
 
         for conn_id, conn in conns.iteritems():
-            # conn is then a BasicConnection (no matter if TCP or MPTCP)
-            duration = conn.attr[co.DURATION]
+            # conn is then a BasicConnection
+            duration = 0
+            if isinstance(conn, tcp.TCPConnection):
+                duration = conn.flow.attr[co.DURATION]
+            elif isinstance(conn, mptcp.MPTCPConnection):
+                duration = conn.attr[co.DURATION]
             nb_bytes = conn.attr[co.S2D].get(co.WIFI, 0) + conn.attr[co.S2D].get(co.RMNET, 0)
             nb_bytes += conn.attr[co.D2S].get(co.WIFI, 0) + conn.attr[co.D2S].get(co.RMNET, 0)
 
