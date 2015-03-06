@@ -1297,6 +1297,44 @@ def fog_duration_bytes(log_file=sys.stdout):
     co.scatter_plot(data, "Duration [s]", "Bytes on connection", color, sums_dir_exp, base_graph_name, plot_identity=False)
 
 
+def cdfs_summary(log_file=sys.stdout):
+    data_duration = {}
+    data_bytes = {}
+    data_bytes_with_dir = {co.S2D: {}, co.D2S: {}}
+    color = ['red', 'blue', 'green', 'black']
+    base_graph_name_duration = "summary_cdf_duration_" + start_time + '_' + stop_time
+    base_graph_name_bytes = "summary_cdf_bytes_" + start_time + '_' + stop_time
+    base_graph_path_duration = os.path.join(sums_dir_exp, base_graph_name_duration)
+    base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
+
+    for fname, conns in connections.iteritems():
+        condition = get_experiment_condition(fname)
+
+        if condition not in data_duration.keys():
+            data_duration[condition] = {co.DURATION: []}
+            data_bytes[condition] = {'bytes': []}
+            data_bytes_with_dir[co.S2D][condition] = {co.BYTES_S2D: []}
+            data_bytes_with_dir[co.D2S][condition] = {co.BYTES_D2S: []}
+
+        for conn_id, conn in conns.iteritems():
+            # conn is then a BasicConnection
+            duration = 0
+            if isinstance(conn, tcp.TCPConnection):
+                duration = conn.flow.attr[co.DURATION]
+            elif isinstance(conn, mptcp.MPTCPConnection):
+                duration = conn.attr[co.DURATION]
+            nb_bytes_s2d = conn.attr[co.S2D].get(co.WIFI, 0) + conn.attr[co.S2D].get(co.RMNET, 0)
+            nb_bytes_d2s = conn.attr[co.D2S].get(co.WIFI, 0) + conn.attr[co.D2S].get(co.RMNET, 0)
+
+            data_duration[condition][co.DURATION].append(duration)
+            data_bytes[condition]['bytes'].append(nb_bytes_s2d + nb_bytes_d2s)
+            data_bytes_with_dir[co.S2D][condition][co.BYTES_S2D].append(nb_bytes_s2d)
+            data_bytes_with_dir[co.D2S][condition][co.BYTES_D2S].append(nb_bytes_d2s)
+
+    co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration)
+    co.plot_cdfs_natural(data_bytes, color, 'Bytes', base_graph_path_bytes)
+    co.plot_cdfs_with_direction(data_bytes_with_dir, color, 'Bytes', base_graph_path_bytes, natural=True)
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
@@ -1340,5 +1378,6 @@ else:
     fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=log_file)
     fog_plot_with_packs_wifi_rmnet_per_condition(log_file=log_file)
     fog_duration_bytes(log_file=log_file)
+    cdfs_summary(log_file=log_file)
 log_file.close()
 print("End of summary")
