@@ -1268,6 +1268,31 @@ def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
     co.scatter_plot_with_direction(data, "Packets on wifi", "Packets on cellular", color, sums_dir_exp, base_graph_name)
 
 
+def fog_duration_bytes(log_file=sys.stdout):
+    # data = {co.S2D: {}, co.D2S: {}}
+    data = {}
+    color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'y', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'g', 'messenger': 'b', 'spotify': 'k', 'youtube': 'r'}
+    base_graph_name = "fog_duration_bytes_" + start_time + '_' + stop_time
+
+    for fname, conns in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        app = get_app_name(fname)
+        if condition not in data.keys():
+            data[condition] = {}
+        if app not in data[condition].keys():
+            data[condition][app] = []
+
+        for conn_id, conn in conns.iteritems():
+            # conn is then a BasicConnection (no matter if TCP or MPTCP)
+            duration = conn.attr[co.DURATION]
+            nb_bytes = conn.attr[co.S2D].get(co.WIFI, 0) + conn.attr[co.S2D].get(co.RMNET, 0)
+            nb_bytes += conn.attr[co.D2S].get(co.WIFI, 0) + conn.attr[co.D2S].get(co.RMNET, 0)
+
+            data[condition][app].append([duration, nb_bytes])
+
+    co.scatter_plot(data, "Duration [s]", "Bytes on connection", color, sums_dir_exp, base_graph_name, plot_identity=False)
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
@@ -1310,5 +1335,6 @@ else:
     nb_conns_by_app(log_file=log_file)
     fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=log_file)
     fog_plot_with_packs_wifi_rmnet_per_condition(log_file=log_file)
+    fog_duration_bytes(log_file=log_file)
 log_file.close()
 print("End of summary")
