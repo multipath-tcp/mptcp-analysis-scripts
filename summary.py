@@ -1208,10 +1208,11 @@ def nb_conns_by_app(log_file=sys.stdout):
 def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
     data = {co.S2D: {}, co.D2S: {}}
     color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'y', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'g', 'messenger': 'b', 'spotify': 'k', 'youtube': 'r'}
+    base_graph_name = "fog_bytes_" + start_time + '_' + stop_time
 
     for fname, conns in connections.iteritems():
         condition = get_experiment_condition(fname)
-        if not 'both' in condition or not 'mptcp' in condition:
+        if 'both' not in condition or 'mptcp' not in condition:
             # No point to do this for one-flow connections
             continue
         app = get_app_name(fname)
@@ -1226,48 +1227,17 @@ def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
             data[co.S2D][condition][app].append([conn.attr[co.S2D].get(co.WIFI, 0), conn.attr[co.S2D].get(co.RMNET, 0)])
             data[co.D2S][condition][app].append([conn.attr[co.D2S].get(co.WIFI, 0), conn.attr[co.D2S].get(co.RMNET, 0)])
 
-
-    for direction, data_dir in data.iteritems():
-        for condition, data_cond in data_dir.iteritems():
-            plt.figure()
-            plt.clf()
-
-            fig, ax = plt.subplots()
-
-            for app_name, data_app in data_cond.iteritems():
-                wifi_val = [x[0] for x in data_app]
-                rmnet_val = [x[1] for x in data_app]
-                ax.plot(wifi_val, rmnet_val, 'o', label=app_name, color=color[app_name])
-
-            identity = np.arange(0, 100000000, 1000000)
-            ax.plot(identity, identity, 'k--')
-            # Shrink current axis by 20%
-            box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-
-            # Put a legend to the right of the current axis
-            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small')
-            plt.xlabel("Bytes on Wifi", fontsize=18)
-            plt.ylabel("Bytes on rmnet", fontsize=16)
-            ax.set_yscale('symlog')
-            ax.set_xscale('symlog')
-
-            graph_fname = "fog_bytes_" + direction + "_" + condition + "_" + start_time + '_' + stop_time + ".pdf"
-            graph_full_path = os.path.join(sums_dir_exp, graph_fname)
-
-            plt.savefig(graph_full_path)
-
-            plt.clf()
-            plt.close('all')
+    co.scatter_plot_with_direction(data, "Bytes on wifi", "Bytes on cellular", color, sums_dir_exp, base_graph_name)
 
 
 def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
     data = {co.S2D: {}, co.D2S: {}}
     color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'y', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'g', 'messenger': 'b', 'spotify': 'k', 'youtube': 'r'}
+    base_graph_name = "fog_packs_" + start_time + '_' + stop_time
 
     for fname, conns in connections.iteritems():
         condition = get_experiment_condition(fname)
-        if not 'both' in condition or not 'mptcp' in condition:
+        if 'both' not in condition or 'mptcp' not in condition:
             # No point to do this for one-flow connections
             continue
         app = get_app_name(fname)
@@ -1281,9 +1251,9 @@ def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
         for conn_id, conn in conns.iteritems():
             # conn is then a MPTCPConnection, be still better to be sure of
             if isinstance(conn, mptcp.MPTCPConnection):
-                packs = {co.S2D: {co.RMNET:0, co.WIFI:0}, co.D2S: {co.RMNET:0, co.WIFI:0}}
+                packs = {co.S2D: {co.RMNET: 0, co.WIFI: 0}, co.D2S: {co.RMNET: 0, co.WIFI: 0}}
                 for flow_id, flow in conn.flows.iteritems():
-                    if not co.PACKS_S2D in flow.attr or not co.PACKS_D2S in flow.attr:
+                    if co.PACKS_S2D not in flow.attr or co.PACKS_D2S not in flow.attr:
                         break
                     interface = flow.attr[co.IF]
                     packs[co.S2D][interface] += flow.attr[co.PACKS_S2D]
@@ -1295,41 +1265,7 @@ def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
                 data[co.S2D][condition][app].append([packs[co.S2D][co.WIFI], packs[co.S2D][co.RMNET]])
                 data[co.D2S][condition][app].append([packs[co.D2S][co.WIFI], packs[co.D2S][co.RMNET]])
 
-
-    for direction, data_dir in data.iteritems():
-        for condition, data_cond in data_dir.iteritems():
-            plt.figure()
-            plt.clf()
-
-            fig, ax = plt.subplots()
-
-            for app_name, data_app in data_cond.iteritems():
-                wifi_val = [x[0] for x in data_app]
-                rmnet_val = [x[1] for x in data_app]
-                ax.plot(wifi_val, rmnet_val, 'o', label=app_name, color=color[app_name])
-
-            identity = np.arange(0, 100000000, 1000000)
-            ax.plot(identity, identity, 'k--')
-
-            # Shrink current axis by 20%
-            box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-
-            # Put a legend to the right of the current axis
-            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small')
-
-            plt.xlabel("Packets on Wifi", fontsize=18)
-            plt.ylabel("Packets on rmnet", fontsize=16)
-            ax.set_yscale('symlog')
-            ax.set_xscale('symlog')
-
-            graph_fname = "fog_packs_" + direction + "_" + condition + "_" + start_time + '_' + stop_time + ".pdf"
-            graph_full_path = os.path.join(sums_dir_exp, graph_fname)
-
-            plt.savefig(graph_full_path)
-
-            plt.clf()
-            plt.close('all')
+    co.scatter_plot_with_direction(data, "Packets on wifi", "Packets on cellular", color, sums_dir_exp, base_graph_name)
 
 
 millis = int(round(time.time() * 1000))

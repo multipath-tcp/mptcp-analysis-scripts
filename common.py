@@ -701,3 +701,48 @@ def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname):
         return
     for direction in aggl_res.keys():
         plot_cdfs(aggl_res[direction], color, xlabel, os.path.splitext(base_graph_fname)[0] + '_' + direction)
+
+
+def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name):
+    """ Plot a scatter plot for each condition inside data (points are for apps)
+        base_graph_name is given without extension
+    """
+    for condition, data_cond in data.iteritems():
+        plt.figure()
+        plt.clf()
+
+        fig, ax = plt.subplots()
+
+        for app_name, data_app in data_cond.iteritems():
+            x_val = [x[0] for x in data_app]
+            y_val = [x[1] for x in data_app]
+            ax.plot(x_val, y_val, 'o', label=app_name, color=color[app_name])
+
+        identity = np.arange(0, 100000000, 1000000)
+        ax.plot(identity, identity, 'k--')
+        # Shrink current axis by 20%
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+        # Put a legend to the right of the current axis
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='x-small')
+        plt.xlabel(xlabel, fontsize=18)
+        plt.ylabel(ylabel, fontsize=16)
+        ax.set_yscale('symlog', linthreshy=1)
+        ax.set_xscale('symlog', linthreshx=1)
+        plt.grid()
+
+        graph_fname = base_graph_name + "_" + condition + ".pdf"
+        graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+        plt.savefig(graph_full_path)
+
+        plt.clf()
+        plt.close('all')
+
+
+def scatter_plot_with_direction(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name):
+    """ Plot a scatter plot for each direction and condition inside data (points are for apps)
+    """
+    for direction, data_dir in data.iteritems():
+        scatter_plot(data_dir, xlabel, ylabel, color, sums_dir_exp, os.path.splitext(base_graph_name)[0] + "_" + direction)
