@@ -317,7 +317,7 @@ def tshark_filter(condition, src_path, dst_path, print_out=sys.stderr):
     """
     cmd = ['tshark', '-r', src_path, '-Y', condition, '-w', dst_path]
     if subprocess.call(cmd, stdout=print_out) != 0:
-        raise co.TSharkError("Error with condition " + condition + " for source " + src_path + " and destination "
+        raise TSharkError("Error with condition " + condition + " for source " + src_path + " and destination "
                              + dst_path)
 
 
