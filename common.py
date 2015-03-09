@@ -34,6 +34,7 @@ import statsmodels.api as sm
 import subprocess
 import sys
 import tempfile
+import time
 import threading
 import traceback
 
@@ -446,7 +447,7 @@ def sort_and_aggregate(aggr_list):
 
 # Initialize lock semaphore for matplotlib
 # This is needed to avoid race conditions inside matplotlib
-plt_lock = threading.RLock()
+plt_lock = threading.Lock()
 
 
 def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_filepath, ymin=None, titlesize=20):
@@ -522,7 +523,9 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
         print("No data for " + title + ": skip", file=sys.stderr)
         return
 
-    plt_lock.acquire()
+    while(not plt_lock.acquire(False)):
+        print("plot_line_graph: lock taken, retry")
+        time.sleep(3)
 
     try:
         critical_plot_line_graph(
@@ -537,7 +540,9 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
 
 def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname):
     """ Plot a bar chart with aggl_res """
-    plt_lock.acquire()
+    while(not plt_lock.acquire(False)):
+        print("plot_bar_chart: lock taken, retry")
+        time.sleep(3)
 
     matplotlib.rcParams.update({'font.size': 8})
 
