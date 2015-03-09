@@ -559,7 +559,7 @@ def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fn
                 str(e)
         else:
             tries += 1
-            print("plot_line_graph: lock taken a try " + str(tries) + ", retry")
+            print("plot_bar_chart: lock taken a try " + str(tries) + ", retry")
             time.sleep(tries)
 
     matplotlib.rcParams.update({'font.size': 8})
