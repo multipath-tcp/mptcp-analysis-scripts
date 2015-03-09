@@ -232,7 +232,7 @@ def process_tcptrace_cmd(cmd, pcap_filepath, keep_csv=False, graph_dir_exp=None)
     if keep_csv:
         try:
             co.move_file(pcap_flow_data_path, os.path.join(
-                graph_dir_exp, co.CSV_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + os.path.basename(pcap_flow_data_path)))
+                graph_dir_exp, co.CSV_DIR, os.path.basename(pcap_flow_data_path)))
         except IOError as e:
             print(str(e), file=sys.stderr)
     else:
