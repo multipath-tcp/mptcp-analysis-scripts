@@ -448,7 +448,7 @@ def sort_and_aggregate(aggr_list):
 # Initialize lock semaphore for matplotlib
 # This is needed to avoid race conditions inside matplotlib
 plt_lock = threading.Lock()
-MAX_TRIES = 30
+
 
 def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_filepath, ymin=None, titlesize=20):
     """ Critical part to plot a line graph """
@@ -523,18 +523,7 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
         print("No data for " + title + ": skip", file=sys.stderr)
         return
 
-    tries = 0
-    while(not plt_lock.acquire(False)):
-        if tries == MAX_TRIES:
-            print("Too much attempts: release lock")
-            try:
-                plt_lock.release()
-            except Exception as e:
-                print(str(e), file=sys.stderr)
-        else:
-            tries += 1
-            print("plot_line_graph: lock taken a try " + str(tries) + ", retry")
-            time.sleep(tries)
+    plt_lock.acquire()
 
     try:
         critical_plot_line_graph(
@@ -549,18 +538,7 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
 
 def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fname):
     """ Plot a bar chart with aggl_res """
-    tries = 0
-    while(not plt_lock.acquire(False)):
-        if tries == MAX_TRIES:
-            print("Too much attempts: release lock")
-            try:
-                plt_lock.release()
-            except Exception as e:
-                print(str(e), file=sys.stderr)
-        else:
-            tries += 1
-            print("plot_bar_chart: lock taken a try " + str(tries) + ", retry")
-            time.sleep(tries)
+    plt_lock.acquire()
 
     matplotlib.rcParams.update({'font.size': 8})
 
