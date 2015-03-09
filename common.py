@@ -530,7 +530,7 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
             try:
                 plt_lock.release()
             except Exception as e:
-                str(e)
+                print(str(e), file=sys.stderr)
         else:
             tries += 1
             print("plot_line_graph: lock taken a try " + str(tries) + ", retry")
@@ -556,7 +556,7 @@ def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fn
             try:
                 plt_lock.release()
             except Exception as e:
-                str(e)
+                print(str(e), file=sys.stderr)
         else:
             tries += 1
             print("plot_bar_chart: lock taken a try " + str(tries) + ", retry")
