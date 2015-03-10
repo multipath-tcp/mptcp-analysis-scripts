@@ -678,15 +678,15 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname):
         for element in aggl_res[cond].keys():
             try:
                 sample = np.array(sorted(aggl_res[cond][element]))
+                f = open(os.path.splitext(base_graph_fname)[0] + '_' + element, 'w')
+                for i in range(len(sample)):
+                    f.write(str(sample[i]) + "\n")
+                f.close()
 
                 ecdf = sm.distributions.ECDF(sample)
 
                 x = np.linspace(min(sample), max(sample))
                 y = ecdf(x)
-                f = open(os.path.splitext(base_graph_fname)[0] + '_' + element, 'w')
-                for i in range(len(y)):
-                    f.write(str(x[i]) + "," + str(y[i]) + "\n")
-                f.close()
                 ax.step(x, y, color=color[aggl_res[cond].keys().index(element)], label=element)
             except ZeroDivisionError as e:
                 print(str(e))
