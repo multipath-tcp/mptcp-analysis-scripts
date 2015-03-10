@@ -826,7 +826,11 @@ def line_graph_aggl():
             for interface, data in data_if.iteritems():
                 if interface not in aggl_res[condition][direction].keys():
                     aggl_res[condition][direction][interface] = []
-                for point in data:
+                if len(data) > 0 and len(data[0]) > 2:
+                    sorted_list = co.sort_and_aggregate(data)
+                else:
+                    sorted_list = data
+                for point in sorted_list:
                     aggl_res[condition][direction][interface].append([point[0], point[1], fname])
 
     # Now aggregate by condition
@@ -1335,6 +1339,43 @@ def cdfs_summary(log_file=sys.stdout):
     co.plot_cdfs_natural(data_bytes, color, 'Bytes', base_graph_path_bytes)
     co.plot_cdfs_with_direction(data_bytes_with_dir, color, 'Bytes', base_graph_path_bytes, natural=True)
 
+
+def textual_summary(log_file=sys.stdout):
+    data = {}
+
+    for fname, conns in connections.iteritems():
+        condition = get_experiment_condition(fname)
+
+        if condition not in data.keys():
+            data[condition] = {'<1s': 0, '1-30s': 0, '30-60s': 0, '>=60s': 0}
+
+        for conn_id, conn in conns.iteritems():
+            # conn is then a BasicConnection
+            duration = 0
+            if isinstance(conn, tcp.TCPConnection):
+                duration = conn.flow.attr[co.DURATION]
+            elif isinstance(conn, mptcp.MPTCPConnection):
+                duration = conn.attr[co.DURATION]
+            nb_bytes_s2d = conn.attr[co.S2D].get(co.WIFI, 0) + conn.attr[co.S2D].get(co.RMNET, 0)
+            nb_bytes_d2s = conn.attr[co.D2S].get(co.WIFI, 0) + conn.attr[co.D2S].get(co.RMNET, 0)
+
+            if duration < 1:
+                data[condition]['<1s'] += nb_bytes_s2d + nb_bytes_d2s
+            elif duration < 30:
+                data[condition]['1-30s'] += nb_bytes_s2d + nb_bytes_d2s
+            elif duration < 60:
+                data[condition]['30-60s'] += nb_bytes_s2d + nb_bytes_d2s
+            else:
+                data[condition]['>=60s'] += nb_bytes_s2d + nb_bytes_d2s
+
+    for cond, data_cond in data.iteritems():
+        print(cond + ":", file=log_file)
+        total = 0.0
+        for dur_type, value in data_cond.iteritems():
+            total += value
+        for dur_type, value in data_cond.iteritems():
+            print(dur_type + ": " + str(value) + " (" + str(value * 100 / total) + "%)", file=log_file)
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
@@ -1379,5 +1420,6 @@ else:
     fog_plot_with_packs_wifi_rmnet_per_condition(log_file=log_file)
     fog_duration_bytes(log_file=log_file)
     cdfs_summary(log_file=log_file)
+    textual_summary(log_file=log_file)
 log_file.close()
 print("End of summary")
