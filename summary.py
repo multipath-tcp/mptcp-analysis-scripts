@@ -1342,12 +1342,15 @@ def cdfs_summary(log_file=sys.stdout):
 
 def textual_summary(log_file=sys.stdout):
     data = {}
+    count = {}
+    tot_count = 0.0
 
     for fname, conns in connections.iteritems():
         condition = get_experiment_condition(fname)
 
         if condition not in data.keys():
             data[condition] = {'<1s': 0, '1-30s': 0, '30-60s': 0, '>=60s': 0}
+            count[condition] = {'<1s': 0, '1-30s': 0, '30-60s': 0, '>=60s': 0}
 
         for conn_id, conn in conns.iteritems():
             # conn is then a BasicConnection
@@ -1361,12 +1364,17 @@ def textual_summary(log_file=sys.stdout):
 
             if duration < 1:
                 data[condition]['<1s'] += nb_bytes_s2d + nb_bytes_d2s
+                count[condition]['<1s'] += 1
             elif duration < 30:
                 data[condition]['1-30s'] += nb_bytes_s2d + nb_bytes_d2s
+                count[condition]['1-30s'] += 1
             elif duration < 60:
                 data[condition]['30-60s'] += nb_bytes_s2d + nb_bytes_d2s
+                count[condition]['30-60s'] += 1
             else:
                 data[condition]['>=60s'] += nb_bytes_s2d + nb_bytes_d2s
+                count[condition]['>=60s'] += 1
+            tot_count += 1
 
     for cond, data_cond in data.iteritems():
         print(cond + ":", file=log_file)
@@ -1374,7 +1382,7 @@ def textual_summary(log_file=sys.stdout):
         for dur_type, value in data_cond.iteritems():
             total += value
         for dur_type, value in data_cond.iteritems():
-            print(dur_type + ": " + str(value) + " (" + str(value * 100 / total) + "%)", file=log_file)
+            print(dur_type + " (has " + str(count[cond][dur_type]) + " with " + str(count[cond][dur_type] * 100 / tot_count) + "%): " + str(value) + " bytes (" + str(value * 100 / total) + "%)", file=log_file)
 
 millis = int(round(time.time() * 1000))
 
