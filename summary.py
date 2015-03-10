@@ -1378,12 +1378,12 @@ def textual_summary(log_file=sys.stdout):
             tot_count[condition] += 1
 
     for cond, data_cond in data.iteritems():
-        print(cond + ":", file=log_file)
+        print(cond + " with " + str(tot_count[cond]) + "connections:", file=log_file)
         total = 0.0
         for dur_type, value in data_cond.iteritems():
             total += value
         for dur_type, value in data_cond.iteritems():
-            print(dur_type + " (has " + str(count[cond][dur_type]) + " with " + str(count[cond][dur_type] * 100 / tot_count[condition]) + "%): " + str(value) + " bytes (" + str(value * 100 / total) + "%)", file=log_file)
+            print(dur_type + " (has " + str(count[cond][dur_type]) + " with " + str(count[cond][dur_type] * 100 / tot_count[cond]) + "%): " + str(value) + " bytes (" + str(value * 100 / total) + "%)", file=log_file)
 
 millis = int(round(time.time() * 1000))
 
