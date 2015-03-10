@@ -38,6 +38,8 @@ import time
 import threading
 import traceback
 
+from multiprocessing import Process
+
 
 # # This import must be done here, because of the internals of matplotlib
 # from matplotlib.backends.backend_pgf import FigureCanvasPgf
@@ -448,7 +450,7 @@ def sort_and_aggregate(aggr_list):
 # Initialize lock semaphore for matplotlib
 # This is needed to avoid race conditions inside matplotlib
 plt_lock = threading.Lock()
-
+TIMEOUT = 60
 
 def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_filepath, ymin=None, titlesize=20):
     """ Critical part to plot a line graph """
@@ -526,8 +528,13 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
     plt_lock.acquire()
 
     try:
-        critical_plot_line_graph(
-            data, label_names, formatting, xlabel, ylabel, title, graph_filepath, ymin=ymin, titlesize=titlesize)
+        p = Process(target=critical_plot_line_graph, args=(
+            data, label_names, formatting, xlabel, ylabel, title, graph_filepath,), kwargs={'ymin': ymin, 'titlesize': titlesize})
+        p.start()
+        p.join(TIMEOUT)
+        if p.is_alive():
+            print("A process must be terminated", file=sys.stderr)
+            p.terminate()
     except Exception as e:
         print("UNCATCHED EXCEPTION IN critical_plot_line_graph for " + graph_filepath, file=sys.stderr)
         print(str(e), file=sys.stderr)
