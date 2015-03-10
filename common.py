@@ -683,6 +683,10 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname):
 
                 x = np.linspace(min(sample), max(sample))
                 y = ecdf(x)
+                f = open(os.path.splitext(base_graph_fname)[0] + '_' + element, 'w')
+                for i in range(len(y)):
+                    f.write(str(x[i]) + "," + str(y[i]))
+                f.close()
                 ax.step(x, y, color=color[aggl_res[cond].keys().index(element)], label=element)
             except ZeroDivisionError as e:
                 print(str(e))
