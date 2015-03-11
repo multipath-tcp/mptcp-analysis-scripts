@@ -1389,7 +1389,7 @@ def textual_summary(log_file=sys.stdout):
             print(dur_type + " (has " + str(count[cond][dur_type]) + " with " + str(count[cond][dur_type] * 100 / tot_count[cond]) + "%): " + str(value) + " bytes (" + str(value * 100 / total) + "%)", file=log_file)
 
 
-def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0):
+def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_bytes=0):
     base_graph_name_bytes = "summary_fraction_cellular_" + start_time + '_' + stop_time
     base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
 
@@ -1424,11 +1424,11 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0):
                         conn_bytes_s2d[interface] -= flow.attr[co.REINJ_ORIG_BYTES_S2D]
                         conn_bytes_d2s[interface] -= flow.attr[co.REINJ_ORIG_BYTES_D2S]
 
-                    if conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'] > 0:
+                    if conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'] > limit_bytes:
                         frac_cell_s2d = ((conn_bytes_s2d['rmnet'] + 0.0) / (conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi']))
                         data_frac[condition][co.S2D][app].append(frac_cell_s2d)
 
-                    if conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi'] > 0:
+                    if conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi'] > limit_bytes:
                         frac_cell_d2s = ((conn_bytes_d2s['rmnet'] + 0.0) / (conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi']))
                         data_frac[condition][co.D2S][app].append(frac_cell_d2s)
 
