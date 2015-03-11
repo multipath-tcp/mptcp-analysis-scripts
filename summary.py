@@ -895,8 +895,9 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
                             y_datas_packs[co.S2D][condition][app][interface] += flow.attr[co.PACKS_S2D]
                             y_datas_packs[co.D2S][condition][app][interface] += flow.attr[co.PACKS_D2S]
 
-
     for direction in y_datas_bytes.keys():
+
+        print("cellular percentage for " + direction + ":", file=log_file)
 
         plt.figure()
         plt.clf()
@@ -904,6 +905,7 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
         fig, ax = plt.subplots()
 
         for condition in y_datas_bytes[direction].keys():
+            print("For " + direction + ":", file=log_file)
             points = []
             loc_x = list(x)
             # Suppose condition starts with mptcp_fm_
@@ -916,6 +918,7 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
                 else:
                     point = (y_datas_bytes[direction][condition][app][co.RMNET] + 0.) / (y_datas_bytes[direction][condition][app][co.RMNET] + y_datas_bytes[direction][condition][app][co.WIFI])
                     points.append(point)
+                    print(app + " with " + str(point), file=log_file)
                 count += 1
 
             for i in reversed(to_pop):
