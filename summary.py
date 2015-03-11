@@ -1451,6 +1451,46 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                 plt.savefig(base_graph_path_bytes + "_" + cond + "_" + direction + ".pdf")
                 plt.close()
 
+
+def cdf_bytes_all(log_file=sys.stdout):
+    base_graph_name_bytes = "cdf_bytes_all_" + start_time + '_' + stop_time
+    base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
+    tot_bytes = {'bytes': []}
+
+    data_frac = {'both3': {}, 'both4': {}}
+    for cond in data_frac:
+        data_frac[cond] = {co.S2D: {}, co.D2S: {}}
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if 'both' in condition and 'mptcp_fm_' in condition:
+            condition = condition[9:]
+            app = get_app_name(fname)
+            for conn_id, conn in data.iteritems():
+                if app not in data_frac[condition][co.S2D]:
+                    for direction in data_frac[condition].keys():
+                        data_frac[condition][direction][app] = []
+
+                # Only interested on MPTCP connections
+                elif isinstance(conn, mptcp.MPTCPConnection):
+                    conn_bytes_s2d = {'rmnet': 0, 'wifi': 0}
+                    conn_bytes_d2s = {'rmnet': 0, 'wifi': 0}
+                    for interface in conn.attr[co.S2D]:
+                        conn_bytes_s2d[interface] += conn.attr[co.S2D][interface]
+                    for interface in conn.attr[co.D2S]:
+                        conn_bytes_d2s[interface] += conn.attr[co.D2S][interface]
+                    for flow_id, flow in conn.flows.iteritems():
+                        if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
+                            break
+                        interface = flow.attr[co.IF]
+                        conn_bytes_s2d[interface] -= flow.attr[co.REINJ_ORIG_BYTES_S2D]
+                        conn_bytes_d2s[interface] -= flow.attr[co.REINJ_ORIG_BYTES_D2S]
+
+                    tot_bytes['bytes'].append(conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'])
+
+    co.plot_cdfs_natural(tot_bytes, ['r'], "Bytes", base_graph_path_bytes)
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
