@@ -905,7 +905,7 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
         fig, ax = plt.subplots()
 
         for condition in y_datas_bytes[direction].keys():
-            print("For " + direction + ":", file=log_file)
+            print("For " + condition + ":", file=log_file)
             points = []
             loc_x = list(x)
             # Suppose condition starts with mptcp_fm_
