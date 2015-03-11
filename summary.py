@@ -1455,7 +1455,7 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
 def cdf_bytes_all(log_file=sys.stdout):
     base_graph_name_bytes = "cdf_bytes_all_" + start_time + '_' + stop_time
     base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
-    tot_bytes = {'bytes': []}
+    tot_bytes = {'all': {'bytes': []}}
 
     data_frac = {'both3': {}, 'both4': {}}
     for cond in data_frac:
@@ -1486,7 +1486,7 @@ def cdf_bytes_all(log_file=sys.stdout):
                         conn_bytes_s2d[interface] -= flow.attr[co.REINJ_ORIG_BYTES_S2D]
                         conn_bytes_d2s[interface] -= flow.attr[co.REINJ_ORIG_BYTES_D2S]
 
-                    tot_bytes['bytes'].append(conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'])
+                    tot_bytes['all']['bytes'].append(conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'])
 
     co.plot_cdfs_natural(tot_bytes, ['r'], "Bytes", base_graph_path_bytes)
 
@@ -1537,5 +1537,6 @@ else:
     cdfs_summary(log_file=log_file)
     textual_summary(log_file=log_file)
     box_plot_cellular_percentage(log_file=log_file)
+    cdf_bytes_all(log_file=log_file)
 log_file.close()
 print("End of summary")
