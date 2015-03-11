@@ -1436,8 +1436,10 @@ def box_plot_cellular_percentage(log_file=sys.stdout):
             fig, ax = plt.subplots()
             apps = data_dir.keys()
             to_plot = []
+            print("Data", file=log_file)
             for app in apps:
                 to_plot.append(data_frac[cond][direction][app])
+            print(to_plot, file=log_file)
             if to_plot:
                 plt.boxplot(to_plot)
                 plt.xticks(range(1, len(apps) + 1), apps)
