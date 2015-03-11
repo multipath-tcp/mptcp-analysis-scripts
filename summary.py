@@ -1389,7 +1389,7 @@ def textual_summary(log_file=sys.stdout):
             print(dur_type + " (has " + str(count[cond][dur_type]) + " with " + str(count[cond][dur_type] * 100 / tot_count[cond]) + "%): " + str(value) + " bytes (" + str(value * 100 / total) + "%)", file=log_file)
 
 
-def box_plot_cellular_percentage(log_file=sys.stdout):
+def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0):
     base_graph_name_bytes = "summary_fraction_cellular_" + start_time + '_' + stop_time
     base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
 
@@ -1409,6 +1409,8 @@ def box_plot_cellular_percentage(log_file=sys.stdout):
 
                 # Only interested on MPTCP connections
                 elif isinstance(conn, mptcp.MPTCPConnection):
+                    if conn.attr[co.DURATION] < limit_duration:
+                        continue
                     conn_bytes_s2d = {'rmnet': 0, 'wifi': 0}
                     conn_bytes_d2s = {'rmnet': 0, 'wifi': 0}
                     for interface in conn.attr[co.S2D]:
