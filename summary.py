@@ -1445,6 +1445,8 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0):
             if to_plot:
                 plt.boxplot(to_plot)
                 plt.xticks(range(1, len(apps) + 1), apps)
+                plt.tick_params(axis='both', which='major', labelsize=10)
+                plt.tick_params(axis='both', which='minor', labelsize=8)
                 plt.ylabel("Fraction of bytes on cellular", fontsize=18)
                 plt.savefig(base_graph_path_bytes + "_" + cond + "_" + direction + ".pdf")
                 plt.close()
