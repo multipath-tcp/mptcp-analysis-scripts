@@ -918,7 +918,7 @@ def percentage_rmnet_by_app_with_conditions(log_file=sys.stdout):
                 else:
                     point = (y_datas_bytes[direction][condition][app][co.RMNET] + 0.) / (y_datas_bytes[direction][condition][app][co.RMNET] + y_datas_bytes[direction][condition][app][co.WIFI])
                     points.append(point)
-                    print(app + " with " + str(point), file=log_file)
+                    print(app + " & " + str(point) + " \\", file=log_file)
                 count += 1
 
             for i in reversed(to_pop):
@@ -1388,6 +1388,63 @@ def textual_summary(log_file=sys.stdout):
         for dur_type, value in data_cond.iteritems():
             print(dur_type + " (has " + str(count[cond][dur_type]) + " with " + str(count[cond][dur_type] * 100 / tot_count[cond]) + "%): " + str(value) + " bytes (" + str(value * 100 / total) + "%)", file=log_file)
 
+
+def box_plot_cellular_percentage(log_file=sys.stdout):
+    base_graph_name_bytes = "summary_fraction_cellular_" + start_time + '_' + stop_time
+    base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
+
+    data_frac = {'both3': {}, 'both4': {}}
+    for cond in data_frac:
+        data_frac[cond] = {co.S2D: {}, co.D2S: {}}
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if 'both' in condition and 'mptcp_fm_' in condition:
+            condition = condition[9:]
+            app = get_app_name(fname)
+            for conn_id, conn in data.iteritems():
+                if app not in data_frac[condition][co.S2D]:
+                    for direction in data_frac[condition].keys():
+                        data_frac[condition][direction][app] = []
+
+                # Only interested on MPTCP connections
+                elif isinstance(conn, mptcp.MPTCPConnection):
+                    conn_bytes_s2d = {'rmnet': 0, 'wifi': 0}
+                    conn_bytes_d2s = {'rmnet': 0, 'wifi': 0}
+                    for interface in conn.attr[co.S2D]:
+                        conn_bytes_s2d[interface] += conn.attr[co.S2D][interface]
+                    for interface in conn.attr[co.D2S]:
+                        conn_bytes_d2s[interface] += conn.attr[co.D2S][interface]
+                    for flow_id, flow in conn.flows.iteritems():
+                        if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
+                            break
+                        interface = flow.attr[co.IF]
+                        conn_bytes_s2d[interface] -= flow.attr[co.REINJ_ORIG_BYTES_S2D]
+                        conn_bytes_d2s[interface] -= flow.attr[co.REINJ_ORIG_BYTES_D2S]
+
+                    if conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'] > 0:
+                        frac_cell_s2d = (conn_bytes_s2d['rmnet'] / (conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi']))
+                        data_frac[condition][co.S2D][app].append(frac_cell_s2d)
+
+                    if conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi'] > 0:
+                        frac_cell_d2s = (conn_bytes_d2s['rmnet'] / (conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi']))
+                        data_frac[condition][co.D2S][app].append(frac_cell_d2s)
+
+    for cond, data_cond in data_frac.iteritems():
+        for direction, data_dir in data_cond.iteritems():
+            plt.figure()
+            fig, ax = plt.subplots()
+            apps = data_dir.keys()
+            to_plot = []
+            for app in apps:
+                to_plot.append(data_frac[cond][direction][app])
+            if to_plot:
+                plt.boxplot(to_plot)
+                plt.xticks(range(1, len(apps) + 1), apps)
+                plt.ylabel("Fraction of bytes on cellular", fontsize=18)
+                plt.savefig(base_graph_path_bytes + "_" + cond + "_" + direction + ".pdf")
+                plt.close()
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
@@ -1433,5 +1490,6 @@ else:
     fog_duration_bytes(log_file=log_file)
     cdfs_summary(log_file=log_file)
     textual_summary(log_file=log_file)
+    box_plot_cellular_percentage(log_file=log_file)
 log_file.close()
 print("End of summary")
