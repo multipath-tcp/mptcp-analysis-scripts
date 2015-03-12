@@ -1492,6 +1492,34 @@ def cdf_bytes_all(log_file=sys.stdout):
     co.plot_cdfs_natural(tot_bytes, ['r'], "Bytes", base_graph_path_bytes)
 
 
+def cdf_rtt_s2d_all(log_file=sys.stdout, min_sample=1):
+    aggl_res = {}
+    wifi = "wifi"
+    rmnet = "rmnet"
+    graph_fname = "rtt_avg_s2d_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if condition not in aggl_res:
+            aggl_res[condition] = {wifi: [], rmnet: []}
+
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    if co.RTT_SAMPLES_S2D not in flow.attr:
+                        break
+                    if flow.attr[co.RTT_SAMPLES_S2D] >= min_sample:
+                        aggl_res[condition][flow.attr[co.IF]] += [(flow.attr[co.RTT_AVG_S2D], fname)]
+            elif isinstance(conn, tcp.TCPConnection):
+                if co.RTT_SAMPLES_S2D not in conn.flow.attr:
+                    break
+                if conn.flow.attr[co.RTT_SAMPLES_S2D] >= min_sample:
+                    aggl_res[condition][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
+
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
+    co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
@@ -1539,5 +1567,6 @@ else:
     textual_summary(log_file=log_file)
     box_plot_cellular_percentage(log_file=log_file)
     cdf_bytes_all(log_file=log_file)
+    cdf_rtt_s2d_all(log_file=log_file)
 log_file.close()
 print("End of summary")
