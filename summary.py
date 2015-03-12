@@ -1704,7 +1704,7 @@ else:
     fog_duration_bytes(log_file=log_file)
     cdfs_summary(log_file=log_file)
     textual_summary(log_file=log_file)
-    box_plot_cellular_percentage(log_file=log_file)
+    box_plot_cellular_percentage(log_file=log_file, limit_duration=1.0, limit_bytes=10000)
     cdf_bytes_all(log_file=log_file)
     cdf_rtt_s2d_all(log_file=log_file)
     boxplot_bytes(log_file=log_file)
