@@ -1474,7 +1474,7 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                 plt.ylabel("Fraction of bytes on cellular", fontsize=18)
                 plt.ylim([0, 1])
                 plt.savefig(base_graph_path_bytes + "_" + cond + "_" + direction + ".pdf")
-                plt.close()
+            plt.close()
 
 
 def cdf_bytes_all(log_file=sys.stdout):
@@ -1544,6 +1544,71 @@ def cdf_rtt_s2d_all(log_file=sys.stdout, min_samples=1):
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
 
+
+def boxplot_bytes(log_file=sys.stdout):
+    aggl_res = {co.S2D: {}, co.D2S: {}}
+    label_names = ['Bytes s2d', 'Bytes d2s']
+    color = ['b', 'g']
+    ecolor = ['g', 'r']
+    ylabel = 'Bytes'
+    title = 'Number of bytes transfered of ' + args.app
+    base_graph_fname = "boxplot_bytes_" + start_time + "_" + stop_time
+    base_graph_full_path = os.path.join(sums_dir_exp, base_graph_fname)
+
+    # Need to agglomerate same tests
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        app = get_app_name(fname)
+        s2d = 0
+        d2s = 0
+        for conn_id, conn in data.iteritems():
+            reinject_bytes_s2d = 0
+            reinject_bytes_d2s = 0
+            if isinstance(conn, mptcp.MPTCPConnection):
+                data = conn.attr
+                for flow_id, flow in conn.flows.iteritems():
+                    if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
+                        break
+                    reinject_bytes_s2d += flow.attr[co.REINJ_ORIG_BYTES_S2D]
+                    reinject_bytes_d2s += flow.attr[co.REINJ_ORIG_BYTES_D2S]
+            elif isinstance(conn, tcp.TCPConnection):
+                data = conn.flow.attr
+            here = [i for i in data.keys() if i in [co.BYTES_S2D, co.BYTES_D2S]]
+            if not len(here) == 2:
+                continue
+            s2d += data[co.BYTES_S2D] - reinject_bytes_s2d
+            d2s += data[co.BYTES_D2S] - reinject_bytes_d2s
+
+        if condition not in aggl_res[co.S2D]:
+            for direction in aggl_res:
+                aggl_res[direction][condition] = {}
+
+        if app not in aggl_res[direction][condition]:
+            for direction in aggl_res:
+                aggl_res[direction][condition][app] = []
+
+        aggl_res[co.S2D][condition][app].append(s2d)
+        aggl_res[co.D2S][condition][app].append(d2s)
+
+    for direction in aggl_res:
+        for condition in aggl_res[direction]:
+            plt.figure()
+            fig, ax = plt.subplots()
+            apps = aggl_res[direction][condition].keys()
+            to_plot = []
+            print("Data bytes boxplot", file=log_file)
+            for app in apps:
+                to_plot.append(aggl_res[direction][condition][app])
+            print(to_plot, file=log_file)
+            if to_plot:
+                plt.boxplot(to_plot)
+                plt.xticks(range(1, len(apps) + 1), apps)
+                plt.tick_params(axis='both', which='major', labelsize=10)
+                plt.tick_params(axis='both', which='minor', labelsize=8)
+                plt.ylabel("Bytes of all scenario", fontsize=18)
+                plt.savefig(base_graph_full_path + "_" + condition + "_" + direction + ".pdf")
+            plt.close()
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
@@ -1592,5 +1657,6 @@ else:
     box_plot_cellular_percentage(log_file=log_file)
     cdf_bytes_all(log_file=log_file)
     cdf_rtt_s2d_all(log_file=log_file)
+    boxplot_bytes(log_file=log_file)
 log_file.close()
 print("End of summary")
