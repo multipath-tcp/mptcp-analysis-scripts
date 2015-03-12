@@ -214,10 +214,10 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
 
     for line in data:
         split_line = line.split(',')
-        if split_line[3] == 1 and (not split_line[5] == -1):
+        if int(split_line[3]) == 1 and (not int(split_line[5]) == -1):
             # Map and reinjected
             reinject_offsets[int(split_line[5]) - 1] += int(split_line[4]) - int(split_line[1])
-            reinject_nb[int(split_line[5] - 1)] += 1
+            reinject_nb[int(split_line[5]) - 1] += 1
 
     for i in range(0, len(connections[conn_id].flows)):
         if is_reversed:
