@@ -1609,6 +1609,56 @@ def boxplot_bytes(log_file=sys.stdout):
                 plt.savefig(base_graph_full_path + "_" + condition + "_" + direction + ".pdf")
             plt.close()
 
+
+def reinject_plot(log_file=sys.stdout):
+    base_graph_fname = "reinject_bytes_" + start_time + "_" + stop_time
+    base_graph_full_path = os.path.join(sums_dir_exp, base_graph_fname)
+    results = {co.S2D: {}, co.D2S: {}}
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if 'both' in condition and 'mptcp_fm_' in condition:
+            condition = condition[9:]
+            app = get_app_name(fname)
+            if condition not in results[co.S2D]:
+                for direction in results:
+                    results[direction][condition] = {}
+
+            if app not in results[direction][condition]:
+                for direction in results:
+                    results[direction][condition][app] = []
+            for conn_id, conn in data.iteritems():
+                reinject_bytes_s2d = 0
+                reinject_bytes_d2s = 0
+                for flow_id, flow in conn.flows.iteritems():
+                    if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
+                        break
+                    reinject_bytes_s2d += flow.attr[co.REINJ_ORIG_BYTES_S2D]
+                    reinject_bytes_d2s += flow.attr[co.REINJ_ORIG_BYTES_D2S]
+
+                results[co.S2D][condition][app].append(reinject_bytes_s2d)
+                results[co.D2S][condition][app].append(reinject_bytes_d2s)
+
+    for direction in results:
+        for condition in results[direction]:
+            plt.figure()
+            fig, ax = plt.subplots()
+            apps = results[direction][condition].keys()
+            to_plot = []
+            print("Data bytes boxplot", file=log_file)
+            for app in apps:
+                to_plot.append(results[direction][condition][app])
+            print(to_plot, file=log_file)
+            if to_plot:
+                plt.boxplot(to_plot)
+                plt.xticks(range(1, len(apps) + 1), apps)
+                plt.tick_params(axis='both', which='major', labelsize=10)
+                plt.tick_params(axis='both', which='minor', labelsize=8)
+                plt.ylabel("Bytes of all scenario", fontsize=18)
+                plt.savefig(base_graph_full_path + "_" + condition + "_" + direction + ".pdf")
+            plt.close()
+
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
@@ -1658,5 +1708,6 @@ else:
     cdf_bytes_all(log_file=log_file)
     cdf_rtt_s2d_all(log_file=log_file)
     boxplot_bytes(log_file=log_file)
+    reinject_plot(log_file=log_file)
 log_file.close()
 print("End of summary")
