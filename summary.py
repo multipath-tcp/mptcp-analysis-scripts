@@ -1492,7 +1492,7 @@ def cdf_bytes_all(log_file=sys.stdout):
     co.plot_cdfs_natural(tot_bytes, ['r'], "Bytes", base_graph_path_bytes)
 
 
-def cdf_rtt_s2d_all(log_file=sys.stdout, min_sample=1):
+def cdf_rtt_s2d_all(log_file=sys.stdout, min_samples=1):
     aggl_res = {}
     wifi = "wifi"
     rmnet = "rmnet"
@@ -1509,12 +1509,12 @@ def cdf_rtt_s2d_all(log_file=sys.stdout, min_sample=1):
                 for flow_id, flow in conn.flows.iteritems():
                     if co.RTT_SAMPLES_S2D not in flow.attr:
                         break
-                    if flow.attr[co.RTT_SAMPLES_S2D] >= min_sample:
+                    if flow.attr[co.RTT_SAMPLES_S2D] >= min_samples:
                         aggl_res[condition][flow.attr[co.IF]] += [(flow.attr[co.RTT_AVG_S2D], fname)]
             elif isinstance(conn, tcp.TCPConnection):
                 if co.RTT_SAMPLES_S2D not in conn.flow.attr:
                     break
-                if conn.flow.attr[co.RTT_SAMPLES_S2D] >= min_sample:
+                if conn.flow.attr[co.RTT_SAMPLES_S2D] >= min_samples:
                     aggl_res[condition][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
