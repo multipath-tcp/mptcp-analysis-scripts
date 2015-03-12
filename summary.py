@@ -1393,9 +1393,19 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
     base_graph_name_bytes = "summary_fraction_cellular_" + start_time + '_' + stop_time
     base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
 
+    fog_base_graph_name_bytes = "fog_cellular_" + start_time + '_' + stop_time
+    fog_base_graph_path_bytes = os.path.join(sums_dir_exp, fog_base_graph_name_bytes)
+
+    color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'y', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'g', 'messenger': 'b', 'spotify': 'k', 'youtube': 'r'}
+
+
+    data_bytes = {'both3': {}, 'both4': {}}
     data_frac = {'both3': {}, 'both4': {}}
     for cond in data_frac:
         data_frac[cond] = {co.S2D: {}, co.D2S: {}}
+
+    for cond in data_bytes:
+        data_bytes[cond] = {co.S2D: {}, co.D2S: {}}
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
@@ -1406,6 +1416,7 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                 if app not in data_frac[condition][co.S2D]:
                     for direction in data_frac[condition].keys():
                         data_frac[condition][direction][app] = []
+                        data_bytes[condition][direction][app] = []
 
                 # Only interested on MPTCP connections
                 elif isinstance(conn, mptcp.MPTCPConnection):
@@ -1427,10 +1438,23 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                     if conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'] > limit_bytes:
                         frac_cell_s2d = ((conn_bytes_s2d['rmnet'] + 0.0) / (conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi']))
                         data_frac[condition][co.S2D][app].append(frac_cell_s2d)
+                        data_bytes[condition][co.S2D][app].append(conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'])
 
                     if conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi'] > limit_bytes:
                         frac_cell_d2s = ((conn_bytes_d2s['rmnet'] + 0.0) / (conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi']))
                         data_frac[condition][co.D2S][app].append(frac_cell_d2s)
+                        data_bytes[condition][co.D2S][app].append(conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'])
+
+    count = 1
+    data_scatter = {co.S2D: {}, co.D2S: {}}
+    for condition in data_bytes:
+        for direction in data_bytes[condition]:
+            data_scatter[direction][condition] = {}
+            for app in data_bytes[condition][direction]:
+                data_scatter[direction][condition][app] = zip(data_bytes[condition][direction][app], data_frac[condition][direction][app])
+
+    co.scatter_plot_with_direction(data_scatter, "Bytes on connection", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False)
+
 
     for cond, data_cond in data_frac.iteritems():
         for direction, data_dir in data_cond.iteritems():
