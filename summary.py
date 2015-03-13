@@ -1619,6 +1619,10 @@ def reinject_plot(log_file=sys.stdout):
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         if 'both' in condition and 'mptcp_fm_' in condition:
+            reinject_bytes_s2d = 0
+            reinject_bytes_d2s = 0
+            reinject_packs_s2d = 0
+            reinject_packs_d2s = 0
             condition = condition[9:]
             app = get_app_name(fname)
             if condition not in results[co.S2D]:
@@ -1631,10 +1635,10 @@ def reinject_plot(log_file=sys.stdout):
                     results[direction][condition][app] = []
                     results_packs[direction][condition][app] = []
             for conn_id, conn in data.iteritems():
-                reinject_bytes_s2d = 0
-                reinject_bytes_d2s = 0
-                reinject_packs_s2d = 0
-                reinject_packs_d2s = 0
+                # reinject_bytes_s2d = 0
+                # reinject_bytes_d2s = 0
+                # reinject_packs_s2d = 0
+                # reinject_packs_d2s = 0
                 for flow_id, flow in conn.flows.iteritems():
                     if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
                         break
@@ -1643,10 +1647,15 @@ def reinject_plot(log_file=sys.stdout):
                     reinject_packs_s2d += flow.attr[co.REINJ_ORIG_PACKS_S2D]
                     reinject_packs_d2s += flow.attr[co.REINJ_ORIG_PACKS_D2S]
 
-                results[co.S2D][condition][app].append(reinject_bytes_s2d)
-                results[co.D2S][condition][app].append(reinject_bytes_d2s)
-                results_packs[co.S2D][condition][app].append(reinject_packs_s2d)
-                results_packs[co.D2S][condition][app].append(reinject_packs_d2s)
+                # results[co.S2D][condition][app].append(reinject_bytes_s2d)
+                # results[co.D2S][condition][app].append(reinject_bytes_d2s)
+                # results_packs[co.S2D][condition][app].append(reinject_packs_s2d)
+                # results_packs[co.D2S][condition][app].append(reinject_packs_d2s)
+
+            reinject_bytes_s2d = 0
+            reinject_bytes_d2s = 0
+            reinject_packs_s2d = 0
+            reinject_packs_d2s = 0
 
     for direction in results:
         for condition in results[direction]:
