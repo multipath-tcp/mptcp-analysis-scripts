@@ -1652,10 +1652,10 @@ def reinject_plot(log_file=sys.stdout):
                 # results_packs[co.S2D][condition][app].append(reinject_packs_s2d)
                 # results_packs[co.D2S][condition][app].append(reinject_packs_d2s)
 
-            reinject_bytes_s2d = 0
-            reinject_bytes_d2s = 0
-            reinject_packs_s2d = 0
-            reinject_packs_d2s = 0
+            results[co.S2D][condition][app].append(reinject_bytes_s2d)
+            results[co.D2S][condition][app].append(reinject_bytes_d2s)
+            results_packs[co.S2D][condition][app].append(reinject_packs_s2d)
+            results_packs[co.D2S][condition][app].append(reinject_packs_d2s)
 
     for direction in results:
         for condition in results[direction]:
