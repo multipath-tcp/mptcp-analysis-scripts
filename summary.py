@@ -1674,7 +1674,7 @@ def reinject_plot(log_file=sys.stdout):
             to_plot = []
             print("Reinject packs boxplot", file=log_file)
             for app in apps:
-                to_plot.append(results[direction][condition][app])
+                to_plot.append(results_packs[direction][condition][app])
             print(to_plot, file=log_file)
             if to_plot:
                 plt.boxplot(to_plot)
