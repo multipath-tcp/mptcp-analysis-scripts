@@ -1666,6 +1666,8 @@ def reinject_plot(log_file=sys.stdout):
                 plt.ylabel("Bytes reinjected of all scenario", fontsize=18)
                 plt.savefig(base_graph_full_path + "_" + condition + "_" + direction + ".pdf")
             plt.close()
+            base_graph_fname = "reinject_packs_" + start_time + "_" + stop_time
+            base_graph_full_path = os.path.join(sums_dir_exp, base_graph_fname)
             plt.figure()
             fig, ax = plt.subplots()
             apps = results_packs[direction][condition].keys()
