@@ -1669,12 +1669,11 @@ def reinject_plot(log_file=sys.stdout):
                 # reinject_packs_s2d = 0
                 # reinject_packs_d2s = 0
                 for flow_id, flow in conn.flows.iteritems():
-                    if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
-                        break
-                    reinject_bytes_s2d += flow.attr[co.REINJ_ORIG_BYTES_S2D]
-                    reinject_bytes_d2s += flow.attr[co.REINJ_ORIG_BYTES_D2S]
-                    reinject_packs_s2d += flow.attr[co.REINJ_ORIG_PACKS_S2D]
-                    reinject_packs_d2s += flow.attr[co.REINJ_ORIG_PACKS_D2S]
+                    if co.REINJ_ORIG_BYTES_S2D in flow.attr and co.REINJ_ORIG_BYTES_D2S not in flow.attr:
+                        reinject_bytes_s2d += flow.attr[co.REINJ_ORIG_BYTES_S2D]
+                        reinject_bytes_d2s += flow.attr[co.REINJ_ORIG_BYTES_D2S]
+                        reinject_packs_s2d += flow.attr[co.REINJ_ORIG_PACKS_S2D]
+                        reinject_packs_d2s += flow.attr[co.REINJ_ORIG_PACKS_D2S]
 
                 # results[co.S2D][condition][app].append(reinject_bytes_s2d)
                 # results[co.D2S][condition][app].append(reinject_bytes_d2s)
@@ -1704,8 +1703,8 @@ def reinject_plot(log_file=sys.stdout):
                 plt.ylabel("Bytes reinjected of all scenario", fontsize=18)
                 plt.savefig(base_graph_full_path + "_" + condition + "_" + direction + ".pdf")
             plt.close()
-            base_graph_fname = "reinject_packs_" + start_time + "_" + stop_time
-            base_graph_full_path = os.path.join(sums_dir_exp, base_graph_fname)
+            packs_base_graph_fname = "reinject_packs_" + start_time + "_" + stop_time
+            packs_base_graph_full_path = os.path.join(sums_dir_exp, packs_base_graph_fname)
             plt.figure()
             fig, ax = plt.subplots()
             apps = results_packs[direction][condition].keys()
@@ -1720,7 +1719,7 @@ def reinject_plot(log_file=sys.stdout):
                 plt.tick_params(axis='both', which='major', labelsize=10)
                 plt.tick_params(axis='both', which='minor', labelsize=8)
                 plt.ylabel("Packs reinjected of all scenario", fontsize=18)
-                plt.savefig(base_graph_full_path + "_" + condition + "_" + direction + ".pdf")
+                plt.savefig(packs_base_graph_full_path + "_" + condition + "_" + direction + ".pdf")
             plt.close()
 
 
