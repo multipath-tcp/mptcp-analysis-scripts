@@ -817,7 +817,7 @@ def line_graph_aggl():
         condition = get_experiment_condition(fname)
         if condition not in aggl_res.keys():
             aggl_res[condition] = {}
-            count[condition] = 1
+            count[condition] = 1.0
         else:
             count[condition] += 1
         for direction, data_if in data_dir.iteritems():
@@ -842,6 +842,7 @@ def line_graph_aggl():
                 for point in aggl_res[condition][direction][interface]:
                     final_list.append([point[0], point[1] / count[condition]])
                 aggl_res[condition][direction][interface] = final_list
+                print(aggl_res[condition][direction][interface])
 
             co.plot_line_graph(aggl_res[condition][direction].values(),
                                aggl_res[condition][direction].keys(),
@@ -1472,7 +1473,7 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                 plt.tick_params(axis='both', which='major', labelsize=10)
                 plt.tick_params(axis='both', which='minor', labelsize=8)
                 plt.ylabel("Fraction of bytes on cellular", fontsize=18)
-                plt.ylim([0, 1])
+                plt.ylim([0.0, 1.0])
                 plt.savefig(base_graph_path_bytes + "_" + cond + "_" + direction + ".pdf")
             plt.close()
 
@@ -1614,6 +1615,7 @@ def reinject_plot(log_file=sys.stdout):
     base_graph_fname = "reinject_bytes_" + start_time + "_" + stop_time
     base_graph_full_path = os.path.join(sums_dir_exp, base_graph_fname)
     results = {co.S2D: {}, co.D2S: {}}
+    results_packs = {co.S2D: {}, co.D2S: {}}
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         if 'both' in condition and 'mptcp_fm_' in condition:
@@ -1622,21 +1624,29 @@ def reinject_plot(log_file=sys.stdout):
             if condition not in results[co.S2D]:
                 for direction in results:
                     results[direction][condition] = {}
+                    results_packs[direction][condition] = {}
 
             if app not in results[direction][condition]:
                 for direction in results:
                     results[direction][condition][app] = []
+                    results_packs[direction][condition][app] = []
             for conn_id, conn in data.iteritems():
                 reinject_bytes_s2d = 0
                 reinject_bytes_d2s = 0
+                reinject_packs_s2d = 0
+                reinject_packs_d2s = 0
                 for flow_id, flow in conn.flows.iteritems():
                     if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
                         break
                     reinject_bytes_s2d += flow.attr[co.REINJ_ORIG_BYTES_S2D]
                     reinject_bytes_d2s += flow.attr[co.REINJ_ORIG_BYTES_D2S]
+                    reinject_packs_s2d += flow.attr[co.REINJ_ORIG_PACKS_S2D]
+                    reinject_packs_d2s += flow.attr[co.REINJ_ORIG_PACKS_D2S]
 
                 results[co.S2D][condition][app].append(reinject_bytes_s2d)
                 results[co.D2S][condition][app].append(reinject_bytes_d2s)
+                results_packs[co.S2D][condition][app].append(reinject_packs_s2d)
+                results_packs[co.D2S][condition][app].append(reinject_packs_d2s)
 
     for direction in results:
         for condition in results[direction]:
@@ -1644,7 +1654,7 @@ def reinject_plot(log_file=sys.stdout):
             fig, ax = plt.subplots()
             apps = results[direction][condition].keys()
             to_plot = []
-            print("Data bytes boxplot", file=log_file)
+            print("Reinject bytes boxplot", file=log_file)
             for app in apps:
                 to_plot.append(results[direction][condition][app])
             print(to_plot, file=log_file)
@@ -1653,7 +1663,23 @@ def reinject_plot(log_file=sys.stdout):
                 plt.xticks(range(1, len(apps) + 1), apps)
                 plt.tick_params(axis='both', which='major', labelsize=10)
                 plt.tick_params(axis='both', which='minor', labelsize=8)
-                plt.ylabel("Bytes of all scenario", fontsize=18)
+                plt.ylabel("Bytes reinjected of all scenario", fontsize=18)
+                plt.savefig(base_graph_full_path + "_" + condition + "_" + direction + ".pdf")
+            plt.close()
+            plt.figure()
+            fig, ax = plt.subplots()
+            apps = results_packs[direction][condition].keys()
+            to_plot = []
+            print("Reinject packs boxplot", file=log_file)
+            for app in apps:
+                to_plot.append(results[direction][condition][app])
+            print(to_plot, file=log_file)
+            if to_plot:
+                plt.boxplot(to_plot)
+                plt.xticks(range(1, len(apps) + 1), apps)
+                plt.tick_params(axis='both', which='major', labelsize=10)
+                plt.tick_params(axis='both', which='minor', labelsize=8)
+                plt.ylabel("Packs reinjected of all scenario", fontsize=18)
                 plt.savefig(base_graph_full_path + "_" + condition + "_" + direction + ".pdf")
             plt.close()
 
@@ -1663,35 +1689,35 @@ millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
 if args.app:
-    print("Remove option is " + str(args.remove), file=log_file)
-    print("Plot count", file=log_file)
-    bar_chart_count_connections(log_file=log_file)
-    print("Plot bytes", file=log_file)
-    bar_chart_bytes(log_file=log_file)
-    print("Plot duration", file=log_file)
-    bar_chart_duration(log_file=log_file)
-    print("Plot bytes s2d", file=log_file)
-    bar_chart_bytes_s2d_interface(log_file=log_file)
-    print("Plot bytes d2s", file=log_file)
-    bar_chart_bytes_d2s_interface(log_file=log_file)
-    print("Plot duration all", file=log_file)
-    bar_chart_duration_all(log_file=log_file)
-    print("Plot packs retrans", file=log_file)
-    bar_chart_packs_retrans(log_file=log_file)
-    print("Plot packs retrans s2d", file=log_file)
-    bar_chart_packs_retrans_s2d_interface(log_file=log_file)
-    print("Plot packs retrans d2s", file=log_file)
-    bar_chart_packs_retrans_d2s_interface(log_file=log_file)
-    print("Plot line graph aggl", file=log_file)
+    # print("Remove option is " + str(args.remove), file=log_file)
+    # print("Plot count", file=log_file)
+    # bar_chart_count_connections(log_file=log_file)
+    # print("Plot bytes", file=log_file)
+    # bar_chart_bytes(log_file=log_file)
+    # print("Plot duration", file=log_file)
+    # bar_chart_duration(log_file=log_file)
+    # print("Plot bytes s2d", file=log_file)
+    # bar_chart_bytes_s2d_interface(log_file=log_file)
+    # print("Plot bytes d2s", file=log_file)
+    # bar_chart_bytes_d2s_interface(log_file=log_file)
+    # print("Plot duration all", file=log_file)
+    # bar_chart_duration_all(log_file=log_file)
+    # print("Plot packs retrans", file=log_file)
+    # bar_chart_packs_retrans(log_file=log_file)
+    # print("Plot packs retrans s2d", file=log_file)
+    # bar_chart_packs_retrans_s2d_interface(log_file=log_file)
+    # print("Plot packs retrans d2s", file=log_file)
+    # bar_chart_packs_retrans_d2s_interface(log_file=log_file)
+    # print("Plot line graph aggl", file=log_file)
     line_graph_aggl()
-    print("Plot rtt average s2d", file=log_file)
-    bar_chart_rtt_average_s2d_interface(log_file=log_file)
-    print("Plot rtt average d2s", file=log_file)
-    bar_chart_rtt_average_d2s_interface(log_file=log_file)
-    print("Plot rtt stdev s2d", file=log_file)
-    bar_chart_rtt_stdev_s2d_interface(log_file=log_file)
-    print("Plot rtt stdev d2s", file=log_file)
-    bar_chart_rtt_stdev_d2s_interface(log_file=log_file)
+    # print("Plot rtt average s2d", file=log_file)
+    # bar_chart_rtt_average_s2d_interface(log_file=log_file)
+    # print("Plot rtt average d2s", file=log_file)
+    # bar_chart_rtt_average_d2s_interface(log_file=log_file)
+    # print("Plot rtt stdev s2d", file=log_file)
+    # bar_chart_rtt_stdev_s2d_interface(log_file=log_file)
+    # print("Plot rtt stdev d2s", file=log_file)
+    # bar_chart_rtt_stdev_d2s_interface(log_file=log_file)
 elif args.cond:
     print("To be implemented after", file=log_file)
 else:

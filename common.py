@@ -717,7 +717,7 @@ def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname, natural=
             plot_cdfs(aggl_res[direction], color, xlabel, os.path.splitext(base_graph_fname)[0] + '_' + direction)
 
 
-def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plot_identity=True, s=None, log_scale_x=True, log_scale_y=True):
+def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plot_identity=True, s=None, log_scale_x=True, log_scale_y=True, y_to_one=False):
     """ Plot a scatter plot for each condition inside data (points are for apps)
         base_graph_name is given without extension
     """
@@ -755,7 +755,10 @@ def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plo
             ax.set_xscale('symlog', linthreshx=1)
         plt.grid()
         plt.xlim(0.0, plt.xlim()[1])
-        plt.ylim(0.0, max(plt.ylim()[1], 1))
+        if y_to_one:
+            plt.ylim(0.0, 1.0)
+        else:
+            plt.ylim(0.0, max(plt.ylim()[1], 1))
 
         graph_fname = base_graph_name + "_" + condition + ".pdf"
         graph_full_path = os.path.join(sums_dir_exp, graph_fname)
@@ -766,11 +769,11 @@ def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plo
         plt.close('all')
 
 
-def scatter_plot_with_direction(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plot_identity=True, s=None, log_scale_x=True, log_scale_y=True):
+def scatter_plot_with_direction(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plot_identity=True, s=None, log_scale_x=True, log_scale_y=True, y_to_one=False):
     """ Plot a scatter plot for each direction and condition inside data (points are for apps)
     """
     for direction, data_dir in data.iteritems():
         if s:
-            scatter_plot(data_dir, xlabel, ylabel, color, sums_dir_exp, os.path.splitext(base_graph_name)[0] + "_" + direction, plot_identity=plot_identity, s=s[direction], log_scale_x=log_scale_x, log_scale_y=log_scale_y)
+            scatter_plot(data_dir, xlabel, ylabel, color, sums_dir_exp, os.path.splitext(base_graph_name)[0] + "_" + direction, plot_identity=plot_identity, s=s[direction], log_scale_x=log_scale_x, log_scale_y=log_scale_y, y_to_one=y_to_one)
         else:
-            scatter_plot(data_dir, xlabel, ylabel, color, sums_dir_exp, os.path.splitext(base_graph_name)[0] + "_" + direction, plot_identity=plot_identity, log_scale_x=log_scale_x, log_scale_y=log_scale_y)
+            scatter_plot(data_dir, xlabel, ylabel, color, sums_dir_exp, os.path.splitext(base_graph_name)[0] + "_" + direction, plot_identity=plot_identity, log_scale_x=log_scale_x, log_scale_y=log_scale_y, y_to_one=y_to_one)
