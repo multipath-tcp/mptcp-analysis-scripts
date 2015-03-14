@@ -842,7 +842,6 @@ def line_graph_aggl():
                 for point in aggl_res[condition][direction][interface]:
                     final_list.append([point[0], point[1] / count[condition]])
                 aggl_res[condition][direction][interface] = final_list
-                print(aggl_res[condition][direction][interface])
 
             co.plot_line_graph(aggl_res[condition][direction].values(),
                                aggl_res[condition][direction].keys(),
