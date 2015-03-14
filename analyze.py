@@ -128,7 +128,7 @@ else:
 def uncompress_file(filename, dirpath):
     if any(match in filename for match in args.pcap):
         # Files from UI tests will be compressed; unzip them
-        if filename.endswith('.gz'):
+        if filename.endswith('.pcap.gz'):
             output_filepath = os.path.join(trace_dir_exp, filename[:-3])
             if args.not_correct:
                 return output_filepath
