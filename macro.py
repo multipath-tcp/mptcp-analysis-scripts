@@ -198,7 +198,7 @@ def cellular_percentage_boxplot(limit_duration=0, limit_bytes=10000):
     for dataset_name, connections in datasets.iteritems():
         for fname, data in connections.iteritems():
             condition = get_experiment_condition(fname)
-            if 'both' in condition and 'mptcp_fm_' in condition:
+            if 'both' in condition and 'mptcp_fm_' in condition and 'TC' not in condition:
                 condition = condition[9:]
                 app = get_app_name(fname)
                 for conn_id, conn in data.iteritems():
