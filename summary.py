@@ -1419,7 +1419,7 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                         data_bytes[condition][direction][app] = []
 
                 # Only interested on MPTCP connections
-                elif isinstance(conn, mptcp.MPTCPConnection):
+                if isinstance(conn, mptcp.MPTCPConnection):
                     if conn.attr[co.DURATION] < limit_duration:
                         continue
                     conn_bytes_s2d = {'rmnet': 0, 'wifi': 0}
