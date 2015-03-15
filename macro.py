@@ -292,6 +292,7 @@ def grouped_boxplot(results, base_graph_path_bytes):
             plt.legend((hB, hR), ('Normal', 'Shaping'))
             hB.set_visible(False)
             hR.set_visible(False)
+            plt.ylabel("Fraction of data bytes on cellular", fontsize=18)
 
             plt.savefig(base_graph_path_bytes + "_" + condition + "_" + direction + ".pdf")
             plt.close('all')
