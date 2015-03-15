@@ -247,7 +247,7 @@ def grouped_boxplot(results, base_graph_path_bytes):
         plt.setp(bp['whiskers'][1], color='blue')
         plt.setp(bp['fliers'][0], color='blue')
         plt.setp(bp['fliers'][1], color='blue')
-        plt.setp(bp['medians'][0], color='blue')
+        plt.setp(bp['medians'][0], color='purple')
 
         plt.setp(bp['boxes'][1], color='red')
         plt.setp(bp['caps'][2], color='red')
@@ -256,7 +256,7 @@ def grouped_boxplot(results, base_graph_path_bytes):
         plt.setp(bp['whiskers'][3], color='red')
         # plt.setp(bp['fliers'][2], color='red')
         # plt.setp(bp['fliers'][3], color='red')
-        plt.setp(bp['medians'][1], color='red')
+        plt.setp(bp['medians'][1], color='orange')
 
     for condition, results_condition in results.iteritems():
         for direction, results_direction in results_condition.iteritems():
