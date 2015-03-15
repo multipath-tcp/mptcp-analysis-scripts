@@ -277,7 +277,7 @@ def grouped_boxplot(results, base_graph_path_bytes):
                 bp = plt.boxplot(data, positions=positions, widths=0.6)
                 setBoxColors(bp)
                 labels.append(app)
-                position_labels.append(((nb_datasets + 1.0) * (count + 1.0)) / 2.0)
+                position_labels.append(((nb_datasets + 1.0) * count) + ((nb_datasets + 1.0) / 2.0))
                 count += 1
 
             # set axes limits and labels
