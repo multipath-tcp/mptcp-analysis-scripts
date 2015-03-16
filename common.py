@@ -87,7 +87,7 @@ class TSharkError(Exception):
 ##               COMMON CONSTANTS               ##
 ##################################################
 # Lines in xpl files that starts with one of the words in XPL_ONE_POINT have one point
-XPL_ONE_POINT = ['darrow', 'uarrow', 'diamond', 'dot', 'atext', 'dtick', 'utick', 'atext']
+XPL_ONE_POINT = ['darrow', 'uarrow', 'diamond', 'dot', 'atext', 'dtick', 'utick', 'atext', 'box', 'htick']
 # Lines in xpl files that starts with one of the words in XPL_TWO_POINTS have two points
 XPL_TWO_POINTS = ['line']
 
