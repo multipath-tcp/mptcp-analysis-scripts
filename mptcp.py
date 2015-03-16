@@ -363,6 +363,7 @@ def process_stats_csv(csv_fname, connections):
                 con_time = line.split(';')[-1]
 
         if first_seqs and last_acks:
+            # Notice that these values remove the reinjected bytes
             connections[conn_id].attr[co.BYTES_S2D] = int(last_acks[1]) - int(first_seqs[0])
             connections[conn_id].attr[co.BYTES_D2S] = int(last_acks[0]) - int(first_seqs[1])
         if con_time:
