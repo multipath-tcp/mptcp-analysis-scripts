@@ -187,57 +187,8 @@ datasets = fetch_data(stat_dir_exp)
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-def cellular_percentage_boxplot(limit_duration=0, limit_bytes=10000):
-    base_graph_name_bytes = "boxplot_cellular_" + start_time + '_' + stop_time
-    base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
 
-    results = {"both3": {}, "both4": {}}
-    for cond in results:
-        results[cond] = {co.S2D: {}, co.D2S: {}}
-
-    for dataset_name, connections in datasets.iteritems():
-        for fname, data in connections.iteritems():
-            condition = get_experiment_condition(fname)
-            if 'both' in condition and 'mptcp_fm_' in condition and 'TC' not in condition:
-                condition = condition[9:]
-                app = get_app_name(fname)
-                for conn_id, conn in data.iteritems():
-                    if app not in results[condition][co.S2D]:
-                        for direction in results[condition].keys():
-                            results[condition][direction][app] = {}
-                    if dataset_name not in results[condition][co.S2D][app]:
-                        for direction in results[condition].keys():
-                            results[condition][direction][app][dataset_name] = []
-
-                    # Only interested on MPTCP connections
-                    if isinstance(conn, mptcp.MPTCPConnection):
-                        if conn.attr[co.DURATION] < limit_duration:
-                            continue
-                        conn_bytes_s2d = {'rmnet': 0, 'wifi': 0}
-                        conn_bytes_d2s = {'rmnet': 0, 'wifi': 0}
-                        for interface in conn.attr[co.S2D]:
-                            conn_bytes_s2d[interface] += conn.attr[co.S2D][interface]
-                        for interface in conn.attr[co.D2S]:
-                            conn_bytes_d2s[interface] += conn.attr[co.D2S][interface]
-                        for flow_id, flow in conn.flows.iteritems():
-                            if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
-                                break
-                            interface = flow.attr[co.IF]
-                            conn_bytes_s2d[interface] -= flow.attr[co.REINJ_ORIG_BYTES_S2D]
-                            conn_bytes_d2s[interface] -= flow.attr[co.REINJ_ORIG_BYTES_D2S]
-
-                        if conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'] > limit_bytes:
-                            frac_cell_s2d = ((conn_bytes_s2d['rmnet'] + 0.0) / (conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi']))
-                            results[condition][co.S2D][app][dataset_name].append(frac_cell_s2d)
-
-                        if conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi'] > limit_bytes:
-                            frac_cell_d2s = ((conn_bytes_d2s['rmnet'] + 0.0) / (conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi']))
-                            results[condition][co.D2S][app][dataset_name].append(frac_cell_d2s)
-
-    grouped_boxplot(results, base_graph_path_bytes)
-
-
-def grouped_boxplot(results, base_graph_path_bytes):
+def grouped_boxplot(results, ylabel, base_graph_path_bytes):
     # function for setting the colors of the box plots pairs
     def setBoxColors(bp):
         plt.setp(bp['boxes'][0], color='blue')
@@ -292,10 +243,128 @@ def grouped_boxplot(results, base_graph_path_bytes):
             plt.legend((hB, hR), ('Normal', 'Shaping'))
             hB.set_visible(False)
             hR.set_visible(False)
-            plt.ylabel("Fraction of data bytes on cellular", fontsize=18)
+            plt.ylabel(ylabel, fontsize=18)
 
             plt.savefig(base_graph_path_bytes + "_" + condition + "_" + direction + ".pdf")
             plt.close('all')
 
 
+def cellular_percentage_boxplot(limit_duration=0, limit_bytes=10000):
+    base_graph_name_bytes = "boxplot_cellular_" + start_time + '_' + stop_time
+    base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
+
+    results = {"both3": {}, "both4": {}}
+    for cond in results:
+        results[cond] = {co.S2D: {}, co.D2S: {}}
+
+    for dataset_name, connections in datasets.iteritems():
+        for fname, data in connections.iteritems():
+            condition = get_experiment_condition(fname)
+            if 'both' in condition and 'mptcp_fm_' in condition and 'TC' not in condition:
+                condition = condition[9:]
+                app = get_app_name(fname)
+                for conn_id, conn in data.iteritems():
+                    if app not in results[condition][co.S2D]:
+                        for direction in results[condition].keys():
+                            results[condition][direction][app] = {}
+                    if dataset_name not in results[condition][co.S2D][app]:
+                        for direction in results[condition].keys():
+                            results[condition][direction][app][dataset_name] = []
+
+                    # Only interested on MPTCP connections
+                    if isinstance(conn, mptcp.MPTCPConnection):
+                        if conn.attr[co.DURATION] < limit_duration:
+                            continue
+                        conn_bytes_s2d = {'rmnet': 0, 'wifi': 0}
+                        conn_bytes_d2s = {'rmnet': 0, 'wifi': 0}
+                        for interface in conn.attr[co.S2D]:
+                            conn_bytes_s2d[interface] += conn.attr[co.S2D][interface]
+                        for interface in conn.attr[co.D2S]:
+                            conn_bytes_d2s[interface] += conn.attr[co.D2S][interface]
+                        for flow_id, flow in conn.flows.iteritems():
+                            if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
+                                break
+                            interface = flow.attr[co.IF]
+                            conn_bytes_s2d[interface] -= flow.attr[co.REINJ_ORIG_BYTES_S2D]
+                            conn_bytes_d2s[interface] -= flow.attr[co.REINJ_ORIG_BYTES_D2S]
+
+                        if conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'] > limit_bytes:
+                            frac_cell_s2d = ((conn_bytes_s2d['rmnet'] + 0.0) / (conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi']))
+                            results[condition][co.S2D][app][dataset_name].append(frac_cell_s2d)
+
+                        if conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi'] > limit_bytes:
+                            frac_cell_d2s = ((conn_bytes_d2s['rmnet'] + 0.0) / (conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi']))
+                            results[condition][co.D2S][app][dataset_name].append(frac_cell_d2s)
+
+    grouped_boxplot(results, "Fraction of data bytes on cellular", base_graph_path_bytes)
+
+def reinjection_boxplot(limit_duration=0, min_bytes=10000):
+    base_graph_name_bytes = "boxplot_reinjection_" + start_time + '_' + stop_time
+    base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
+
+    results = {"both3": {}, "both4": {}}
+    for cond in results:
+        results[cond] = {co.S2D: {}, co.D2S: {}}
+
+    for dataset_name, connections in datasets.iteritems():
+        for fname, data in connections.iteritems():
+            condition = get_experiment_condition(fname)
+            if 'both' in condition and 'mptcp_fm_' in condition and 'TC' not in condition:
+                condition = condition[9:]
+                app = get_app_name(fname)
+                for conn_id, conn in data.iteritems():
+                    if app not in results[condition][co.S2D]:
+                        for direction in results[condition].keys():
+                            results[condition][direction][app] = {}
+                    if dataset_name not in results[condition][co.S2D][app]:
+                        for direction in results[condition].keys():
+                            results[condition][direction][app][dataset_name] = []
+
+                    reinject_bytes_s2d = 0.0
+                    reinject_bytes_d2s = 0.0
+                    reinject_packs_s2d = 0.0
+                    reinject_packs_d2s = 0.0
+                    bytes_s2d = 0.0
+                    bytes_d2s = 0.0
+                    packs_s2d = 0.0
+                    packs_d2s = 0.0
+
+                    # reinject_bytes_s2d = 0
+                    # reinject_bytes_d2s = 0
+                    # reinject_packs_s2d = 0
+                    # reinject_packs_d2s = 0
+                    for flow_id, flow in conn.flows.iteritems():
+                        if co.REINJ_ORIG_BYTES_S2D in flow.attr and co.REINJ_ORIG_BYTES_D2S in flow.attr:
+                            if co.BYTES_S2D in flow.attr:
+                                bytes_s2d += flow.attr[co.BYTES_S2D]
+                            else:
+                                continue
+                            if co.BYTES_D2S in flow.attr:
+                                bytes_d2s += flow.attr[co.BYTES_D2S]
+                            else:
+                                continue
+                            reinject_bytes_s2d += flow.attr[co.REINJ_ORIG_BYTES_S2D]
+                            reinject_bytes_d2s += flow.attr[co.REINJ_ORIG_BYTES_D2S]
+                            reinject_packs_s2d += flow.attr[co.REINJ_ORIG_PACKS_S2D]
+                            reinject_packs_d2s += flow.attr[co.REINJ_ORIG_PACKS_D2S]
+                            packs_s2d += flow.attr[co.PACKS_S2D]
+                            packs_d2s += flow.attr[co.PACKS_D2S]
+
+                    # results[co.S2D][condition][app].append(reinject_bytes_s2d)
+                    # results[co.D2S][condition][app].append(reinject_bytes_d2s)
+                    # results_packs[co.S2D][condition][app].append(reinject_packs_s2d)
+                    # results_packs[co.D2S][condition][app].append(reinject_packs_d2s)
+
+                    if bytes_s2d > min_bytes:
+                        results[co.S2D][condition][app].append(reinject_bytes_s2d / bytes_s2d)
+
+                    if bytes_d2s > min_bytes:
+                        if (reinject_bytes_d2s / bytes_d2s) >= 0.5:
+                            print("reinj: " + str(reinject_bytes_d2s) + " tot: " + str(bytes_d2s) + " " + fname + " " + conn_id)
+                        results[co.D2S][condition][app][dataset_name].append(reinject_bytes_d2s / bytes_d2s)
+
+    grouped_boxplot(results, "Fraction of bytes that are reinjected", base_graph_path_bytes)
+
+
 cellular_percentage_boxplot()
+reinjection_boxplot()
