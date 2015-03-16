@@ -356,12 +356,12 @@ def reinjection_boxplot(limit_duration=0, min_bytes=10000):
                     # results_packs[co.D2S][condition][app].append(reinject_packs_d2s)
 
                     if bytes_s2d > min_bytes:
-                        results[co.S2D][condition][app].append(reinject_bytes_s2d / bytes_s2d)
+                        results[condition][co.S2D][app].append(reinject_bytes_s2d / bytes_s2d)
 
                     if bytes_d2s > min_bytes:
                         if (reinject_bytes_d2s / bytes_d2s) >= 0.5:
                             print("reinj: " + str(reinject_bytes_d2s) + " tot: " + str(bytes_d2s) + " " + fname + " " + conn_id)
-                        results[co.D2S][condition][app][dataset_name].append(reinject_bytes_d2s / bytes_d2s)
+                        results[condition][co.D2S][app][dataset_name].append(reinject_bytes_d2s / bytes_d2s)
 
     grouped_boxplot(results, "Fraction of bytes that are reinjected", base_graph_path_bytes)
 
