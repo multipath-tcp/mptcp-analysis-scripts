@@ -1699,6 +1699,8 @@ def reinject_plot(log_file=sys.stdout, min_bytes=0.0):
                     results_packs[co.S2D][condition][app].append(reinject_packs_s2d / packs_s2d)
 
                 if bytes_d2s > min_bytes:
+                    if (reinject_bytes_d2s / bytes_d2s) >= 0.5:
+                        print("reinj: " + str(reinject_bytes_d2s) + " tot: " + str(bytes_d2s) + " " + fname + " " + conn_id)
                     results[co.D2S][condition][app].append(reinject_bytes_d2s / bytes_d2s)
                     results_packs[co.D2S][condition][app].append(reinject_packs_d2s / packs_d2s)
 
