@@ -1676,14 +1676,10 @@ def reinject_plot(log_file=sys.stdout, min_bytes=0.0):
                     if co.REINJ_ORIG_BYTES_S2D in flow.attr and co.REINJ_ORIG_BYTES_D2S in flow.attr:
                         if co.BYTES_S2D in flow.attr:
                             bytes_s2d += flow.attr[co.BYTES_S2D]
-                        elif isinstance(conn.attr[co.BYTES_S2D], dict) and flow.attr[co.IF] in conn.attr[co.BYTES_S2D]:
-                            bytes_s2d += conn.attr[co.BYTES_S2D][flow.attr[co.IF]]
                         else:
                             continue
                         if co.BYTES_D2S in flow.attr:
                             bytes_d2s += flow.attr[co.BYTES_D2S]
-                        elif isinstance(conn.attr[co.BYTES_D2S], dict) and flow.attr[co.IF] in conn.attr[co.BYTES_D2S]:
-                            bytes_d2s += conn.attr[co.BYTES_D2S][flow.attr[co.IF]]
                         else:
                             continue
                         reinject_bytes_s2d += flow.attr[co.REINJ_ORIG_BYTES_S2D]
