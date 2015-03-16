@@ -1639,7 +1639,7 @@ def boxplot_bytes(log_file=sys.stdout):
             plt.close()
 
 
-def reinject_plot(log_file=sys.stdout):
+def reinject_plot(log_file=sys.stdout, min_bytes=0.0):
     base_graph_fname = "reinject_bytes_" + start_time + "_" + stop_time
     base_graph_full_path = os.path.join(sums_dir_exp, base_graph_fname)
     results = {co.S2D: {}, co.D2S: {}}
@@ -1647,10 +1647,6 @@ def reinject_plot(log_file=sys.stdout):
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         if 'both' in condition and 'mptcp_fm_' in condition:
-            reinject_bytes_s2d = 0
-            reinject_bytes_d2s = 0
-            reinject_packs_s2d = 0
-            reinject_packs_d2s = 0
             condition = condition[9:]
             app = get_app_name(fname)
             if condition not in results[co.S2D]:
@@ -1663,6 +1659,15 @@ def reinject_plot(log_file=sys.stdout):
                     results[direction][condition][app] = []
                     results_packs[direction][condition][app] = []
             for conn_id, conn in data.iteritems():
+                reinject_bytes_s2d = 0.0
+                reinject_bytes_d2s = 0.0
+                reinject_packs_s2d = 0.0
+                reinject_packs_d2s = 0.0
+                bytes_s2d = 0.0
+                bytes_d2s = 0.0
+                packs_s2d = 0.0
+                packs_d2s = 0.0
+
                 # reinject_bytes_s2d = 0
                 # reinject_bytes_d2s = 0
                 # reinject_packs_s2d = 0
@@ -1673,16 +1678,23 @@ def reinject_plot(log_file=sys.stdout):
                         reinject_bytes_d2s += flow.attr[co.REINJ_ORIG_BYTES_D2S]
                         reinject_packs_s2d += flow.attr[co.REINJ_ORIG_PACKS_S2D]
                         reinject_packs_d2s += flow.attr[co.REINJ_ORIG_PACKS_D2S]
+                        bytes_s2d += flow.attr[co.BYTES_S2D]
+                        bytes_d2s += flow.attr[co.BYTES_D2S]
+                        packs_s2d += flow.attr[co.PACKS_S2D]
+                        packs_d2s += flow.attr[co.PACKS_D2S]
 
                 # results[co.S2D][condition][app].append(reinject_bytes_s2d)
                 # results[co.D2S][condition][app].append(reinject_bytes_d2s)
                 # results_packs[co.S2D][condition][app].append(reinject_packs_s2d)
                 # results_packs[co.D2S][condition][app].append(reinject_packs_d2s)
 
-            results[co.S2D][condition][app].append(reinject_bytes_s2d)
-            results[co.D2S][condition][app].append(reinject_bytes_d2s)
-            results_packs[co.S2D][condition][app].append(reinject_packs_s2d)
-            results_packs[co.D2S][condition][app].append(reinject_packs_d2s)
+                if bytes_s2d > min_bytes:
+                    results[co.S2D][condition][app].append(reinject_bytes_s2d / bytes_s2d)
+                    results_packs[co.S2D][condition][app].append(reinject_packs_s2d / packs_s2d)
+
+                if bytes_d2s > min_bytes:
+                    results[co.D2S][condition][app].append(reinject_bytes_d2s / bytes_d2s)
+                    results_packs[co.D2S][condition][app].append(reinject_packs_d2s / packs_d2s)
 
     for direction in results:
         for condition in results[direction]:
@@ -1699,7 +1711,7 @@ def reinject_plot(log_file=sys.stdout):
                 plt.xticks(range(1, len(apps) + 1), apps)
                 plt.tick_params(axis='both', which='major', labelsize=10)
                 plt.tick_params(axis='both', which='minor', labelsize=8)
-                plt.ylabel("Bytes reinjected of all scenario", fontsize=18)
+                plt.ylabel("Fraction of bytes reinjected", fontsize=18)
                 plt.savefig(base_graph_full_path + "_" + condition + "_" + direction + ".pdf")
             plt.close()
             packs_base_graph_fname = "reinject_packs_" + start_time + "_" + stop_time
@@ -1717,7 +1729,7 @@ def reinject_plot(log_file=sys.stdout):
                 plt.xticks(range(1, len(apps) + 1), apps)
                 plt.tick_params(axis='both', which='major', labelsize=10)
                 plt.tick_params(axis='both', which='minor', labelsize=8)
-                plt.ylabel("Packs reinjected of all scenario", fontsize=18)
+                plt.ylabel("Fraction of packs reinjected", fontsize=18)
                 plt.savefig(packs_base_graph_full_path + "_" + condition + "_" + direction + ".pdf")
             plt.close()
 
