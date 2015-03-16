@@ -1742,7 +1742,7 @@ def reinject_plot(log_file=sys.stdout, min_bytes=0.0):
             plt.close()
 
 def reinject_plot_relative_to_data(log_file=sys.stdout, min_bytes=0.0):
-    base_graph_fname = "reinject_bytes_" + start_time + "_" + stop_time
+    base_graph_fname = "reinject_data_bytes_" + start_time + "_" + stop_time
     base_graph_full_path = os.path.join(sums_dir_exp, base_graph_fname)
     results = {co.S2D: {}, co.D2S: {}}
     for fname, data in connections.iteritems():
@@ -1753,12 +1753,10 @@ def reinject_plot_relative_to_data(log_file=sys.stdout, min_bytes=0.0):
             if condition not in results[co.S2D]:
                 for direction in results:
                     results[direction][condition] = {}
-                    results_packs[direction][condition] = {}
 
             if app not in results[direction][condition]:
                 for direction in results:
                     results[direction][condition][app] = []
-                    results_packs[direction][condition][app] = []
             for conn_id, conn in data.iteritems():
                 reinject_bytes_s2d = 0.0
                 reinject_bytes_d2s = 0.0
