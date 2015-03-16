@@ -225,7 +225,7 @@ def grouped_boxplot(results, ylabel, base_graph_path_bytes, ylim=None):
             for app, results_app in results_direction.iteritems():
                 positions = [((nb_datasets + 1) * count) + 1, ((nb_datasets + 1) * count) + 2]
                 data = [results_app['dirs'], results_app['dirs_two']]
-                bp = plt.boxplot(data, positions=positions, widths=0.6)
+                bp = ax.boxplot(data, positions=positions, widths=0.6)
                 setBoxColors(bp)
                 labels.append(app)
                 position_labels.append(((nb_datasets + 1.0) * count) + ((nb_datasets + 1.0) / 2.0))
@@ -242,6 +242,15 @@ def grouped_boxplot(results, ylabel, base_graph_path_bytes, ylim=None):
             hB, = plt.plot([0.01, 0.01], 'b-')
             hR, = plt.plot([0.01, 0.01], 'r-')
             plt.legend((hB, hR), ('Normal', 'Shaping'))
+
+            # Shrink current axis's height by 10% on the top
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0,
+                             box.width, box.height * 0.9])
+
+            # Put a legend above current axis
+            ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=nb_datasets)
+
             hB.set_visible(False)
             hR.set_visible(False)
             plt.ylabel(ylabel, fontsize=18)
