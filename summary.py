@@ -1283,7 +1283,7 @@ def fog_duration_bytes(log_file=sys.stdout):
 
     for fname, conns in connections.iteritems():
         condition = get_experiment_condition(fname)
-        app = get_app_name(fname)
+        app = get_app_name(fname).title()
         if condition not in data.keys():
             data[condition] = {}
         if app not in data[condition].keys():
@@ -1411,7 +1411,7 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
         condition = get_experiment_condition(fname)
         if 'both' in condition and 'mptcp_fm_' in condition:
             condition = condition[9:]
-            app = get_app_name(fname)
+            app = get_app_name(fname).title()
             for conn_id, conn in data.iteritems():
                 if app not in data_frac[condition][co.S2D]:
                     for direction in data_frac[condition].keys():

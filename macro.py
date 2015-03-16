@@ -248,7 +248,7 @@ def grouped_boxplot(results, ylabel, base_graph_path_bytes, ylim=None):
                              box.width, box.height * 0.9])
 
             # Put a legend above current axis
-            ax.legend((hB, hR), ('Normal', 'Shaping'), loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=nb_datasets)
+            ax.legend((hB, hR), ('Without shaping', 'With shaping'), loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=nb_datasets)
 
             hB.set_visible(False)
             hR.set_visible(False)
@@ -271,7 +271,7 @@ def cellular_percentage_boxplot(limit_duration=0, limit_bytes=10000):
             condition = get_experiment_condition(fname)
             if 'both' in condition and 'mptcp_fm_' in condition and 'TC' not in condition:
                 condition = condition[9:]
-                app = get_app_name(fname)
+                app = get_app_name(fname).title()
                 for conn_id, conn in data.iteritems():
                     if app not in results[condition][co.S2D]:
                         for direction in results[condition].keys():
@@ -320,7 +320,7 @@ def reinjection_boxplot(limit_duration=0, min_bytes=10000):
             condition = get_experiment_condition(fname)
             if 'both' in condition and 'mptcp_fm_' in condition and 'TC' not in condition:
                 condition = condition[9:]
-                app = get_app_name(fname)
+                app = get_app_name(fname).title()
                 for conn_id, conn in data.iteritems():
                     if app not in results[condition][co.S2D]:
                         for direction in results[condition].keys():
