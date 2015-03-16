@@ -211,6 +211,9 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
 
     reinject_offsets = {0: 0, 1: 0, 2: 0, 3: 0}
     reinject_nb = {0: 0, 1: 0, 2: 0, 3: 0}
+    reinject = {}
+    for i in range(0, len(connections[conn_id].flows)):
+        reinject[i] = {}
 
     for line in data:
         split_line = line.split(',')
@@ -218,14 +221,22 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
             # Map and reinjected
             reinject_offsets[int(split_line[5]) - 1] += int(split_line[4]) - int(split_line[1])
             reinject_nb[int(split_line[5]) - 1] += 1
+            packet_seqs = (int(split_line[4]), int(split_line[1]))
+            if packet_seqs not in reinject[int(split_line[5]) - 1]:
+                reinject[int(split_line[5]) - 1][packet_seqs] = 1
+            else:
+                print("WARNING: double reinjection for " + csv_fname, file=sys.stderr)
+                reinject[int(split_line[5]) - 1][packet_seqs] += 1
 
     for i in range(0, len(connections[conn_id].flows)):
         if is_reversed:
             connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_PACKS_D2S] = reinject_nb[i]
             connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_BYTES_D2S] = reinject_offsets[i]
+            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_D2S] = reinject
         else:
             connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_PACKS_S2D] = reinject_nb[i]
             connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_BYTES_S2D] = reinject_offsets[i]
+            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_S2D] = reinject
 
 
 def generate_title(xpl_fname, connections):

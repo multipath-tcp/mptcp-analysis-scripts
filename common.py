@@ -163,6 +163,10 @@ REINJ_ORIG_PACKS_D2S = 'reinjected_orig_packets_destination2source'
 REINJ_ORIG_BYTES_S2D = 'reinjected_orig_bytes_source2destination'
 # Reinjected bytes from destination to source
 REINJ_ORIG_BYTES_D2S = 'reinjected_orig_bytes_destination2source'
+# Reinjected origin from source to destination
+REINJ_ORIG_S2D = 'reinjected_orig_source2destination'
+# Reinjected origin from destination to source
+REINJ_ORIG_D2S = 'reinjected_orig_destination2source'
 
 # RTT info
 RTT_SAMPLES_S2D = 'rtt_samples_s2d'
