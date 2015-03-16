@@ -239,8 +239,8 @@ def grouped_boxplot(results, ylabel, base_graph_path_bytes, ylim=None):
             ax.set_xticks(position_labels)
 
             # draw temporary red and blue lines and use them to create a legend
-            hB, = plt.plot([1, 1], 'b-')
-            hR, = plt.plot([1, 1], 'r-')
+            hB, = plt.plot([0.01, 0.01], 'b-')
+            hR, = plt.plot([0.01, 0.01], 'r-')
             plt.legend((hB, hR), ('Normal', 'Shaping'))
             hB.set_visible(False)
             hR.set_visible(False)
