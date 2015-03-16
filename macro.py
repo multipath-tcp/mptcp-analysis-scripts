@@ -188,7 +188,7 @@ datasets = fetch_data(stat_dir_exp)
 ##################################################
 
 
-def grouped_boxplot(results, ylabel, base_graph_path_bytes):
+def grouped_boxplot(results, ylabel, base_graph_path_bytes, ylim=None):
     # function for setting the colors of the box plots pairs
     def setBoxColors(bp):
         plt.setp(bp['boxes'][0], color='blue')
@@ -233,7 +233,8 @@ def grouped_boxplot(results, ylabel, base_graph_path_bytes):
 
             # set axes limits and labels
             plt.xlim(0, nb_apps * (nb_datasets + 1))
-            plt.ylim(0, 1.0)
+            if ylim:
+                plt.ylim(0, ylim)
             ax.set_xticklabels(labels)
             ax.set_xticks(position_labels)
 
@@ -296,7 +297,7 @@ def cellular_percentage_boxplot(limit_duration=0, limit_bytes=10000):
                             frac_cell_d2s = ((conn_bytes_d2s['rmnet'] + 0.0) / (conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi']))
                             results[condition][co.D2S][app][dataset_name].append(frac_cell_d2s)
 
-    grouped_boxplot(results, "Fraction of data bytes on cellular", base_graph_path_bytes)
+    grouped_boxplot(results, "Fraction of data bytes on cellular", base_graph_path_bytes, ylim=1.0)
 
 def reinjection_boxplot(limit_duration=0, min_bytes=10000):
     base_graph_name_bytes = "boxplot_reinjection_" + start_time + '_' + stop_time
