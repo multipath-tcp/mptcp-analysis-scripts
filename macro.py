@@ -241,7 +241,6 @@ def grouped_boxplot(results, ylabel, base_graph_path_bytes, ylim=None):
             # draw temporary red and blue lines and use them to create a legend
             hB, = plt.plot([0.01, 0.01], 'b-')
             hR, = plt.plot([0.01, 0.01], 'r-')
-            plt.legend((hB, hR), ('Normal', 'Shaping'))
 
             # Shrink current axis's height by 10% on the top
             box = ax.get_position()
@@ -249,7 +248,7 @@ def grouped_boxplot(results, ylabel, base_graph_path_bytes, ylim=None):
                              box.width, box.height * 0.9])
 
             # Put a legend above current axis
-            ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=nb_datasets)
+            ax.legend((hB, hR), ('Normal', 'Shaping'), loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=nb_datasets)
 
             hB.set_visible(False)
             hR.set_visible(False)
