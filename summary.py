@@ -1656,7 +1656,7 @@ def reinject_plot(log_file=sys.stdout, min_bytes=0.0):
         condition = get_experiment_condition(fname)
         if 'both' in condition and 'mptcp_fm_' in condition:
             condition = condition[9:]
-            app = get_app_name(fname)
+            app = get_app_name(fname).title()
             if condition not in results[co.S2D]:
                 for direction in results:
                     results[direction][condition] = {}
