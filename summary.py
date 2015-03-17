@@ -1214,7 +1214,7 @@ def nb_conns_by_app(log_file=sys.stdout):
 
 def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
     data = {co.S2D: {}, co.D2S: {}}
-    color = {'dailymotion': 'brown', 'drive': 'm', 'dropbox': 'y', 'facebook': 'c', 'firefox': 'orange', 'firefoxspdy': 'g', 'messenger': 'b', 'spotify': 'k', 'youtube': 'r'}
+    color = {'Dailymotion': 'brown', 'Drive': 'm', 'Dropbox': 'g', 'Facebook': 'c', 'Firefox': 'orange', 'Messenger': 'b', 'Spotify': 'k', 'Youtube': 'r'}
     base_graph_name = "fog_bytes_" + start_time + '_' + stop_time
 
     for fname, conns in connections.iteritems():
