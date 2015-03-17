@@ -1222,7 +1222,7 @@ def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
         if 'both' not in condition or 'mptcp' not in condition:
             # No point to do this for one-flow connections
             continue
-        app = get_app_name(fname)
+        app = get_app_name(fname).title()
         if condition not in data[co.S2D].keys():
             data[co.S2D][condition] = {}
             data[co.D2S][condition] = {}
@@ -1234,7 +1234,7 @@ def fog_plot_with_bytes_wifi_rmnet_per_condition(log_file=sys.stdout):
             data[co.S2D][condition][app].append([conn.attr[co.S2D].get(co.WIFI, 0), conn.attr[co.S2D].get(co.RMNET, 0)])
             data[co.D2S][condition][app].append([conn.attr[co.D2S].get(co.WIFI, 0), conn.attr[co.D2S].get(co.RMNET, 0)])
 
-    co.scatter_plot_with_direction(data, "Bytes on wifi", "Bytes on cellular", color, sums_dir_exp, base_graph_name)
+    co.scatter_plot_with_direction(data, "Bytes on Wi-Fi", "Bytes on cellular", color, sums_dir_exp, base_graph_name)
 
 
 def fog_plot_with_packs_wifi_rmnet_per_condition(log_file=sys.stdout):
