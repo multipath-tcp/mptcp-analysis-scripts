@@ -191,23 +191,23 @@ datasets = fetch_data(stat_dir_exp)
 def grouped_boxplot(results, ylabel, base_graph_path_bytes, ylim=None):
     # function for setting the colors of the box plots pairs
     def setBoxColors(bp):
-        plt.setp(bp['boxes'][0], color='blue')
-        plt.setp(bp['caps'][0], color='blue')
-        plt.setp(bp['caps'][1], color='blue')
-        plt.setp(bp['whiskers'][0], color='blue')
-        plt.setp(bp['whiskers'][1], color='blue')
-        plt.setp(bp['fliers'][0], color='blue')
-        plt.setp(bp['fliers'][1], color='blue')
-        plt.setp(bp['medians'][0], color='purple')
+        plt.setp(bp['boxes'][0], color='red')
+        plt.setp(bp['caps'][0], color='red')
+        plt.setp(bp['caps'][1], color='red')
+        plt.setp(bp['whiskers'][0], color='red')
+        plt.setp(bp['whiskers'][1], color='red')
+        plt.setp(bp['fliers'][0], color='red')
+        plt.setp(bp['fliers'][1], color='red')
+        plt.setp(bp['medians'][0], color='orange')
 
-        plt.setp(bp['boxes'][1], color='red')
-        plt.setp(bp['caps'][2], color='red')
-        plt.setp(bp['caps'][3], color='red')
-        plt.setp(bp['whiskers'][2], color='red')
-        plt.setp(bp['whiskers'][3], color='red')
-        # plt.setp(bp['fliers'][2], color='red')
-        # plt.setp(bp['fliers'][3], color='red')
-        plt.setp(bp['medians'][1], color='orange')
+        plt.setp(bp['boxes'][1], color='blue')
+        plt.setp(bp['caps'][2], color='blue')
+        plt.setp(bp['caps'][3], color='blue')
+        plt.setp(bp['whiskers'][2], color='blue')
+        plt.setp(bp['whiskers'][3], color='blue')
+        # plt.setp(bp['fliers'][2], color='blue')
+        # plt.setp(bp['fliers'][3], color='blue')
+        plt.setp(bp['medians'][1], color='purple')
 
     for condition, results_condition in results.iteritems():
         for direction, results_direction in results_condition.iteritems():
@@ -239,8 +239,8 @@ def grouped_boxplot(results, ylabel, base_graph_path_bytes, ylim=None):
             ax.set_xticks(position_labels)
 
             # draw temporary red and blue lines and use them to create a legend
-            hB, = plt.plot([0.01, 0.01], 'b-')
-            hR, = plt.plot([0.01, 0.01], 'r-')
+            hB, = plt.plot([0.01, 0.01], 'r-')
+            hR, = plt.plot([0.01, 0.01], 'b-')
 
             # Shrink current axis's height by 10% on the top
             box = ax.get_position()
