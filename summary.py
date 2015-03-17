@@ -1618,8 +1618,14 @@ def boxplot_bytes(log_file=sys.stdout):
             for direction in aggl_res:
                 aggl_res[direction][condition][app] = []
 
-        aggl_res[co.S2D][condition][app].append(s2d)
-        aggl_res[co.D2S][condition][app].append(d2s)
+        if s2d < 0 or s2d >= 100000000:
+            print("Please check " + fname)
+        else:
+            aggl_res[co.S2D][condition][app].append(s2d)
+        if d2s < 0 or d2s >= 100000000:
+            print("Please check " + fname)
+        else:
+            aggl_res[co.D2S][condition][app].append(d2s)
 
     for direction in aggl_res:
         for condition in aggl_res[direction]:
