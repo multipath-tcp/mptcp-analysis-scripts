@@ -1809,6 +1809,110 @@ def reinject_plot(log_file=sys.stdout, min_bytes=0.0):
                 plt.savefig(packs_base_graph_full_path + "_" + condition + "_" + direction + ".pdf")
             plt.close()
 
+
+def retrans_plot(log_file=sys.stdout, min_bytes=0.0):
+    base_graph_fname = "retrans_bytes_" + start_time + "_" + stop_time
+    base_graph_full_path = os.path.join(sums_dir_exp, base_graph_fname)
+    results = {co.S2D: {}, co.D2S: {}}
+    results_packs = {co.S2D: {}, co.D2S: {}}
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if 'both' in condition and 'mptcp_fm_' in condition:
+            condition = condition[9:]
+            app = get_app_name(fname).title()
+            if condition not in results[co.S2D]:
+                for direction in results:
+                    results[direction][condition] = {}
+                    results_packs[direction][condition] = {}
+
+            if app not in results[direction][condition]:
+                for direction in results:
+                    results[direction][condition][app] = []
+                    results_packs[direction][condition][app] = []
+            for conn_id, conn in data.iteritems():
+                bytes_retrans_s2d = 0.0
+                bytes_retrans_d2s = 0.0
+                packs_retrans_s2d = 0.0
+                packs_retrans_d2s = 0.0
+                bytes_s2d = 0.0
+                bytes_d2s = 0.0
+                packs_s2d = 0.0
+                packs_d2s = 0.0
+
+                # reinject_bytes_s2d = 0
+                # reinject_bytes_d2s = 0
+                # reinject_packs_s2d = 0
+                # reinject_packs_d2s = 0
+                for flow_id, flow in conn.flows.iteritems():
+                    if co.BYTES_RETRANS_S2D in flow.attr and co.BYTES_RETRANS_D2S in flow.attr:
+                        if co.BYTES_S2D in flow.attr:
+                            bytes_s2d += flow.attr[co.BYTES_S2D]
+                        else:
+                            continue
+                        if co.BYTES_D2S in flow.attr:
+                            bytes_d2s += flow.attr[co.BYTES_D2S]
+                        else:
+                            continue
+                        bytes_retrans_s2d += flow.attr[co.BYTES_RETRANS_S2D]
+                        bytes_retrans_d2s += flow.attr[co.BYTES_RETRANS_D2S]
+                        packs_retrans_s2d += flow.attr[co.PACKS_RETRANS_S2D]
+                        packs_retrans_d2s += flow.attr[co.PACKS_RETRANS_D2S]
+                        packs_s2d += flow.attr[co.PACKS_S2D]
+                        packs_d2s += flow.attr[co.PACKS_D2S]
+
+                # results[co.S2D][condition][app].append(reinject_bytes_s2d)
+                # results[co.D2S][condition][app].append(reinject_bytes_d2s)
+                # results_packs[co.S2D][condition][app].append(reinject_packs_s2d)
+                # results_packs[co.D2S][condition][app].append(reinject_packs_d2s)
+
+                if bytes_s2d > min_bytes:
+                    results[co.S2D][condition][app].append(bytes_retrans_s2d / bytes_s2d)
+                    results_packs[co.S2D][condition][app].append(bytes_retrans_s2d / packs_s2d)
+
+                if bytes_d2s > min_bytes:
+                    if (bytes_retrans_d2s / bytes_d2s) >= 0.5:
+                        print("retrans: " + str(bytes_retrans_d2s) + " tot: " + str(bytes_d2s) + " " + fname + " " + conn_id)
+                    results[co.D2S][condition][app].append(bytes_retrans_d2s / bytes_d2s)
+                    results_packs[co.D2S][condition][app].append(bytes_retrans_d2s / packs_d2s)
+
+    for direction in results:
+        for condition in results[direction]:
+            plt.figure()
+            fig, ax = plt.subplots()
+            apps = results[direction][condition].keys()
+            to_plot = []
+            print("Retransmitted bytes boxplot", file=log_file)
+            for app in apps:
+                to_plot.append(results[direction][condition][app])
+            print(to_plot, file=log_file)
+            if to_plot:
+                plt.boxplot(to_plot)
+                plt.xticks(range(1, len(apps) + 1), apps)
+                plt.tick_params(axis='both', which='major', labelsize=10)
+                plt.tick_params(axis='both', which='minor', labelsize=8)
+                plt.ylabel("Fraction of bytes retransmitted", fontsize=18)
+                plt.savefig(base_graph_full_path + "_" + condition + "_" + direction + ".pdf")
+            plt.close()
+            packs_base_graph_fname = "retrans_packs_" + start_time + "_" + stop_time
+            packs_base_graph_full_path = os.path.join(sums_dir_exp, packs_base_graph_fname)
+            plt.figure()
+            fig, ax = plt.subplots()
+            apps = results_packs[direction][condition].keys()
+            to_plot = []
+            print("Reinject packs boxplot", file=log_file)
+            for app in apps:
+                to_plot.append(results_packs[direction][condition][app])
+            print(to_plot, file=log_file)
+            if to_plot:
+                plt.boxplot(to_plot)
+                plt.xticks(range(1, len(apps) + 1), apps)
+                plt.tick_params(axis='both', which='major', labelsize=10)
+                plt.tick_params(axis='both', which='minor', labelsize=8)
+                plt.ylabel("Fraction of packs retransmitted", fontsize=18)
+                plt.savefig(packs_base_graph_full_path + "_" + condition + "_" + direction + ".pdf")
+            plt.close()
+
+
 def reinject_plot_relative_to_data(log_file=sys.stdout, min_bytes=0.0):
     base_graph_fname = "reinject_data_bytes_" + start_time + "_" + stop_time
     base_graph_full_path = os.path.join(sums_dir_exp, base_graph_fname)
@@ -1926,5 +2030,6 @@ else:
     boxplot_bytes(log_file=log_file)
     reinject_plot(log_file=log_file)
     reinject_plot_relative_to_data(log_file=log_file)
+    retrans_plot(log_file=log_file)
 log_file.close()
 print("End of summary")
