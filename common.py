@@ -151,6 +151,8 @@ REINJ_ORIG_PACKS = 'reinjected_orig_packets'
 REINJ_ORIG_BYTES = 'reinjected_orig_bytes'
 # Reinjected origin
 REINJ_ORIG = 'reinjected_orig'
+# Number of bytes returned by mptcptrace
+BYTES_MPTCPTRACE = 'bytes_mptcptrace'
 
 # RTT info
 RTT_SAMPLES = 'rtt_samples'
@@ -192,10 +194,10 @@ if os.path.isfile('config.py'):
 class BasicFlow(object):
 
     """ Represent a flow between two hosts at transport layer """
-    attr = {}
+    attr = {S2D: {}, D2S: {}}
 
     def __init__(self):
-        self.attr = {}
+        self.attr = {S2D: {}, D2S: {}}
 
     def indicates_wifi_or_cell(self):
         """ Given data of a mptcp connection subflow, indicates if comes from wifi or cell """
@@ -218,11 +220,11 @@ class BasicConnection(object):
 
     """ Represent a connection between two hosts at high level """
     conn_id = ""
-    attr = {}
+    attr = {S2D: {}, D2S: {}}
 
     def __init__(self, cid):
         self.conn_id = cid
-        self.attr = {}
+        self.attr = {S2D: {}, D2S: {}}
 
 
 ##################################################
