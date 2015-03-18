@@ -117,35 +117,37 @@ def extract_flow_data(out_file):
                 connection.flow.attr[co.SPORT] = info[3]
                 connection.flow.attr[co.DPORT] = info[4]
                 connection.flow.detect_ipv4()
-                connection.flow.indicates_wifi_or_rmnet()
+                connection.flow.indicates_wifi_or_cell()
                 connection.flow.attr[co.START] = float(fix_tcptrace_time_bug(info[5]))
                 connection.flow.attr[co.DURATION] = compute_duration(info)
-                connection.flow.attr[co.PACKS_S2D] = int(info[7])
-                connection.flow.attr[co.PACKS_D2S] = int(info[8])
+                connection.flow.attr[co.S2D] = {}
+                connection.flow.attr[co.D2S] = {}
+                connection.flow.attr[co.S2D][co.PACKS] = int(info[7])
+                connection.flow.attr[co.D2S][co.PACKS] = int(info[8])
                 # Note that this count is about unique_data_bytes
-                connection.flow.attr[co.BYTES_S2D] = int(info[21])
-                connection.flow.attr[co.BYTES_D2S] = int(info[22])
+                connection.flow.attr[co.S2D][co.BYTES] = int(info[21])
+                connection.flow.attr[co.D2S][co.BYTES] = int(info[22])
 
-                connection.flow.attr[co.PACKS_RETRANS_S2D] = int(info[27])
-                connection.flow.attr[co.PACKS_RETRANS_D2S] = int(info[28])
-                connection.flow.attr[co.BYTES_RETRANS_S2D] = int(info[29])
-                connection.flow.attr[co.BYTES_RETRANS_D2S] = int(info[30])
+                connection.flow.attr[co.S2D][co.PACKS_RETRANS] = int(info[27])
+                connection.flow.attr[co.D2S][co.PACKS_RETRANS] = int(info[28])
+                connection.flow.attr[co.S2D][co.BYTES_RETRANS] = int(info[29])
+                connection.flow.attr[co.D2S][co.BYTES_RETRANS] = int(info[30])
 
-                connection.flow.attr[co.PACKS_OOO_S2D] = int(info[35])
-                connection.flow.attr[co.PACKS_OOO_D2S] = int(info[36])
+                connection.flow.attr[co.S2D][co.PACKS_OOO] = int(info[35])
+                connection.flow.attr[co.D2S][co.PACKS_OOO] = int(info[36])
 
                 # Caution: -r must be set here!!
                 if len(info) >= 99:
-                    connection.flow.attr[co.RTT_SAMPLES_S2D] = int(info[89])
-                    connection.flow.attr[co.RTT_SAMPLES_D2S] = int(info[90])
-                    connection.flow.attr[co.RTT_MIN_S2D] = float(info[91])
-                    connection.flow.attr[co.RTT_MIN_D2S] = float(info[92])
-                    connection.flow.attr[co.RTT_MAX_S2D] = float(info[93])
-                    connection.flow.attr[co.RTT_MAX_D2S] = float(info[94])
-                    connection.flow.attr[co.RTT_AVG_S2D] = float(info[95])
-                    connection.flow.attr[co.RTT_AVG_D2S] = float(info[96])
-                    connection.flow.attr[co.RTT_STDEV_S2D] = float(info[97])
-                    connection.flow.attr[co.RTT_STDEV_D2S] = float(info[98])
+                    connection.flow.attr[co.S2D][co.RTT_SAMPLES] = int(info[89])
+                    connection.flow.attr[co.D2S][co.RTT_SAMPLES] = int(info[90])
+                    connection.flow.attr[co.S2D][co.RTT_MIN] = float(info[91])
+                    connection.flow.attr[co.D2S][co.RTT_MIN] = float(info[92])
+                    connection.flow.attr[co.S2D][co.RTT_MAX] = float(info[93])
+                    connection.flow.attr[co.D2S][co.RTT_MAX] = float(info[94])
+                    connection.flow.attr[co.S2D][co.RTT_AVG] = float(info[95])
+                    connection.flow.attr[co.D2S][co.RTT_AVG] = float(info[96])
+                    connection.flow.attr[co.S2D][co.RTT_STDEV] = float(info[97])
+                    connection.flow.attr[co.D2S][co.RTT_STDEV] = float(info[98])
 
                 # TODO maybe extract more information
 
@@ -369,10 +371,9 @@ def interesting_graph(flow_name, is_reversed, connections):
         is not 127.0.0.1 -> 127.0.0.1 and if there are data packets sent
     """
     if (not connections[flow_name].flow.attr[co.TYPE] == 'IPv4' or connections[flow_name].flow.attr[co.IF]):
-        if is_reversed:
-            return (connections[flow_name].flow.attr[co.PACKS_D2S] > 0)
-        else:
-            return (connections[flow_name].flow.attr[co.PACKS_S2D] > 0)
+        direction = co.D2S if is_reversed else co.S2D
+        return (connections[flow_name].flow.attr[direction][co.PACKS] > 0)
+
     return False
 
 
@@ -490,30 +491,18 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections):
     if conn_id:
         mptcp_connections[conn_id].flows[flow_id].attr[co.START] = connection.flow.attr[co.START]
         mptcp_connections[conn_id].flows[flow_id].attr[co.DURATION] = connection.flow.attr[co.DURATION]
-        mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_S2D] = connection.flow.attr[co.PACKS_S2D]
-        mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_D2S] = connection.flow.attr[co.PACKS_D2S]
-        mptcp_connections[conn_id].flows[flow_id].attr[
-            co.PACKS_RETRANS_S2D] = connection.flow.attr[co.PACKS_RETRANS_S2D]
-        mptcp_connections[conn_id].flows[flow_id].attr[
-            co.PACKS_RETRANS_D2S] = connection.flow.attr[co.PACKS_RETRANS_D2S]
-        mptcp_connections[conn_id].flows[flow_id].attr[
-            co.BYTES_RETRANS_S2D] = connection.flow.attr[co.BYTES_RETRANS_S2D]
-        mptcp_connections[conn_id].flows[flow_id].attr[
-            co.BYTES_RETRANS_D2S] = connection.flow.attr[co.BYTES_RETRANS_D2S]
-        mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_OOO_S2D] = connection.flow.attr[co.PACKS_OOO_S2D]
-        mptcp_connections[conn_id].flows[flow_id].attr[co.PACKS_OOO_D2S] = connection.flow.attr[co.PACKS_OOO_D2S]
+        for direction in co.DIRECTIONS:
+            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.PACKS] = connection.flow.attr[direction][co.PACKS]
+            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.PACKS_RETRANS] = connection.flow.attr[direction][co.PACKS_RETRANS]
+            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_RETRANS] = connection.flow.attr[direction][co.BYTES_RETRANS]
+            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.PACKS_OOO] = connection.flow.attr[direction][co.PACKS_OOO]
 
-        if co.RTT_SAMPLES_S2D in connection.flow.attr:
-            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_SAMPLES_S2D] = connection.flow.attr[co.RTT_SAMPLES_S2D]
-            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_SAMPLES_D2S] = connection.flow.attr[co.RTT_SAMPLES_D2S]
-            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_MIN_S2D] = connection.flow.attr[co.RTT_MIN_S2D]
-            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_MIN_D2S] = connection.flow.attr[co.RTT_MIN_D2S]
-            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_MAX_S2D] = connection.flow.attr[co.RTT_MAX_S2D]
-            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_MAX_D2S] = connection.flow.attr[co.RTT_MAX_D2S]
-            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_AVG_S2D] = connection.flow.attr[co.RTT_AVG_S2D]
-            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_AVG_D2S] = connection.flow.attr[co.RTT_AVG_D2S]
-            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_STDEV_S2D] = connection.flow.attr[co.RTT_STDEV_S2D]
-            mptcp_connections[conn_id].flows[flow_id].attr[co.RTT_STDEV_D2S] = connection.flow.attr[co.RTT_STDEV_D2S]
+            if co.RTT_SAMPLES in connection.flow.attr[direction]:
+                mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_SAMPLES] = connection.flow.attr[direction][co.RTT_SAMPLES]
+                mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_MIN] = connection.flow.attr[direction][co.RTT_MIN]
+                mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_MAX] = connection.flow.attr[direction][co.RTT_MAX]
+                mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_AVG] = connection.flow.attr[direction][co.RTT_AVG]
+                mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_STDEV] = connection.flow.attr[direction][co.RTT_STDEV]
 
     return conn_id, flow_id
 
@@ -600,36 +589,18 @@ def process_tsg_xpl_file(pcap_filepath, xpl_filepath, graph_dir_exp, connections
     create_congestion_window_data(
         aggregate_tsg, adv_rwin, pcap_filepath, cwin_data_all, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id)
     interface = connections[flow_name].flow.attr[co.IF]
-    if is_reversed:
-        aggregate_dict[co.D2S][interface] += aggregate_tsg
-        if mptcp_connections:
-            if conn_id:
-                mptcp_connections[conn_id].flows[flow_id].attr[
-                    co.BYTES_D2S] = connections[flow_name].flow.attr[co.BYTES_D2S]
-                if interface in mptcp_connections[conn_id].attr[co.D2S].keys():
-                    mptcp_connections[conn_id].attr[co.D2S][
-                        interface] += connections[flow_name].flow.attr[co.BYTES_D2S]
-                else:
-                    mptcp_connections[conn_id].attr[co.D2S][
-                        interface] = connections[flow_name].flow.attr[co.BYTES_D2S]
-        else:
-            connections[flow_name].attr[co.D2S][interface] = connections[
-                flow_name].flow.attr[co.BYTES_D2S]
+    direction = co.D2S if is_reversed else co.S2D
+    if mptcp_connections:
+        if conn_id:
+            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES] = connections[flow_name].flow.attr[direction][co.BYTES]
+            if interface in mptcp_connections[conn_id].attr[direction][co.BYTES]:
+                mptcp_connections[conn_id].attr[direction][co.BYTES][interface] += connections[flow_name].flow.attr[direction][co.BYTES]
+            else:
+                mptcp_connections[conn_id].attr[direction][co.BYTES][interface] = connections[flow_name].flow.attr[direction][co.BYTES]
     else:
-        aggregate_dict[co.S2D][interface] += aggregate_tsg
-        if mptcp_connections:
-            if conn_id:
-                mptcp_connections[conn_id].flows[flow_id].attr[
-                    co.BYTES_S2D] = connections[flow_name].flow.attr[co.BYTES_S2D]
-                if interface in mptcp_connections[conn_id].attr[co.S2D].keys():
-                    mptcp_connections[conn_id].attr[co.S2D][
-                        interface] += connections[flow_name].flow.attr[co.BYTES_S2D]
-                else:
-                    mptcp_connections[conn_id].attr[co.S2D][
-                        interface] = connections[flow_name].flow.attr[co.BYTES_S2D]
-        else:
-            connections[flow_name].attr[co.S2D][interface] = connections[
-                flow_name].flow.attr[co.BYTES_S2D]
+        if co.BYTES not in connections[flow_name].attr[direction]:
+            connections[flow_name].attr[direction][co.BYTES] = {}
+        connections[flow_name].attr[direction][co.BYTES][interface] = connections[flow_name].flow.attr[direction][co.BYTES]
 
 
 def plot_aggregated_results(pcap_filepath, graph_dir_exp, aggregate_dict):
@@ -669,7 +640,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
 
     relative_start = get_relative_start_time(connections)
     aggregate_dict = {
-        co.S2D: {co.WIFI: [], co.RMNET: []}, co.D2S: {co.WIFI: [], co.RMNET: []}}
+        co.S2D: {co.WIFI: [], co.CELL: []}, co.D2S: {co.WIFI: [], co.CELL: []}}
 
     prepare_connections_objects(connections, mptcp_connections)
     # The dictionary where all cwin data of the scenario will be stored
