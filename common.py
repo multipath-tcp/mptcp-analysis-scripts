@@ -111,11 +111,11 @@ CSV_DIR = 'csv'
 
 # Following constants are used to make the code cleaner and more robust (for dictionary)
 # Those are mainly determined by the output of mptcptrace
-RMNET = 'rmnet'
+CELL = 'cell'
 WIFI = 'wifi'
 # IPv4 or IPv6
 TYPE = 'type'
-# Interface: RMNET or WIFI
+# Interface: CELL or WIFI
 IF = 'interface'
 # Source IP address
 SADDR = 'saddr'
@@ -133,56 +133,37 @@ WSCALEDST = 'wscaledst'
 START = 'start_time'
 # Duration of a connection
 DURATION = 'duration'
-# Number of packets from source to destination
-PACKS_S2D = 'packets_source2destination'
-# Number of packets from destination to source
-PACKS_D2S = 'packets_destination2source'
-# Number of bytes from source to destination
-BYTES_S2D = 'bytes_source2destination'
-# Number of bytes from destination to source
-BYTES_D2S = 'bytes_destination2source'
-# Number of packets retransmitted from source to destination
-PACKS_RETRANS_S2D = 'packets_retrans_source2destination'
-# Number of packets retransmitted from destination to source
-PACKS_RETRANS_D2S = 'packets_retrans_destination2source'
-# Number of bytes retransmitted from source to destination
-BYTES_RETRANS_S2D = 'bytes_retrans_source2destination'
-# Number of bytes retransmitted from destination to source
-BYTES_RETRANS_D2S = 'bytes_retrans_destination2source'
-# Number of packets out of orders from source to destination
-PACKS_OOO_S2D = 'packets_outoforder_source2destination'
-# Number of packets out of orders from destination to source
-PACKS_OOO_D2S = 'packets_outoforder_destination2source'
+# Number of packets
+PACKS = 'packets'
+# Number of bytes
+BYTES = 'bytes'
+# Number of packets retransmitted
+PACKS_RETRANS = 'packets_retrans'
+# Number of bytes retransmitted
+BYTES_RETRANS = 'bytes_retrans'
+# Number of packets out of orders
+PACKS_OOO = 'packets_outoforder'
 # Congestion window graph data dictionary
 CWIN_DATA = 'congestion_window_data'
-# Reinjected packets from source to destination
-REINJ_ORIG_PACKS_S2D = 'reinjected_orig_packets_source2destination'
-# Reinjected packets from destination to source
-REINJ_ORIG_PACKS_D2S = 'reinjected_orig_packets_destination2source'
-# Reinjected bytes from source to destination
-REINJ_ORIG_BYTES_S2D = 'reinjected_orig_bytes_source2destination'
-# Reinjected bytes from destination to source
-REINJ_ORIG_BYTES_D2S = 'reinjected_orig_bytes_destination2source'
-# Reinjected origin from source to destination
-REINJ_ORIG_S2D = 'reinjected_orig_source2destination'
-# Reinjected origin from destination to source
-REINJ_ORIG_D2S = 'reinjected_orig_destination2source'
+# Reinjected packets
+REINJ_ORIG_PACKS = 'reinjected_orig_packets'
+# Reinjected bytes
+REINJ_ORIG_BYTES = 'reinjected_orig_bytes'
+# Reinjected origin
+REINJ_ORIG = 'reinjected_orig'
 
 # RTT info
-RTT_SAMPLES_S2D = 'rtt_samples_s2d'
-RTT_SAMPLES_D2S = 'rtt_samples_d2s'
-RTT_MIN_S2D = 'rtt_min_s2d'
-RTT_MIN_D2S = 'rtt_min_d2s'
-RTT_MAX_S2D = 'rtt_max_s2d'
-RTT_MAX_D2S = 'rtt_max_d2s'
-RTT_AVG_S2D = 'rtt_avg_s2d'
-RTT_AVG_D2S = 'rtt_avg_d2s'
-RTT_STDEV_S2D = 'rtt_stdev_s2d'
-RTT_STDEV_D2S = 'rtt_stdev_d2s'
+RTT_SAMPLES = 'rtt_samples'
+RTT_MIN = 'rtt_min'
+RTT_MAX = 'rtt_max'
+RTT_AVG = 'rtt_avg'
+RTT_STDEV = 'rtt_stdev'
 
 # For aggregation
 S2D = 'source2destination'
 D2S = 'destination2source'
+
+DIRECTIONS = [S2D, D2S]
 
 # IPv4 localhost address
 LOCALHOST_IPv4 = '127.0.0.1'
@@ -216,12 +197,12 @@ class BasicFlow(object):
     def __init__(self):
         self.attr = {}
 
-    def indicates_wifi_or_rmnet(self):
-        """ Given data of a mptcp connection subflow, indicates if comes from wifi or rmnet """
+    def indicates_wifi_or_cell(self):
+        """ Given data of a mptcp connection subflow, indicates if comes from wifi or cell """
         if self.attr[SADDR].startswith(PREFIX_WIFI_IF) or self.attr[DADDR].startswith(PREFIX_WIFI_IF) or self.attr[SADDR].startswith(PREFIX_IP_WIFI) or self.attr[DADDR].startswith(PREFIX_IP_WIFI):
             self.attr[IF] = WIFI
         else:
-            self.attr[IF] = RMNET
+            self.attr[IF] = CELL
 
     def detect_ipv4(self):
         """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
@@ -366,12 +347,12 @@ def clean_loopback_pcap(pcap_filepath, print_out=sys.stdout):
         print("Error in moving " + tmp_pcap + " to " + pcap_filepath, file=sys.stderr)
 
 
-def indicates_wifi_or_rmnet(data):
-    """ Given data of a mptcp connection subflow, indicates if comes from wifi or rmnet """
+def indicates_wifi_or_cell(data):
+    """ Given data of a mptcp connection subflow, indicates if comes from wifi or cell """
     if data[SADDR].startswith(PREFIX_WIFI_IF) or data[DADDR].startswith(PREFIX_WIFI_IF):
         data[IF] = WIFI
     else:
-        data[IF] = RMNET
+        data[IF] = CELL
 
 
 def detect_ipv4(data):
