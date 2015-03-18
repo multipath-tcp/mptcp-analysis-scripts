@@ -1576,6 +1576,62 @@ def cdf_rtt_d2s_all(log_file=sys.stdout, min_samples=5):
     co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
 
 
+def cdf_rtt_s2d_single_graph_all(log_file=sys.stdout, min_samples=5):
+    wifi = "Wi-Fi"
+    rmnet_3 = "3G"
+    rmnet_4 = "4G"
+    aggl_res = {wifi: [], rmnet_3: [], rmnet_4: []}
+    graph_fname = "rtt_avg_s2d_all_tcp_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if condition.startswith('tcp') and 'both' not in condition:
+            for conn_id, conn in data.iteritems():
+                if isinstance(conn, tcp.TCPConnection):
+                    if co.RTT_SAMPLES_S2D not in conn.flow.attr:
+                        break
+                    if conn.flow.attr[co.RTT_SAMPLES_S2D] >= min_samples:
+                        if conn.flow.attr[co.RTT_AVG_S2D] >= 1.0:
+                            if 'wlan' in fname:
+                                aggl_res[wifi] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
+                            elif 'rmnet3' in fname:
+                                aggl_res[rmnet_3] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
+                            elif 'rmnet4' in fname:
+                                aggl_res[rmnet_4] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
+
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
+    co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
+
+
+def cdf_rtt_d2s_single_graph_all(log_file=sys.stdout, min_samples=5):
+    wifi = "Wi-Fi"
+    rmnet_3 = "3G"
+    rmnet_4 = "4G"
+    aggl_res = {wifi: [], rmnet_3: [], rmnet_4: []}
+    graph_fname = "rtt_avg_d2s_all_tcp_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if condition.startswith('tcp') and 'both' not in condition:
+            for conn_id, conn in data.iteritems():
+                if isinstance(conn, tcp.TCPConnection):
+                    if co.RTT_SAMPLES_D2S not in conn.flow.attr:
+                        break
+                    if conn.flow.attr[co.RTT_SAMPLES_D2S] >= min_samples:
+                        if conn.flow.attr[co.RTT_AVG_D2S] >= 1.0:
+                            if 'wlan' in fname:
+                                aggl_res[wifi] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
+                            elif 'rmnet3' in fname:
+                                aggl_res[rmnet_3] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
+                            elif 'rmnet4' in fname:
+                                aggl_res[rmnet_4] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
+
+    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
+    co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
+
+
 def boxplot_bytes(log_file=sys.stdout):
     aggl_res = {co.S2D: {}, co.D2S: {}}
     label_names = ['Bytes s2d', 'Bytes d2s']
