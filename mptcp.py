@@ -28,6 +28,7 @@ from __future__ import print_function
 
 import common as co
 import glob
+import numpy as np
 import os
 import shutil
 import subprocess
@@ -43,8 +44,11 @@ import tempfile
 MPTCP_SEQ_FNAME = '_seq_'
 # mptcptrace file identifier in csv filename for subflow number informations
 MPTCP_SF_FNAME = '_sf_'
+# mptcptrace file identifier in csv filename for rtt informations
+MPTCP_RTT_FNAME = '_rtt_seq_'
 # mptcptrace stats files prefix in csv filename of a subflow
 MPTCP_STATS_PREFIX = 'stats_'
+
 
 ##################################################
 ##                  EXCEPTIONS                  ##
@@ -239,6 +243,36 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
             connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_S2D] = reinject
 
 
+def process_rtt_csv(csv_fname, connections, conn_id, is_reversed):
+    """ Process the csv with rtt given in argument """
+    try:
+        csv_file = open(csv_fname)
+        data = csv_file.readlines()
+        csv_file.close()
+    except IOError:
+        print('IOError for ' + csv_fname + ': no data extracted from csv', file=sys.stderr)
+
+    rtt_data = []
+
+    for line in data:
+        split_line = line.split(',')
+        # All data is good
+        rtt_data.append(float(split_line[1]))
+
+    if is_reversed:
+        connections[conn_id].attr[co.RTT_SAMPLES_D2S] = len(rtt_data)
+        connections[conn_id].attr[co.RTT_MIN_D2S] = np.min(rtt_data)
+        connections[conn_id].attr[co.RTT_MAX_D2S] = np.max(rtt_data)
+        connections[conn_id].attr[co.RTT_AVG_D2S] = np.mean(rtt_data)
+        connections[conn_id].attr[co.RTT_STDEV_D2S] = np.std(rtt_data)
+    else:
+        connections[conn_id].attr[co.RTT_SAMPLES_S2D] = len(rtt_data)
+        connections[conn_id].attr[co.RTT_MIN_S2D] = np.min(rtt_data)
+        connections[conn_id].attr[co.RTT_MAX_S2D] = np.max(rtt_data)
+        connections[conn_id].attr[co.RTT_AVG_S2D] = np.mean(rtt_data)
+        connections[conn_id].attr[co.RTT_STDEV_S2D] = np.std(rtt_data)
+
+
 def generate_title(xpl_fname, connections):
     """ Generate the title for a mptcp connection """
 
@@ -424,7 +458,7 @@ def first_pass_on_files(connections):
 
     relative_start = float("inf")
     for xpl_fname in glob.glob('*.xpl'):
-        if MPTCP_SEQ_FNAME in xpl_fname:
+        if MPTCP_SEQ_FNAME in xpl_fname and MPTCP_RTT_FNAME not in xpl_fname:
             relative_start = first_pass_on_seq_xpl(xpl_fname, relative_start)
 
     return relative_start
@@ -456,7 +490,30 @@ def process_seq_xpl(xpl_fname, connections, relative_start, min_bytes):
         # os.remove(csv_fname)
 
     except IOError:
-        print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
+        print('IOError for ' + xpl_fname + ': skipped', file=sys.stderr)
+
+
+def process_rtt_xpl(xpl_fname, connections, relative_start, min_bytes):
+    """ If there is data, store it in connections and rewrite file """
+    try:
+        conn_id = get_connection_id(xpl_fname)
+        is_reversed = is_reverse_connection(xpl_fname)
+        xpl_file = open(xpl_fname)
+        data = xpl_file.readlines()
+        xpl_file.close()
+        # Check if there is data in file (and not only one line of 0s)
+        if not data == [] and len(data) > 1:
+            if ((is_reversed and connections[conn_id].attr[co.BYTES_D2S] >= min_bytes) or
+                    (not is_reversed and connections[conn_id].attr[co.BYTES_S2D] >= min_bytes)):
+                # Collect begin time and seq num to plot graph starting at 0
+                try:
+                    csv_fname = xpl_fname[:-4] + '.csv'
+                    process_rtt_csv(csv_fname, connections, conn_id, is_reversed)
+                except ValueError:
+                    print('ValueError for ' + xpl_fname + ': skipped', file=sys.stderr)
+
+    except IOError:
+        print('IOError for ' + xpl_fname + ': skipped', file=sys.stderr)
 
 
 def plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all):
@@ -490,11 +547,11 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
     try:
         with co.cd(csv_tmp_dir):
             # If segmentation faults, remove the -S option
-            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-S', '-G', '250',  '-w', '0']
+            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-S', '-G', '250', '-r', '2', '-w', '0']
             connections = process_mptcptrace_cmd(cmd, pcap_filepath)
 
             # Useful to count the number of reinjected bytes
-            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-G', '250', '-w', '2']
+            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-G', '250', '-r', '2', '-w', '2']
             devnull = open(os.devnull, 'w')
             if subprocess.call(cmd, stdout=devnull) != 0:
                 raise MPTCPTraceError("Error of mptcptrace with " + pcap_filepath)
@@ -507,7 +564,9 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
 
             # Then really process xpl files
             for xpl_fname in glob.glob('*.xpl'):
-                if MPTCP_SEQ_FNAME in xpl_fname:
+                if MPTCP_RTT_FNAME in xpl_fname:
+                    process_rtt_xpl(xpl_fname, connections, relative_start, min_bytes)
+                elif MPTCP_SEQ_FNAME in xpl_fname:
                     process_seq_xpl(xpl_fname, connections, relative_start, min_bytes)
                 try:
                     co.move_file(xpl_fname, os.path.join(
