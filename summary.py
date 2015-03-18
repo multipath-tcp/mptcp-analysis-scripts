@@ -1600,8 +1600,10 @@ def cdf_rtt_s2d_single_graph_all(log_file=sys.stdout, min_samples=5):
                             elif 'rmnet4' in fname:
                                 aggl_res[rmnet_4] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
 
-    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
+    results = {'all': aggl_res}
+
+    co.log_outliers(results, remove=args.remove, log_file=log_file)
+    co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
 
 
 def cdf_rtt_d2s_single_graph_all(log_file=sys.stdout, min_samples=5):
@@ -1628,8 +1630,10 @@ def cdf_rtt_d2s_single_graph_all(log_file=sys.stdout, min_samples=5):
                             elif 'rmnet4' in fname:
                                 aggl_res[rmnet_4] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
 
-    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
+    results = {'all': aggl_res}
+
+    co.log_outliers(results, remove=args.remove, log_file=log_file)
+    co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
 
 
 def boxplot_bytes(log_file=sys.stdout):
