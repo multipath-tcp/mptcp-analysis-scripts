@@ -120,7 +120,7 @@ def extract_flow_data(out_file):
                 subflow.attr[attri] = value
                 index += 2
 
-            subflow.indicates_wifi_or_rmnet()
+            subflow.indicates_wifi_or_cell()
             connections[current_connection].flows[sub_flow_id] = subflow
 
         # Case 3: skip the line (no more current connection)
@@ -182,7 +182,7 @@ def interesting_graph(csv_fname, connections):
     """ Return True if the MPTCP graph is worthy, else False
         This function assumes that a graph is interesting if it has at least one connection that
         if not 127.0.0.1 -> 127.0.0.1
-        Note that is the graph is interesting and IPv4, indicates if the traffic is Wi-Fi or rmnet
+        Note that is the graph is interesting and IPv4, indicates if the traffic is Wi-Fi or cell
     """
     connection_id = get_connection_id(csv_fname)
     for sub_flow_id, conn in connections[connection_id].flows.iteritems():
@@ -232,15 +232,11 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
                 print("WARNING: double reinjection for " + csv_fname, file=sys.stderr)
                 reinject[int(split_line[5]) - 1][packet_seqs] += 1
 
+    direction = co.D2S if is_reversed else co.S2D
     for i in range(0, len(connections[conn_id].flows)):
-        if is_reversed:
-            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_PACKS_D2S] = reinject_nb[i]
-            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_BYTES_D2S] = reinject_offsets[i]
-            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_D2S] = reinject
-        else:
-            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_PACKS_S2D] = reinject_nb[i]
-            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_BYTES_S2D] = reinject_offsets[i]
-            connections[conn_id].flows[str(i)].attr[co.REINJ_ORIG_S2D] = reinject
+        connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_PACKS] = reinject_nb[i]
+        connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_BYTES] = reinject_offsets[i]
+        connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG] = reinject
 
 
 def process_rtt_csv(csv_fname, connections, conn_id, is_reversed):
@@ -259,18 +255,12 @@ def process_rtt_csv(csv_fname, connections, conn_id, is_reversed):
         # All data is good
         rtt_data.append(float(split_line[1]))
 
-    if is_reversed:
-        connections[conn_id].attr[co.RTT_SAMPLES_D2S] = len(rtt_data)
-        connections[conn_id].attr[co.RTT_MIN_D2S] = np.min(rtt_data)
-        connections[conn_id].attr[co.RTT_MAX_D2S] = np.max(rtt_data)
-        connections[conn_id].attr[co.RTT_AVG_D2S] = np.mean(rtt_data)
-        connections[conn_id].attr[co.RTT_STDEV_D2S] = np.std(rtt_data)
-    else:
-        connections[conn_id].attr[co.RTT_SAMPLES_S2D] = len(rtt_data)
-        connections[conn_id].attr[co.RTT_MIN_S2D] = np.min(rtt_data)
-        connections[conn_id].attr[co.RTT_MAX_S2D] = np.max(rtt_data)
-        connections[conn_id].attr[co.RTT_AVG_S2D] = np.mean(rtt_data)
-        connections[conn_id].attr[co.RTT_STDEV_S2D] = np.std(rtt_data)
+    direction = co.D2S if is_reversed else co.S2D
+    connections[conn_id].attr[direction][co.RTT_SAMPLES] = len(rtt_data)
+    connections[conn_id].attr[direction][co.RTT_MIN] = np.min(rtt_data)
+    connections[conn_id].attr[direction][co.RTT_MAX] = np.max(rtt_data)
+    connections[conn_id].attr[direction][co.RTT_AVG] = np.mean(rtt_data)
+    connections[conn_id].attr[direction][co.RTT_STDEV] = np.std(rtt_data)
 
 
 def generate_title(xpl_fname, connections):
@@ -301,7 +291,7 @@ def generate_title(xpl_fname, connections):
 
 def rewrite_xpl(xpl_fname, xpl_data, begin_time, begin_seq, connections, conn_id, is_reversed):
     """ Rewrite the xpl file with filename xpl_fname in order to have the same relative time
-        Number 1 is wifi (green), number 2 is rmnet (red)
+        Number 1 is wifi (green), number 2 is cell (red)
     """
     if len(connections[conn_id].flows) > 2:
         print("WARNING: xpl plot only show two curves (green = wifi, red = cellular)", file=sys.stderr)
@@ -315,7 +305,7 @@ def rewrite_xpl(xpl_fname, xpl_data, begin_time, begin_seq, connections, conn_id
 
         if co.is_number(split_line[0]):
             interface = connections[conn_id].flows[str(int(split_line[0]) - 1)].attr[co.IF]
-            number = 1 if interface == co.WIFI else 2 if interface == co.RMNET else 3
+            number = 1 if interface == co.WIFI else 2 if interface == co.CELL else 3
             xpl_file.write(str(number) + "\n")
 
         elif split_line[0] in co.XPL_ONE_POINT:
@@ -409,8 +399,8 @@ def process_stats_csv(csv_fname, connections):
 
         if first_seqs and last_acks:
             # Notice that these values remove the reinjected bytes
-            connections[conn_id].attr[co.BYTES_S2D] = int(last_acks[1]) - int(first_seqs[0])
-            connections[conn_id].attr[co.BYTES_D2S] = int(last_acks[0]) - int(first_seqs[1])
+            connections[conn_id].attr[co.S2D][co.BYTES_MPTCPTRACE] = int(last_acks[1]) - int(first_seqs[0])
+            connections[conn_id].attr[co.D2S][co.BYTES_MPTCPTRACE] = int(last_acks[0]) - int(first_seqs[1])
         if con_time:
             connections[conn_id].attr[co.DURATION] = float(con_time)
 
@@ -475,8 +465,8 @@ def process_seq_xpl(xpl_fname, connections, relative_start, min_bytes):
         xpl_file.close()
         # Check if there is data in file (and not only one line of 0s)
         if not data == [] and len(data) > 1:
-            if ((is_reversed and connections[conn_id].attr[co.BYTES_D2S] >= min_bytes) or
-                    (not is_reversed and connections[conn_id].attr[co.BYTES_S2D] >= min_bytes)):
+            direction = co.D2S if is_reversed else co.S2D
+            if connections[conn_id].attr[direction][co.BYTES_MPTCPTRACE] >= min_bytes:
                 # Collect begin time and seq num to plot graph starting at 0
                 try:
                     begin_time, begin_seq = get_begin_values(data)
@@ -503,8 +493,8 @@ def process_rtt_xpl(xpl_fname, connections, relative_start, min_bytes):
         xpl_file.close()
         # Check if there is data in file (and not only one line of 0s)
         if not data == [] and len(data) > 1:
-            if ((is_reversed and connections[conn_id].attr[co.BYTES_D2S] >= min_bytes) or
-                    (not is_reversed and connections[conn_id].attr[co.BYTES_S2D] >= min_bytes)):
+            direction = co.D2S if is_reversed else co.S2D
+            if connections[conn_id].attr[direction][co.BYTES_MPTCPTRACE] >= min_bytes:
                 # Collect begin time and seq num to plot graph starting at 0
                 try:
                     csv_fname = xpl_fname[:-4] + '.csv'
