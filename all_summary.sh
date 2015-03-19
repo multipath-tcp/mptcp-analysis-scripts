@@ -6,7 +6,7 @@ shift
 DIRS=$@
 
 for cond in both3 both4 rmnet3 rmnet4 wlan; do
-    for app in dailymotion drive dropbox facebook firefox firefoxspdy messenger spotify youtube; do
+    for app in dailymotion drive dropbox facebook firefox messenger spotify youtube; do
         echo "Summary with $cond on app $app"
         ./summary.py -a $app -c $cond $TIME -d $DIRS
     done
