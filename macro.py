@@ -299,25 +299,25 @@ def cellular_percentage_boxplot(limit_duration=0, limit_bytes=10000):
                     if isinstance(conn, mptcp.MPTCPConnection):
                         if conn.attr[co.DURATION] < limit_duration:
                             continue
-                        conn_bytes_s2d = {'rmnet': 0, 'wifi': 0}
-                        conn_bytes_d2s = {'rmnet': 0, 'wifi': 0}
+                        conn_bytes_s2d = {'cellular': 0, 'wifi': 0}
+                        conn_bytes_d2s = {'cellular': 0, 'wifi': 0}
                         for interface in conn.attr[co.S2D]:
-                            conn_bytes_s2d[interface] += conn.attr[co.S2D][interface]
+                            conn_bytes_s2d[interface] += conn.attr[co.S2D][co.BYTES][interface]
                         for interface in conn.attr[co.D2S]:
-                            conn_bytes_d2s[interface] += conn.attr[co.D2S][interface]
+                            conn_bytes_d2s[interface] += conn.attr[co.D2S][co.BYTES][interface]
                         for flow_id, flow in conn.flows.iteritems():
                             if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
                                 break
                             interface = flow.attr[co.IF]
-                            conn_bytes_s2d[interface] -= flow.attr[co.REINJ_ORIG_BYTES_S2D]
-                            conn_bytes_d2s[interface] -= flow.attr[co.REINJ_ORIG_BYTES_D2S]
+                            conn_bytes_s2d[interface] -= flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
+                            conn_bytes_d2s[interface] -= flow.attr[co.D2S][co.REINJ_ORIG_BYTES]
 
-                        if conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'] > limit_bytes:
-                            frac_cell_s2d = ((conn_bytes_s2d['rmnet'] + 0.0) / (conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi']))
+                        if conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'] > limit_bytes:
+                            frac_cell_s2d = ((conn_bytes_s2d['cellular'] + 0.0) / (conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi']))
                             results[condition][co.S2D][app][dataset_name].append(frac_cell_s2d)
 
-                        if conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi'] > limit_bytes:
-                            frac_cell_d2s = ((conn_bytes_d2s['rmnet'] + 0.0) / (conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi']))
+                        if conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'] > limit_bytes:
+                            frac_cell_d2s = ((conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi']))
                             results[condition][co.D2S][app][dataset_name].append(frac_cell_d2s)
 
     grouped_boxplot(results, "Fraction of data bytes on cellular", base_graph_path_bytes, ylim=1.0)
@@ -348,7 +348,7 @@ def reinjection_boxplot(limit_duration=0, min_bytes=10000):
                     reinject_bytes_d2s = 0.0
 
                     for flow_id, flow in conn.flows.iteritems():
-                        if co.REINJ_ORIG_BYTES_S2D in flow.attr and co.REINJ_ORIG_BYTES_D2S in flow.attr:
+                        if co.REINJ_ORIG_BYTES in flow.attr[co.S2D] and co.REINJ_ORIG_BYTES in flow.attr[co.D2S]:
                             reinject_bytes_s2d += flow.attr[co.REINJ_ORIG_BYTES_S2D]
                             reinject_bytes_d2s += flow.attr[co.REINJ_ORIG_BYTES_D2S]
 
