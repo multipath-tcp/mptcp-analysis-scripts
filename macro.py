@@ -364,10 +364,10 @@ def reinjection_boxplot(limit_duration=0, min_bytes=10000):
                     # results_packs[co.S2D][condition][app].append(reinject_packs_s2d)
                     # results_packs[co.D2S][condition][app].append(reinject_packs_d2s)
 
-                    if bytes_s2d > min_bytes:
+                    if bytes_s2d > min_bytes and conn.attr[co.BYTES_S2D] > min_bytes:
                         results[condition][co.S2D][app][dataset_name].append(reinject_bytes_s2d / bytes_s2d)
 
-                    if bytes_d2s > min_bytes:
+                    if bytes_d2s > min_bytes and conn.attr[co.BYTES_S2D] > min_bytes:
                         if (reinject_bytes_d2s / bytes_d2s) >= 0.5:
                             print("reinj: " + str(reinject_bytes_d2s) + " tot: " + str(bytes_d2s) + " " + fname + " " + conn_id)
                         results[condition][co.D2S][app][dataset_name].append(reinject_bytes_d2s / bytes_d2s)
