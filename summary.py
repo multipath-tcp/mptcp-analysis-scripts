@@ -1533,7 +1533,7 @@ def cdf_rtt_d2s_all(log_file=sys.stdout, min_samples=5):
     co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
 
 
-def cdf_rtt_s2d_single_graph_all(log_file=sys.stdout, min_samples=5):
+def cdf_rtt_s2d_single_graph_all(log_file=sys.stdout, min_samples=5, min_bytes=100):
     wifi = "Wi-Fi"
     rmnet_3 = "3G"
     rmnet_4 = "4G"
@@ -1548,7 +1548,7 @@ def cdf_rtt_s2d_single_graph_all(log_file=sys.stdout, min_samples=5):
                 if isinstance(conn, tcp.TCPConnection):
                     if co.RTT_SAMPLES_S2D not in conn.flow.attr:
                         break
-                    if conn.flow.attr[co.RTT_SAMPLES_S2D] >= min_samples:
+                    if conn.flow.attr[co.RTT_SAMPLES_S2D] >= min_samples and conn.flow.attr[co.BYTES_S2D] >= min_bytes:
                         if conn.flow.attr[co.RTT_AVG_S2D] >= 1.0:
                             if 'wlan' in fname:
                                 aggl_res[wifi] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
@@ -1563,7 +1563,7 @@ def cdf_rtt_s2d_single_graph_all(log_file=sys.stdout, min_samples=5):
     co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
 
 
-def cdf_rtt_d2s_single_graph_all(log_file=sys.stdout, min_samples=5):
+def cdf_rtt_d2s_single_graph_all(log_file=sys.stdout, min_samples=5, min_bytes=100):
     wifi = "Wi-Fi"
     rmnet_3 = "3G"
     rmnet_4 = "4G"
@@ -1578,7 +1578,7 @@ def cdf_rtt_d2s_single_graph_all(log_file=sys.stdout, min_samples=5):
                 if isinstance(conn, tcp.TCPConnection):
                     if co.RTT_SAMPLES_D2S not in conn.flow.attr:
                         break
-                    if conn.flow.attr[co.RTT_SAMPLES_D2S] >= min_samples:
+                    if conn.flow.attr[co.RTT_SAMPLES_D2S] >= min_samples and conn.flow.attr[co.BYTES_D2S] >= min_bytes:
                         if conn.flow.attr[co.RTT_AVG_D2S] >= 1.0:
                             if 'wlan' in fname:
                                 aggl_res[wifi] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
