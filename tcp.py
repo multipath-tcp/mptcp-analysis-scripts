@@ -120,8 +120,6 @@ def extract_flow_data(out_file):
                 connection.flow.indicates_wifi_or_cell()
                 connection.flow.attr[co.START] = float(fix_tcptrace_time_bug(info[5]))
                 connection.flow.attr[co.DURATION] = compute_duration(info)
-                connection.flow.attr[co.S2D] = {}
-                connection.flow.attr[co.D2S] = {}
                 connection.flow.attr[co.S2D][co.PACKS] = int(info[7])
                 connection.flow.attr[co.D2S][co.PACKS] = int(info[8])
                 # Note that this count is about unique_data_bytes
