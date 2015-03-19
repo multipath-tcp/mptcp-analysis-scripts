@@ -315,8 +315,8 @@ def bar_chart_bandwidth_smart(log_file=sys.stdout):
 def bar_chart_bytes_s2d_interface(log_file=sys.stdout):
     aggl_res = {}
     wifi = "Wi-Fi"
-    rmnet = "rmnet"
-    label_names = [wifi, rmnet]
+    cell = "Cellular"
+    label_names = [wifi, cell]
     color = ['r', 'b']
     ecolor = ['b', 'r']
     ylabel = "Bytes"
@@ -327,34 +327,32 @@ def bar_chart_bytes_s2d_interface(log_file=sys.stdout):
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         wifi_bytes = 0
-        rmnet_bytes = 0
+        cell_bytes = 0
         reinject_bytes_wifi = 0
-        reinject_bytes_rmnet = 0
+        reinject_bytes_cell = 0
         for conn_id, conn in data.iteritems():
-            if not co.S2D in conn.attr.keys():
-                continue
             if isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
-                    if co.REINJ_ORIG_BYTES_S2D not in flow.attr:
+                    if co.REINJ_ORIG_BYTES not in flow.attr[co.S2D]:
                         break
                     if flow.attr[co.IF] == co.WIFI:
-                        reinject_bytes_wifi += flow.attr[co.REINJ_ORIG_BYTES_S2D]
-                    elif flow.attr[co.IF] == co.RMNET:
-                        reinject_bytes_rmnet += flow.attr[co.REINJ_ORIG_BYTES_S2D]
-            if co.WIFI in conn.attr[co.S2D].keys():
-                wifi_bytes += conn.attr[co.S2D][co.WIFI]
-            if co.RMNET in conn.attr[co.S2D].keys():
-                rmnet_bytes += conn.attr[co.S2D][co.RMNET]
+                        reinject_bytes_wifi += flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
+                    elif flow.attr[co.IF] == co.CELL:
+                        reinject_bytes_cell += flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
+            if co.WIFI in conn.attr[co.S2D][co.BYTES]:
+                wifi_bytes += conn.attr[co.S2D][co.BYTES][co.WIFI]
+            if co.CELL in conn.attr[co.S2D][co.BYTES]:
+                cell_bytes += conn.attr[co.S2D][co.BYTES][co.CELL]
 
         wifi_bytes -= reinject_bytes_wifi
-        rmnet_bytes -= reinject_bytes_rmnet
+        cell_bytes -= reinject_bytes_cell
 
         if condition in aggl_res:
             aggl_res[condition][wifi] += [(wifi_bytes, fname)]
-            aggl_res[condition][rmnet] += [(rmnet_bytes, fname)]
+            aggl_res[condition][cell] += [(cell_bytes, fname)]
         else:
             aggl_res[condition] = {
-                wifi: [(wifi_bytes, fname)], rmnet: [(rmnet_bytes, fname)]}
+                wifi: [(wifi_bytes, fname)], cell: [(cell_bytes, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Bytes', graph_full_path)
@@ -364,8 +362,8 @@ def bar_chart_bytes_s2d_interface(log_file=sys.stdout):
 def bar_chart_bytes_d2s_interface(log_file=sys.stdout):
     aggl_res = {}
     wifi = "Wi-Fi"
-    rmnet = "rmnet"
-    label_names = [wifi, rmnet]
+    cell = "Cellular"
+    label_names = [wifi, cell]
     color = ['r', 'b']
     ecolor = ['b', 'r']
     ylabel = "Bytes"
@@ -376,34 +374,32 @@ def bar_chart_bytes_d2s_interface(log_file=sys.stdout):
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         wifi_bytes = 0
-        rmnet_bytes = 0
+        cell_bytes = 0
         reinject_bytes_wifi = 0
-        reinject_bytes_rmnet = 0
+        reinject_bytes_cell = 0
         for conn_id, conn in data.iteritems():
-            if not co.D2S in conn.attr.keys():
-                continue
             if isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
-                    if co.REINJ_ORIG_BYTES_D2S not in flow.attr:
+                    if co.REINJ_ORIG_BYTES not in flow.attr[co.D2S]:
                         break
                     if flow.attr[co.IF] == co.WIFI:
-                        reinject_bytes_wifi += flow.attr[co.REINJ_ORIG_BYTES_D2S]
-                    if flow.attr[co.IF] == co.RMNET:
-                        reinject_bytes_rmnet += flow.attr[co.REINJ_ORIG_BYTES_D2S]
-            if co.WIFI in conn.attr[co.D2S].keys():
-                wifi_bytes += conn.attr[co.D2S][co.WIFI]
-            if co.RMNET in conn.attr[co.D2S].keys():
-                rmnet_bytes += conn.attr[co.D2S][co.RMNET]
+                        reinject_bytes_wifi += flow.attr[co.D2S][co.REINJ_ORIG_BYTES]
+                    if flow.attr[co.IF] == co.CELL:
+                        reinject_bytes_cell += flow.attr[co.D2S][co.REINJ_ORIG_BYTES]
+            if co.WIFI in conn.attr[co.D2S][co.BYTES]:
+                wifi_bytes += conn.attr[co.D2S][co.BYTES][co.WIFI]
+            if co.CELL in conn.attr[co.D2S][co.BYTES]:
+                cell_bytes += conn.attr[co.D2S][co.BYTES][co.CELL]
 
         wifi_bytes -= reinject_bytes_wifi
-        rmnet_bytes -= reinject_bytes_rmnet
+        cell_bytes -= reinject_bytes_cell
 
         if condition in aggl_res:
             aggl_res[condition][wifi] += [(wifi_bytes, fname)]
-            aggl_res[condition][rmnet] += [(rmnet_bytes, fname)]
+            aggl_res[condition][cell] += [(cell_bytes, fname)]
         else:
             aggl_res[condition] = {
-                wifi: [(wifi_bytes, fname)], rmnet: [(rmnet_bytes, fname)]}
+                wifi: [(wifi_bytes, fname)], cell: [(cell_bytes, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Bytes', graph_full_path)
@@ -430,18 +426,11 @@ def bar_chart_packs_retrans(log_file=sys.stdout):
         for conn_id, conn in data.iteritems():
             if isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
-                    here = [i for i in flow.attr.keys() if i in [co.PACKS_RETRANS_S2D, co.PACKS_RETRANS_D2S]]
-                    if not len(here) == 2:
-                        continue
-                    s2d += flow.attr[co.PACKS_RETRANS_S2D]
-                    d2s += flow.attr[co.PACKS_RETRANS_D2S]
+                    s2d += flow.attr[co.S2D][co.PACKS_RETRANS]
+                    d2s += flow.attr[co.D2S][co.PACKS_RETRANS]
             elif isinstance(conn, tcp.TCPConnection):
-                here = [i for i in conn.flow.attr.keys() if i in [co.PACKS_RETRANS_S2D, co.PACKS_RETRANS_D2S]]
-                if not len(here) == 2:
-                    continue
-
-                s2d += conn.flow.attr[co.PACKS_RETRANS_S2D]
-                d2s += conn.flow.attr[co.PACKS_RETRANS_D2S]
+                s2d += conn.flow.attr[co.S2D][co.PACKS_RETRANS]
+                d2s += conn.flow.attr[co.D2S][co.PACKS_RETRANS]
             else:
                 print(conn + ": unknown object")
                 continue
@@ -461,8 +450,8 @@ def bar_chart_packs_retrans(log_file=sys.stdout):
 def bar_chart_packs_retrans_s2d_interface(log_file=sys.stdout):
     aggl_res = {}
     wifi = "Wi-Fi"
-    rmnet = "rmnet"
-    label_names = [wifi, rmnet]
+    cell = "Cellular"
+    label_names = [wifi, cell]
     color = ['r', 'b']
     ecolor = ['b', 'r']
     ylabel = "Packets"
@@ -473,39 +462,29 @@ def bar_chart_packs_retrans_s2d_interface(log_file=sys.stdout):
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         wifi_packs = 0
-        rmnet_packs = 0
+        cell_packs = 0
         for conn_id, conn in data.iteritems():
             if isinstance(conn, tcp.TCPConnection):
-                # For compatibility reasons with old stat files
-                if co.PACKS_RETRANS_S2D not in conn.flow.attr:
-                    # Will produce a graph with 0 values, result should be ignored (so break for no graph)
-                    print(co.PACKS_RETRANS_S2D + " not in " + conn_id + " of " + fname, file=sys.stderr)
-                    break
                 if conn.flow.attr[co.IF] == co.WIFI:
-                    wifi_packs += conn.flow.attr[co.PACKS_RETRANS_S2D]
-                elif conn.flow.attr[co.IF] == co.RMNET:
-                    rmnet_packs += conn.flow.attr[co.PACKS_RETRANS_S2D]
+                    wifi_packs += conn.flow.attr[co.S2D][co.PACKS_RETRANS]
+                elif conn.flow.attr[co.IF] == co.CELL:
+                    cell_packs += conn.flow.attr[co.S2D][co.PACKS_RETRANS]
             elif isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
-                    # For compatibility reasons with old stat files
-                    if co.PACKS_RETRANS_S2D not in flow.attr:
-                        # Will produce a graph with 0 values, result should be ignored (so break for no graph)
-                        print(co.PACKS_RETRANS_S2D + " not in flow" + flow_id + " of connection " + conn_id + " of " + fname, file=sys.stderr)
-                        break
                     if flow.attr[co.IF] == co.WIFI:
-                        wifi_packs += flow.attr[co.PACKS_RETRANS_S2D]
-                    elif flow.attr[co.IF] == co.RMNET:
-                        rmnet_packs += flow.attr[co.PACKS_RETRANS_S2D]
+                        wifi_packs += flow.attr[co.S2D][co.PACKS_RETRANS]
+                    elif flow.attr[co.IF] == co.CELL:
+                        cell_packs += flow.attr[co.S2D][co.PACKS_RETRANS]
             else:
                 print(conn + ": unknown object")
                 continue
 
         if condition in aggl_res:
             aggl_res[condition][wifi] += [(wifi_packs, fname)]
-            aggl_res[condition][rmnet] += [(rmnet_packs, fname)]
+            aggl_res[condition][cell] += [(cell_packs, fname)]
         else:
             aggl_res[condition] = {
-                wifi: [(wifi_packs, fname)], rmnet: [(rmnet_packs, fname)]}
+                wifi: [(wifi_packs, fname)], cell: [(cell_packs, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Number of retransmitted packets', graph_full_path)
@@ -515,8 +494,8 @@ def bar_chart_packs_retrans_s2d_interface(log_file=sys.stdout):
 def bar_chart_packs_retrans_d2s_interface(log_file=sys.stdout):
     aggl_res = {}
     wifi = "Wi-Fi"
-    rmnet = "rmnet"
-    label_names = [wifi, rmnet]
+    cell = "Cellular"
+    label_names = [wifi, cell]
     color = ['r', 'b']
     ecolor = ['b', 'r']
     ylabel = "Packets"
@@ -527,39 +506,26 @@ def bar_chart_packs_retrans_d2s_interface(log_file=sys.stdout):
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         wifi_packs = 0
-        rmnet_packs = 0
+        cell_packs = 0
         for conn_id, conn in data.iteritems():
             if isinstance(conn, tcp.TCPConnection):
-                # For compatibility reasons with old stat files
-                if co.PACKS_RETRANS_D2S not in conn.flow.attr:
-                    # Will produce a graph with 0 values, result should be ignored (so break for no graph)
-                    print(co.PACKS_RETRANS_D2S + " not in " + conn_id + " of " + fname, file=sys.stderr)
-                    break
                 if conn.flow.attr[co.IF] == co.WIFI:
-                    wifi_packs += conn.flow.attr[co.PACKS_RETRANS_D2S]
-                elif conn.flow.attr[co.IF] == co.RMNET:
-                    rmnet_packs += conn.flow.attr[co.PACKS_RETRANS_D2S]
+                    wifi_packs += conn.flow.attr[co.D2S][co.PACKS_RETRANS]
+                elif conn.flow.attr[co.IF] == co.CELL:
+                    cell_packs += conn.flow.attr[co.D2S][co.PACKS_RETRANS]
             elif isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
-                    # For compatibility reasons with old stat files
-                    if co.PACKS_RETRANS_D2S not in flow.attr:
-                        # Will produce a graph with 0 values, result should be ignored (so break for no graph)
-                        print(co.PACKS_RETRANS_D2S + " not in flow" + flow_id + " of connection " + conn_id + " of " + fname, file=sys.stderr)
-                        break
                     if flow.attr[co.IF] == co.WIFI:
-                        wifi_packs += flow.attr[co.PACKS_RETRANS_D2S]
-                    elif flow.attr[co.IF] == co.RMNET:
-                        rmnet_packs += flow.attr[co.PACKS_RETRANS_D2S]
-            else:
-                print(conn + ": unknown object")
-                continue
+                        wifi_packs += flow.attr[co.D2S][co.PACKS_RETRANS]
+                    elif flow.attr[co.IF] == co.CELL:
+                        cell_packs += flow.attr[co.D2S][co.PACKS_RETRANS]
 
         if condition in aggl_res:
             aggl_res[condition][wifi] += [(wifi_packs, fname)]
-            aggl_res[condition][rmnet] += [(rmnet_packs, fname)]
+            aggl_res[condition][cell] += [(cell_packs, fname)]
         else:
             aggl_res[condition] = {
-                wifi: [(wifi_packs, fname)], rmnet: [(rmnet_packs, fname)]}
+                wifi: [(wifi_packs, fname)], cell: [(cell_packs, fname)]}
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_cdfs(aggl_res, ['red', 'blue', 'green', 'black'], 'Number of retransmitted packets', graph_full_path)
@@ -585,9 +551,6 @@ def bar_chart_duration(log_file=sys.stdout):
                 data = conn.attr
             elif isinstance(conn, tcp.TCPConnection):
                 data = conn.flow.attr
-            here = [i for i in data.keys() if i in [co.DURATION]]
-            if not len(here) == 1:
-                continue
             if condition in aggl_res:
                 aggl_res[condition][tot_int_lbl] += [(data[co.DURATION], fname)]
             else:
@@ -617,16 +580,10 @@ def bar_chart_duration_all(log_file=sys.stdout):
         for conn_id, conn in data.iteritems():
             if isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
-                    here = [i for i in flow.attr.keys() if i in [co.DURATION]]
-                    if not len(here) == 1:
-                            continue
                     start = min(start, flow.attr[co.START])
                     stop = max(stop, flow.attr[co.START] + flow.attr[co.DURATION])
 
             elif isinstance(conn, tcp.TCPConnection):
-                here = [i for i in conn.flow.attr.keys() if i in [co.DURATION]]
-                if not len(here) == 1:
-                        continue
                 start = min(start, conn.flow.attr[co.START])
                 stop = max(stop, conn.flow.attr[co.START] + conn.flow.attr[co.DURATION])
 
@@ -1518,7 +1475,7 @@ def cdf_bytes_all(log_file=sys.stdout):
     co.plot_cdfs_natural(tot_bytes, ['r'], "Bytes", base_graph_path_bytes)
 
 
-def cdf_rtt_s2d_all(log_file=sys.stdout, min_samples=5):
+def cdf_rtt_s2d_all(log_file=sys.stdout, min_samples=5, min_bytes=100):
     aggl_res = {}
     wifi = "wifi"
     rmnet = "rmnet"
@@ -1535,12 +1492,12 @@ def cdf_rtt_s2d_all(log_file=sys.stdout, min_samples=5):
                 for flow_id, flow in conn.flows.iteritems():
                     if co.RTT_SAMPLES_S2D not in flow.attr:
                         break
-                    if flow.attr[co.RTT_SAMPLES_S2D] >= min_samples:
+                    if flow.attr[co.RTT_SAMPLES_S2D] >= min_samples and flow.attr[co.BYTES_S2D] >= min_bytes:
                         aggl_res[condition][flow.attr[co.IF]] += [(flow.attr[co.RTT_AVG_S2D], fname)]
             elif isinstance(conn, tcp.TCPConnection):
                 if co.RTT_SAMPLES_S2D not in conn.flow.attr:
                     break
-                if conn.flow.attr[co.RTT_SAMPLES_S2D] >= min_samples:
+                if conn.flow.attr[co.RTT_SAMPLES_S2D] >= min_samples and conn.flow.attr[co.BYTES_S2D] >= min_bytes:
                     aggl_res[condition][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
