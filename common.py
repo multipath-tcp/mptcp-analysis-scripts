@@ -111,7 +111,7 @@ CSV_DIR = 'csv'
 
 # Following constants are used to make the code cleaner and more robust (for dictionary)
 # Those are mainly determined by the output of mptcptrace
-CELL = 'cell'
+CELL = 'cellular'
 WIFI = 'wifi'
 # IPv4 or IPv6
 TYPE = 'type'
