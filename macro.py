@@ -437,3 +437,4 @@ def cdf_rtt_single_graph_all(min_samples=5, min_bytes=100):
 
 cellular_percentage_boxplot()
 reinjection_boxplot()
+cdf_rtt_single_graph_all()
