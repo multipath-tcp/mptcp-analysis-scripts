@@ -1395,7 +1395,6 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                     if conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'] > limit_bytes:
                         if (conn_bytes_s2d['rmnet'] + 0.0) / (conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi']) > 0.6:
                             print(str((conn_bytes_s2d['rmnet'] + 0.0) / (conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'])) + " " + str(conn_bytes_s2d['rmnet']) + " " + str(conn_bytes_s2d['wifi']) + " " + fname + " " + conn_id)
-                        frac_cell_d2s = min(1.0, ((conn_bytes_d2s['rmnet'] + 0.0) / (conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi'])))
                         frac_cell_s2d = (min(1.0, (conn_bytes_s2d['rmnet'] + 0.0) / (conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'])))
                         data_frac[condition][co.S2D][app].append(frac_cell_s2d)
                         data_bytes[condition][co.S2D][app].append(conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'])
