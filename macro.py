@@ -404,7 +404,7 @@ def cdf_rtt_single_graph_all(min_samples=5, min_bytes=100):
     for dataset_name, connections in datasets.iteritems():
         for fname, data in connections.iteritems():
             condition = get_experiment_condition(fname)
-            if condition.startswith('tcp') and 'both' not in condition:
+            if condition.startswith('tcp') and 'both' not in condition and 'TC' not in condition:
                 for conn_id, conn in data.iteritems():
                     if isinstance(conn, tcp.TCPConnection):
                         if dataset_name == 'dirs':
