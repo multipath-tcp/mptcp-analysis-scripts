@@ -73,6 +73,8 @@ parser.add_argument("-U",
                     "--upload", help="only load upload intensive apps", action="store_true")
 parser.add_argument("-D",
                     "--download", help="only load download intensive apps", action="store_true")
+parser.add_argument("-A",
+                    "--all", help="load all apps", action="store_true")
 
 args = parser.parse_args()
 
@@ -107,6 +109,8 @@ elif args.upload:
     apps_to_load = ['drive', 'dropbox', 'facebook', 'messenger']
 elif args.download:
     apps_to_load = ['dailymotion', 'firefox', 'spotify', 'youtube']
+elif args.all:
+    apps_to_load = ['drive', 'dropbox', 'facebook', 'messenger'] + ['dailymotion', 'firefox', 'spotify', 'youtube']
 
 ##################################################
 ##                 GET THE DATA                 ##
