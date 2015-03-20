@@ -435,6 +435,52 @@ def cdf_rtt_single_graph_all(min_samples=5, min_bytes=100):
     co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path)
 
 
+def cdf_rtt_mptcp_single_graph_all(min_samples=5, min_bytes=100):
+    wifi_up = "Wi-Fi Up"
+    rmnet_3_up = "3G Up"
+    rmnet_4_up = "4G Up"
+    wifi_down = "Wi-Fi Down"
+    rmnet_3_down = "3G Down"
+    rmnet_4_down = "4G Down"
+    aggl_res = {wifi_up: [], rmnet_3_up: [], rmnet_4_up: [], wifi_down: [], rmnet_3_down: [], rmnet_4_down: []}
+    graph_fname = "rtt_avg_all_mptcp_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+    for dataset_name, connections in datasets.iteritems():
+        for fname, data in connections.iteritems():
+            condition = get_experiment_condition(fname)
+            if condition.startswith('mptcp_fm') and 'both' not in condition and 'TC' not in condition:
+                for conn_id, conn in data.iteritems():
+                    if isinstance(conn, tcp.TCPConnection):
+                        if dataset_name == 'dirs':
+                            if co.RTT_SAMPLES_S2D not in conn.flow.attr:
+                                break
+                            if conn.flow.attr[co.RTT_SAMPLES_S2D] >= min_samples and conn.flow.attr[co.BYTES_S2D] >= min_bytes:
+                                if conn.flow.attr[co.RTT_AVG_S2D] >= 1.0:
+                                    if 'wlan' in fname:
+                                        aggl_res[wifi_up] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
+                                    elif 'rmnet3' in fname:
+                                        aggl_res[rmnet_3_up] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
+                                    elif 'rmnet4' in fname:
+                                        aggl_res[rmnet_4_up] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
+                        elif dataset_name == 'dirs_two':
+                            if co.RTT_SAMPLES_D2S not in conn.flow.attr:
+                                break
+                            if conn.flow.attr[co.RTT_SAMPLES_D2S] >= min_samples and conn.flow.attr[co.BYTES_D2S] >= min_bytes:
+                                if conn.flow.attr[co.RTT_AVG_D2S] >= 1.0:
+                                    if 'wlan' in fname:
+                                        aggl_res[wifi_down] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
+                                    elif 'rmnet3' in fname:
+                                        aggl_res[rmnet_3_down] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
+                                    elif 'rmnet4' in fname:
+                                        aggl_res[rmnet_4_down] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
+    results = {'all': aggl_res}
+
+    co.log_outliers(results, remove=args.remove)
+    co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path)
+
+
 cellular_percentage_boxplot()
 reinjection_boxplot()
 cdf_rtt_single_graph_all()
+cdf_rtt_mptcp_single_graph_all()
