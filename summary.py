@@ -752,6 +752,8 @@ def line_graph_aggl():
                     final_list.append([point[0], point[1] / count[condition]])
                 aggl_res[condition][direction][interface] = final_list
 
+            print(condition, direction)
+            print(aggl_res[condition][direction])
             co.plot_line_graph(aggl_res[condition][direction].values(),
                                aggl_res[condition][direction].keys(),
                                ['r', 'b'] if len(aggl_res[condition][direction].keys()) == 2 else ['k'],
@@ -1204,8 +1206,8 @@ def cdfs_summary(log_file=sys.stdout):
         if condition not in data_duration:
             data_duration[condition] = {co.DURATION: []}
             data_bytes[condition] = {'bytes': []}
-            data_bytes_with_dir[co.S2D][condition] = {co.BYTES_S2D: []}
-            data_bytes_with_dir[co.D2S][condition] = {co.BYTES_D2S: []}
+            data_bytes_with_dir[co.S2D][condition] = {co.BYTES: []}
+            data_bytes_with_dir[co.D2S][condition] = {co.BYTES: []}
 
         for conn_id, conn in conns.iteritems():
             # conn is then a BasicConnection
@@ -1219,8 +1221,8 @@ def cdfs_summary(log_file=sys.stdout):
 
             data_duration[condition][co.DURATION].append(duration)
             data_bytes[condition]['bytes'].append(nb_bytes_s2d + nb_bytes_d2s)
-            data_bytes_with_dir[co.S2D][condition][co.BYTES_S2D].append(nb_bytes_s2d)
-            data_bytes_with_dir[co.D2S][condition][co.BYTES_D2S].append(nb_bytes_d2s)
+            data_bytes_with_dir[co.S2D][condition][co.BYTES].append(nb_bytes_s2d)
+            data_bytes_with_dir[co.D2S][condition][co.BYTES].append(nb_bytes_d2s)
 
     co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration)
     co.plot_cdfs_natural(data_bytes, color, 'Bytes', base_graph_path_bytes)
@@ -1388,9 +1390,9 @@ def cdf_bytes_all(log_file=sys.stdout):
                 elif isinstance(conn, mptcp.MPTCPConnection):
                     conn_bytes_s2d = {'cellular': 0, 'wifi': 0}
                     conn_bytes_d2s = {'cellular': 0, 'wifi': 0}
-                    for interface in conn.attr[co.S2D]:
+                    for interface in conn.attr[co.S2D][co.BYTES]:
                         conn_bytes_s2d[interface] += conn.attr[co.S2D][co.BYTES][interface]
-                    for interface in conn.attr[co.D2S]:
+                    for interface in conn.attr[co.D2S][co.BYTES]:
                         conn_bytes_d2s[interface] += conn.attr[co.D2S][co.BYTES][interface]
                     for flow_id, flow in conn.flows.iteritems():
                         if co.REINJ_ORIG_BYTES not in flow.attr[co.S2D] or co.REINJ_ORIG_BYTES not in flow.attr[co.D2S]:
@@ -1494,9 +1496,9 @@ def cdf_rtt_s2d_single_graph_all(log_file=sys.stdout, min_samples=5, min_bytes=1
 
 def cdf_rtt_d2s_single_graph_all(log_file=sys.stdout, min_samples=5, min_bytes=100):
     wifi = "Wi-Fi"
-    rmnet_3 = "3G"
-    rmnet_4 = "4G"
-    aggl_res = {wifi: [], rmnet_3: [], rmnet_4: []}
+    cell_3 = "3G"
+    cell_4 = "4G"
+    aggl_res = {wifi: [], cell_3: [], cell_4: []}
     graph_fname = "rtt_avg_d2s_all_tcp_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
@@ -1505,16 +1507,16 @@ def cdf_rtt_d2s_single_graph_all(log_file=sys.stdout, min_samples=5, min_bytes=1
         if condition.startswith('tcp') and 'both' not in condition:
             for conn_id, conn in data.iteritems():
                 if isinstance(conn, tcp.TCPConnection):
-                    if co.RTT_SAMPLES_D2S not in conn.flow.attr:
+                    if co.RTT_SAMPLES not in conn.flow.attr[co.D2S]:
                         break
-                    if conn.flow.attr[co.RTT_SAMPLES_D2S] >= min_samples and conn.flow.attr[co.BYTES_D2S] >= min_bytes:
-                        if conn.flow.attr[co.RTT_AVG_D2S] >= 1.0:
+                    if conn.flow.attr[co.D2S][co.RTT_SAMPLES] >= min_samples and conn.flow.attr[co.D2S][co.BYTES] >= min_bytes:
+                        if conn.flow.attr[co.D2S][co.RTT_AVG] >= 1.0:
                             if 'wlan' in fname:
-                                aggl_res[wifi] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
+                                aggl_res[wifi] += [(conn.flow.attr[co.D2S][co.RTT_AVG], fname)]
                             elif 'rmnet3' in fname:
-                                aggl_res[rmnet_3] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
+                                aggl_res[cell_3] += [(conn.flow.attr[co.D2S][co.RTT_AVG], fname)]
                             elif 'rmnet4' in fname:
-                                aggl_res[rmnet_4] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
+                                aggl_res[cell_4] += [(conn.flow.attr[co.D2S][co.RTT_AVG], fname)]
 
     results = {'all': aggl_res}
 
@@ -1539,22 +1541,12 @@ def boxplot_bytes(log_file=sys.stdout):
         s2d = 0
         d2s = 0
         for conn_id, conn in data.iteritems():
-            reinject_bytes_s2d = 0
-            reinject_bytes_d2s = 0
             if isinstance(conn, mptcp.MPTCPConnection):
-                data = conn.attr
-                for flow_id, flow in conn.flows.iteritems():
-                    if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
-                        break
-                    reinject_bytes_s2d += flow.attr[co.REINJ_ORIG_BYTES_S2D]
-                    reinject_bytes_d2s += flow.attr[co.REINJ_ORIG_BYTES_D2S]
+                s2d += conn.attr[co.S2D][co.BYTES_MPTCPTRACE]
+                d2s += conn.attr[co.D2S][co.BYTES_MPTCPTRACE]
             elif isinstance(conn, tcp.TCPConnection):
-                data = conn.flow.attr
-            here = [i for i in data.keys() if i in [co.BYTES_S2D, co.BYTES_D2S]]
-            if not len(here) == 2:
-                continue
-            s2d += data[co.BYTES_S2D] - reinject_bytes_s2d
-            d2s += data[co.BYTES_D2S] - reinject_bytes_d2s
+                s2d += conn.flow.attr[co.S2D][co.BYTES]
+                d2s += conn.flow.attr[co.D2S][co.BYTES]
 
         if condition not in aggl_res[co.S2D]:
             for direction in aggl_res:
@@ -1622,31 +1614,22 @@ def reinject_plot(log_file=sys.stdout, min_bytes=0.0):
                 packs_s2d = 0.0
                 packs_d2s = 0.0
 
-                # reinject_bytes_s2d = 0
-                # reinject_bytes_d2s = 0
-                # reinject_packs_s2d = 0
-                # reinject_packs_d2s = 0
                 for flow_id, flow in conn.flows.iteritems():
-                    if co.REINJ_ORIG_BYTES_S2D in flow.attr and co.REINJ_ORIG_BYTES_D2S in flow.attr:
-                        if co.BYTES_S2D in flow.attr:
-                            bytes_s2d += flow.attr[co.BYTES_S2D]
+                    if co.REINJ_ORIG_BYTES in flow.attr[co.S2D] and co.REINJ_ORIG_BYTES in flow.attr[co.D2S]:
+                        if co.BYTES in flow.attr[co.S2D]:
+                            bytes_s2d += flow.attr[co.S2D][co.BYTES]
                         else:
                             continue
-                        if co.BYTES_D2S in flow.attr:
-                            bytes_d2s += flow.attr[co.BYTES_D2S]
+                        if co.BYTES in flow.attr[co.D2S]:
+                            bytes_d2s += flow.attr[co.D2S][co.BYTES]
                         else:
                             continue
-                        reinject_bytes_s2d += flow.attr[co.REINJ_ORIG_BYTES_S2D]
-                        reinject_bytes_d2s += flow.attr[co.REINJ_ORIG_BYTES_D2S]
-                        reinject_packs_s2d += flow.attr[co.REINJ_ORIG_PACKS_S2D]
-                        reinject_packs_d2s += flow.attr[co.REINJ_ORIG_PACKS_D2S]
-                        packs_s2d += flow.attr[co.PACKS_S2D]
-                        packs_d2s += flow.attr[co.PACKS_D2S]
-
-                # results[co.S2D][condition][app].append(reinject_bytes_s2d)
-                # results[co.D2S][condition][app].append(reinject_bytes_d2s)
-                # results_packs[co.S2D][condition][app].append(reinject_packs_s2d)
-                # results_packs[co.D2S][condition][app].append(reinject_packs_d2s)
+                        reinject_bytes_s2d += flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
+                        reinject_bytes_d2s += flow.attr[co.D2S][co.REINJ_ORIG_BYTES]
+                        reinject_packs_s2d += flow.attr[co.S2D][co.REINJ_ORIG_PACKS]
+                        reinject_packs_d2s += flow.attr[co.D2S][co.REINJ_ORIG_PACKS]
+                        packs_s2d += flow.attr[co.S2D][co.PACKS]
+                        packs_d2s += flow.attr[co.D2S][co.PACKS]
 
                 if bytes_s2d > min_bytes:
                     results[co.S2D][condition][app].append(reinject_bytes_s2d / bytes_s2d)
@@ -1725,31 +1708,22 @@ def retrans_plot(log_file=sys.stdout, min_bytes=0.0):
                 packs_s2d = 0.0
                 packs_d2s = 0.0
 
-                # reinject_bytes_s2d = 0
-                # reinject_bytes_d2s = 0
-                # reinject_packs_s2d = 0
-                # reinject_packs_d2s = 0
                 for flow_id, flow in conn.flows.iteritems():
-                    if co.BYTES_RETRANS_S2D in flow.attr and co.BYTES_RETRANS_D2S in flow.attr:
-                        if co.BYTES_S2D in flow.attr:
-                            bytes_s2d += flow.attr[co.BYTES_S2D]
+                    if co.BYTES_RETRANS in flow.attr[co.S2D] and co.BYTES_RETRANS in flow.attr[co.D2S]:
+                        if co.BYTES in flow.attr[co.S2D]:
+                            bytes_s2d += flow.attr[co.S2D][co.BYTES]
                         else:
                             continue
-                        if co.BYTES_D2S in flow.attr:
-                            bytes_d2s += flow.attr[co.BYTES_D2S]
+                        if co.BYTES in flow.attr[co.D2S]:
+                            bytes_d2s += flow.attr[co.D2S][co.BYTES]
                         else:
                             continue
-                        bytes_retrans_s2d += flow.attr[co.BYTES_RETRANS_S2D]
-                        bytes_retrans_d2s += flow.attr[co.BYTES_RETRANS_D2S]
-                        packs_retrans_s2d += flow.attr[co.PACKS_RETRANS_S2D]
-                        packs_retrans_d2s += flow.attr[co.PACKS_RETRANS_D2S]
-                        packs_s2d += flow.attr[co.PACKS_S2D]
-                        packs_d2s += flow.attr[co.PACKS_D2S]
-
-                # results[co.S2D][condition][app].append(reinject_bytes_s2d)
-                # results[co.D2S][condition][app].append(reinject_bytes_d2s)
-                # results_packs[co.S2D][condition][app].append(reinject_packs_s2d)
-                # results_packs[co.D2S][condition][app].append(reinject_packs_d2s)
+                        bytes_retrans_d2s += flow.attr[co.D2S][co.BYTES_RETRANS]
+                        bytes_retrans_s2d += flow.attr[co.S2D][co.BYTES_RETRANS]
+                        packs_retrans_s2d += flow.attr[co.S2D][co.PACKS_RETRANS]
+                        packs_retrans_d2s += flow.attr[co.D2S][co.PACKS_RETRANS]
+                        packs_s2d += flow.attr[co.S2D][co.PACKS]
+                        packs_d2s += flow.attr[co.D2S][co.PACKS]
 
                 if bytes_s2d > min_bytes:
                     results[co.S2D][condition][app].append(bytes_retrans_s2d / bytes_s2d)
@@ -1818,22 +1792,17 @@ def reinject_plot_relative_to_data(log_file=sys.stdout, min_bytes=0.0):
             for conn_id, conn in data.iteritems():
                 reinject_bytes_s2d = 0.0
                 reinject_bytes_d2s = 0.0
-                bytes_s2d = conn.attr[co.BYTES_S2D]
-                bytes_d2s = conn.attr[co.BYTES_D2S]
+                bytes_s2d = conn.attr[co.S2D][co.BYTES_MPTCPTRACE]
+                bytes_d2s = conn.attr[co.D2S][co.BYTES_MPTCPTRACE]
 
                 # reinject_bytes_s2d = 0
                 # reinject_bytes_d2s = 0
                 # reinject_packs_s2d = 0
                 # reinject_packs_d2s = 0
                 for flow_id, flow in conn.flows.iteritems():
-                    if co.REINJ_ORIG_BYTES_S2D in flow.attr and co.REINJ_ORIG_BYTES_D2S in flow.attr:
-                        reinject_bytes_s2d += flow.attr[co.REINJ_ORIG_BYTES_S2D]
-                        reinject_bytes_d2s += flow.attr[co.REINJ_ORIG_BYTES_D2S]
-
-                # results[co.S2D][condition][app].append(reinject_bytes_s2d)
-                # results[co.D2S][condition][app].append(reinject_bytes_d2s)
-                # results_packs[co.S2D][condition][app].append(reinject_packs_s2d)
-                # results_packs[co.D2S][condition][app].append(reinject_packs_d2s)
+                    if co.REINJ_ORIG_BYTES in flow.attr[co.S2D] and co.REINJ_ORIG_BYTES in flow.attr[co.D2S]:
+                        reinject_bytes_s2d += flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
+                        reinject_bytes_d2s += flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
 
                 if bytes_s2d > min_bytes:
                     results[co.S2D][condition][app].append(reinject_bytes_s2d / bytes_s2d)
@@ -1864,9 +1833,6 @@ def reinject_plot_relative_to_data(log_file=sys.stdout, min_bytes=0.0):
 
 
 def box_plot_cellular_percentage_rtt_wifi(log_file=sys.stdout, limit_duration=0, limit_bytes=0):
-    base_graph_name_bytes = "fog_fraction_cellular_" + start_time + '_' + stop_time
-    base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
-
     fog_base_graph_name_bytes = "fog_cellular_rtt_wifi_" + start_time + '_' + stop_time
     fog_base_graph_path_bytes = os.path.join(sums_dir_exp, fog_base_graph_name_bytes)
 
@@ -1887,7 +1853,7 @@ def box_plot_cellular_percentage_rtt_wifi(log_file=sys.stdout, limit_duration=0,
             app = get_app_name(fname).title()
             for conn_id, conn in data.iteritems():
                 if app not in data_frac[condition][co.S2D]:
-                    for direction in data_frac[condition].keys():
+                    for direction in data_frac[condition]:
                         data_frac[condition][direction][app] = []
                         data_rtt[condition][direction][app] = []
 
@@ -1895,35 +1861,35 @@ def box_plot_cellular_percentage_rtt_wifi(log_file=sys.stdout, limit_duration=0,
                 if isinstance(conn, mptcp.MPTCPConnection):
                     if conn.attr[co.DURATION] < limit_duration:
                         continue
-                    conn_bytes_s2d = {'rmnet': 0, 'wifi': 0}
-                    conn_bytes_d2s = {'rmnet': 0, 'wifi': 0}
+                    conn_bytes_s2d = {'cellular': 0, 'wifi': 0}
+                    conn_bytes_d2s = {'cellular': 0, 'wifi': 0}
                     rtt_max_wifi_s2d = None
                     rtt_max_wifi_d2s = None
-                    for interface in conn.attr[co.S2D]:
-                        conn_bytes_s2d[interface] += conn.attr[co.S2D][interface]
-                    for interface in conn.attr[co.D2S]:
-                        conn_bytes_d2s[interface] += conn.attr[co.D2S][interface]
+                    for interface in conn.attr[co.S2D][co.BYTES]:
+                        conn_bytes_s2d[interface] += conn.attr[co.S2D][co.BYTES][interface]
+                    for interface in conn.attr[co.D2S][co.BYTES]:
+                        conn_bytes_d2s[interface] += conn.attr[co.D2S][co.BYTES][interface]
                     for flow_id, flow in conn.flows.iteritems():
-                        if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
+                        if co.REINJ_ORIG_BYTES not in flow.attr[co.S2D] or co.REINJ_ORIG_BYTES not in flow.attr[co.D2S]:
                             break
                         interface = flow.attr[co.IF]
-                        conn_bytes_s2d[interface] -= flow.attr[co.REINJ_ORIG_BYTES_S2D]
-                        conn_bytes_d2s[interface] -= flow.attr[co.REINJ_ORIG_BYTES_D2S]
+                        conn_bytes_s2d[interface] -= flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
+                        conn_bytes_d2s[interface] -= flow.attr[co.D2S][co.REINJ_ORIG_BYTES]
                         if interface == co.WIFI:
-                            rtt_max_wifi_s2d = flow.attr[co.RTT_MAX_S2D]
-                            rtt_max_wifi_d2s = flow.attr[co.RTT_MAX_D2S]
+                            rtt_max_wifi_s2d = flow.attr[co.S2D][co.RTT_MAX]
+                            rtt_max_wifi_d2s = flow.attr[co.D2S][co.RTT_MAX]
 
-                    if conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'] > limit_bytes:
-                        if (conn_bytes_s2d['rmnet'] + 0.0) / (conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi']) > 0.6:
-                            print("S2D: " + str((conn_bytes_s2d['rmnet'] + 0.0) / (conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'])) + " " + str(conn_bytes_s2d['rmnet']) + " " + str(conn_bytes_s2d['wifi']) + " " + fname + " " + conn_id + " " + str(conn.attr[co.DURATION]) + " " + conn.flows['0'].attr[co.IF] + " " + str(conn.flows['0'].attr[co.RTT_STDEV_S2D]) + " " + conn.flows['1'].attr[co.IF] + " " + str(conn.flows['1'].attr[co.RTT_STDEV_S2D]))
-                        frac_cell_s2d = (min(1.0, (conn_bytes_s2d['rmnet'] + 0.0) / (conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'])))
+                    if conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'] > limit_bytes:
+                        if (conn_bytes_s2d['cellular'] + 0.0) / (conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi']) > 0.6:
+                            print("S2D: " + str((conn_bytes_s2d['cellular'] + 0.0) / (conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'])) + " " + str(conn_bytes_s2d['cellular']) + " " + str(conn_bytes_s2d['wifi']) + " " + fname + " " + conn_id + " " + str(conn.attr[co.DURATION]) + " " + conn.flows['0'].attr[co.IF] + " " + str(conn.flows['0'].attr[co.S2D][co.RTT_STDEV]) + " " + conn.flows['1'].attr[co.IF] + " " + str(conn.flows['1'].attr[co.S2D][co.RTT_STDEV]))
+                        frac_cell_s2d = (min(1.0, (conn_bytes_s2d['cellular'] + 0.0) / (conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'])))
                         data_frac[condition][co.S2D][app].append(frac_cell_s2d)
                         data_rtt[condition][co.S2D][app].append(rtt_max_wifi_s2d)
 
-                    if conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi'] > limit_bytes:
-                        if (conn_bytes_d2s['rmnet'] + 0.0) / (conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi']) > 0.6:
-                            print("D2S: " + str((conn_bytes_d2s['rmnet'] + 0.0) / (conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi'])) + " " + str(conn_bytes_d2s['rmnet']) + " " + str(conn_bytes_d2s['wifi']) + " " + fname + " " + conn_id + " " + str(conn.attr[co.DURATION]) + " " + conn.flows['0'].attr[co.IF] + " " + str(conn.flows['0'].attr[co.RTT_STDEV_D2S]) + " " + conn.flows['1'].attr[co.IF] + " " + str(conn.flows['1'].attr[co.RTT_STDEV_D2S]))
-                        frac_cell_d2s = min(1.0, ((conn_bytes_d2s['rmnet'] + 0.0) / (conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi'])))
+                    if conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'] > limit_bytes:
+                        if (conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi']) > 0.6:
+                            print("D2S: " + str((conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'])) + " " + str(conn_bytes_d2s['cellular']) + " " + str(conn_bytes_d2s['wifi']) + " " + fname + " " + conn_id + " " + str(conn.attr[co.DURATION]) + " " + conn.flows['0'].attr[co.IF] + " " + str(conn.flows['0'].attr[co.D2S][co.RTT_STDEV]) + " " + conn.flows['1'].attr[co.IF] + " " + str(conn.flows['1'].attr[co.D2S][co.RTT_STDEV]))
+                        frac_cell_d2s = min(1.0, ((conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'])))
                         data_frac[condition][co.D2S][app].append(frac_cell_d2s)
                         data_rtt[condition][co.D2S][app].append(rtt_max_wifi_d2s)
 
@@ -1962,11 +1928,13 @@ def textual_summary_global(log_file=sys.stdout):
         tests_number[condition] += 1
         for conn_id, conn in data.iteritems():
             if isinstance(conn, tcp.TCPConnection):
-                bytes_s2d_number[condition] += check_ok(conn.flow.attr[co.BYTES_S2D])
-                bytes_d2s_number[condition] += check_ok(conn.flow.attr[co.BYTES_D2S])
+                bytes_s2d_number[condition] += check_ok(conn.flow.attr[co.S2D][co.BYTES])
+                bytes_d2s_number[condition] += check_ok(conn.flow.attr[co.D2S][co.BYTES])
             elif isinstance(conn, mptcp.MPTCPConnection):
-                bytes_s2d_number[condition] += check_ok(conn.attr[co.BYTES_S2D])
-                bytes_d2s_number[condition] += check_ok(conn.attr[co.BYTES_D2S])
+                if not co.BYTES_MPTCPTRACE in conn.attr[co.S2D]:
+                    print(fname, conn_id)
+                bytes_s2d_number[condition] += check_ok(conn.attr[co.S2D][co.BYTES_MPTCPTRACE])
+                bytes_d2s_number[condition] += check_ok(conn.attr[co.D2S][co.BYTES_MPTCPTRACE])
 
     total = 0
     total_tests = 0
@@ -2005,8 +1973,8 @@ if args.app:
     bar_chart_packs_retrans_s2d_interface(log_file=log_file)
     print("Plot packs retrans d2s", file=log_file)
     bar_chart_packs_retrans_d2s_interface(log_file=log_file)
-    print("Plot line graph aggl", file=log_file)
-    line_graph_aggl()
+    # print("Plot line graph aggl", file=log_file)
+    # line_graph_aggl()
     print("Plot rtt average s2d", file=log_file)
     bar_chart_rtt_average_s2d_interface(log_file=log_file)
     print("Plot rtt average d2s", file=log_file)
@@ -2019,21 +1987,21 @@ elif args.cond:
     print("To be implemented after", file=log_file)
 else:
     print("Summary plots", file=log_file)
-    # percentage_cell_by_app_with_conditions(log_file=log_file)
-    # percentage_cell_by_condition_with_apps(log_file=log_file)
-    # nb_conns_by_app(log_file=log_file)
-    # fog_plot_with_bytes_wifi_cell_per_condition(log_file=log_file)
-    # fog_plot_with_packs_wifi_cell_per_condition(log_file=log_file)
-    # fog_duration_bytes(log_file=log_file)
-    # cdfs_summary(log_file=log_file)
-    # textual_summary(log_file=log_file)
-    # box_plot_cellular_percentage(log_file=log_file, limit_bytes=0)
-    # cdf_bytes_all(log_file=log_file)
-    # cdf_rtt_s2d_all(log_file=log_file, min_samples=5)
-    # boxplot_bytes(log_file=log_file)
-    # reinject_plot(log_file=log_file, min_bytes=9999.9)
-    # reinject_plot_relative_to_data(log_file=log_file, min_bytes=9999.9)
-    # cdf_rtt_s2d_single_graph_all(log_file=log_file)
+    percentage_cell_by_app_with_conditions(log_file=log_file)
+    percentage_cell_by_condition_with_apps(log_file=log_file)
+    nb_conns_by_app(log_file=log_file)
+    fog_plot_with_bytes_wifi_cell_per_condition(log_file=log_file)
+    fog_plot_with_packs_wifi_cell_per_condition(log_file=log_file)
+    fog_duration_bytes(log_file=log_file)
+    cdfs_summary(log_file=log_file)
+    textual_summary(log_file=log_file)
+    box_plot_cellular_percentage(log_file=log_file, limit_bytes=0)
+    cdf_bytes_all(log_file=log_file)
+    cdf_rtt_s2d_all(log_file=log_file, min_samples=5)
+    boxplot_bytes(log_file=log_file)
+    reinject_plot(log_file=log_file, min_bytes=9999.9)
+    reinject_plot_relative_to_data(log_file=log_file, min_bytes=9999.9)
+    cdf_rtt_s2d_single_graph_all(log_file=log_file)
     retrans_plot(log_file=log_file)
     box_plot_cellular_percentage_rtt_wifi(log_file=log_file)
     textual_summary_global(log_file=log_file)
