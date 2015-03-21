@@ -1935,6 +1935,82 @@ def reinject_plot_relative_to_data(log_file=sys.stdout, min_bytes=0.0):
                 plt.savefig(base_graph_full_path + "_" + condition + "_" + direction + ".pdf")
             plt.close()
 
+
+def box_plot_cellular_percentage_rtt_wifi(log_file=sys.stdout, limit_duration=0, limit_bytes=0):
+    base_graph_name_bytes = "fog_fraction_cellular_" + start_time + '_' + stop_time
+    base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
+
+    fog_base_graph_name_bytes = "fog_cellular_rtt_wifi_" + start_time + '_' + stop_time
+    fog_base_graph_path_bytes = os.path.join(sums_dir_exp, fog_base_graph_name_bytes)
+
+    color = {'Dailymotion': 'brown', 'Drive': 'm', 'Dropbox': 'g', 'Facebook': 'c', 'Firefox': 'orange', 'Firefoxspdy': 'g', 'Messenger': 'b', 'Spotify': 'k', 'Youtube': 'r'}
+
+    data_rtt = {'both3': {}, 'both4': {}}
+    data_frac = {'both3': {}, 'both4': {}}
+    for cond in data_frac:
+        data_frac[cond] = {co.S2D: {}, co.D2S: {}}
+
+    for cond in data_rtt:
+        data_rtt[cond] = {co.S2D: {}, co.D2S: {}}
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if 'both' in condition and 'mptcp_fm_' in condition:
+            condition = condition[9:]
+            app = get_app_name(fname).title()
+            for conn_id, conn in data.iteritems():
+                if app not in data_frac[condition][co.S2D]:
+                    for direction in data_frac[condition].keys():
+                        data_frac[condition][direction][app] = []
+                        data_rtt[condition][direction][app] = []
+
+                # Only interested on MPTCP connections
+                if isinstance(conn, mptcp.MPTCPConnection):
+                    if conn.attr[co.DURATION] < limit_duration:
+                        continue
+                    conn_bytes_s2d = {'rmnet': 0, 'wifi': 0}
+                    conn_bytes_d2s = {'rmnet': 0, 'wifi': 0}
+                    rtt_max_wifi_s2d = None
+                    rtt_max_wifi_d2s = None
+                    for interface in conn.attr[co.S2D]:
+                        conn_bytes_s2d[interface] += conn.attr[co.S2D][interface]
+                    for interface in conn.attr[co.D2S]:
+                        conn_bytes_d2s[interface] += conn.attr[co.D2S][interface]
+                    for flow_id, flow in conn.flows.iteritems():
+                        if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
+                            break
+                        interface = flow.attr[co.IF]
+                        conn_bytes_s2d[interface] -= flow.attr[co.REINJ_ORIG_BYTES_S2D]
+                        conn_bytes_d2s[interface] -= flow.attr[co.REINJ_ORIG_BYTES_D2S]
+                        if interface == co.WIFI:
+                            rtt_max_wifi_s2d = flow.attr[co.RTT_MAX_S2D]
+                            rtt_max_wifi_d2s = flow.attr[co.RTT_MAX_D2S]
+
+                    if conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'] > limit_bytes:
+                        if (conn_bytes_s2d['rmnet'] + 0.0) / (conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi']) > 0.6:
+                            print("S2D: " + str((conn_bytes_s2d['rmnet'] + 0.0) / (conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'])) + " " + str(conn_bytes_s2d['rmnet']) + " " + str(conn_bytes_s2d['wifi']) + " " + fname + " " + conn_id + " " + str(conn.attr[co.DURATION]) + " " + conn.flows['0'].attr[co.IF] + " " + str(conn.flows['0'].attr[co.RTT_STDEV_S2D]) + " " + conn.flows['1'].attr[co.IF] + " " + str(conn.flows['1'].attr[co.RTT_STDEV_S2D]))
+                        frac_cell_s2d = (min(1.0, (conn_bytes_s2d['rmnet'] + 0.0) / (conn_bytes_s2d['rmnet'] + conn_bytes_s2d['wifi'])))
+                        data_frac[condition][co.S2D][app].append(frac_cell_s2d)
+                        data_rtt[condition][co.S2D][app].append(rtt_max_wifi_s2d)
+
+                    if conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi'] > limit_bytes:
+                        if (conn_bytes_d2s['rmnet'] + 0.0) / (conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi']) > 0.6:
+                            print("D2S: " + str((conn_bytes_d2s['rmnet'] + 0.0) / (conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi'])) + " " + str(conn_bytes_d2s['rmnet']) + " " + str(conn_bytes_d2s['wifi']) + " " + fname + " " + conn_id + " " + str(conn.attr[co.DURATION]) + " " + conn.flows['0'].attr[co.IF] + " " + str(conn.flows['0'].attr[co.RTT_STDEV_D2S]) + " " + conn.flows['1'].attr[co.IF] + " " + str(conn.flows['1'].attr[co.RTT_STDEV_D2S]))
+                        frac_cell_d2s = min(1.0, ((conn_bytes_d2s['rmnet'] + 0.0) / (conn_bytes_d2s['rmnet'] + conn_bytes_d2s['wifi'])))
+                        data_frac[condition][co.D2S][app].append(frac_cell_d2s)
+                        data_rtt[condition][co.D2S][app].append(rtt_max_wifi_d2s)
+
+    count = 1
+    data_scatter = {co.S2D: {}, co.D2S: {}}
+    for condition in data_rtt:
+        for direction in data_rtt[condition]:
+            data_scatter[direction][condition] = {}
+            for app in data_rtt[condition][direction]:
+                data_scatter[direction][condition][app] = zip(data_rtt[condition][direction][app], data_frac[condition][direction][app])
+
+    co.scatter_plot_with_direction(data_scatter, "Max RTT on Wi-Fi", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False)
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
@@ -1988,5 +2064,6 @@ else:
     # reinject_plot_relative_to_data(log_file=log_file, min_bytes=9999.9)
     # cdf_rtt_s2d_single_graph_all(log_file=log_file)
     retrans_plot(log_file=log_file)
+    box_plot_cellular_percentage_rtt_wifi(log_file=log_file)
 log_file.close()
 print("End of summary")
