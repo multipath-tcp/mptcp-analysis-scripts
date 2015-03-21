@@ -662,7 +662,7 @@ def plot_cdfs(aggl_res, color, xlabel, base_graph_fname):
         plt.close('all')
 
 
-def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname):
+def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None):
     """ Plot all possible CDFs based on aggl_res.
         aggl_res is a dictionary with the structure aggl_res[condition][element] = list of data
         base_graph_fname does not have any extension
@@ -698,6 +698,9 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname):
         box = ax.get_position()
         ax.set_position([box.x0, box.y0,
                          box.width, box.height * 0.9])
+
+        if xlim:
+            ax.xlim(0.0, xlim)
 
         # Put a legend above current axis
         ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=len(aggl_res[cond]))
