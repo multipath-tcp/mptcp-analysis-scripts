@@ -2008,7 +2008,7 @@ def box_plot_cellular_percentage_rtt_wifi(log_file=sys.stdout, limit_duration=0,
             for app in data_rtt[condition][direction]:
                 data_scatter[direction][condition][app] = zip(data_rtt[condition][direction][app], data_frac[condition][direction][app])
 
-    co.scatter_plot_with_direction(data_scatter, "Max RTT on Wi-Fi", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False)
+    co.scatter_plot_with_direction(data_scatter, "Max RTT on Wi-Fi", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, log_scale_x=False)
 
 
 millis = int(round(time.time() * 1000))
