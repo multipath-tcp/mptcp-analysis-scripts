@@ -700,7 +700,7 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None):
                          box.width, box.height * 0.9])
 
         if xlim:
-            ax.xlim(0.0, xlim)
+            plt.xlim(0.0, xlim)
 
         # Put a legend above current axis
         ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=len(aggl_res[cond]))
