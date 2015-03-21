@@ -1436,27 +1436,27 @@ def cdf_rtt_s2d_all(log_file=sys.stdout, min_samples=5, min_bytes=100):
 def cdf_rtt_d2s_all(log_file=sys.stdout, min_samples=5):
     aggl_res = {}
     wifi = "wifi"
-    rmnet = "rmnet"
+    cell = "cellular"
     graph_fname = "rtt_avg_d2s_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         if condition not in aggl_res:
-            aggl_res[condition] = {wifi: [], rmnet: []}
+            aggl_res[condition] = {wifi: [], cell: []}
 
         for conn_id, conn in data.iteritems():
             if isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
-                    if co.RTT_SAMPLES_D2S not in flow.attr:
+                    if co.RTT_SAMPLES not in flow.attr[co.D2S]:
                         break
-                    if flow.attr[co.RTT_SAMPLES_D2S] >= min_samples:
-                        aggl_res[condition][flow.attr[co.IF]] += [(flow.attr[co.RTT_AVG_D2S], fname)]
+                    if flow.attr[co.D2S][co.RTT_SAMPLES] >= min_samples:
+                        aggl_res[condition][flow.attr[co.IF]] += [(flow.attr[co.D2S][co.RTT_AVG], fname)]
             elif isinstance(conn, tcp.TCPConnection):
-                if co.RTT_SAMPLES_D2S not in conn.flow.attr:
+                if co.RTT_SAMPLES not in conn.flow.attr[co.D2S]:
                     break
-                if conn.flow.attr[co.RTT_SAMPLES_D2S] >= min_samples:
-                    aggl_res[condition][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
+                if conn.flow.attr[co.D2S][co.RTT_SAMPLES] >= min_samples:
+                    aggl_res[condition][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.D2S][co.RTT_AVG], fname)]
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
@@ -1464,9 +1464,9 @@ def cdf_rtt_d2s_all(log_file=sys.stdout, min_samples=5):
 
 def cdf_rtt_s2d_single_graph_all(log_file=sys.stdout, min_samples=5, min_bytes=100):
     wifi = "Wi-Fi"
-    rmnet_3 = "3G"
-    rmnet_4 = "4G"
-    aggl_res = {wifi: [], rmnet_3: [], rmnet_4: []}
+    cell_3 = "3G"
+    cell_4 = "4G"
+    aggl_res = {wifi: [], cell_3: [], cell_4: []}
     graph_fname = "rtt_avg_s2d_all_tcp_" + args.app + "_" + start_time + "_" + stop_time + '.pdf'
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
@@ -1475,16 +1475,16 @@ def cdf_rtt_s2d_single_graph_all(log_file=sys.stdout, min_samples=5, min_bytes=1
         if condition.startswith('tcp') and 'both' not in condition:
             for conn_id, conn in data.iteritems():
                 if isinstance(conn, tcp.TCPConnection):
-                    if co.RTT_SAMPLES_S2D not in conn.flow.attr:
+                    if co.RTT_SAMPLES not in conn.flow.attr[co.S2D]:
                         break
-                    if conn.flow.attr[co.RTT_SAMPLES_S2D] >= min_samples and conn.flow.attr[co.BYTES_S2D] >= min_bytes:
-                        if conn.flow.attr[co.RTT_AVG_S2D] >= 1.0:
+                    if conn.flow.attr[co.S2D][co.RTT_SAMPLES] >= min_samples and conn.flow.attr[co.S2D][co.BYTES] >= min_bytes:
+                        if conn.flow.attr[co.S2D][co.RTT_AVG] >= 1.0:
                             if 'wlan' in fname:
-                                aggl_res[wifi] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
+                                aggl_res[wifi] += [(conn.flow.attr[co.S2D][co.RTT_AVG], fname)]
                             elif 'rmnet3' in fname:
-                                aggl_res[rmnet_3] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
+                                aggl_res[cell_3] += [(conn.flow.attr[co.S2D][co.RTT_AVG], fname)]
                             elif 'rmnet4' in fname:
-                                aggl_res[rmnet_4] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
+                                aggl_res[cell_4] += [(conn.flow.attr[co.S2D][co.RTT_AVG], fname)]
 
     results = {'all': aggl_res}
 
