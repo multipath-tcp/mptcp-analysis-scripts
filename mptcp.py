@@ -257,6 +257,8 @@ def process_rtt_csv(csv_fname, connections, conn_id, is_reversed):
 
     direction = co.D2S if is_reversed else co.S2D
     connections[conn_id].attr[direction][co.RTT_SAMPLES] = len(rtt_data)
+    if not rtt_data:
+        return
     connections[conn_id].attr[direction][co.RTT_MIN] = np.min(rtt_data)
     connections[conn_id].attr[direction][co.RTT_MAX] = np.max(rtt_data)
     connections[conn_id].attr[direction][co.RTT_AVG] = np.mean(rtt_data)
