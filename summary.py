@@ -1252,7 +1252,10 @@ def fog_duration_bytes(log_file=sys.stdout):
             if isinstance(conn, tcp.TCPConnection):
                 duration = conn.flow.attr[co.DURATION]
             elif isinstance(conn, mptcp.MPTCPConnection):
-                duration = conn.attr[co.DURATION]
+                if co.DURATION not in conn.attr:
+                    print("ERROR: missing key " + conn_id + " " + fname)
+                else:
+                    duration = conn.attr[co.DURATION]
             nb_bytes = conn.attr[co.S2D].get(co.WIFI, 0) + conn.attr[co.S2D].get(co.RMNET, 0)
             nb_bytes += conn.attr[co.D2S].get(co.WIFI, 0) + conn.attr[co.D2S].get(co.RMNET, 0)
 
