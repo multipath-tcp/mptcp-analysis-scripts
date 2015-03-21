@@ -2011,6 +2011,12 @@ def box_plot_cellular_percentage_rtt_wifi(log_file=sys.stdout, limit_duration=0,
     co.scatter_plot_with_direction(data_scatter, "Max RTT on Wi-Fi (ms)", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, log_scale_x=False)
 
 
+def check_ok(value):
+    if value < 0 or value >= 100000000:
+        return 0
+    return value
+
+
 def textual_summary_global(log_file=sys.stdout):
     conn_number = {}
     bytes_s2d_number = {}
@@ -2026,11 +2032,11 @@ def textual_summary_global(log_file=sys.stdout):
         conn_number[condition] += len(data)
         for conn_id, conn in data.iteritems():
             if isinstance(conn, tcp.TCPConnection):
-                bytes_s2d_number[condition] += conn.flow.attr[co.BYTES_S2D]
-                bytes_d2s_number[condition] += conn.flow.attr[co.BYTES_D2S]
+                bytes_s2d_number[condition] += check_ok(conn.flow.attr[co.BYTES_S2D])
+                bytes_d2s_number[condition] += check_ok(conn.flow.attr[co.BYTES_D2S])
             elif isinstance(conn, mptcp.MPTCPConnection):
-                bytes_s2d_number[condition] += conn.attr[co.BYTES_S2D]
-                bytes_d2s_number[condition] += conn.attr[co.BYTES_D2S]
+                bytes_s2d_number[condition] += check_ok(conn.attr[co.BYTES_S2D])
+                bytes_d2s_number[condition] += check_ok(conn.attr[co.BYTES_D2S])
 
     total = 0
     total_s2d = 0
