@@ -544,6 +544,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
         print("WARNING: no mptcp joins on " + pcap_filepath, file=sys.stderr)
     csv_tmp_dir = tempfile.mkdtemp(dir=os.getcwd())
     connections = None
+    do_tcp_processing = False
     try:
         with co.cd(csv_tmp_dir):
             # If segmentation faults, remove the -S option
@@ -582,6 +583,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
                 except IOError as e:
                     print(str(e), file=sys.stderr)
 
+            do_tcp_processing = True
+
     except MPTCPTraceError as e:
         print(str(e) + "; skip mptcp process", file=sys.stderr)
 
@@ -589,7 +592,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
 
     # Create aggregated graphes and add per interface information on MPTCPConnection
     # This will save the mptcp connections
-    if connections:
+    if connections and do_tcp_processing:
         cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot_cwin, mptcp_connections=connections)
         co.save_data(pcap_filepath, stat_dir_exp, connections)
         if plot_cwin:
