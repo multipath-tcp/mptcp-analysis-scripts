@@ -451,7 +451,7 @@ def cdf_rtt_mptcp_single_graph_all(min_samples=5, min_bytes=100):
             condition = get_experiment_condition(fname)
             if condition.startswith('mptcp_fm') and 'both' not in condition and 'TC' not in condition:
                 for conn_id, conn in data.iteritems():
-                    if isinstance(conn, tcp.MPTCPConnection):
+                    if isinstance(conn, mptcp.MPTCPConnection):
                         for flow_id, flow in conn.flows.iteritems():
                             if dataset_name == 'dirs':
                                 if co.RTT_SAMPLES_S2D not in flow.attr:
