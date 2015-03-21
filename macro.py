@@ -478,7 +478,7 @@ def cdf_rtt_mptcp_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
     results = {'all': aggl_res}
 
     co.log_outliers(results, remove=args.remove)
-    co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path, ncol=3, xlim=None)
+    co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path, ncol=3, xlim=xlim)
 
 
 cellular_percentage_boxplot()
