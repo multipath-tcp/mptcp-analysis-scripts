@@ -2019,6 +2019,7 @@ def check_ok(value):
 
 def textual_summary_global(log_file=sys.stdout):
     conn_number = {}
+    tests_number = {}
     bytes_s2d_number = {}
     bytes_d2s_number = {}
 
@@ -2026,10 +2027,12 @@ def textual_summary_global(log_file=sys.stdout):
         condition = get_experiment_condition(fname)
         if condition not in conn_number:
             conn_number[condition] = 0
+            tests_number[condition] = 0
             bytes_s2d_number[condition] = 0
             bytes_d2s_number[condition] = 0
 
         conn_number[condition] += len(data)
+        tests_number[condition] += 1
         for conn_id, conn in data.iteritems():
             if isinstance(conn, tcp.TCPConnection):
                 bytes_s2d_number[condition] += check_ok(conn.flow.attr[co.BYTES_S2D])
@@ -2039,15 +2042,17 @@ def textual_summary_global(log_file=sys.stdout):
                 bytes_d2s_number[condition] += check_ok(conn.attr[co.BYTES_D2S])
 
     total = 0
+    total_tests = 0
     total_s2d = 0
     total_d2s = 0
     for cond, cond_num in conn_number.iteritems():
-        print(cond + ": " + str(cond_num) + " connections with " + str(bytes_s2d_number[cond]) + " bytes S2D and " + str(bytes_d2s_number[cond]) + " D2S", file=log_file)
+        print(cond + ": " + str(cond_num) + " connections with " + str(tests_number[cond]) + " tests; " + str(bytes_s2d_number[cond]) + " bytes S2D and " + str(bytes_d2s_number[cond]) + " D2S", file=log_file)
         total += cond_num
+        total_tests += tests_number[cond]
         total_s2d += bytes_s2d_number[cond]
         total_d2s += bytes_d2s_number[cond]
 
-    print("Total: " + str(total) + " connections with " + str(total_s2d) + " bytes S2D and " + str(total_d2s) + " D2S", file=log_file)
+    print("Total: " + str(total) + " connections with " + str(total_tests) + " tests; " + str(total_s2d) + " bytes S2D and " + str(total_d2s) + " D2S", file=log_file)
 
 
 millis = int(round(time.time() * 1000))
