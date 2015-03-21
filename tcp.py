@@ -469,18 +469,6 @@ def get_flow_name_connection(connection, connections):
     return None, None
 
 
-def prepare_connections_objects(connections, mptcp_connections):
-    """ Prepare connections objects """
-    if mptcp_connections:
-        for conn_id, conn in mptcp_connections.iteritems():
-            conn.attr[co.S2D] = {}
-            conn.attr[co.D2S] = {}
-    else:
-        for conn_id, conn in connections.iteritems():
-            conn.attr[co.S2D] = {}
-            conn.attr[co.D2S] = {}
-
-
 def copy_info_to_mptcp_connections(connection, mptcp_connections):
     """ Given a tcp connection, copy its start and duration to the corresponding mptcp connection
         Return the corresponding connection and flow ids of the mptcp connection
@@ -642,7 +630,6 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
     aggregate_dict = {
         co.S2D: {co.WIFI: [], co.CELL: []}, co.D2S: {co.WIFI: [], co.CELL: []}}
 
-    prepare_connections_objects(connections, mptcp_connections)
     # The dictionary where all cwin data of the scenario will be stored
     cwin_data_all = {}
 
