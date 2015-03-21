@@ -346,46 +346,18 @@ def reinjection_boxplot(limit_duration=0, min_bytes=10000):
 
                     reinject_bytes_s2d = 0.0
                     reinject_bytes_d2s = 0.0
-                    reinject_packs_s2d = 0.0
-                    reinject_packs_d2s = 0.0
-                    bytes_s2d = 0.0
-                    bytes_d2s = 0.0
-                    packs_s2d = 0.0
-                    packs_d2s = 0.0
 
-                    # reinject_bytes_s2d = 0
-                    # reinject_bytes_d2s = 0
-                    # reinject_packs_s2d = 0
-                    # reinject_packs_d2s = 0
                     for flow_id, flow in conn.flows.iteritems():
                         if co.REINJ_ORIG_BYTES_S2D in flow.attr and co.REINJ_ORIG_BYTES_D2S in flow.attr:
-                            if co.BYTES_S2D in flow.attr:
-                                bytes_s2d += flow.attr[co.BYTES_S2D]
-                            else:
-                                continue
-                            if co.BYTES_D2S in flow.attr:
-                                bytes_d2s += flow.attr[co.BYTES_D2S]
-                            else:
-                                continue
                             reinject_bytes_s2d += flow.attr[co.REINJ_ORIG_BYTES_S2D]
                             reinject_bytes_d2s += flow.attr[co.REINJ_ORIG_BYTES_D2S]
-                            reinject_packs_s2d += flow.attr[co.REINJ_ORIG_PACKS_S2D]
-                            reinject_packs_d2s += flow.attr[co.REINJ_ORIG_PACKS_D2S]
-                            packs_s2d += flow.attr[co.PACKS_S2D]
-                            packs_d2s += flow.attr[co.PACKS_D2S]
 
-                    # results[co.S2D][condition][app].append(reinject_bytes_s2d)
-                    # results[co.D2S][condition][app].append(reinject_bytes_d2s)
-                    # results_packs[co.S2D][condition][app].append(reinject_packs_s2d)
-                    # results_packs[co.D2S][condition][app].append(reinject_packs_d2s)
+                    # Compare with number of actual bytes useful (not the sum of bytes from TCPTrace)
+                    if conn.attr[co.BYTES_S2D] > min_bytes:
+                        results[condition][co.S2D][app][dataset_name].append(reinject_bytes_s2d / conn.attr[co.BYTES_S2D])
 
-                    if bytes_s2d > min_bytes and conn.attr[co.BYTES_S2D] > min_bytes:
-                        results[condition][co.S2D][app][dataset_name].append(reinject_bytes_s2d / bytes_s2d)
-
-                    if bytes_d2s > min_bytes and conn.attr[co.BYTES_S2D] > min_bytes:
-                        if (reinject_bytes_d2s / bytes_d2s) >= 0.5:
-                            print("reinj: " + str(reinject_bytes_d2s) + " tot: " + str(bytes_d2s) + " " + fname + " " + conn_id)
-                        results[condition][co.D2S][app][dataset_name].append(reinject_bytes_d2s / bytes_d2s)
+                    if conn.attr[co.BYTES_D2S] > min_bytes:
+                        results[condition][co.D2S][app][dataset_name].append(reinject_bytes_d2s / conn.attr[co.BYTES_D2S])
 
     grouped_boxplot(results, "Fraction of bytes that are reinjected", base_graph_path_bytes)
 
