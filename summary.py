@@ -2008,7 +2008,40 @@ def box_plot_cellular_percentage_rtt_wifi(log_file=sys.stdout, limit_duration=0,
             for app in data_rtt[condition][direction]:
                 data_scatter[direction][condition][app] = zip(data_rtt[condition][direction][app], data_frac[condition][direction][app])
 
-    co.scatter_plot_with_direction(data_scatter, "Max RTT on Wi-Fi", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, log_scale_x=False)
+    co.scatter_plot_with_direction(data_scatter, "Max RTT on Wi-Fi (ms)", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, log_scale_x=False)
+
+
+def textual_summary_global(log_file=sys.stdout):
+    conn_number = {}
+    bytes_s2d_number = {}
+    bytes_d2s_number = {}
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if condition not in conn_number:
+            conn_number[condition] = 0
+            bytes_s2d_number[condition] = 0
+            bytes_d2s_number[condition] = 0
+
+        conn_number[condition] += len(data)
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, tcp.TCPConnection):
+                bytes_s2d_number += conn.flow.attr[co.BYTES_S2D]
+                bytes_d2s_number += conn.flow.attr[co.BYTES_D2S]
+            elif isinstance(conn, mptcp.MPTCPConnection):
+                bytes_s2d_number += conn.attr[co.BYTES_S2D]
+                bytes_d2s_number += conn.attr[co.BYTES_D2S]
+
+    total = 0
+    total_s2d = 0
+    total_d2s = 0
+    for cond, cond_num in conn_number.iteritems():
+        print(cond + ": " + str(cond_num) + " connections with " + str(bytes_s2d_number[cond]) + " bytes S2D and " + str(bytes_d2s_number[cond]) + " D2S", file=log_file)
+        total += cond_num
+        total_s2d += bytes_s2d_number[cond]
+        total_d2s += bytes_d2s_number[cond]
+
+    print("Total: " + str(total) + " connections with " + str(total_s2d) + " bytes S2D and " + str(total_d2s) + " D2S", file=log_file)
 
 
 millis = int(round(time.time() * 1000))
@@ -2065,5 +2098,6 @@ else:
     # cdf_rtt_s2d_single_graph_all(log_file=log_file)
     retrans_plot(log_file=log_file)
     box_plot_cellular_percentage_rtt_wifi(log_file=log_file)
+    textual_summary_global(log_file=log_file)
 log_file.close()
 print("End of summary")
