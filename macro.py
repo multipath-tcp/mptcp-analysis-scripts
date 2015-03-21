@@ -435,7 +435,7 @@ def cdf_rtt_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
     co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path, xlim=xlim, ncol=3)
 
 
-def cdf_rtt_mptcp_single_graph_all(min_samples=5, min_bytes=100):
+def cdf_rtt_mptcp_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
     wifi_up = "Wi-Fi Up"
     rmnet_3_up = "3G Up"
     rmnet_4_up = "4G Up"
@@ -478,10 +478,10 @@ def cdf_rtt_mptcp_single_graph_all(min_samples=5, min_bytes=100):
     results = {'all': aggl_res}
 
     co.log_outliers(results, remove=args.remove)
-    co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path, ncol=3)
+    co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path, ncol=3, xlim=None)
 
 
 cellular_percentage_boxplot()
 reinjection_boxplot()
 cdf_rtt_single_graph_all(xlim=400.0)
-cdf_rtt_mptcp_single_graph_all()
+cdf_rtt_mptcp_single_graph_all(xlim=400.0)
