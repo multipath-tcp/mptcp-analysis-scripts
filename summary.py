@@ -1250,7 +1250,10 @@ def fog_duration_bytes(log_file=sys.stdout):
             # conn is then a BasicConnection
             duration = 0
             if isinstance(conn, tcp.TCPConnection):
-                duration = conn.flow.attr[co.DURATION]
+                if co.DURATION not in conn.flow.attr:
+                    print("ERROR: missing key " + conn_id + " " + fname)
+                else:
+                    duration = conn.flow.attr[co.DURATION]
             elif isinstance(conn, mptcp.MPTCPConnection):
                 if co.DURATION not in conn.attr:
                     print("ERROR: missing key " + conn_id + " " + fname)
