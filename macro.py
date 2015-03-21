@@ -432,7 +432,7 @@ def cdf_rtt_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
     results = {'all': aggl_res}
 
     co.log_outliers(results, remove=args.remove)
-    co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path, xlim=xlim)
+    co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path, xlim=xlim, ncol=3)
 
 
 def cdf_rtt_mptcp_single_graph_all(min_samples=5, min_bytes=100):
@@ -451,33 +451,34 @@ def cdf_rtt_mptcp_single_graph_all(min_samples=5, min_bytes=100):
             condition = get_experiment_condition(fname)
             if condition.startswith('mptcp_fm') and 'both' not in condition and 'TC' not in condition:
                 for conn_id, conn in data.iteritems():
-                    if isinstance(conn, tcp.TCPConnection):
-                        if dataset_name == 'dirs':
-                            if co.RTT_SAMPLES_S2D not in conn.flow.attr:
-                                break
-                            if conn.flow.attr[co.RTT_SAMPLES_S2D] >= min_samples and conn.flow.attr[co.BYTES_S2D] >= min_bytes:
-                                if conn.flow.attr[co.RTT_AVG_S2D] >= 1.0:
-                                    if 'wlan' in fname:
-                                        aggl_res[wifi_up] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
-                                    elif 'rmnet3' in fname:
-                                        aggl_res[rmnet_3_up] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
-                                    elif 'rmnet4' in fname:
-                                        aggl_res[rmnet_4_up] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
-                        elif dataset_name == 'dirs_two':
-                            if co.RTT_SAMPLES_D2S not in conn.flow.attr:
-                                break
-                            if conn.flow.attr[co.RTT_SAMPLES_D2S] >= min_samples and conn.flow.attr[co.BYTES_D2S] >= min_bytes:
-                                if conn.flow.attr[co.RTT_AVG_D2S] >= 1.0:
-                                    if 'wlan' in fname:
-                                        aggl_res[wifi_down] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
-                                    elif 'rmnet3' in fname:
-                                        aggl_res[rmnet_3_down] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
-                                    elif 'rmnet4' in fname:
-                                        aggl_res[rmnet_4_down] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
+                    if isinstance(conn, tcp.MPTCPConnection):
+                        for flow_id, flow in conn.flows.iteritems():
+                            if dataset_name == 'dirs':
+                                if co.RTT_SAMPLES_S2D not in flow.attr:
+                                    break
+                                if flow.attr[co.RTT_SAMPLES_S2D] >= min_samples and flow.attr[co.BYTES_S2D] >= min_bytes:
+                                    if flow.attr[co.RTT_AVG_S2D] >= 1.0:
+                                        if 'wlan' in fname:
+                                            aggl_res[wifi_up] += [(flow.attr[co.RTT_AVG_S2D], fname)]
+                                        elif 'rmnet3' in fname:
+                                            aggl_res[rmnet_3_up] += [(flow.attr[co.RTT_AVG_S2D], fname)]
+                                        elif 'rmnet4' in fname:
+                                            aggl_res[rmnet_4_up] += [(flow.attr[co.RTT_AVG_S2D], fname)]
+                            elif dataset_name == 'dirs_two':
+                                if co.RTT_SAMPLES_D2S not in flow.attr:
+                                    break
+                                if flow.attr[co.RTT_SAMPLES_D2S] >= min_samples and flow.attr[co.BYTES_D2S] >= min_bytes:
+                                    if flow.attr[co.RTT_AVG_D2S] >= 1.0:
+                                        if 'wlan' in fname:
+                                            aggl_res[wifi_down] += [(flow.attr[co.RTT_AVG_D2S], fname)]
+                                        elif 'rmnet3' in fname:
+                                            aggl_res[rmnet_3_down] += [(flow.attr[co.RTT_AVG_D2S], fname)]
+                                        elif 'rmnet4' in fname:
+                                            aggl_res[rmnet_4_down] += [(flow.attr[co.RTT_AVG_D2S], fname)]
     results = {'all': aggl_res}
 
     co.log_outliers(results, remove=args.remove)
-    co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path)
+    co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path, ncol=3)
 
 
 cellular_percentage_boxplot()
