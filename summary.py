@@ -2026,11 +2026,11 @@ def textual_summary_global(log_file=sys.stdout):
         conn_number[condition] += len(data)
         for conn_id, conn in data.iteritems():
             if isinstance(conn, tcp.TCPConnection):
-                bytes_s2d_number += conn.flow.attr[co.BYTES_S2D]
-                bytes_d2s_number += conn.flow.attr[co.BYTES_D2S]
+                bytes_s2d_number[condition] += conn.flow.attr[co.BYTES_S2D]
+                bytes_d2s_number[condition] += conn.flow.attr[co.BYTES_D2S]
             elif isinstance(conn, mptcp.MPTCPConnection):
-                bytes_s2d_number += conn.attr[co.BYTES_S2D]
-                bytes_d2s_number += conn.attr[co.BYTES_D2S]
+                bytes_s2d_number[condition] += conn.attr[co.BYTES_S2D]
+                bytes_d2s_number[condition] += conn.attr[co.BYTES_D2S]
 
     total = 0
     total_s2d = 0
