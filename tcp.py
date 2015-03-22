@@ -269,6 +269,14 @@ def process_tcptrace_cmd(cmd, pcap_filepath, keep_csv=False, graph_dir_exp=None)
 
 def get_total_and_retrans_frames(pcap_filepath, connections):
     """ Fill informations for connections based on tshark """
+    # First init values to avoid strange errors if connection is empty
+    for conn_id, conn in connections.iteritems():
+        for direction in co.DIRECTIONS:
+            connections[conn_id].flow.attr[direction][co.FRAMES_TOTAL] = 0
+            connections[conn_id].flow.attr[direction][co.BYTES_FRAMES_TOTAL] = 0
+            connections[conn_id].flow.attr[direction][co.FRAMES_RETRANS] = 0
+            connections[conn_id].flow.attr[direction][co.BYTES_FRAMES_RETRANS] = 0
+
     stats_filename = os.path.basename(pcap_filepath)[:-5] + "_tshark_total"
     stats_file = open(stats_filename, 'w')
     co.tshark_stats(None, pcap_filepath, print_out=stats_file)
