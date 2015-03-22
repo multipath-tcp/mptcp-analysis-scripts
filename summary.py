@@ -249,8 +249,8 @@ def bar_chart_bytes(log_file=sys.stdout):
                 s2d += conn.attr[co.S2D][co.BYTES_MPTCPTRACE]
                 d2s += conn.attr[co.D2S][co.BYTES_MPTCPTRACE]
             elif isinstance(conn, tcp.TCPConnection):
-                s2d += conn.attr[co.S2D][co.BYTES]
-                d2s += conn.attr[co.D2S][co.BYTES]
+                s2d += conn.flow.attr[co.S2D][co.BYTES]
+                d2s += conn.flow.attr[co.D2S][co.BYTES]
 
         if condition in aggl_res:
             aggl_res[condition][tot_lbl] += [(s2d, fname)]
