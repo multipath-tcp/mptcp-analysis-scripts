@@ -95,7 +95,7 @@ parser.add_argument("-P",
 parser.add_argument("-b",
                     "--min-bytes", help="only plot graphs of connections with at least a given amount of bytes", default=0)
 parser.add_argument("-W",
-                    "--not-cwin", help="don't plot congestion window graphs or aggregation graphs", action="store_true")
+                    "--cwin", help="plot congestion window graphs and aggregation graphs", action="store_true")
 
 args = parser.parse_args()
 
@@ -254,14 +254,14 @@ if args.threads > 1:
     for thread_id in range(args.threads):
         thread = threading.Thread(target=thread_launch,
                                   args=(thread_id, args.clean,
-                                        not args.not_correct, not args.not_graph, not args.not_purge, not args.not_cwin))
+                                        not args.not_correct, not args.not_graph, not args.not_purge, args.cwin))
         thread.start()
         threads.append(thread)
     # Wait
     for thread in threads:
         thread.join()
 else:
-    thread_launch(0, args.clean, not args.not_correct, not args.not_graph, not args.not_purge, not args.not_cwin)
+    thread_launch(0, args.clean, not args.not_correct, not args.not_graph, not args.not_purge, args.cwin)
 
 
 print('End of analyze', file=print_out)
