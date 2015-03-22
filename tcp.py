@@ -560,6 +560,8 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections):
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.PACKS_RETRANS] = connection.flow.attr[direction][co.PACKS_RETRANS]
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_RETRANS] = connection.flow.attr[direction][co.BYTES_RETRANS]
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.PACKS_OOO] = connection.flow.attr[direction][co.PACKS_OOO]
+            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_DATA] = connection.flow.attr[direction][co.BYTES_DATA]
+            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.MISSED_DATA] = connection.flow.attr[direction][co.MISSED_DATA]
 
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_FRAMES_TOTAL] = connection.flow.attr[direction][co.BYTES_FRAMES_TOTAL]
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.FRAMES_TOTAL] = connection.flow.attr[direction][co.FRAMES_TOTAL]
@@ -570,6 +572,7 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections):
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_MAX] = connection.flow.attr[direction][co.RTT_MAX]
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_AVG] = connection.flow.attr[direction][co.RTT_AVG]
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_STDEV] = connection.flow.attr[direction][co.RTT_STDEV]
+                mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_3WHS] = connection.flow.attr[direction][co.RTT_3WHS]
 
             if co.BYTES_FRAMES_RETRANS in connection.flow.attr[direction]:
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_FRAMES_RETRANS] = connection.flow.attr[direction][co.BYTES_FRAMES_RETRANS]
