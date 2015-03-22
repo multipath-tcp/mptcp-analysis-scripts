@@ -153,6 +153,14 @@ REINJ_ORIG_BYTES = 'reinjected_orig_bytes'
 REINJ_ORIG = 'reinjected_orig'
 # Number of bytes returned by mptcptrace
 BYTES_MPTCPTRACE = 'bytes_mptcptrace'
+# Total number of bytes of frames
+BYTES_FRAMES_TOTAL = 'bytes_frames_total'
+# Total number of frames
+FRAMES_TOTAL = 'frames_total'
+# Total number of retransmitted bytes of frames
+BYTES_FRAMES_RETRANS = 'bytes_frames_retrans'
+# Total number of retransmitted frames
+FRAMES_RETRANS = 'frames_retrans'
 
 # RTT info
 RTT_SAMPLES = 'rtt_samples'
@@ -307,6 +315,19 @@ def tshark_filter(condition, src_path, dst_path, print_out=sys.stderr):
     if subprocess.call(cmd, stdout=print_out) != 0:
         raise TSharkError("Error with condition " + condition + " for source " + src_path + " and destination "
                              + dst_path)
+
+
+def tshark_stats(filtering, src_path, print_out=sys.stderr):
+    """ Filter src_path using the condition and write the result to print_out (open stream)
+        Raise a TSharkError in case of failure
+    """
+    table = 'conv,tcp'
+    if filtering:
+        table += ',' + filtering
+
+    cmd = ['tshark', '-nr', src_path, '-z', table, '-q']
+    if subprocess.call(cmd, stdout=print_out) != 0:
+        raise TSharkError("Error with filtering " + filtering + " for source " + src_path)
 
 
 ##################################################

@@ -239,6 +239,62 @@ def process_tcptrace_cmd(cmd, pcap_filepath, keep_csv=False, graph_dir_exp=None)
         os.remove(pcap_flow_data_path)
     return connections
 
+
+##################################################
+##                RETRANSMISSION                ##
+##################################################
+
+
+def get_total_and_retrans_frames(pcap_filepath, connections):
+    """ Fill informations for connections based on tshark """
+    stats_filename = os.path.basename(pcap_filepath)[:-5] + "_tshark_total"
+    stats_file = open(stats_filename, 'w')
+    co.tshark_stats(None, pcap_filepath, print_out=stats_file)
+    stats_file.close()
+
+    stats_file = open(stats_filename)
+    data = stats_file.readlines()
+    stats_file.close()
+    for line in data:
+        split_line = " ".join(line.split()).split(" ")
+        if len(split_line) == 11:
+            ip_src, port_src = split_line[0].split(":")
+            ip_dst, port_dst = split_line[2].split(":")
+            for conn_id, conn in connections.iteritems():
+                if conn.flow.attr[co.SADDR] == ip_src and conn.flow.attr[co.SPORT] == port_src and conn.flow.attr[co.DADDR] == ip_dst and conn.flow.attr[co.DPORT]:
+                    connections[conn_id].flow.attr[co.D2S][co.FRAMES_TOTAL] = int(split_line[3])
+                    connections[conn_id].flow.attr[co.D2S][co.BYTES_FRAMES_TOTAL] = int(split_line[4])
+                    connections[conn_id].flow.attr[co.S2D][co.FRAMES_TOTAL] = int(split_line[5])
+                    connections[conn_id].flow.attr[co.S2D][co.BYTES_FRAMES_TOTAL] = int(split_line[6])
+                    break
+    stats_file.close()
+    os.remove(stats_filename)
+
+    stats_filename = os.path.basename(pcap_filepath)[:-5] + "_tshark_retrans"
+    stats_file = open(stats_filename, 'w')
+    co.tshark_stats('tcp.analysis.retransmission', pcap_filepath, print_out=stats_file)
+    stats_file.close()
+
+    stats_file = open(stats_filename)
+    data = stats_file.readlines()
+    stats_file.close()
+    for line in data:
+        split_line = " ".join(line.split()).split(" ")
+        if len(split_line) == 11:
+            ip_src, port_src = split_line[0].split(":")
+            ip_dst, port_dst = split_line[2].split(":")
+            for conn_id, conn in connections.iteritems():
+                if conn.flow.attr[co.SADDR] == ip_src and conn.flow.attr[co.SPORT] == port_src and conn.flow.attr[co.DADDR] == ip_dst and conn.flow.attr[co.DPORT]:
+                    connections[conn_id].flow.attr[co.D2S][co.FRAMES_RETRANS] = int(split_line[3])
+                    connections[conn_id].flow.attr[co.D2S][co.BYTES_FRAMES_RETRANS] = int(split_line[4])
+                    connections[conn_id].flow.attr[co.S2D][co.FRAMES_RETRANS] = int(split_line[5])
+                    connections[conn_id].flow.attr[co.S2D][co.BYTES_FRAMES_RETRANS] = int(split_line[6])
+                    break
+    stats_file.close()
+    os.remove(stats_filename)
+
+
+
 ##################################################
 ##               CLEANING RELATED               ##
 ##################################################
@@ -483,12 +539,19 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections):
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_RETRANS] = connection.flow.attr[direction][co.BYTES_RETRANS]
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.PACKS_OOO] = connection.flow.attr[direction][co.PACKS_OOO]
 
+            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_FRAMES_TOTAL] = connection.flow.attr[direction][co.BYTES_FRAMES_TOTAL]
+            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.FRAMES_TOTAL] = connection.flow.attr[direction][co.FRAMES_TOTAL]
+
             if co.RTT_SAMPLES in connection.flow.attr[direction]:
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_SAMPLES] = connection.flow.attr[direction][co.RTT_SAMPLES]
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_MIN] = connection.flow.attr[direction][co.RTT_MIN]
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_MAX] = connection.flow.attr[direction][co.RTT_MAX]
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_AVG] = connection.flow.attr[direction][co.RTT_AVG]
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_STDEV] = connection.flow.attr[direction][co.RTT_STDEV]
+
+            if co.BYTES_FRAMES_RETRANS in connection.flow.attr[direction]:
+                mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_FRAMES_RETRANS] = connection.flow.attr[direction][co.BYTES_FRAMES_RETRANS]
+                mptcp_connections[conn_id].flows[flow_id].attr[direction][co.FRAMES_RETRANS] = connection.flow.attr[direction][co.FRAMES_RETRANS]
 
     return conn_id, flow_id
 
@@ -625,6 +688,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
     except TCPTraceError as e:
         print(str(e) + ": skip process", file=sys.stderr)
         return
+
+    get_total_and_retrans_frames(pcap_filepath, connections)
 
     relative_start = get_relative_start_time(connections)
     aggregate_dict = {
