@@ -229,14 +229,14 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
             if packet_seqs not in reinject[int(split_line[5]) - 1]:
                 reinject[int(split_line[5]) - 1][packet_seqs] = 1
             else:
-                print("WARNING: double reinjection for " + csv_fname, file=sys.stderr)
                 reinject[int(split_line[5]) - 1][packet_seqs] += 1
+                print("WARNING: reinjection " + str(reinject[int(split_line[5]) - 1][packet_seqs]) + " for " + csv_fname, file=sys.stderr)
 
     direction = co.D2S if is_reversed else co.S2D
     for i in range(0, len(connections[conn_id].flows)):
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_PACKS] = reinject_nb[i]
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_BYTES] = reinject_offsets[i]
-        connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG] = reinject
+        connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG] = reinject[i]
 
 
 def process_rtt_csv(csv_fname, connections, conn_id, is_reversed):
