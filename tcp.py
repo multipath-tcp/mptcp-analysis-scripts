@@ -123,8 +123,16 @@ def extract_flow_data(out_file):
                 connection.flow.attr[co.S2D][co.PACKS] = int(info[7])
                 connection.flow.attr[co.D2S][co.PACKS] = int(info[8])
                 # Note that this count is about unique_data_bytes
+                # Check for strange values (too high or negative)
+                if int(info[21]) < 0 or int(info[21]) >= 100000000:
+                    print("WARNING: strange value here S2D; see " + int(info[21]) + " for " + info[21])
+                if int(info[22]) < 0 or int(info[22]) >= 100000000:
+                    print("WARNING: strange value here D2S; see " + int(info[22]) + " for " + info[22])
                 connection.flow.attr[co.S2D][co.BYTES] = int(info[21])
                 connection.flow.attr[co.D2S][co.BYTES] = int(info[22])
+                # This is about actual data bytes
+                connection.flow.attr[co.S2D][co.BYTES_DATA] = int(info[25])
+                connection.flow.attr[co.D2S][co.BYTES_DATA] = int(info[26])
 
                 connection.flow.attr[co.S2D][co.PACKS_RETRANS] = int(info[27])
                 connection.flow.attr[co.D2S][co.PACKS_RETRANS] = int(info[28])
@@ -134,8 +142,19 @@ def extract_flow_data(out_file):
                 connection.flow.attr[co.S2D][co.PACKS_OOO] = int(info[35])
                 connection.flow.attr[co.D2S][co.PACKS_OOO] = int(info[36])
 
+                try:
+                    connection.flow.attr[co.S2D][co.MISSED_DATA] = int(info[75])
+                except ValueError:
+                    # info[75] is 'NA'
+                    connection.flow.attr[co.S2D][co.MISSED_DATA] = 0
+                try:
+                    connection.flow.attr[co.D2S][co.MISSED_DATA] = int(info[76])
+                except ValueError:
+                    # info[76] is 'NA'
+                    connection.flow.attr[co.D2S][co.MISSED_DATA] = 0
+
                 # Caution: -r must be set here!!
-                if len(info) >= 99:
+                if len(info) >= 101:
                     connection.flow.attr[co.S2D][co.RTT_SAMPLES] = int(info[89])
                     connection.flow.attr[co.D2S][co.RTT_SAMPLES] = int(info[90])
                     connection.flow.attr[co.S2D][co.RTT_MIN] = float(info[91])
@@ -146,6 +165,9 @@ def extract_flow_data(out_file):
                     connection.flow.attr[co.D2S][co.RTT_AVG] = float(info[96])
                     connection.flow.attr[co.S2D][co.RTT_STDEV] = float(info[97])
                     connection.flow.attr[co.D2S][co.RTT_STDEV] = float(info[98])
+                    connection.flow.attr[co.S2D][co.RTT_3WHS] = float(info[99])
+                    connection.flow.attr[co.D2S][co.RTT_3WHS] = float(info[100])
+
 
                 # TODO maybe extract more information
 

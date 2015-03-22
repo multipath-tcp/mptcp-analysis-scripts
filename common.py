@@ -137,6 +137,10 @@ DURATION = 'duration'
 PACKS = 'packets'
 # Number of bytes
 BYTES = 'bytes'
+# Number of data bytes (according to tcptrace)
+BYTES_DATA = 'bytes_data'
+# Number of bytes missed by tcptrace (if non-zero, this connection should be take with care)
+MISSED_DATA = 'missed_data'
 # Number of packets retransmitted
 PACKS_RETRANS = 'packets_retrans'
 # Number of bytes retransmitted
@@ -168,6 +172,7 @@ RTT_MIN = 'rtt_min'
 RTT_MAX = 'rtt_max'
 RTT_AVG = 'rtt_avg'
 RTT_STDEV = 'rtt_stdev'
+RTT_3WHS = 'rtt_from_3whs'
 
 # For aggregation
 S2D = 'source2destination'
