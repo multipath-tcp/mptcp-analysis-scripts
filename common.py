@@ -652,11 +652,14 @@ def plot_cdfs(aggl_res, color, xlabel, base_graph_fname):
             try:
                 sample = np.array(sorted(aggl_res[cond][element]))
 
-                ecdf = sm.distributions.ECDF(sample)
+                sorted_array = np.sort(sample)
+                yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
 
-                x = np.linspace(min(sample), max(sample))
-                y = ecdf(x)
-                ax.step(x, y, color=color[aggl_res.keys().index(cond)], label=cond)
+                if len(sorted_array) > 0:
+                    # Add a last point
+                    sorted_array = np.append(sorted_array, sorted_array[-1])
+                    yvals = np.append(yvals, 1.0)
+                    plt.plot(sorted_array, yvals, color=color[aggl_res[cond].keys().index(element)], label=element)
             except ZeroDivisionError as e:
                 print(str(e))
 
