@@ -306,7 +306,7 @@ def cellular_percentage_boxplot(limit_duration=0, limit_bytes=10000):
                         for interface in conn.attr[co.D2S]:
                             conn_bytes_d2s[interface] += conn.attr[co.D2S][co.BYTES][interface]
                         for flow_id, flow in conn.flows.iteritems():
-                            if co.REINJ_ORIG_BYTES_S2D not in flow.attr or co.REINJ_ORIG_BYTES_D2S not in flow.attr:
+                            if co.REINJ_ORIG_BYTES not in flow.attr[co.S2D] or co.REINJ_ORIG_BYTES not in flow.attr[co.D2S]:
                                 break
                             interface = flow.attr[co.IF]
                             conn_bytes_s2d[interface] -= flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
@@ -349,15 +349,15 @@ def reinjection_boxplot(limit_duration=0, min_bytes=10000):
 
                     for flow_id, flow in conn.flows.iteritems():
                         if co.REINJ_ORIG_BYTES in flow.attr[co.S2D] and co.REINJ_ORIG_BYTES in flow.attr[co.D2S]:
-                            reinject_bytes_s2d += flow.attr[co.REINJ_ORIG_BYTES_S2D]
-                            reinject_bytes_d2s += flow.attr[co.REINJ_ORIG_BYTES_D2S]
+                            reinject_bytes_s2d += flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
+                            reinject_bytes_d2s += flow.attr[co.D2S][co.REINJ_ORIG_BYTES]
 
                     # Compare with number of actual bytes useful (not the sum of bytes from TCPTrace)
-                    if conn.attr[co.BYTES_S2D] > min_bytes:
-                        results[condition][co.S2D][app][dataset_name].append(reinject_bytes_s2d / conn.attr[co.BYTES_S2D])
+                    if conn.attr[co.S2D][co.BYTES_MPTCPTRACE] > min_bytes:
+                        results[condition][co.S2D][app][dataset_name].append(reinject_bytes_s2d / conn.attr[co.S2D][co.BYTES_MPTCPTRACE])
 
-                    if conn.attr[co.BYTES_D2S] > min_bytes:
-                        results[condition][co.D2S][app][dataset_name].append(reinject_bytes_d2s / conn.attr[co.BYTES_D2S])
+                    if conn.attr[co.D2S][co.BYTES_MPTCPTRACE] > min_bytes:
+                        results[condition][co.D2S][app][dataset_name].append(reinject_bytes_d2s / conn.attr[co.D2S][co.BYTES_MPTCPTRACE])
 
     grouped_boxplot(results, "Fraction of bytes that are reinjected", base_graph_path_bytes)
 
@@ -380,27 +380,27 @@ def cdf_rtt_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
                 for conn_id, conn in data.iteritems():
                     if isinstance(conn, tcp.TCPConnection):
                         if dataset_name == 'dirs':
-                            if co.RTT_SAMPLES_S2D not in conn.flow.attr:
+                            if co.RTT_SAMPLES not in conn.flow.attr[co.S2D]:
                                 break
-                            if conn.flow.attr[co.RTT_SAMPLES_S2D] >= min_samples and conn.flow.attr[co.BYTES_S2D] >= min_bytes:
-                                if conn.flow.attr[co.RTT_AVG_S2D] >= 1.0:
+                            if conn.flow.attr[co.S2D][co.RTT_SAMPLES] >= min_samples and conn.flow.attr[co.S2D][co.BYTES] >= min_bytes:
+                                if conn.flow.attr[co.S2D][co.RTT_AVG] >= 1.0:
                                     if 'wlan' in fname:
-                                        aggl_res[wifi_up] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
+                                        aggl_res[wifi_up] += [(conn.flow.attr[co.S2D][co.RTT_AVG], fname)]
                                     elif 'rmnet3' in fname:
-                                        aggl_res[rmnet_3_up] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
+                                        aggl_res[rmnet_3_up] += [(conn.flow.attr[co.S2D][co.RTT_AVG], fname)]
                                     elif 'rmnet4' in fname:
-                                        aggl_res[rmnet_4_up] += [(conn.flow.attr[co.RTT_AVG_S2D], fname)]
+                                        aggl_res[rmnet_4_up] += [(conn.flow.attr[co.S2D][co.RTT_AVG], fname)]
                         elif dataset_name == 'dirs_two':
-                            if co.RTT_SAMPLES_D2S not in conn.flow.attr:
+                            if co.RTT_SAMPLES not in conn.flow.attr[co.D2S]:
                                 break
-                            if conn.flow.attr[co.RTT_SAMPLES_D2S] >= min_samples and conn.flow.attr[co.BYTES_D2S] >= min_bytes:
-                                if conn.flow.attr[co.RTT_AVG_D2S] >= 1.0:
+                            if conn.flow.attr[co.D2S][co.RTT_SAMPLES] >= min_samples and conn.flow.attr[co.D2S][co.BYTES] >= min_bytes:
+                                if conn.flow.attr[co.D2S][co.RTT_AVG] >= 1.0:
                                     if 'wlan' in fname:
-                                        aggl_res[wifi_down] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
+                                        aggl_res[wifi_down] += [(conn.flow.attr[co.D2S][co.RTT_AVG], fname)]
                                     elif 'rmnet3' in fname:
-                                        aggl_res[rmnet_3_down] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
+                                        aggl_res[rmnet_3_down] += [(conn.flow.attr[co.D2S][co.RTT_AVG], fname)]
                                     elif 'rmnet4' in fname:
-                                        aggl_res[rmnet_4_down] += [(conn.flow.attr[co.RTT_AVG_D2S], fname)]
+                                        aggl_res[rmnet_4_down] += [(conn.flow.attr[co.D2S][co.RTT_AVG], fname)]
     results = {'all': aggl_res}
 
     co.log_outliers(results, remove=args.remove)
@@ -426,27 +426,27 @@ def cdf_rtt_mptcp_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
                     if isinstance(conn, mptcp.MPTCPConnection):
                         for flow_id, flow in conn.flows.iteritems():
                             if dataset_name == 'dirs':
-                                if co.RTT_SAMPLES_S2D not in flow.attr:
+                                if co.RTT_SAMPLES not in flow.attr[co.S2D]:
                                     break
-                                if flow.attr[co.RTT_SAMPLES_S2D] >= min_samples and flow.attr[co.BYTES_S2D] >= min_bytes:
-                                    if flow.attr[co.RTT_AVG_S2D] >= 1.0:
+                                if flow.attr[co.S2D][co.RTT_SAMPLES] >= min_samples and flow.attr[co.S2D][co.BYTES] >= min_bytes:
+                                    if flow.attr[co.S2D][co.RTT_AVG] >= 1.0:
                                         if 'wlan' in fname:
-                                            aggl_res[wifi_up] += [(flow.attr[co.RTT_AVG_S2D], fname)]
+                                            aggl_res[wifi_up] += [(flow.attr[co.S2D][co.RTT_AVG], fname)]
                                         elif 'rmnet3' in fname:
-                                            aggl_res[rmnet_3_up] += [(flow.attr[co.RTT_AVG_S2D], fname)]
+                                            aggl_res[rmnet_3_up] += [(flow.attr[co.S2D][co.RTT_AVG], fname)]
                                         elif 'rmnet4' in fname:
-                                            aggl_res[rmnet_4_up] += [(flow.attr[co.RTT_AVG_S2D], fname)]
+                                            aggl_res[rmnet_4_up] += [(flow.attr[co.S2D][co.RTT_AVG], fname)]
                             elif dataset_name == 'dirs_two':
-                                if co.RTT_SAMPLES_D2S not in flow.attr:
+                                if co.RTT_SAMPLES not in flow.attr[co.D2S]:
                                     break
-                                if flow.attr[co.RTT_SAMPLES_D2S] >= min_samples and flow.attr[co.BYTES_D2S] >= min_bytes:
-                                    if flow.attr[co.RTT_AVG_D2S] >= 1.0:
+                                if flow.attr[co.D2S][co.RTT_SAMPLES] >= min_samples and flow.attr[co.D2S][co.BYTES] >= min_bytes:
+                                    if flow.attr[co.D2S][co.RTT_AVG] >= 1.0:
                                         if 'wlan' in fname:
-                                            aggl_res[wifi_down] += [(flow.attr[co.RTT_AVG_D2S], fname)]
+                                            aggl_res[wifi_down] += [(flow.attr[co.D2S][co.RTT_AVG], fname)]
                                         elif 'rmnet3' in fname:
-                                            aggl_res[rmnet_3_down] += [(flow.attr[co.RTT_AVG_D2S], fname)]
+                                            aggl_res[rmnet_3_down] += [(flow.attr[co.D2S][co.RTT_AVG], fname)]
                                         elif 'rmnet4' in fname:
-                                            aggl_res[rmnet_4_down] += [(flow.attr[co.RTT_AVG_D2S], fname)]
+                                            aggl_res[rmnet_4_down] += [(flow.attr[co.D2S][co.RTT_AVG], fname)]
     results = {'all': aggl_res}
 
     co.log_outliers(results, remove=args.remove)
