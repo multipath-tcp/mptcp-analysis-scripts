@@ -1950,6 +1950,38 @@ def textual_summary_global(log_file=sys.stdout):
     print("Total: " + str(total) + " connections with " + str(total_tests) + " tests; " + str(total_s2d) + " bytes S2D and " + str(total_d2s) + " D2S", file=log_file)
 
 
+def textual_summary_app(log_file=sys.stdout):
+    results = {}
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        app = get_app_name(fname).title()
+        if condition not in results:
+            results[condition] = {}
+        if app not in results[condition]:
+            results[condition][app] = {'conn': [], 'bytes_s2d': {}, 'bytes_d2s': {}}
+
+        results[condition][app]['conn'].append(len(data))
+
+        bytes_s2d = 0
+        bytes_d2s = 0
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, tcp.TCPConnection):
+                bytes_s2d += conn.flow.attr[co.S2D][co.BYTES]
+                bytes_d2s += conn.flow.attr[co.D2S][co.BYTES]
+
+        results[condition][app]['bytes_s2d'].append(bytes_s2d)
+        results[condition][app]['bytes_d2s'].append(bytes_d2s)
+
+
+    for condition in results:
+        print(condition, file=log_file)
+        print("Application & \# connections & Bytes smartphone to server & Bytes server to smartphone", file=log_file)
+        for app in results[condition]:
+            print(app, "&", np.mean(results[condition][app]['conn']), "&", np.mean(results[condition][app]['bytes_s2d']), "&", np.mean(results[condition][app]['bytes_d2s']), r"\\", file=log_file)
+            print("\hline", file=log_file)
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
