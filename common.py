@@ -704,9 +704,9 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ncol
                 print(str(e))
 
         # Shrink current axis's height by 10% on the top
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0,
-                         box.width, box.height * 0.9])
+        # box = ax.get_position()
+        # ax.set_position([box.x0, box.y0,
+        #                  box.width, box.height * 0.9])
 
         if xlim:
             plt.xlim(0.0, xlim)
@@ -715,7 +715,8 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ncol
             ncol = len(aggl_res[cond])
 
         # Put a legend above current axis
-        ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
+        # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
+        ax.legend(loc='lower right')
 
         plt.xlabel(xlabel, fontsize=18)
         plt.savefig(graph_fname)
