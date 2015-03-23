@@ -697,6 +697,9 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ncol
 
                 sorted_array = np.sort(sample)
                 yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+                # Add a last point
+                sorted_array.append(sorted_array[-1])
+                yvals.append(1.0)
                 plt.plot(sorted_array, yvals, color=color[aggl_res[cond].keys().index(element)], label=element)
             except ZeroDivisionError as e:
                 print(str(e))
