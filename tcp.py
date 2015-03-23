@@ -171,6 +171,9 @@ def extract_flow_data(out_file):
 
                 # TODO maybe extract more information
 
+                connection.attr[co.S2D][co.BYTES] = {}
+                connection.attr[co.D2S][co.BYTES] = {}
+
                 connections[conn] = connection
 
     return connections
@@ -675,15 +678,11 @@ def process_tsg_xpl_file(pcap_filepath, xpl_filepath, graph_dir_exp, connections
     if mptcp_connections:
         if conn_id:
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES] = connections[flow_name].flow.attr[direction][co.BYTES]
-            if co.BYTES not in mptcp_connections[conn_id].attr[direction]:
-                mptcp_connections[conn_id].attr[direction][co.BYTES] = {}
             if interface in mptcp_connections[conn_id].attr[direction][co.BYTES]:
                 mptcp_connections[conn_id].attr[direction][co.BYTES][interface] += connections[flow_name].flow.attr[direction][co.BYTES]
             else:
                 mptcp_connections[conn_id].attr[direction][co.BYTES][interface] = connections[flow_name].flow.attr[direction][co.BYTES]
     else:
-        if co.BYTES not in connections[flow_name].attr[direction]:
-            connections[flow_name].attr[direction][co.BYTES] = {}
         connections[flow_name].attr[direction][co.BYTES][interface] = connections[flow_name].flow.attr[direction][co.BYTES]
 
 

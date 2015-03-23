@@ -123,6 +123,9 @@ def extract_flow_data(out_file):
             subflow.indicates_wifi_or_cell()
             connections[current_connection].flows[sub_flow_id] = subflow
 
+            connections[current_connection].attr[co.S2D][co.BYTES] = {}
+            connections[current_connection].attr[co.D2S][co.BYTES] = {}
+
         # Case 3: skip the line (no more current connection)
         else:
             current_connection = False
