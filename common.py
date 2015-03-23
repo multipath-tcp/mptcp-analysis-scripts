@@ -190,6 +190,8 @@ PREFIX_WIFI_IF = '192.168.'
 SIZE_LAT_ALPH = 26
 # IP address of the proxy
 IP_PROXY = False
+# Size of the header of frame of a MPTCP packet with data (16 + 20 + 52)
+FRAME_MPTCP_OVERHEAD = 88
 
 PREFIX_IP_WIFI = False
 

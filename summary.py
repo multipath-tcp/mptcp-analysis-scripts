@@ -1982,6 +1982,37 @@ def textual_summary_app(log_file=sys.stdout):
             print("\hline", file=log_file)
 
 
+def cdf_overhead_retrans_reinj(log_file=sys.stdout):
+    results = {co.S2D: {}, co.D2S: {}}
+    graph_fname = "overhead_retrans_reinj_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if 'mptcp_fm' in condition and 'both' in condition:
+            if condition not in results:
+                for direction in co.DIRECTIONS:
+                    results[direction][condition] = {'Reinjection': [], 'Retransmission': {}}
+
+            for conn_id, conn in data.iteritems():
+                retrans_bytes = {co.S2D: 0, co.D2S: 0}
+                reinj_bytes = {co.S2D: 0, co.D2S: 0}
+                total_bytes = {co.S2D: 0, co.D2S: 0}
+
+                for flow_id, flow in conn.flows.iteritems():
+                    for direction in co.DIRECTIONS:
+                        if co.BYTES_FRAMES_TOTAL in flow.attr[direction]:
+                            total_bytes[direction] += flow.attr[direction][co.BYTES_FRAMES_TOTAL]
+                            retrans_bytes[direction] += flow.attr[direction].get(co.BYTES_FRAMES_RETRANS, 0)
+                            reinj_bytes[direction] += flow.attr[direction][co.REINJ_ORIG_BYTES] + (flow.attr[direction][co.REINJ_ORIG_PACKS] * co.FRAME_MPTCP_OVERHEAD)
+
+                for direction in co.DIRECTIONS:
+                    if total_bytes[direction] > 0:
+                        results[condition]['Retransmission'].append((reinj_bytes[direction] + 0.0) / total_bytes[direction])
+                        results[condition]['Reinjection'].append((retrans_bytes[direction] + 0.0) / total_bytes[direction])
+
+    co.plot_cdfs_with_direction(results, ['red', 'blue'], 'Fraction of total bytes', graph_full_path, natural=True)
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
@@ -2037,5 +2068,6 @@ else:
     retrans_plot(log_file=log_file)
     box_plot_cellular_percentage_rtt_wifi(log_file=log_file)
     textual_summary_global(log_file=log_file)
+    cdf_overhead_retrans_reinj(log_file=log_file)
 log_file.close()
 print("End of summary")
