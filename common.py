@@ -695,11 +695,9 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ncol
                     f.write(str(sample[i]) + "\n")
                 f.close()
 
-                ecdf = sm.distributions.ECDF(sample)
-
-                x = np.linspace(min(sample), max(sample))
-                y = ecdf(x)
-                ax.step(x, y, color=color[aggl_res[cond].keys().index(element)], label=element)
+                sorted_array = np.sort(sample)
+                yvals = np.arange(len(sorted))/float(len(sorted))
+                plt.plot(sorted_array, yvals, color=color[aggl_res[cond].keys().index(element)], label=element)
             except ZeroDivisionError as e:
                 print(str(e))
 
