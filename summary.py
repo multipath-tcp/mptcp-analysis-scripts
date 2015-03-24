@@ -2019,6 +2019,7 @@ def textual_summary_global(log_file=sys.stdout):
         for conn_id, conn in data.iteritems():
             if isinstance(conn, tcp.TCPConnection):
                 ith = conn.flow.attr[co.IF]
+                print(ith, fname, conn_id)
                 for direction in co.DIRECTIONS:
                     bytes_number[condition][direction][ith] += check_ok(conn.flow.attr[direction][co.BYTES])
 
