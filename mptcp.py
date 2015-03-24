@@ -370,7 +370,12 @@ def check_mptcp_joins(pcap_fullpath, print_out=sys.stdout):
         if len(split_line) < 12:
             continue
         flags = line[line.rindex("[") + 1:line.rindex("]")]
-        sport, dport = split_line[7].split('\xe2\x86\x92')
+        ports = split_line[7].split('\xe2\x86\x92')
+        if len(ports) < 2:
+            print("WARNING: not enough ports...", file=sys.stderr)
+            return True
+        sport = ports[0]
+        dport = ports[1]
         if flags == 'SYN':
             mp_joins[(sport, dport)] = 1
         elif flags == 'SYN, ACK' and mp_joins.get((dport, sport), 0) == 1:
