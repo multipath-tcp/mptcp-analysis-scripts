@@ -1344,7 +1344,7 @@ def textual_summary(log_file=sys.stdout):
         for dur_type, value in data_cond.iteritems():
             total += value
         for dur_type, value in data_cond.iteritems():
-            print(dur_type + " (has " + str(count[cond][dur_type]) + " with " + str(count[cond][dur_type] * 100 / tot_count[cond]) + "%): " + str(value) + " bytes (" + str(value * 100 / total) + "%)", file=log_file)
+            print(dur_type + " (has " + str(count[cond][dur_type]) + " with " + str(count[cond][dur_type] * 100 / (tot_count[cond] + 0.00001)) + "%): " + str(value) + " bytes (" + str(value * 100 / (total+ 0.00001)) + "%)", file=log_file)
 
 
 def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_bytes=0):
