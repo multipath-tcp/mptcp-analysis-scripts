@@ -2034,7 +2034,7 @@ def fog_rtt_bytes(log_file=sys.stdout):
                         ith = '3G'
                     elif conn.flow.attr[co.IF] == co.CELL and ('both4' in condition or 'rmnet4' in condition):
                         ith = '4G'
-                    results[direction][ith][conn.flow.attr[direction][co.RTT_AVG], conn.flow.attr[direction][co.BYTES]]
+                    results[direction][condition][ith].append([conn.flow.attr[direction][co.RTT_AVG], conn.flow.attr[direction][co.BYTES]])
 
             elif isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
@@ -2045,9 +2045,9 @@ def fog_rtt_bytes(log_file=sys.stdout):
                             ith = '3G'
                         elif flow.attr[co.IF] == co.CELL and ('both4' in condition or 'rmnet4' in condition):
                             ith = '4G'
-                        results[direction][ith][conn.flow.attr[direction][co.RTT_AVG], conn.flow.attr[direction][co.BYTES]]
+                        results[direction][condition][ith].append([flow.attr[direction][co.RTT_AVG], flow.attr[direction][co.BYTES]])
 
-    co.scatter_plot_with_direction(results, "Mean RTT [ms]", "Bytes on connection", color, sums_dir_exp, base_graph_name, plot_identity=False, log_scale_x=False, log_scale_y=False)
+    co.scatter_plot_with_direction(results, "Mean RTT [ms]", "Bytes on connection", color, sums_dir_exp, base_graph_name, plot_identity=False, log_scale_x=False)
 
 
 millis = int(round(time.time() * 1000))
