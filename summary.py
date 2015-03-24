@@ -1613,8 +1613,10 @@ def boxplot_bytes(log_file=sys.stdout):
         d2s = 0
         for conn_id, conn in data.iteritems():
             if isinstance(conn, mptcp.MPTCPConnection):
-                s2d += conn.attr[co.S2D][co.BYTES_MPTCPTRACE]
-                d2s += conn.attr[co.D2S][co.BYTES_MPTCPTRACE]
+                if co.BYTES_MPTCPTRACE in conn.attr[co.S2D]:
+                    s2d += conn.attr[co.S2D][co.BYTES_MPTCPTRACE]
+                if co.BYTES_MPTCPTRACE in conn.attr[co.D2S]:
+                    d2s += conn.attr[co.D2S][co.BYTES_MPTCPTRACE]
             elif isinstance(conn, tcp.TCPConnection):
                 if co.BYTES in conn.attr[co.S2D]:
                     s2d += conn.flow.attr[co.S2D][co.BYTES]
