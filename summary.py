@@ -1789,21 +1789,22 @@ def retrans_plot(log_file=sys.stdout, min_bytes=0.0):
                 packs_d2s = 0.0
 
                 for flow_id, flow in conn.flows.iteritems():
-                    if co.BYTES_RETRANS in flow.attr[co.S2D] and co.BYTES_RETRANS in flow.attr[co.D2S]:
-                        if co.BYTES in flow.attr[co.S2D]:
-                            bytes_s2d += flow.attr[co.S2D][co.BYTES]
-                        else:
-                            continue
-                        if co.BYTES in flow.attr[co.D2S]:
-                            bytes_d2s += flow.attr[co.D2S][co.BYTES]
-                        else:
-                            continue
-                        bytes_retrans_d2s += flow.attr[co.D2S][co.BYTES_RETRANS]
-                        bytes_retrans_s2d += flow.attr[co.S2D][co.BYTES_RETRANS]
-                        packs_retrans_s2d += flow.attr[co.S2D][co.PACKS_RETRANS]
-                        packs_retrans_d2s += flow.attr[co.D2S][co.PACKS_RETRANS]
-                        packs_s2d += flow.attr[co.S2D][co.PACKS]
-                        packs_d2s += flow.attr[co.D2S][co.PACKS]
+                    if co.S2D in flow.attr and co.D2S in flow.attr:
+                        if co.BYTES_RETRANS in flow.attr[co.S2D] and co.BYTES_RETRANS in flow.attr[co.D2S]:
+                            if co.BYTES in flow.attr[co.S2D]:
+                                bytes_s2d += flow.attr[co.S2D][co.BYTES]
+                            else:
+                                continue
+                            if co.BYTES in flow.attr[co.D2S]:
+                                bytes_d2s += flow.attr[co.D2S][co.BYTES]
+                            else:
+                                continue
+                            bytes_retrans_d2s += flow.attr[co.D2S][co.BYTES_RETRANS]
+                            bytes_retrans_s2d += flow.attr[co.S2D][co.BYTES_RETRANS]
+                            packs_retrans_s2d += flow.attr[co.S2D][co.PACKS_RETRANS]
+                            packs_retrans_d2s += flow.attr[co.D2S][co.PACKS_RETRANS]
+                            packs_s2d += flow.attr[co.S2D][co.PACKS]
+                            packs_d2s += flow.attr[co.D2S][co.PACKS]
 
                 if bytes_s2d > min_bytes:
                     results[co.S2D][condition][app].append(bytes_retrans_s2d / bytes_s2d)
