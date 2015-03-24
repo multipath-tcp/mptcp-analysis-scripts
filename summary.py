@@ -761,6 +761,61 @@ def line_graph_aggl():
                                os.path.join(sums_dir_exp, graph_fname_start + condition + "_" + direction + ".pdf"))
 
 
+def time_completion_big_connections(log_file=sys.stdout, min_bytes=500000):
+    results = {co.S2D: {}, co.D2S: {}}
+    base_graph_name_bytes = "boxplot_duration_" + args.app + "_" + start_time + '_' + stop_time
+    base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
+
+    for direction in co.DIRECTIONS:
+        results[direction] = {'WiFi': [], '3G': [], '3G 100k + WiFi': [], 'MultiPath 4G': [], '4G': []}
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        fname_date = co.get_date_as_int(fname)
+        key = None
+        if 'wlan' in condition and ((20150214 <= fname_date and fname_date <= 20150220) or (20150323 <= fname_date and 20150324 >= fname_date)):
+            key = 'WiFi'
+        elif 'rmnet3' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150324 >= fname_date)):
+            key = '3G'
+        elif 'both3' in condition and 20150214 <= fname_date and fname_date <= 20150220:
+            key = '3G 100k + WiFi'
+        elif 'both4' in condition and 20150323 <= fname_date and 20150324 >= fname_date:
+            key = 'MultiPath 4G'
+        elif 'rmnet4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150324 >= fname_date)):
+            key = '4G'
+
+        if key:
+            for conn_id, conn in data.iteritems():
+                if isinstance(conn, tcp.TCPConnection):
+                    for direction in co.DIRECTIONS:
+                        if conn.flow.attr[direction][co.BYTES] >= min_bytes:
+                            results[direction][key].append(conn.attr[co.DURATION])
+                elif isinstance(conn, mptcp.MPTCPConnection):
+                    for direction in co.DIRECTIONS:
+                        if co.BYTES_MPTCPTRACE in conn.attr[direction] and conn.attr[direction][co.BYTES_MPTCPTRACE] > min_bytes:
+                            results[direction][key].append(conn.attr[co.DURATION])
+
+
+    for direction, data_dir in results.iteritems():
+        plt.figure()
+        fig, ax = plt.subplots()
+        conds = data_dir.keys()
+        to_plot = []
+        print("Data", file=log_file)
+        for cond in conds:
+            to_plot.append(results[direction][cond])
+        print(to_plot, file=log_file)
+        if to_plot:
+            plt.boxplot(to_plot)
+            plt.xticks(range(1, len(conds) + 1), conds)
+            plt.tick_params(axis='both', which='major', labelsize=10)
+            plt.tick_params(axis='both', which='minor', labelsize=8)
+            plt.ylabel("Fraction of bytes on cellular", fontsize=18)
+            plt.ylim([0.0, 1.0])
+            plt.savefig(base_graph_path_bytes + "_" + direction + ".pdf")
+        plt.close()
+
+
 def percentage_cell_by_app_with_conditions(log_file=sys.stdout):
     xlabels = ['dailymotion', 'drive', 'dropbox', 'facebook', 'firefox', 'firefoxspdy', 'messenger', 'spotify', 'youtube']
     x = range(len(xlabels))
@@ -1112,8 +1167,10 @@ def fog_plot_with_bytes_wifi_cell_per_condition(log_file=sys.stdout):
             data[co.D2S][condition][app] = []
 
         for conn_id, conn in conns.iteritems():
-            data[co.S2D][condition][app].append([conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0), conn.attr[co.S2D][co.BYTES].get(co.CELL, 0)])
-            data[co.D2S][condition][app].append([conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0), conn.attr[co.D2S][co.BYTES].get(co.CELL, 0)])
+            if co.BYTES in conn.attr[co.S2D]:
+                data[co.S2D][condition][app].append([conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0), conn.attr[co.S2D][co.BYTES].get(co.CELL, 0)])
+            if co.BYTES in conn.attr[co.D2S]:
+                data[co.D2S][condition][app].append([conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0), conn.attr[co.D2S][co.BYTES].get(co.CELL, 0)])
 
     co.scatter_plot_with_direction(data, "Bytes on Wi-Fi", "Bytes on cellular", color, sums_dir_exp, base_graph_name)
 
@@ -1183,8 +1240,10 @@ def fog_duration_bytes(log_file=sys.stdout):
                     print("ERROR: missing key " + conn_id + " " + fname)
                 else:
                     duration = conn.attr[co.DURATION]
-            nb_bytes = conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0) + conn.attr[co.S2D][co.BYTES].get(co.CELL, 0)
-            nb_bytes += conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0) + conn.attr[co.D2S][co.BYTES].get(co.CELL, 0)
+            if co.BYTES in conn.attr[co.S2D]:
+                nb_bytes = conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0) + conn.attr[co.S2D][co.BYTES].get(co.CELL, 0)
+            if co.BYTES in conn.attr[co.D2S]:
+                nb_bytes += conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0) + conn.attr[co.D2S][co.BYTES].get(co.CELL, 0)
             data[condition][app].append([duration, nb_bytes])
 
     co.scatter_plot(data, "Duration [s]", "Bytes on connection", color, sums_dir_exp, base_graph_name, plot_identity=False)
@@ -1216,8 +1275,10 @@ def cdfs_summary(log_file=sys.stdout):
                 duration = conn.flow.attr[co.DURATION]
             elif isinstance(conn, mptcp.MPTCPConnection):
                 duration = conn.attr[co.DURATION]
-            nb_bytes_s2d = conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0) + conn.attr[co.S2D][co.BYTES].get(co.CELL, 0)
-            nb_bytes_d2s = conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0) + conn.attr[co.D2S][co.BYTES].get(co.CELL, 0)
+            if co.BYTES in conn.attr[co.S2D]:
+                nb_bytes_s2d = conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0) + conn.attr[co.S2D][co.BYTES].get(co.CELL, 0)
+            if co.BYTES in conn.attr[co.D2S]:
+                nb_bytes_d2s = conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0) + conn.attr[co.D2S][co.BYTES].get(co.CELL, 0)
 
             data_duration[condition][co.DURATION].append(duration)
             data_bytes[condition]['bytes'].append(nb_bytes_s2d + nb_bytes_d2s)
@@ -1249,8 +1310,10 @@ def textual_summary(log_file=sys.stdout):
                 duration = conn.flow.attr[co.DURATION]
             elif isinstance(conn, mptcp.MPTCPConnection):
                 duration = conn.attr[co.DURATION]
-            nb_bytes_s2d = conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0) + conn.attr[co.S2D][co.BYTES].get(co.CELL, 0)
-            nb_bytes_d2s = conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0) + conn.attr[co.D2S][co.BYTES].get(co.CELL, 0)
+            if co.BYTES in conn.attr[co.S2D]:
+                nb_bytes_s2d = conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0) + conn.attr[co.S2D][co.BYTES].get(co.CELL, 0)
+            if co.BYTES in conn.attr[co.D2S]:
+                nb_bytes_d2s = conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0) + conn.attr[co.D2S][co.BYTES].get(co.CELL, 0)
 
             if duration < 1:
                 data[condition]['<1s'] += nb_bytes_s2d + nb_bytes_d2s
@@ -1310,10 +1373,12 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                         continue
                     conn_bytes_s2d = {'cellular': 0, 'wifi': 0}
                     conn_bytes_d2s = {'cellular': 0, 'wifi': 0}
-                    for interface in conn.attr[co.S2D][co.BYTES]:
-                        conn_bytes_s2d[interface] += conn.attr[co.S2D][co.BYTES][interface]
-                    for interface in conn.attr[co.D2S][co.BYTES]:
-                        conn_bytes_d2s[interface] += conn.attr[co.D2S][co.BYTES][interface]
+                    if co.BYTES in conn.attr[co.S2D]:
+                        for interface in conn.attr[co.S2D][co.BYTES]:
+                            conn_bytes_s2d[interface] += conn.attr[co.S2D][co.BYTES][interface]
+                    if co.BYTES in conn.attr[co.D2S]:
+                        for interface in conn.attr[co.D2S][co.BYTES]:
+                            conn_bytes_d2s[interface] += conn.attr[co.D2S][co.BYTES][interface]
                     for flow_id, flow in conn.flows.iteritems():
                         if co.REINJ_ORIG_BYTES not in flow.attr[co.S2D] or co.REINJ_ORIG_BYTES not in flow.attr[co.D2S]:
                             break
@@ -1390,10 +1455,12 @@ def cdf_bytes_all(log_file=sys.stdout):
                 elif isinstance(conn, mptcp.MPTCPConnection):
                     conn_bytes_s2d = {'cellular': 0, 'wifi': 0}
                     conn_bytes_d2s = {'cellular': 0, 'wifi': 0}
-                    for interface in conn.attr[co.S2D][co.BYTES]:
-                        conn_bytes_s2d[interface] += conn.attr[co.S2D][co.BYTES][interface]
-                    for interface in conn.attr[co.D2S][co.BYTES]:
-                        conn_bytes_d2s[interface] += conn.attr[co.D2S][co.BYTES][interface]
+                    if co.BYTES in conn.attr[co.S2D]:
+                        for interface in conn.attr[co.S2D][co.BYTES]:
+                            conn_bytes_s2d[interface] += conn.attr[co.S2D][co.BYTES][interface]
+                    if co.BYTES in conn.attr[co.D2S]:
+                        for interface in conn.attr[co.D2S][co.BYTES]:
+                            conn_bytes_d2s[interface] += conn.attr[co.D2S][co.BYTES][interface]
                     for flow_id, flow in conn.flows.iteritems():
                         if co.REINJ_ORIG_BYTES not in flow.attr[co.S2D] or co.REINJ_ORIG_BYTES not in flow.attr[co.D2S]:
                             break
@@ -1545,8 +1612,10 @@ def boxplot_bytes(log_file=sys.stdout):
                 s2d += conn.attr[co.S2D][co.BYTES_MPTCPTRACE]
                 d2s += conn.attr[co.D2S][co.BYTES_MPTCPTRACE]
             elif isinstance(conn, tcp.TCPConnection):
-                s2d += conn.flow.attr[co.S2D][co.BYTES]
-                d2s += conn.flow.attr[co.D2S][co.BYTES]
+                if co.BYTES in conn.attr[co.S2D]:
+                    s2d += conn.flow.attr[co.S2D][co.BYTES]
+                if co.BYTES in conn.attr[co.D2S]:
+                    d2s += conn.flow.attr[co.D2S][co.BYTES]
 
         if condition not in aggl_res[co.S2D]:
             for direction in aggl_res:
@@ -1865,10 +1934,12 @@ def box_plot_cellular_percentage_rtt_wifi(log_file=sys.stdout, limit_duration=0,
                     conn_bytes_d2s = {'cellular': 0, 'wifi': 0}
                     rtt_max_wifi_s2d = None
                     rtt_max_wifi_d2s = None
-                    for interface in conn.attr[co.S2D][co.BYTES]:
-                        conn_bytes_s2d[interface] += conn.attr[co.S2D][co.BYTES][interface]
-                    for interface in conn.attr[co.D2S][co.BYTES]:
-                        conn_bytes_d2s[interface] += conn.attr[co.D2S][co.BYTES][interface]
+                    if co.BYTES in conn.attr[co.S2D]:
+                        for interface in conn.attr[co.S2D][co.BYTES]:
+                            conn_bytes_s2d[interface] += conn.attr[co.S2D][co.BYTES][interface]
+                    if co.BYTES in conn.attr[co.D2S]:
+                        for interface in conn.attr[co.D2S][co.BYTES]:
+                            conn_bytes_d2s[interface] += conn.attr[co.D2S][co.BYTES][interface]
                     for flow_id, flow in conn.flows.iteritems():
                         if co.REINJ_ORIG_BYTES not in flow.attr[co.S2D] or co.REINJ_ORIG_BYTES not in flow.attr[co.D2S]:
                             break
@@ -2121,6 +2192,8 @@ if args.app:
     bar_chart_rtt_stdev_s2d_interface(log_file=log_file)
     print("Plot rtt stdev d2s", file=log_file)
     bar_chart_rtt_stdev_d2s_interface(log_file=log_file)
+    print("Plot boxplot duration", file=log_file)
+    time_completion_big_connections(log_file=log_file)
 elif args.cond:
     print("To be implemented after", file=log_file)
 else:
