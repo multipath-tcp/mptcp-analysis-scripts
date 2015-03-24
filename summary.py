@@ -773,24 +773,26 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
         condition = get_experiment_condition(fname)
         fname_date = co.get_date_as_int(fname)
         key = None
-        if 'wlan' in condition and ((20150214 <= fname_date and fname_date <= 20150220) or (20150323 <= fname_date and 20150324 >= fname_date)):
-            key = 'WiFi'
-        elif 'wlan' in condition and 20150304 <= fname_date and fname_date <= 20150308:
-            key = 'WiFi (1M)'
-        elif 'rmnet3' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150324 >= fname_date)):
-            key = '3G'
-        elif 'both3' in condition and 20150214 <= fname_date and fname_date <= 20150220:
-            key = 'MPTCP 3G (3G: 100k)'
-        elif 'both4' in condition and 20150323 <= fname_date and 20150324 >= fname_date:
-            key = 'MPTCP 4G'
-        elif 'rmnet4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150324 >= fname_date)):
-            key = '4G'
-        elif 'both4' in condition and 20150304 <= fname_date and fname_date <= 20150308:
-            key = 'MPTCP 4G (WiFi: 1M)'
+        if 'mptcp_fm_' in condition:
+            if 'both3' in condition and 20150214 <= fname_date and fname_date <= 20150220:
+                key = 'MPTCP 3G (3G: 100k)'
+            elif 'both4' in condition and 20150323 <= fname_date and 20150324 >= fname_date:
+                key = 'MPTCP 4G'
+            elif 'both4' in condition and 20150304 <= fname_date and fname_date <= 20150308:
+                key = 'MPTCP 4G (WiFi: 1M)'
+        else:
+            if 'wlan' in condition and ((20150214 <= fname_date and fname_date <= 20150220) or (20150323 <= fname_date and 20150324 >= fname_date)):
+                key = 'WiFi'
+            elif 'wlan' in condition and 20150304 <= fname_date and fname_date <= 20150308:
+                key = 'WiFi (1M)'
+            elif 'rmnet3' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150324 >= fname_date)):
+                key = '3G'
+            elif 'rmnet4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150324 >= fname_date)):
+                key = '4G'
 
         if key:
             for conn_id, conn in data.iteritems():
-                if isinstance(conn, tcp.TCPConnection) and not condition.startswith('both'):
+                if isinstance(conn, tcp.TCPConnection):
                     for direction in co.DIRECTIONS:
                         if direction in conn.flow.attr:
                             if conn.flow.attr[direction][co.BYTES] >= min_bytes:
@@ -807,7 +809,7 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
         fig, ax = plt.subplots()
         to_plot = []
         print("Data", file=log_file)
-        for cond in ['WiFi', 'WiFi (1M)', '3G', '4G', 'MPTCP 4G', 'MPTCP 3G (3G: 100k)', 'MPTCP 4G (WiFi: 1M)']:
+        for cond in ['WiFi', 'WiFi (1M)', '3G', '4G', 'MPTCP 4G (WiFi: 1M)', 'MPTCP 3G (3G: 100k)', 'MPTCP 4G']:
             to_plot.append(results[direction][cond])
         print(to_plot, file=log_file)
         if to_plot:
