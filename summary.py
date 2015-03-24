@@ -812,8 +812,7 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
             plt.xticks(range(1, len(conds) + 1), conds)
             plt.tick_params(axis='both', which='major', labelsize=10)
             plt.tick_params(axis='both', which='minor', labelsize=8)
-            plt.ylabel("Fraction of bytes on cellular", fontsize=18)
-            plt.ylim([0.0, 1.0])
+            plt.ylabel("Duration [s]", fontsize=18)
             plt.savefig(base_graph_path_bytes + "_" + direction + ".pdf")
         plt.close()
 
