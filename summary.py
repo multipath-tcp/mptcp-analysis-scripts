@@ -1883,9 +1883,10 @@ def reinject_plot_relative_to_data(log_file=sys.stdout, min_bytes=0.0):
                 # reinject_packs_s2d = 0
                 # reinject_packs_d2s = 0
                 for flow_id, flow in conn.flows.iteritems():
-                    if co.REINJ_ORIG_BYTES in flow.attr[co.S2D] and co.REINJ_ORIG_BYTES in flow.attr[co.D2S]:
-                        reinject_bytes_s2d += flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
-                        reinject_bytes_d2s += flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
+                    if co.S2D in flow.attr and co.D2S in flow.attr:
+                        if co.REINJ_ORIG_BYTES in flow.attr[co.S2D] and co.REINJ_ORIG_BYTES in flow.attr[co.D2S]:
+                            reinject_bytes_s2d += flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
+                            reinject_bytes_d2s += flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
 
                 if bytes_s2d > min_bytes:
                     results[co.S2D][condition][app].append(reinject_bytes_s2d / bytes_s2d)
