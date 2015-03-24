@@ -2190,6 +2190,46 @@ def cdf_duration_mptcp_tcp(log_file=sys.stdout, limit_bytes=10000):
     co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black'], 'Duration (s)', graph_full_path)
 
 
+def plot_total_bytes_reinj_bytes(log_file=sys.stdout):
+    results = {co.S2D: {}, co.D2S: {}}
+    results_raw = {co.S2D: {}, co.D2S: {}}
+    graph_fname = "total_bytes_reinj_bytes_" + start_time + "_" + stop_time
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if 'mptcp_fm' in condition and 'both' in condition:
+            if condition not in results:
+                for direction in co.DIRECTIONS:
+                    results[direction][condition] = [[], []]
+                    results_raw[direction][condition] = []
+
+            for conn_id, conn in data.iteritems():
+                reinj_bytes = {co.S2D: 0, co.D2S: 0}
+                total_bytes = {co.S2D: 0, co.D2S: 0}
+
+                for flow_id, flow in conn.flows.iteritems():
+                    for direction in co.DIRECTIONS:
+                        if co.BYTES_FRAMES_TOTAL in flow.attr[direction]:
+                            total_bytes[direction] += flow.attr[direction][co.BYTES]
+                            reinj_bytes[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
+
+                for direction in co.DIRECTIONS:
+                    if total_bytes[direction] > 0:
+                        results_raw[direction][condition].append([total_bytes[direction], reinj_bytes[direction]])
+
+    for direction in results_raw:
+        for condition in results_raw[direction]:
+            results_raw[direction][condition] = sorted(results_raw[direction][condition], key=lambda elem: elem[0])
+            i = 0
+            for point in results_raw[direction][condition]:
+                results[direction][condition][0].append([i, point[0]])
+                results[direction][condition][1].append([i, point[1]])
+                i += 1
+
+            graph_full_path += direction + "_" + condition + ".pdf"
+            co.plot_line_graph(results[direction][condition], ['Total', 'Reinjections'], ['b', 'r'], 'Connections', 'Number of data bytes', '', graph_full_path)
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
@@ -2250,5 +2290,6 @@ else:
     cdf_overhead_retrans_reinj(log_file=log_file)
     fog_rtt_bytes(log_file=log_file)
     cdf_duration_mptcp_tcp(log_file=log_file)
+    plot_total_bytes_reinj_bytes(log_file=log_file)
 log_file.close()
 print("End of summary")
