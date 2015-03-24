@@ -2017,10 +2017,11 @@ def textual_summary_global(log_file=sys.stdout):
                     ith = flow.attr[co.IF]
                     for direction in co.DIRECTIONS:
                         reinjected = 0
-                        for start_seq, stop_seq in flow.attr[direction][co.REINJ_ORIG]:
-                            reinjected += stop_seq - start_seq
-                        if co.BYTES in flow.attr[direction]:
-                            bytes_number[condition][direction][ith] += check_ok(flow.attr[direction][co.BYTES] - reinjected)
+                        if direction in flow.attr:
+                            for start_seq, stop_seq in flow.attr[direction][co.REINJ_ORIG]:
+                                reinjected += stop_seq - start_seq
+                            if co.BYTES in flow.attr[direction]:
+                                bytes_number[condition][direction][ith] += check_ok(flow.attr[direction][co.BYTES] - reinjected)
 
     total = 0
     total_tests = 0
