@@ -1913,41 +1913,49 @@ def check_ok(value):
 def textual_summary_global(log_file=sys.stdout):
     conn_number = {}
     tests_number = {}
-    bytes_s2d_number = {}
-    bytes_d2s_number = {}
+    bytes_number = {}
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         if condition not in conn_number:
             conn_number[condition] = 0
             tests_number[condition] = 0
-            bytes_s2d_number[condition] = 0
-            bytes_d2s_number[condition] = 0
+            bytes_number[condition] = {co.S2D: {co.CELL: 0, co.WIFI: 0}, co.D2S: {co.CELL: 0, co.WIFI: 0}}
 
         conn_number[condition] += len(data)
         tests_number[condition] += 1
         for conn_id, conn in data.iteritems():
             if isinstance(conn, tcp.TCPConnection):
-                bytes_s2d_number[condition] += check_ok(conn.flow.attr[co.S2D][co.BYTES])
-                bytes_d2s_number[condition] += check_ok(conn.flow.attr[co.D2S][co.BYTES])
+                ith = conn.flow.attr[co.IF]
+                for direction in co.DIRECTIONS:
+                    bytes_number[condition][direction][ith] += check_ok(conn.flow.attr[direction][co.BYTES])
+
             elif isinstance(conn, mptcp.MPTCPConnection):
-                if not co.BYTES_MPTCPTRACE in conn.attr[co.S2D]:
-                    print(fname, conn_id)
-                bytes_s2d_number[condition] += check_ok(conn.attr[co.S2D][co.BYTES_MPTCPTRACE])
-                bytes_d2s_number[condition] += check_ok(conn.attr[co.D2S][co.BYTES_MPTCPTRACE])
+                for flow_id, flow in conn.flows.iteritems():
+                    ith = flow.attr[co.IF]
+                    for direction in co.DIRECTIONS:
+                        reinjected = 0
+                        for start_seq, stop_seq in flow.attr[direction][co.REINJ_ORIG]:
+                            reinjected += stop_seq - start_seq
+                        bytes_number[condition][direction][ith] += check_ok(flow.attr[direction][co.BYTES] - reinjected)
 
     total = 0
     total_tests = 0
     total_s2d = 0
     total_d2s = 0
     for cond, cond_num in conn_number.iteritems():
-        print(cond + ": " + str(cond_num) + " connections with " + str(tests_number[cond]) + " tests; " + str(bytes_s2d_number[cond]) + " bytes S2D and " + str(bytes_d2s_number[cond]) + " D2S", file=log_file)
+        print(cond + ": ", cond_num, " connections with ", tests_number[cond], " tests;", file=log_file)
         total += cond_num
         total_tests += tests_number[cond]
-        total_s2d += bytes_s2d_number[cond]
-        total_d2s += bytes_d2s_number[cond]
+        for direction in co.DIRECTIONS:
+            ratio = (bytes_number[cond][direction][co.CELL] + 0.0) / (bytes_number[cond][direction][co.WIFI] + bytes_number[cond][direction][co.CELL]) * 100 if bytes_number[cond][direction][co.WIFI] + bytes_number[cond][direction][co.CELL] > 0 else 0
+            print(direction, bytes_number[cond][direction][co.CELL], " bytes cell and ", bytes_number[cond][direction][co.WIFI], "bytes wifi (", ratio, "% cell)", file=log_file)
+        for ith in [co.WIFI, co.CELL]:
+            total_s2d += bytes_number[cond][co.S2D][ith]
+            total_d2s += bytes_number[cond][co.D2S][ith]
 
-    print("Total: " + str(total) + " connections with " + str(total_tests) + " tests; " + str(total_s2d) + " bytes S2D and " + str(total_d2s) + " D2S", file=log_file)
+    total_ratio = (total_s2d + 0.0) / (total_s2d + total_d2s) * 100 if total_s2d + total_d2s > 0 else 0
+    print("Total: " + str(total) + " connections with " + str(total_tests) + " tests; " + str(total_s2d) + " bytes S2D and " + str(total_d2s) + " D2S (" + str(total_ratio) + " % s2d)", file=log_file)
 
 
 def textual_summary_app(log_file=sys.stdout):
@@ -2050,6 +2058,35 @@ def fog_rtt_bytes(log_file=sys.stdout):
     co.scatter_plot_with_direction(results, "Mean RTT [ms]", "Bytes on connection", color, sums_dir_exp, base_graph_name, plot_identity=False, log_scale_x=False)
 
 
+def cdf_duration_mptcp_tcp(log_file=sys.stdout, limit_bytes=10000):
+    results = {co.S2D: {'MPTCP Both4': [], 'TCP 4G': [], 'TCP WiFi': []}, co.D2S: {'MPTCP Both4': [], 'TCP 4G': [], 'TCP WiFi': []}}
+    color = {'MPTCP Both4': 'blue', 'TCP 4G': 'red', 'TCP WiFi': 'green'}
+    base_graph_name = "cdf_duration_mptcp_tcp_" + start_time + '_' + stop_time
+    graph_full_path = os.path.join(sums_dir_exp, base_graph_name)
+
+    for fname, conns in connections.iteritems():
+        condition = get_experiment_condition(fname)
+
+        for conn_id, conn in conns.iteritems():
+            if isinstance(conn, tcp.TCPConnection):
+                if 'rmnet4' in condition:
+                    for direction in co.DIRECTIONS:
+                        if conn.flow.attr[direction][co.BYTES] >= limit_bytes:
+                            results[direction]['TCP 4G'].append(conn.attr[co.DURATION])
+                elif 'wlan' in condition:
+                    for direction in co.DIRECTIONS:
+                        if conn.flow.attr[direction][co.BYTES] >= limit_bytes:
+                            results[direction]['TCP WiFi'].append(conn.attr[co.DURATION])
+
+            elif isinstance(conn, mptcp.MPTCPConnection):
+                if 'both4' in condition:
+                    for direction in co.DIRECTIONS:
+                        if conn.attr[direction][co.BYTES_MPTCPTRACE] >= limit_bytes:
+                            results[direction]['MPTCP Both4'].append(conn.attr[co.DURATION])
+
+    co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black'], 'Duration (s)', graph_full_path)
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
@@ -2107,5 +2144,6 @@ else:
     textual_summary_global(log_file=log_file)
     cdf_overhead_retrans_reinj(log_file=log_file)
     fog_rtt_bytes(log_file=log_file)
+    cdf_duration_mptcp_tcp(log_file=log_file)
 log_file.close()
 print("End of summary")
