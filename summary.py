@@ -1872,6 +1872,8 @@ def reinject_plot_relative_to_data(log_file=sys.stdout, min_bytes=0.0):
             for conn_id, conn in data.iteritems():
                 reinject_bytes_s2d = 0.0
                 reinject_bytes_d2s = 0.0
+                bytes_s2d = 0.0
+                bytes_d2s = 0.0
                 if co.BYTES_MPTCPTRACE in co.S2D:
                     bytes_s2d = conn.attr[co.S2D][co.BYTES_MPTCPTRACE]
                 if co.BYTES_MPTCPTRACE in co.D2S:
