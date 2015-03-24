@@ -1244,6 +1244,7 @@ def fog_duration_bytes(log_file=sys.stdout):
                     print("ERROR: missing key " + conn_id + " " + fname)
                 else:
                     duration = conn.attr[co.DURATION]
+            nb_bytes = 0
             if co.BYTES in conn.attr[co.S2D]:
                 nb_bytes = conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0) + conn.attr[co.S2D][co.BYTES].get(co.CELL, 0)
             if co.BYTES in conn.attr[co.D2S]:
