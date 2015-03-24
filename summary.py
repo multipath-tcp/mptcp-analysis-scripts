@@ -761,7 +761,7 @@ def line_graph_aggl():
                                os.path.join(sums_dir_exp, graph_fname_start + condition + "_" + direction + ".pdf"))
 
 
-def time_completion_big_connections(log_file=sys.stdout, min_bytes=500000):
+def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
     results = {co.S2D: {}, co.D2S: {}}
     base_graph_name_bytes = "boxplot_duration_" + args.app + "_" + start_time + '_' + stop_time
     base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
