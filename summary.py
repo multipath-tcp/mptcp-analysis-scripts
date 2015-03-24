@@ -533,7 +533,7 @@ def bar_chart_duration_all(log_file=sys.stdout):
             if isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
                     start = min(start, flow.attr[co.START])
-                    stop = max(stop, flow.attr[co.START] + flow.attr[co.DURATION])
+                    stop = max(stop, flow.attr[co.START] + conn.attr[co.DURATION])
 
             elif isinstance(conn, tcp.TCPConnection):
                 start = min(start, conn.flow.attr[co.START])
@@ -790,7 +790,7 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=500000):
                     for direction in co.DIRECTIONS:
                         if direction in conn.flow.attr:
                             if conn.flow.attr[direction][co.BYTES] >= min_bytes:
-                                results[direction][key].append(conn.attr[co.DURATION])
+                                results[direction][key].append(conn.flow.attr[co.DURATION])
                 elif isinstance(conn, mptcp.MPTCPConnection):
                     for direction in co.DIRECTIONS:
                         if direction in conn.attr:
@@ -2148,11 +2148,11 @@ def cdf_duration_mptcp_tcp(log_file=sys.stdout, limit_bytes=10000):
                 if 'rmnet4' in condition:
                     for direction in co.DIRECTIONS:
                         if conn.flow.attr[direction][co.BYTES] >= limit_bytes:
-                            results[direction]['TCP 4G'].append(conn.attr[co.DURATION])
+                            results[direction]['TCP 4G'].append(conn.flow.attr[co.DURATION])
                 elif 'wlan' in condition:
                     for direction in co.DIRECTIONS:
                         if conn.flow.attr[direction][co.BYTES] >= limit_bytes:
-                            results[direction]['TCP WiFi'].append(conn.attr[co.DURATION])
+                            results[direction]['TCP WiFi'].append(conn.flow.attr[co.DURATION])
 
             elif isinstance(conn, mptcp.MPTCPConnection):
                 if 'both4' in condition:
