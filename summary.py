@@ -1389,7 +1389,7 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                         for interface in conn.attr[co.D2S][co.BYTES]:
                             conn_bytes_d2s[interface] += conn.attr[co.D2S][co.BYTES][interface]
                     for flow_id, flow in conn.flows.iteritems():
-                        if co.REINJ_ORIG_BYTES not in flow.attr[co.S2D] or co.REINJ_ORIG_BYTES not in flow.attr[co.D2S]:
+                        if co.S2D not in flow.attr or co.D2S not in flow.attr or co.REINJ_ORIG_BYTES not in flow.attr[co.S2D] or co.REINJ_ORIG_BYTES not in flow.attr[co.D2S]:
                             break
                         interface = flow.attr[co.IF]
                         conn_bytes_s2d[interface] -= flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
