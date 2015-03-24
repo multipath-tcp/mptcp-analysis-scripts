@@ -2020,6 +2020,8 @@ def textual_summary_global(log_file=sys.stdout):
             if isinstance(conn, tcp.TCPConnection):
                 ith = conn.flow.attr[co.IF]
                 print(ith, fname, conn_id)
+                if ith not in bytes_number[condition][co.S2D]:
+                    continue
                 for direction in co.DIRECTIONS:
                     bytes_number[condition][direction][ith] += check_ok(conn.flow.attr[direction][co.BYTES])
 
