@@ -767,7 +767,7 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
     base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
 
     for direction in co.DIRECTIONS:
-        results[direction] = {'WiFi': [], '3G': [], '3G 100k + WiFi': [], 'MultiPath 4G': [], '4G': []}
+        results[direction] = {'WiFi': [], 'WiFi (1M)': [], '3G': [], 'MPTCP 3G (3G: 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi: 1M)': []}
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
@@ -775,18 +775,22 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
         key = None
         if 'wlan' in condition and ((20150214 <= fname_date and fname_date <= 20150220) or (20150323 <= fname_date and 20150324 >= fname_date)):
             key = 'WiFi'
+        elif 'wlan' in condition and 20150304 <= fname_date and fname_date <= 20150308:
+            key = 'WiFi (1M)'
         elif 'rmnet3' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150324 >= fname_date)):
             key = '3G'
         elif 'both3' in condition and 20150214 <= fname_date and fname_date <= 20150220:
-            key = '3G 100k + WiFi'
+            key = 'MPTCP 3G (3G: 100k)'
         elif 'both4' in condition and 20150323 <= fname_date and 20150324 >= fname_date:
-            key = 'MultiPath 4G'
+            key = 'MPTCP 4G'
         elif 'rmnet4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150324 >= fname_date)):
             key = '4G'
+        elif 'both4' in condition and 20150304 <= fname_date and fname_date <= 20150308:
+            key = 'MPTCP 4G (WiFi: 1M)'
 
         if key:
             for conn_id, conn in data.iteritems():
-                if isinstance(conn, tcp.TCPConnection):
+                if isinstance(conn, tcp.TCPConnection) and not condition.startswith('both'):
                     for direction in co.DIRECTIONS:
                         if direction in conn.flow.attr:
                             if conn.flow.attr[direction][co.BYTES] >= min_bytes:
@@ -801,10 +805,9 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
     for direction, data_dir in results.iteritems():
         plt.figure()
         fig, ax = plt.subplots()
-        conds = data_dir.keys()
         to_plot = []
         print("Data", file=log_file)
-        for cond in conds:
+        for cond in ['WiFi', 'WiFi (1M)', '3G', '4G', 'MPTCP 4G', 'MPTCP 3G (3G: 100k)', 'MPTCP 4G (WiFi: 1M)']:
             to_plot.append(results[direction][cond])
         print(to_plot, file=log_file)
         if to_plot:
