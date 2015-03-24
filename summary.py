@@ -1315,6 +1315,10 @@ def textual_summary(log_file=sys.stdout):
                 duration = conn.flow.attr[co.DURATION]
             elif isinstance(conn, mptcp.MPTCPConnection):
                 duration = conn.attr[co.DURATION]
+
+            nb_bytes_s2d = 0
+            nb_bytes_d2s = 0
+
             if co.BYTES in conn.attr[co.S2D]:
                 nb_bytes_s2d = conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0) + conn.attr[co.S2D][co.BYTES].get(co.CELL, 0)
             if co.BYTES in conn.attr[co.D2S]:
