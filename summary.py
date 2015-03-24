@@ -788,12 +788,14 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=500000):
             for conn_id, conn in data.iteritems():
                 if isinstance(conn, tcp.TCPConnection):
                     for direction in co.DIRECTIONS:
-                        if conn.flow.attr[direction][co.BYTES] >= min_bytes:
-                            results[direction][key].append(conn.attr[co.DURATION])
+                        if direction in conn.flow.attr:
+                            if conn.flow.attr[direction][co.BYTES] >= min_bytes:
+                                results[direction][key].append(conn.attr[co.DURATION])
                 elif isinstance(conn, mptcp.MPTCPConnection):
                     for direction in co.DIRECTIONS:
-                        if co.BYTES_MPTCPTRACE in conn.attr[direction] and conn.attr[direction][co.BYTES_MPTCPTRACE] > min_bytes:
-                            results[direction][key].append(conn.attr[co.DURATION])
+                        if direction in conn.attr:
+                            if co.BYTES_MPTCPTRACE in conn.attr[direction] and conn.attr[direction][co.BYTES_MPTCPTRACE] > min_bytes:
+                                results[direction][key].append(conn.attr[co.DURATION])
 
 
     for direction, data_dir in results.iteritems():
@@ -1198,6 +1200,8 @@ def fog_plot_with_packs_wifi_cell_per_condition(log_file=sys.stdout):
             if isinstance(conn, mptcp.MPTCPConnection):
                 packs = {co.S2D: {co.CELL: 0, co.WIFI: 0}, co.D2S: {co.CELL: 0, co.WIFI: 0}}
                 for flow_id, flow in conn.flows.iteritems():
+                    if not co.S2D in flow.attr:
+                        continue
                     if co.PACKS not in flow.attr[co.S2D] or co.PACKS not in flow.attr[co.D2S]:
                         break
                     interface = flow.attr[co.IF]
@@ -1488,12 +1492,12 @@ def cdf_rtt_s2d_all(log_file=sys.stdout, min_samples=5, min_bytes=100):
         for conn_id, conn in data.iteritems():
             if isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
-                    if co.RTT_SAMPLES not in flow.attr[co.S2D]:
+                    if co.S2D not in flow.attr or co.RTT_SAMPLES not in flow.attr[co.S2D]:
                         break
                     if flow.attr[co.S2D][co.RTT_SAMPLES] >= min_samples and flow.attr[co.S2D][co.BYTES] >= min_bytes:
                         aggl_res[condition][flow.attr[co.IF]] += [(flow.attr[co.S2D][co.RTT_AVG], fname)]
             elif isinstance(conn, tcp.TCPConnection):
-                if co.RTT_SAMPLES not in conn.flow.attr[co.S2D]:
+                if co.S2D not in conn.flow.attr or co.RTT_SAMPLES not in conn.flow.attr[co.S2D]:
                     break
                 if conn.flow.attr[co.S2D][co.RTT_SAMPLES] >= min_samples and conn.flow.attr[co.S2D][co.BYTES] >= min_bytes:
                     aggl_res[condition][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.S2D][co.RTT_AVG], fname)]
@@ -1517,12 +1521,12 @@ def cdf_rtt_d2s_all(log_file=sys.stdout, min_samples=5):
         for conn_id, conn in data.iteritems():
             if isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
-                    if co.RTT_SAMPLES not in flow.attr[co.D2S]:
+                    if co.D2S not in flow.attr or co.RTT_SAMPLES not in flow.attr[co.D2S]:
                         break
                     if flow.attr[co.D2S][co.RTT_SAMPLES] >= min_samples:
                         aggl_res[condition][flow.attr[co.IF]] += [(flow.attr[co.D2S][co.RTT_AVG], fname)]
             elif isinstance(conn, tcp.TCPConnection):
-                if co.RTT_SAMPLES not in conn.flow.attr[co.D2S]:
+                if co.D2S not in conn.flow.attr or co.RTT_SAMPLES not in conn.flow.attr[co.D2S]:
                     break
                 if conn.flow.attr[co.D2S][co.RTT_SAMPLES] >= min_samples:
                     aggl_res[condition][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.D2S][co.RTT_AVG], fname)]
@@ -1544,7 +1548,7 @@ def cdf_rtt_s2d_single_graph_all(log_file=sys.stdout, min_samples=5, min_bytes=1
         if condition.startswith('tcp') and 'both' not in condition:
             for conn_id, conn in data.iteritems():
                 if isinstance(conn, tcp.TCPConnection):
-                    if co.RTT_SAMPLES not in conn.flow.attr[co.S2D]:
+                    if co.S2D not in conn.flow.attr or co.RTT_SAMPLES not in conn.flow.attr[co.S2D]:
                         break
                     if conn.flow.attr[co.S2D][co.RTT_SAMPLES] >= min_samples and conn.flow.attr[co.S2D][co.BYTES] >= min_bytes:
                         if conn.flow.attr[co.S2D][co.RTT_AVG] >= 1.0:
@@ -1574,7 +1578,7 @@ def cdf_rtt_d2s_single_graph_all(log_file=sys.stdout, min_samples=5, min_bytes=1
         if condition.startswith('tcp') and 'both' not in condition:
             for conn_id, conn in data.iteritems():
                 if isinstance(conn, tcp.TCPConnection):
-                    if co.RTT_SAMPLES not in conn.flow.attr[co.D2S]:
+                    if co.S2D not in conn.flow.attr or co.RTT_SAMPLES not in conn.flow.attr[co.D2S]:
                         break
                     if conn.flow.attr[co.D2S][co.RTT_SAMPLES] >= min_samples and conn.flow.attr[co.D2S][co.BYTES] >= min_bytes:
                         if conn.flow.attr[co.D2S][co.RTT_AVG] >= 1.0:
