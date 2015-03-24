@@ -1960,6 +1960,8 @@ def box_plot_cellular_percentage_rtt_wifi(log_file=sys.stdout, limit_duration=0,
                         for interface in conn.attr[co.D2S][co.BYTES]:
                             conn_bytes_d2s[interface] += conn.attr[co.D2S][co.BYTES][interface]
                     for flow_id, flow in conn.flows.iteritems():
+                        if co.S2D not in flow.attr or co.D2S not in flow.attr:
+                            continue
                         if co.REINJ_ORIG_BYTES not in flow.attr[co.S2D] or co.REINJ_ORIG_BYTES not in flow.attr[co.D2S]:
                             break
                         interface = flow.attr[co.IF]
