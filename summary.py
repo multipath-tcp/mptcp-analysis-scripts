@@ -2003,7 +2003,7 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
                         if co.BYTES_FRAMES_TOTAL in flow.attr[direction]:
                             total_bytes[direction] += flow.attr[direction][co.BYTES_FRAMES_TOTAL]
                             retrans_bytes[direction] += flow.attr[direction].get(co.BYTES_FRAMES_RETRANS, 0)
-                            reinj_bytes[direction] += flow.attr[direction].get([co.REINJ_ORIG_BYTES], 0) + (flow.attr[direction].get([co.REINJ_ORIG_PACKS], 0) * co.FRAME_MPTCP_OVERHEAD)
+                            reinj_bytes[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0) + (flow.attr[direction].get(co.REINJ_ORIG_PACKS, 0) * co.FRAME_MPTCP_OVERHEAD)
 
                 for direction in co.DIRECTIONS:
                     if total_bytes[direction] > 0:
