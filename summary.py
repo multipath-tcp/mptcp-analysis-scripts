@@ -2031,8 +2031,9 @@ def textual_summary_global(log_file=sys.stdout):
                     for direction in co.DIRECTIONS:
                         reinjected = 0
                         if direction in flow.attr:
-                            for start_seq, stop_seq in flow.attr[direction][co.REINJ_ORIG]:
-                                reinjected += stop_seq - start_seq
+                            if co.REINJ_ORIG in flow.attr[direction]:
+                                for start_seq, stop_seq in flow.attr[direction][co.REINJ_ORIG]:
+                                    reinjected += stop_seq - start_seq
                             if co.BYTES in flow.attr[direction]:
                                 bytes_number[condition][direction][ith] += check_ok(flow.attr[direction][co.BYTES] - reinjected)
 
