@@ -2013,6 +2013,43 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
     co.plot_cdfs_with_direction(results, ['red', 'blue'], 'Fraction of total bytes', graph_full_path, natural=True)
 
 
+def fog_rtt_bytes(log_file=sys.stdout):
+    results = {co.S2D: {}, co.D2S: {}}
+    color = {'3G': 'blue', '4G': 'red', 'WiFi': 'green'}
+    base_graph_name = "fog_rtt_bytes_" + start_time + '_' + stop_time
+
+    for fname, conns in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if condition not in results[co.S2D]:
+            for direction in co.DIRECTIONS:
+                results[direction][condition] = {'3G': [], '4G': [], 'WiFi': []}
+
+        for conn_id, conn in conns.iteritems():
+
+            if isinstance(conn, tcp.TCPConnection):
+                for direction in co.DIRECTIONS:
+                    if conn.flow.attr[co.IF] == co.WIFI:
+                        ith = 'WiFi'
+                    elif conn.flow.attr[co.IF] == co.CELL and ('both3' in condition or 'rmnet3' in condition):
+                        ith = '3G'
+                    elif conn.flow.attr[co.IF] == co.CELL and ('both4' in condition or 'rmnet4' in condition):
+                        ith = '4G'
+                    results[direction][ith][conn.flow.attr[direction][co.RTT_AVG], conn.flow.attr[direction][co.BYTES]]
+
+            elif isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    for direction in co.DIRECTIONS:
+                        if flow.attr[co.IF] == co.WIFI:
+                            ith = 'WiFi'
+                        elif flow.attr[co.IF] == co.CELL and ('both3' in condition or 'rmnet3' in condition):
+                            ith = '3G'
+                        elif flow.attr[co.IF] == co.CELL and ('both4' in condition or 'rmnet4' in condition):
+                            ith = '4G'
+                        results[direction][ith][conn.flow.attr[direction][co.RTT_AVG], conn.flow.attr[direction][co.BYTES]]
+
+    co.scatter_plot_with_direction(results, "Mean RTT [ms]", "Bytes on connection", color, sums_dir_exp, base_graph_name, plot_identity=False, log_scale_x=False, log_scale_y=False)
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
@@ -2069,5 +2106,6 @@ else:
     box_plot_cellular_percentage_rtt_wifi(log_file=log_file)
     textual_summary_global(log_file=log_file)
     cdf_overhead_retrans_reinj(log_file=log_file)
+    fog_rtt_bytes(log_file=log_file)
 log_file.close()
 print("End of summary")
