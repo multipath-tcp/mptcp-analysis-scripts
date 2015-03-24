@@ -2134,6 +2134,8 @@ def fog_rtt_bytes(log_file=sys.stdout):
 
             if isinstance(conn, tcp.TCPConnection):
                 for direction in co.DIRECTIONS:
+                    if co.RTT_AVG not in conn.flow.attr[direction]:
+                        continue
                     if conn.flow.attr[co.IF] == co.WIFI:
                         ith = 'WiFi'
                     elif conn.flow.attr[co.IF] == co.CELL and ('both3' in condition or 'rmnet3' in condition):
@@ -2145,6 +2147,8 @@ def fog_rtt_bytes(log_file=sys.stdout):
             elif isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
                     for direction in co.DIRECTIONS:
+                        if co.RTT_AVG not in flow.attr[direction]:
+                            continue
                         if flow.attr[co.IF] == co.WIFI:
                             ith = 'WiFi'
                         elif flow.attr[co.IF] == co.CELL and ('both3' in condition or 'rmnet3' in condition):
