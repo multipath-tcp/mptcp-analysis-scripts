@@ -1871,13 +1871,15 @@ def reinject_plot_relative_to_data(log_file=sys.stdout, min_bytes=0.0):
                 for direction in results:
                     results[direction][condition][app] = []
             for conn_id, conn in data.iteritems():
+                if not co.S2D in conn.attr or not co.D2S in conn.attr:
+                    continue
                 reinject_bytes_s2d = 0.0
                 reinject_bytes_d2s = 0.0
                 bytes_s2d = 0.0
                 bytes_d2s = 0.0
-                if co.BYTES_MPTCPTRACE in co.S2D:
+                if co.BYTES_MPTCPTRACE in conn.attr[co.S2D]:
                     bytes_s2d = conn.attr[co.S2D][co.BYTES_MPTCPTRACE]
-                if co.BYTES_MPTCPTRACE in co.D2S:
+                if co.BYTES_MPTCPTRACE in conn.attr[co.D2S]:
                     bytes_d2s = conn.attr[co.D2S][co.BYTES_MPTCPTRACE]
 
                 # reinject_bytes_s2d = 0
