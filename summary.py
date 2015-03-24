@@ -1695,7 +1695,7 @@ def reinject_plot(log_file=sys.stdout, min_bytes=0.0):
                 packs_d2s = 0.0
 
                 for flow_id, flow in conn.flows.iteritems():
-                    if co.REINJ_ORIG_BYTES in flow.attr[co.S2D] and co.REINJ_ORIG_BYTES in flow.attr[co.D2S]:
+                    if co.S2D in flow.attr and co.D2S in flow.attr and co.REINJ_ORIG_BYTES in flow.attr[co.S2D] and co.REINJ_ORIG_BYTES in flow.attr[co.D2S]:
                         if co.BYTES in flow.attr[co.S2D]:
                             bytes_s2d += flow.attr[co.S2D][co.BYTES]
                         else:
