@@ -815,7 +815,6 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
             to_plot.append(results[direction][cond])
         if to_plot:
             plt.boxplot(to_plot)
-            conds = ['WiFi', '3G', '4G', 'MPTCP 4G' + r'\n' + '(WiFi 1M)', 'MPTCP 3G' + r'\n' + '(3G 100k)', 'MPTCP 4G']
             plt.xticks(range(1, len(conds) + 1), conds)
             plt.tick_params(axis='both', which='major', labelsize=7)
             plt.tick_params(axis='both', which='minor', labelsize=5)
@@ -832,7 +831,6 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
             to_plot.append(results_two[direction][cond])
         if to_plot:
             plt.boxplot(to_plot)
-            conds = ['WiFi', '3G', '4G', 'MPTCP 4G' + r'\n' + '(WiFi 1M)', 'MPTCP 3G' + r'\n' + '(3G 100k)', 'MPTCP 4G']
             plt.xticks(range(1, len(conds) + 1), conds)
             plt.tick_params(axis='both', which='major', labelsize=7)
             plt.tick_params(axis='both', which='minor', labelsize=5)
