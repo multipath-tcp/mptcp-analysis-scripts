@@ -2392,5 +2392,6 @@ else:
     fog_rtt_bytes(log_file=log_file)
     cdf_duration_mptcp_tcp(log_file=log_file)
     plot_total_bytes_reinj_bytes(log_file=log_file)
+    cdf_overhead_retrans_reinj_new(log_file=log_file)
 log_file.close()
 print("End of summary")
