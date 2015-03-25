@@ -404,6 +404,8 @@ def cdf_rtt_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
     results = {'all': aggl_res}
 
     co.log_outliers(results, remove=args.remove)
+    for condition in aggl_res:
+        print(condition, "mean", np.mean(aggl_res[condition]), "median", np.median(aggl_res[condition]), "max", np.max(aggl_res[condition]))
     co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path, xlim=xlim, ncol=3)
 
 
