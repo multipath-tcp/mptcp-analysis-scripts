@@ -770,6 +770,8 @@ def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plo
             labels = label_order
 
         for app_name in labels:
+            if app_name not in data_cond:
+                continue
             x_val = [x[0] for x in data_cond[app_name]]
             y_val = [x[1] for x in data_cond[app_name]]
             if s:
