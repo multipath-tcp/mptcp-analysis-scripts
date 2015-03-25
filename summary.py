@@ -1377,14 +1377,22 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
 
     color = {'Dailymotion': 'brown', 'Drive': 'm', 'Dropbox': 'g', 'Facebook': 'c', 'Firefox': 'orange', 'Firefoxspdy': 'g', 'Messenger': 'b', 'Spotify': 'k', 'Youtube': 'r'}
 
-
     data_bytes = {'both3': {}, 'both4': {}}
     data_frac = {'both3': {}, 'both4': {}}
+    nb_zero = {'both3': {}, 'both4': {}}
+    bytes_zero = {'both3': {}, 'both4': {}}
+
     for cond in data_frac:
         data_frac[cond] = {co.S2D: {}, co.D2S: {}}
 
     for cond in data_bytes:
         data_bytes[cond] = {co.S2D: {}, co.D2S: {}}
+
+    for cond in nb_zero:
+        nb_zero[cond] = {co.S2D: {}, co.D2S: {}}
+
+    for cond in bytes_zero:
+        bytes_zero[cond] = {co.S2D: {}, co.D2S: {}}
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
@@ -1396,6 +1404,8 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                     for direction in data_frac[condition].keys():
                         data_frac[condition][direction][app] = []
                         data_bytes[condition][direction][app] = []
+                        nb_zero[condition][direction][app] = 0
+                        bytes_zero[condition][direction][app] = 0
 
                 # Only interested on MPTCP connections
                 if isinstance(conn, mptcp.MPTCPConnection):
@@ -1417,26 +1427,28 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                         conn_bytes_d2s[interface] -= flow.attr[co.D2S][co.REINJ_ORIG_BYTES]
 
                     if conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'] > limit_bytes:
-                        if (conn_bytes_s2d['cellular'] + 0.0) / (conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi']) > 0.6:
-                            print("S2D: " + str((conn_bytes_s2d['cellular'] + 0.0) / (conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'])) + " " + str(conn_bytes_s2d['cellular']) + " " + str(conn_bytes_s2d['wifi']) + " " + fname + " " + conn_id + " " + str(conn.attr[co.DURATION]) + " " + conn.flows['0'].attr[co.IF] + " " + str(conn.flows['0'].attr[co.S2D][co.RTT_STDEV]) + " " + conn.flows['1'].attr[co.IF] + " " + str(conn.flows['1'].attr[co.S2D][co.RTT_STDEV]))
                         frac_cell_s2d = (min(1.0, (conn_bytes_s2d['cellular'] + 0.0) / (conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'])))
+                        if frac_cell_s2d == 0:
+                            nb_zero[condition][co.S2D][app] += 1
+                            bytes_zero[condition][co.D2S][app] = conn_bytes_s2d['wifi']
                         data_frac[condition][co.S2D][app].append(frac_cell_s2d)
                         data_bytes[condition][co.S2D][app].append(conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'])
 
                     if conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'] > limit_bytes:
-                        if (conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi']) > 0.6:
-                            print("D2S: " + str((conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'])) + " " + str(conn_bytes_d2s['cellular']) + " " + str(conn_bytes_d2s['wifi']) + " " + fname + " " + conn_id + " " + str(conn.attr[co.DURATION]) + " " + conn.flows['0'].attr[co.IF] + " " + str(conn.flows['0'].attr[co.D2S][co.RTT_STDEV]) + " " + conn.flows['1'].attr[co.IF] + " " + str(conn.flows['1'].attr[co.D2S][co.RTT_STDEV]))
                         frac_cell_d2s = min(1.0, ((conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'])))
+                        if frac_cell_d2s == 0:
+                            nb_zero[condition][co.D2S][app] += 1
+                            bytes_zero[condition][co.D2S][app] = conn_bytes_d2s['wifi']
                         data_frac[condition][co.D2S][app].append(frac_cell_d2s)
                         data_bytes[condition][co.D2S][app].append(conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'])
 
-    count = 1
     data_scatter = {co.S2D: {}, co.D2S: {}}
     for condition in data_bytes:
         for direction in data_bytes[condition]:
             data_scatter[direction][condition] = {}
             for app in data_bytes[condition][direction]:
                 data_scatter[direction][condition][app] = zip(data_bytes[condition][direction][app], data_frac[condition][direction][app])
+                print(condition, direction, app, "NB ZERO", nb_zero[condition][direction][app], "BYTES ZERO", bytes_zero[condition][direction][app])
 
     co.scatter_plot_with_direction(data_scatter, "Bytes on connection", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, y_to_one=True, label_order=['Dailymotion', 'Drive', 'Dropbox', 'Facebook', 'Firefox', 'Messenger', 'Spotify', 'Youtube'])
 
