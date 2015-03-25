@@ -471,15 +471,16 @@ def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, titl
     count = 0
     fig = plt.figure()
     plt.clf()
+    fig, ax = plt.subplots()
     # Create plots
     try:
         for dataset in data:
             x_val = [x[0] for x in dataset]
             y_val = [x[1] for x in dataset]
-            plt.plot(x_val, y_val, formatting[count], label=label_names[count])
+            ax.plot(x_val, y_val, formatting[count], label=label_names[count])
             count += 1
 
-        legend = plt.legend(loc='upper left', shadow=True, fontsize='x-large')
+        legend = ax.legend(loc='upper left', shadow=True, fontsize='x-large')
     except ValueError as e:
         print(str(e) + ": create plots: skip " + graph_filepath, file=sys.stderr)
         return
@@ -500,7 +501,7 @@ def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, titl
     plt.ylabel(ylabel, fontsize=16)
 
     if y_log:
-        plt.set_yscale('symlog', linthreshy=1)
+        ax.set_yscale('symlog', linthreshy=1)
 
     if ymin is not None:
         plt.ylim(ymin=ymin)
