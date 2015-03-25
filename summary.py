@@ -2173,7 +2173,7 @@ def fog_rtt_bytes(log_file=sys.stdout):
             elif isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
                     for direction in co.DIRECTIONS:
-                        if direction not in conn.flow.attr:
+                        if direction not in flow.attr:
                             continue
                         if co.RTT_AVG not in flow.attr[direction]:
                             continue
