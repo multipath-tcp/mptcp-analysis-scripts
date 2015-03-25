@@ -816,8 +816,8 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
         if to_plot:
             plt.boxplot(to_plot)
             plt.xticks(range(1, len(conds) + 1), conds)
-            plt.tick_params(axis='both', which='major', labelsize=8)
-            plt.tick_params(axis='both', which='minor', labelsize=6)
+            plt.tick_params(axis='both', which='major', labelsize=7)
+            plt.tick_params(axis='both', which='minor', labelsize=5)
             plt.ylabel("Duration [s]", fontsize=18)
             plt.savefig(base_graph_path_bytes + "_" + direction + ".pdf")
         plt.close()
@@ -826,14 +826,14 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
         plt.figure()
         fig, ax = plt.subplots()
         to_plot = []
-        conds = ['WiFi', 'WiFi (1M)', '3G', '4G', 'MPTCP 4G (WiFi: 1M)', 'MPTCP 3G (3G: 100k)', 'MPTCP 4G']
-        for cond in ['WiFi', 'WiFi (1M)', '3G', '4G', 'MPTCP 4G (WiFi: 1M)', 'MPTCP 3G (3G: 100k)', 'MPTCP 4G']:
+        conds = ['WiFi', '3G', '4G', 'MPTCP 4G (WiFi: 1M)', 'MPTCP 3G (3G: 100k)', 'MPTCP 4G']
+        for cond in ['WiFi', '3G', '4G', 'MPTCP 4G (WiFi: 1M)', 'MPTCP 3G (3G: 100k)', 'MPTCP 4G']:
             to_plot.append(results_two[direction][cond])
         if to_plot:
             plt.boxplot(to_plot)
             plt.xticks(range(1, len(conds) + 1), conds)
-            plt.tick_params(axis='both', which='major', labelsize=8)
-            plt.tick_params(axis='both', which='minor', labelsize=6)
+            plt.tick_params(axis='both', which='major', labelsize=7)
+            plt.tick_params(axis='both', which='minor', labelsize=5)
             plt.ylabel("Throughput [Bytes/s]", fontsize=18)
             plt.savefig(base_graph_path_bytes + "_throughput_" + direction + ".pdf")
         plt.close()
