@@ -1381,6 +1381,8 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
     data_frac = {'both3': {}, 'both4': {}}
     nb_zero = {'both3': {}, 'both4': {}}
     bytes_zero = {'both3': {}, 'both4': {}}
+    tot_conn = {'both3': {}, 'both4': {}}
+    tot_bytes = {'both3': {}, 'both4': {}}
 
     for cond in data_frac:
         data_frac[cond] = {co.S2D: {}, co.D2S: {}}
@@ -1394,6 +1396,12 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
     for cond in bytes_zero:
         bytes_zero[cond] = {co.S2D: {}, co.D2S: {}}
 
+    for cond in tot_conn:
+        tot_conn[cond] = {co.S2D: {}, co.D2S: {}}
+
+    for cond in tot_bytes:
+        tot_bytes[cond] = {co.S2D: {}, co.D2S: {}}
+
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         if 'both' in condition and 'mptcp_fm_' in condition:
@@ -1406,6 +1414,8 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                         data_bytes[condition][direction][app] = []
                         nb_zero[condition][direction][app] = 0
                         bytes_zero[condition][direction][app] = 0
+                        tot_conn[condition][direction][app] = 0
+                        tot_bytes[condition][direction][app] = 0
 
                 # Only interested on MPTCP connections
                 if isinstance(conn, mptcp.MPTCPConnection):
@@ -1433,6 +1443,8 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                             bytes_zero[condition][co.S2D][app] += conn_bytes_s2d['wifi']
                         data_frac[condition][co.S2D][app].append(frac_cell_s2d)
                         data_bytes[condition][co.S2D][app].append(conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'])
+                        tot_conn[condition][co.S2D][app] += 1
+                        tot_bytes[condition][co.S2D][app] += conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi']
 
                     if conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'] > limit_bytes:
                         frac_cell_d2s = min(1.0, ((conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'])))
@@ -1441,14 +1453,26 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                             bytes_zero[condition][co.D2S][app] += conn_bytes_d2s['wifi']
                         data_frac[condition][co.D2S][app].append(frac_cell_d2s)
                         data_bytes[condition][co.D2S][app].append(conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'])
+                        tot_conn[condition][co.D2S][app] += 1
+                        tot_bytes[condition][co.D2S][app] += conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi']
 
     data_scatter = {co.S2D: {}, co.D2S: {}}
+    nb_zeros = 0.
+    bytes_zeros = 0.
+    total_conn = 0.
+    total_bytes = 0.
     for condition in data_bytes:
         for direction in data_bytes[condition]:
             data_scatter[direction][condition] = {}
             for app in data_bytes[condition][direction]:
                 data_scatter[direction][condition][app] = zip(data_bytes[condition][direction][app], data_frac[condition][direction][app])
                 print(condition, direction, app, "NB ZERO", nb_zero[condition][direction][app], "BYTES ZERO", bytes_zero[condition][direction][app])
+                nb_zeros = nb_zero[condition][direction][app]
+                bytes_zeros = bytes_zero[condition][direction][app]
+                total_conn = tot_conn[condition][direction][app]
+                total_bytes = tot_bytes[condition][direction][app]
+
+    print("TOTAL:", nb_zeros, "zero conns over", total_conn, nb_zeros / total_conn, "%", bytes_zeros, "zero bytes over", total_bytes, bytes_zeros / total_bytes, "%")
 
     co.scatter_plot_with_direction(data_scatter, "Bytes on connection", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, y_to_one=True, label_order=['Dailymotion', 'Drive', 'Dropbox', 'Facebook', 'Firefox', 'Messenger', 'Spotify', 'Youtube'])
 
