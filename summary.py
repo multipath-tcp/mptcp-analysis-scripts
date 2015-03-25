@@ -2252,8 +2252,8 @@ def plot_total_bytes_reinj_bytes(log_file=sys.stdout):
                 results[direction][condition][1].append([i, point[1]])
                 i += 1
 
-            graph_full_path += direction + "_" + condition + ".pdf"
-            co.plot_line_graph(results[direction][condition], ['Total', 'Reinjections'], ['b', 'r'], 'Connections', 'Number of data bytes', '', graph_full_path)
+            tot_graph_full_path = graph_full_path + "_" + direction + "_" + condition + ".pdf"
+            co.plot_line_graph(results[direction][condition], ['Total', 'Reinjections'], ['b', 'r'], 'Connections', 'Number of data bytes', '', tot_graph_full_path)
 
 
 millis = int(round(time.time() * 1000))
