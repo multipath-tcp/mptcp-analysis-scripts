@@ -763,11 +763,13 @@ def line_graph_aggl():
 
 def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
     results = {co.S2D: {}, co.D2S: {}}
+    results_two = {co.S2D: {}, co.D2S: {}}
     base_graph_name_bytes = "boxplot_duration_" + args.app + "_" + start_time + '_' + stop_time
     base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
 
     for direction in co.DIRECTIONS:
         results[direction] = {'WiFi': [], 'WiFi (1M)': [], '3G': [], 'MPTCP 3G (3G: 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi: 1M)': []}
+        results_two[direction] = {'WiFi': [], 'WiFi (1M)': [], '3G': [], 'MPTCP 3G (3G: 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi: 1M)': []}
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
@@ -797,21 +799,22 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
                         if direction in conn.flow.attr:
                             if conn.flow.attr[direction][co.BYTES] >= min_bytes:
                                 results[direction][key].append(conn.flow.attr[co.DURATION])
+                                results_two[direction][key].append((conn.flow.attr[co.BYTES] + 0.0) / conn.flow.attr[co.DURATION])
                 elif isinstance(conn, mptcp.MPTCPConnection):
                     for direction in co.DIRECTIONS:
                         if direction in conn.attr:
                             if co.BYTES_MPTCPTRACE in conn.attr[direction] and conn.attr[direction][co.BYTES_MPTCPTRACE] > min_bytes:
                                 results[direction][key].append(conn.attr[co.DURATION])
+                                results_two[direction][key].append((conn.attr[co.BYTES_MPTCPTRACE] + 0.0) / conn.attr[co.DURATION])
 
 
     for direction, data_dir in results.iteritems():
         plt.figure()
         fig, ax = plt.subplots()
         to_plot = []
-        print("Data", file=log_file)
+        conds = ['WiFi', 'WiFi (1M)', '3G', '4G', 'MPTCP 4G (WiFi: 1M)', 'MPTCP 3G (3G: 100k)', 'MPTCP 4G']
         for cond in ['WiFi', 'WiFi (1M)', '3G', '4G', 'MPTCP 4G (WiFi: 1M)', 'MPTCP 3G (3G: 100k)', 'MPTCP 4G']:
             to_plot.append(results[direction][cond])
-        print(to_plot, file=log_file)
         if to_plot:
             plt.boxplot(to_plot)
             plt.xticks(range(1, len(conds) + 1), conds)
@@ -819,6 +822,22 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
             plt.tick_params(axis='both', which='minor', labelsize=8)
             plt.ylabel("Duration [s]", fontsize=18)
             plt.savefig(base_graph_path_bytes + "_" + direction + ".pdf")
+        plt.close()
+
+    for direction, data_dir in results_two.iteritems():
+        plt.figure()
+        fig, ax = plt.subplots()
+        to_plot = []
+        conds = ['WiFi', 'WiFi (1M)', '3G', '4G', 'MPTCP 4G (WiFi: 1M)', 'MPTCP 3G (3G: 100k)', 'MPTCP 4G']
+        for cond in ['WiFi', 'WiFi (1M)', '3G', '4G', 'MPTCP 4G (WiFi: 1M)', 'MPTCP 3G (3G: 100k)', 'MPTCP 4G']:
+            to_plot.append(results_two[direction][cond])
+        if to_plot:
+            plt.boxplot(to_plot)
+            plt.xticks(range(1, len(conds) + 1), conds)
+            plt.tick_params(axis='both', which='major', labelsize=10)
+            plt.tick_params(axis='both', which='minor', labelsize=8)
+            plt.ylabel("Throughput [Bytes/s]", fontsize=18)
+            plt.savefig(base_graph_path_bytes + "_throughput_" + direction + ".pdf")
         plt.close()
 
 
@@ -2139,6 +2158,8 @@ def fog_rtt_bytes(log_file=sys.stdout):
 
             if isinstance(conn, tcp.TCPConnection):
                 for direction in co.DIRECTIONS:
+                    if direction not in conn.flow.attr:
+                        continue
                     if co.RTT_AVG not in conn.flow.attr[direction]:
                         continue
                     if conn.flow.attr[co.IF] == co.WIFI:
@@ -2152,6 +2173,8 @@ def fog_rtt_bytes(log_file=sys.stdout):
             elif isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
                     for direction in co.DIRECTIONS:
+                        if direction not in conn.flow.attr:
+                            continue
                         if co.RTT_AVG not in flow.attr[direction]:
                             continue
                         if flow.attr[co.IF] == co.WIFI:
