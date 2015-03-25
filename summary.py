@@ -1272,7 +1272,7 @@ def fog_duration_bytes(log_file=sys.stdout):
                 nb_bytes += conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0) + conn.attr[co.D2S][co.BYTES].get(co.CELL, 0)
             data[condition][app].append([duration, nb_bytes])
 
-    co.scatter_plot(data, "Duration [s]", "Bytes on connection", color, sums_dir_exp, base_graph_name, plot_identity=False)
+    co.scatter_plot(data, "Duration [s]", "Bytes on connection", color, sums_dir_exp, base_graph_name, plot_identity=False, label_order=['Dailymotion', 'Drive', 'Dropbox', 'Facebook', 'Firefox', 'Messenger', 'Spotify', 'Youtube'])
 
 
 def cdfs_summary(log_file=sys.stdout):
