@@ -2347,9 +2347,8 @@ def fog_plot_cellular_percentage_all(log_file=sys.stdout, limit_duration=0, limi
             app = get_app_name(fname).title()
             for conn_id, conn in data.iteritems():
                 if app not in data_frac[condition]:
-                    for direction in data_frac[condition].keys():
-                        data_frac[condition][app] = []
-                        data_bytes[condition][app] = []
+                    data_frac[condition][app] = []
+                    data_bytes[condition][app] = []
 
                 # Only interested on MPTCP connections
                 if isinstance(conn, mptcp.MPTCPConnection):
@@ -2402,9 +2401,8 @@ def fog_plot_cellular_percentage_scenario(log_file=sys.stdout, limit_duration=0,
             app = get_app_name(fname).title()
             for conn_id, conn in data.iteritems():
                 if app not in data_frac[condition]:
-                    for direction in data_frac[condition].keys():
-                        data_frac[condition][app] = []
-                        data_bytes[condition][app] = []
+                    data_frac[condition][app] = []
+                    data_bytes[condition][app] = []
 
                 # Only interested on MPTCP connections
                 if isinstance(conn, mptcp.MPTCPConnection):
