@@ -2441,7 +2441,7 @@ def fog_plot_cellular_percentage_scenario(log_file=sys.stdout, limit_duration=0,
         for app in data_bytes[condition]:
             data_scatter[condition][app] = zip(data_bytes[condition][app], data_frac[condition][app])
 
-    co.scatter_plot_with_direction(data_scatter, "Bytes on connection", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, y_to_one=True, label_order=['Dailymotion', 'Drive', 'Dropbox', 'Facebook', 'Firefox', 'Messenger', 'Spotify', 'Youtube'])
+    co.scatter_plot(data_scatter, "Bytes on connection", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, y_to_one=True, label_order=['Dailymotion', 'Drive', 'Dropbox', 'Facebook', 'Firefox', 'Messenger', 'Spotify', 'Youtube'])
 
 
 millis = int(round(time.time() * 1000))
