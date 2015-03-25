@@ -385,25 +385,24 @@ def cdf_rtt_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
                             if conn.flow.attr[co.S2D][co.RTT_SAMPLES] >= min_samples and conn.flow.attr[co.S2D][co.BYTES] >= min_bytes:
                                 if conn.flow.attr[co.S2D][co.RTT_AVG] >= 1.0:
                                     if 'wlan' in fname:
-                                        aggl_res[wifi_up] += [(conn.flow.attr[co.S2D][co.RTT_AVG], fname)]
+                                        aggl_res[wifi_up] += [(conn.flow.attr[co.S2D][co.RTT_AVG])]
                                     elif 'rmnet3' in fname:
-                                        aggl_res[rmnet_3_up] += [(conn.flow.attr[co.S2D][co.RTT_AVG], fname)]
+                                        aggl_res[rmnet_3_up] += [(conn.flow.attr[co.S2D][co.RTT_AVG])]
                                     elif 'rmnet4' in fname:
-                                        aggl_res[rmnet_4_up] += [(conn.flow.attr[co.S2D][co.RTT_AVG], fname)]
+                                        aggl_res[rmnet_4_up] += [(conn.flow.attr[co.S2D][co.RTT_AVG])]
                         elif dataset_name == 'dirs_two':
                             if co.RTT_SAMPLES not in conn.flow.attr[co.D2S]:
                                 break
                             if conn.flow.attr[co.D2S][co.RTT_SAMPLES] >= min_samples and conn.flow.attr[co.D2S][co.BYTES] >= min_bytes:
                                 if conn.flow.attr[co.D2S][co.RTT_AVG] >= 1.0:
                                     if 'wlan' in fname:
-                                        aggl_res[wifi_down] += [(conn.flow.attr[co.D2S][co.RTT_AVG], fname)]
+                                        aggl_res[wifi_down] += [(conn.flow.attr[co.D2S][co.RTT_AVG])]
                                     elif 'rmnet3' in fname:
-                                        aggl_res[rmnet_3_down] += [(conn.flow.attr[co.D2S][co.RTT_AVG], fname)]
+                                        aggl_res[rmnet_3_down] += [(conn.flow.attr[co.D2S][co.RTT_AVG])]
                                     elif 'rmnet4' in fname:
-                                        aggl_res[rmnet_4_down] += [(conn.flow.attr[co.D2S][co.RTT_AVG], fname)]
+                                        aggl_res[rmnet_4_down] += [(conn.flow.attr[co.D2S][co.RTT_AVG])]
     results = {'all': aggl_res}
 
-    co.log_outliers(results, remove=args.remove)
     for condition in aggl_res:
         print(condition, "mean", np.mean(aggl_res[condition]), "median", np.median(aggl_res[condition]), "max", np.max(aggl_res[condition]))
     co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path, xlim=xlim, ncol=3, label_order=[rmnet_3_up, rmnet_3_down, rmnet_4_up, rmnet_4_down, wifi_up, wifi_down])

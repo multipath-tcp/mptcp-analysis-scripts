@@ -696,7 +696,7 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ncol
 
         graph_fname = os.path.splitext(base_graph_fname)[0] + "_cdf_" + cond + ".pdf"
 
-        cont_list = aggl_res[cond].keys()
+        cond_list = aggl_res[cond].keys()
         if label_order:
             cond_list = label_order
         for element in cond_list:
