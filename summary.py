@@ -2157,7 +2157,7 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
                 to_plot[1].append([i, point[1]])
                 i += 1
             tot_graph_full_path = graph_full_path + "_details_" + direction + "_" + condition + ".pdf"
-            co.plot_line_graph(results[direction][condition], ['Total', 'Reinjections'], ['b', 'r'], 'Connections', 'Number of data bytes', '', tot_graph_full_path, y_log=True)
+            co.plot_line_graph(to_plot, ['Total', 'Reinjections'], ['b', 'r'], 'Connections', 'Number of data bytes', '', tot_graph_full_path, y_log=True)
 
 def fog_rtt_bytes(log_file=sys.stdout):
     results = {co.S2D: {}, co.D2S: {}}
