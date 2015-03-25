@@ -752,7 +752,7 @@ def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname, natural=
             plot_cdfs(aggl_res[direction], color, xlabel, os.path.splitext(base_graph_fname)[0] + '_' + direction)
 
 
-def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plot_identity=True, s=None, log_scale_x=True, log_scale_y=True, y_to_one=False):
+def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plot_identity=True, s=None, log_scale_x=True, log_scale_y=True, y_to_one=False, label_order=None):
     """ Plot a scatter plot for each condition inside data (points are for apps)
         base_graph_name is given without extension
     """
@@ -763,9 +763,15 @@ def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plo
         fig, ax = plt.subplots()
         scatters = []
         apps = []
-        for app_name, data_app in data_cond.iteritems():
-            x_val = [x[0] for x in data_app]
-            y_val = [x[1] for x in data_app]
+
+        labels = data_cond.keys()
+
+        if label_order:
+            labels = label_order
+
+        for app_name in labels:
+            x_val = [x[0] for x in data_cond[app_name]]
+            y_val = [x[1] for x in data_cond[app_name]]
             if s:
                 scatters.append(ax.scatter(x_val, y_val, s=s[condition][app_name], label=app_name, color=color[app_name]))
             else:
