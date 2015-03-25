@@ -2235,13 +2235,17 @@ def plot_total_bytes_reinj_bytes(log_file=sys.stdout):
 
                 for flow_id, flow in conn.flows.iteritems():
                     for direction in co.DIRECTIONS:
-                        if co.BYTES in flow.attr[direction] and co.REINJ_ORIG_BYTES in flow.attr[direction]:
-                            total_bytes[direction] += flow.attr[direction][co.BYTES]
-                            reinj_bytes[direction] += flow.attr[direction][co.REINJ_ORIG_BYTES]
+                        reinjected = 0
+                        if direction in flow.attr:
+                            if co.REINJ_ORIG in flow.attr[direction]:
+                                for start_seq, stop_seq in flow.attr[direction][co.REINJ_ORIG]:
+                                    reinjected += stop_seq - start_seq
+                            if co.BYTES in flow.attr[direction]:
+                                total_bytes[direction] += flow.attr[direction][co.BYTES]
+                                reinj_bytes[direction] += reinjected
 
                 for direction in co.DIRECTIONS:
-                    if total_bytes[direction] > 0:
-                        results_raw[direction][condition].append([total_bytes[direction], reinj_bytes[direction]])
+                    results_raw[direction][condition].append([total_bytes[direction], reinj_bytes[direction]])
 
     for direction in results_raw:
         for condition in results_raw[direction]:
