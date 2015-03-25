@@ -466,7 +466,7 @@ def sort_and_aggregate(aggr_list):
 plt_lock = threading.Lock()
 TIMEOUT = 60
 
-def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_filepath, ymin=None, titlesize=20):
+def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_filepath, ymin=None, titlesize=20, y_log=False):
     """ Critical part to plot a line graph """
     count = 0
     fig = plt.figure()
@@ -499,6 +499,9 @@ def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, titl
     plt.xlabel(xlabel, fontsize=18)
     plt.ylabel(ylabel, fontsize=16)
 
+    if y_log:
+        plt.set_yscale('symlog', linthreshy=1)
+
     if ymin is not None:
         plt.ylim(ymin=ymin)
 
@@ -517,7 +520,7 @@ def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, titl
     plt.close()
 
 
-def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_filepath, ymin=None, titlesize=20):
+def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_filepath, ymin=None, titlesize=20, y_log=False):
     """ Plot a line graph with data """
     # no data, skip
     pop_index = []
@@ -543,7 +546,7 @@ def plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_
 
     try:
         p = Process(target=critical_plot_line_graph, args=(
-            data, label_names, formatting, xlabel, ylabel, title, graph_filepath,), kwargs={'ymin': ymin, 'titlesize': titlesize})
+            data, label_names, formatting, xlabel, ylabel, title, graph_filepath,), kwargs={'ymin': ymin, 'titlesize': titlesize, 'y_log': y_log},)
         p.start()
         p.join(TIMEOUT)
         if p.is_alive():
