@@ -2224,30 +2224,25 @@ def plot_total_bytes_reinj_bytes(log_file=sys.stdout):
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
 
-        if condition not in results:
-            for direction in co.DIRECTIONS:
-                results[direction][condition] = [[], []]
-                results_raw[direction][condition] = []
+        if 'mptcp_fm' in condition and 'both' in condition:
+            if condition not in results:
+                for direction in co.DIRECTIONS:
+                    results[direction][condition] = [[], []]
+                    results_raw[direction][condition] = []
 
-            for conn_id, conn in data.iteritems():
-                if isinstance(conn, mptcp.MPTCPConnection):
-                    reinj_bytes = {co.S2D: 0, co.D2S: 0}
-                    total_bytes = {co.S2D: 0, co.D2S: 0}
+                for conn_id, conn in data.iteritems():
+                    if isinstance(conn, mptcp.MPTCPConnection):
+                        reinj_bytes = {co.S2D: 0, co.D2S: 0}
+                        total_bytes = {co.S2D: 0, co.D2S: 0}
 
-                    for flow_id, flow in conn.flows.iteritems():
-                        for direction in co.DIRECTIONS:
-                            reinjected = 0
-                            if direction in flow.attr:
-                                if co.REINJ_ORIG in flow.attr[direction]:
-                                    for start_seq, stop_seq in flow.attr[direction][co.REINJ_ORIG]:
-                                        if stop_seq > start_seq:
-                                            reinjected += stop_seq - start_seq
+                        for flow_id, flow in conn.flows.iteritems():
+                            for direction in co.DIRECTIONS:
                                 if co.BYTES in flow.attr[direction]:
                                     total_bytes[direction] += flow.attr[direction][co.BYTES]
-                                    reinj_bytes[direction] += reinjected
+                                    reinj_bytes[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
 
-                    for direction in co.DIRECTIONS:
-                        results_raw[direction][condition].append([total_bytes[direction], reinj_bytes[direction]])
+                        for direction in co.DIRECTIONS:
+                            results_raw[direction][condition].append([total_bytes[direction], reinj_bytes[direction]])
 
     for direction in results_raw:
         for condition in results_raw[direction]:
