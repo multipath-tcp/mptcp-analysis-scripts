@@ -2153,8 +2153,8 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
             to_plot = [[], []]
             i = 0
             for point in sorted_data:
-                to_plot[0].append(i, point[0])
-                to_plot[1].append(i, point[1])
+                to_plot[0].append([i, point[0]])
+                to_plot[1].append([i, point[1]])
                 i += 1
             tot_graph_full_path = graph_full_path + "_details_" + direction + "_" + condition + ".pdf"
             co.plot_line_graph(results[direction][condition], ['Total', 'Reinjections'], ['b', 'r'], 'Connections', 'Number of data bytes', '', tot_graph_full_path, y_log=True)
