@@ -2118,7 +2118,7 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         if 'mptcp_fm' in condition and 'both' in condition:
-            if condition not in results:
+            if condition not in results[co.S2D]:
                 for direction in co.DIRECTIONS:
                     results[direction][condition] = {'Reinjection': [], 'Retransmission': []}
                     results_two[direction][condition] = []
@@ -2290,7 +2290,7 @@ def cdf_overhead_retrans_reinj_new(log_file=sys.stdout):
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         if 'mptcp_fm' in condition and 'both' in condition:
-            if condition not in results:
+            if condition not in results[co.S2D]:
                 for direction in co.DIRECTIONS:
                     results[direction][condition] = []
 
