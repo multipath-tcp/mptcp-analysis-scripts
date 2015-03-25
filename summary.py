@@ -2130,12 +2130,16 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
                 total_data_bytes = {co.S2D: 0, co.D2S: 0}
                 reinj_data_bytes = {co.S2D: 0, co.D2S: 0}
 
+
                 for flow_id, flow in conn.flows.iteritems():
                     for direction in co.DIRECTIONS:
-                        if co.BYTES_FRAMES_TOTAL in flow.attr[direction]:
-                            total_bytes[direction] += flow.attr[direction][co.BYTES_FRAMES_TOTAL]
-                            retrans_bytes[direction] += flow.attr[direction].get(co.BYTES_FRAMES_RETRANS, 0)
-                            reinj_bytes[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0) + (flow.attr[direction].get(co.REINJ_ORIG_PACKS, 0) * co.FRAME_MPTCP_OVERHEAD)
+                        if co.BYTES in flow.attr[direction]:
+                            # total_bytes[direction] += flow.attr[direction][co.BYTES_FRAMES_TOTAL]
+                            total_bytes[direction] += flow.attr[direction][co.BYTES]
+                            # retrans_bytes[direction] += flow.attr[direction].get(co.BYTES_FRAMES_RETRANS, 0)
+                            retrans_bytes[direction] += flow.attr[direction].get(co.BYTES_RETRANS, 0)
+                            # reinj_bytes[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0) + (flow.attr[direction].get(co.REINJ_ORIG_PACKS, 0) * co.FRAME_MPTCP_OVERHEAD)
+                            reinj_bytes[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
                             total_data_bytes[direction] += flow.attr[direction].get(co.BYTES, 0)
                             reinj_data_bytes[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
 
@@ -2146,7 +2150,6 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
                         results_two[direction][condition].append([total_data_bytes[direction], reinj_data_bytes[direction]])
 
     co.plot_cdfs_with_direction(results, ['red', 'blue'], 'Fraction of total bytes', graph_full_path, natural=True)
-
     for direction in results_two:
         for condition in results_two[direction]:
             sorted_data = sorted(results_two[direction][condition], key=lambda elem: elem[0])
