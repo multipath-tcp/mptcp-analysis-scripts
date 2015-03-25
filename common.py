@@ -814,11 +814,11 @@ def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plo
         plt.close('all')
 
 
-def scatter_plot_with_direction(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plot_identity=True, s=None, log_scale_x=True, log_scale_y=True, y_to_one=False):
+def scatter_plot_with_direction(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plot_identity=True, s=None, log_scale_x=True, log_scale_y=True, y_to_one=False, label_order=None):
     """ Plot a scatter plot for each direction and condition inside data (points are for apps)
     """
     for direction, data_dir in data.iteritems():
         if s:
-            scatter_plot(data_dir, xlabel, ylabel, color, sums_dir_exp, os.path.splitext(base_graph_name)[0] + "_" + direction, plot_identity=plot_identity, s=s[direction], log_scale_x=log_scale_x, log_scale_y=log_scale_y, y_to_one=y_to_one)
+            scatter_plot(data_dir, xlabel, ylabel, color, sums_dir_exp, os.path.splitext(base_graph_name)[0] + "_" + direction, plot_identity=plot_identity, s=s[direction], log_scale_x=log_scale_x, log_scale_y=log_scale_y, y_to_one=y_to_one, label_order=label_order)
         else:
-            scatter_plot(data_dir, xlabel, ylabel, color, sums_dir_exp, os.path.splitext(base_graph_name)[0] + "_" + direction, plot_identity=plot_identity, log_scale_x=log_scale_x, log_scale_y=log_scale_y, y_to_one=y_to_one)
+            scatter_plot(data_dir, xlabel, ylabel, color, sums_dir_exp, os.path.splitext(base_graph_name)[0] + "_" + direction, plot_identity=plot_identity, log_scale_x=log_scale_x, log_scale_y=log_scale_y, y_to_one=y_to_one, label_order=label_order)
