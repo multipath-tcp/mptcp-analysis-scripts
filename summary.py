@@ -799,13 +799,13 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
                         if direction in conn.flow.attr:
                             if conn.flow.attr[direction][co.BYTES] >= min_bytes:
                                 results[direction][key].append(conn.flow.attr[co.DURATION])
-                                results_two[direction][key].append((conn.flow.attr[co.BYTES] + 0.0) / conn.flow.attr[co.DURATION])
+                                results_two[direction][key].append((conn.flow.attr[direction][co.BYTES] + 0.0) / conn.flow.attr[co.DURATION])
                 elif isinstance(conn, mptcp.MPTCPConnection):
                     for direction in co.DIRECTIONS:
                         if direction in conn.attr:
                             if co.BYTES_MPTCPTRACE in conn.attr[direction] and conn.attr[direction][co.BYTES_MPTCPTRACE] > min_bytes:
                                 results[direction][key].append(conn.attr[co.DURATION])
-                                results_two[direction][key].append((conn.attr[co.BYTES_MPTCPTRACE] + 0.0) / conn.attr[co.DURATION])
+                                results_two[direction][key].append((conn.attr[direction][co.BYTES_MPTCPTRACE] + 0.0) / conn.attr[co.DURATION])
 
 
     for direction, data_dir in results.iteritems():
