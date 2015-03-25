@@ -680,7 +680,7 @@ def plot_cdfs(aggl_res, color, xlabel, base_graph_fname):
         plt.close('all')
 
 
-def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ncol=None):
+def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ncol=None, label_order=None):
     """ Plot all possible CDFs based on aggl_res.
         aggl_res is a dictionary with the structure aggl_res[condition][element] = list of data
         base_graph_fname does not have any extension
@@ -696,7 +696,10 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ncol
 
         graph_fname = os.path.splitext(base_graph_fname)[0] + "_cdf_" + cond + ".pdf"
 
-        for element in aggl_res[cond].keys():
+        cont_list = aggl_res[cond].keys()
+        if label_order:
+            cond_list = label_order
+        for element in cond_list:
             try:
                 sample = np.array(sorted(aggl_res[cond][element]))
                 f = open(os.path.splitext(base_graph_fname)[0] + '_' + cond + '_' + element, 'w')

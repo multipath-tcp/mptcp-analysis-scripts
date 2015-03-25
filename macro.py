@@ -406,7 +406,7 @@ def cdf_rtt_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
     co.log_outliers(results, remove=args.remove)
     for condition in aggl_res:
         print(condition, "mean", np.mean(aggl_res[condition]), "median", np.median(aggl_res[condition]), "max", np.max(aggl_res[condition]))
-    co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path, xlim=xlim, ncol=3)
+    co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path, xlim=xlim, ncol=3, label_order=[rmnet_3_up, rmnet_3_down, rmnet_4_up, rmnet_4_down, wifi_up, wifi_down])
 
 
 def cdf_rtt_mptcp_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
