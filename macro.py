@@ -404,7 +404,7 @@ def cdf_rtt_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
     results = {'all': aggl_res}
 
     for condition in aggl_res:
-        print(condition, "mean", np.mean(aggl_res[condition]), "median", np.median(aggl_res[condition]), "max", np.max(aggl_res[condition]))
+        print(condition, "mean", np.mean(aggl_res[condition]), "median", np.median(aggl_res[condition]), "max", np.max(aggl_res[condition]), "60", np.percentile(aggl_res[condition], 60))
     co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path, xlim=xlim, ncol=3, label_order=[rmnet_3_up, rmnet_3_down, rmnet_4_up, rmnet_4_down, wifi_up, wifi_down])
 
 
