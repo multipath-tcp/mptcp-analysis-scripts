@@ -2278,6 +2278,59 @@ def plot_total_bytes_reinj_bytes(log_file=sys.stdout):
             co.plot_line_graph(results[direction][condition], ['Total', 'Reinjections'], ['b', 'r'], 'Connections', 'Number of data bytes', '', tot_graph_full_path, y_log=True)
 
 
+def cdf_overhead_retrans_reinj_new(log_file=sys.stdout):
+    results = {co.S2D: {}, co.D2S: {}}
+    graph_fname = "overhead_retrans_reinj_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+    retrans_bytes = {co.S2D: 0, co.D2S: 0}
+    reinj_bytes = {co.S2D: 0, co.D2S: 0}
+    total_bytes = {co.S2D: 0, co.D2S: 0}
+    total_data_bytes = {co.S2D: 0, co.D2S: 0}
+    reinj_data_bytes = {co.S2D: 0, co.D2S: 0}
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if 'mptcp_fm' in condition and 'both' in condition:
+            if condition not in results:
+                for direction in co.DIRECTIONS:
+                    results[direction][condition] = []
+
+            for conn_id, conn in data.iteritems():
+                for direction in co.DIRECTIONS:
+                    retrans_bytes[direction] = 0
+                    reinj_bytes[direction] = 0
+                    total_bytes[direction] = 0
+                    total_data_bytes[direction] = 0
+                    reinj_data_bytes[direction] = 0
+
+                for flow_id, flow in conn.flows.iteritems():
+                    for direction in co.DIRECTIONS:
+                        if co.BYTES in flow.attr[direction]:
+                            # total_bytes[direction] += flow.attr[direction][co.BYTES_FRAMES_TOTAL]
+                            total_bytes[direction] = total_bytes[direction] + flow.attr[direction][co.BYTES]
+                            # retrans_bytes[direction] += flow.attr[direction].get(co.BYTES_FRAMES_RETRANS, 0)
+                            retrans_bytes[direction] = retrans_bytes[direction] + flow.attr[direction].get(co.BYTES_RETRANS, 0)
+                            # reinj_bytes[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0) + (flow.attr[direction].get(co.REINJ_ORIG_PACKS, 0) * co.FRAME_MPTCP_OVERHEAD)
+                            reinj_bytes[direction] = reinj_bytes[direction] + flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
+                            total_data_bytes[direction] = total_data_bytes[direction] + flow.attr[direction].get(co.BYTES, 0)
+                            reinj_data_bytes[direction] = reinj_data_bytes[direction] + flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
+
+                for direction in co.DIRECTIONS:
+                    results[direction][condition].append((total_data_bytes[direction], reinj_data_bytes[direction]))
+
+    co.plot_cdfs_with_direction(results, ['red', 'blue'], 'Fraction of total bytes', graph_full_path, natural=True)
+    for direction in results:
+        for condition in results[direction]:
+            sorted_data = sorted(results[direction][condition], key=lambda elem: elem[0])
+            to_plot = [[], []]
+            i = 0
+            for point in sorted_data:
+                to_plot[0].append([i, point[0]])
+                to_plot[1].append([i, point[1]])
+                i += 1
+            tot_graph_full_path = graph_full_path + "_details_" + direction + "_" + condition + ".pdf"
+            co.plot_line_graph(to_plot, ['Total', 'Reinjections'], ['b', 'r'], 'Connections', 'Number of data bytes', '', tot_graph_full_path, y_log=True)
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
