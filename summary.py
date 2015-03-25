@@ -2370,16 +2370,78 @@ def fog_plot_cellular_percentage_all(log_file=sys.stdout, limit_duration=0, limi
                         conn_bytes[interface] -= flow.attr[co.D2S][co.REINJ_ORIG_BYTES]
 
                     if conn_bytes['cellular'] + conn_bytes['wifi'] > limit_bytes:
-                        frac_cell_s2d = (min(1.0, (conn_bytes['cellular'] + 0.0) / (conn_bytes['cellular'] + conn_bytes['wifi'])))
-                        data_frac[condition][co.S2D][app].append(frac_cell_s2d)
-                        data_bytes[condition][co.S2D][app].append(conn_bytes['cellular'] + conn_bytes['wifi'])
+                        frac_cell = (min(1.0, (conn_bytes['cellular'] + 0.0) / (conn_bytes['cellular'] + conn_bytes['wifi'])))
+                        data_frac[condition][app].append(frac_cell)
+                        data_bytes[condition][app].append(conn_bytes['cellular'] + conn_bytes['wifi'])
 
-    data_scatter = {co.S2D: {}, co.D2S: {}}
+    data_scatter = {}
     for condition in data_bytes:
-        for direction in data_bytes[condition]:
-            data_scatter[direction][condition] = {}
-            for app in data_bytes[condition][direction]:
-                data_scatter[direction][condition][app] = zip(data_bytes[condition][direction][app], data_frac[condition][direction][app])
+        data_scatter[condition] = {}
+        for app in data_bytes[condition]:
+            data_scatter[condition][app] = zip(data_bytes[condition][app], data_frac[condition][app])
+
+    co.scatter_plot(data_scatter, "Bytes on connection", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, y_to_one=True, label_order=['Dailymotion', 'Drive', 'Dropbox', 'Facebook', 'Firefox', 'Messenger', 'Spotify', 'Youtube'])
+
+
+def fog_plot_cellular_percentage_scenario(log_file=sys.stdout, limit_duration=0, limit_bytes=0):
+
+    fog_base_graph_name_bytes = "fog_cellular_scenario_" + start_time + '_' + stop_time
+    fog_base_graph_path_bytes = os.path.join(sums_dir_exp, fog_base_graph_name_bytes)
+
+    color = {'Dailymotion': 'brown', 'Drive': 'm', 'Dropbox': 'g', 'Facebook': 'c', 'Firefox': 'orange', 'Firefoxspdy': 'g', 'Messenger': 'b', 'Spotify': 'k', 'Youtube': 'r'}
+    UPLOAD_APPS = ['Drive', 'Dropbox', 'Facebook', 'Messenger']
+    DOWNLOAD_APPS = ['Dailymotion', 'Firefox', 'Spotify', 'Youtube']
+
+    data_frac = {'both3': {}, 'both4': {}}
+    data_bytes = {'both3': {}, 'both4': {}}
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if 'both' in condition and 'mptcp_fm_' in condition:
+            condition = condition[9:]
+            app = get_app_name(fname).title()
+            for conn_id, conn in data.iteritems():
+                if app not in data_frac[condition]:
+                    for direction in data_frac[condition].keys():
+                        data_frac[condition][app] = []
+                        data_bytes[condition][app] = []
+
+                # Only interested on MPTCP connections
+                if isinstance(conn, mptcp.MPTCPConnection):
+                    if conn.attr[co.DURATION] < limit_duration:
+                        continue
+                    conn_bytes = {'cellular': 0, 'wifi': 0}
+                    if app in UPLOAD_APPS:
+                        if co.BYTES in conn.attr[co.S2D]:
+                            for interface in conn.attr[co.S2D][co.BYTES]:
+                                conn_bytes[interface] += conn.attr[co.S2D][co.BYTES][interface]
+                        for flow_id, flow in conn.flows.iteritems():
+                            if co.S2D not in flow.attr or co.REINJ_ORIG_BYTES not in flow.attr[co.S2D]:
+                                break
+                            interface = flow.attr[co.IF]
+                            conn_bytes[interface] -= flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
+
+                    elif app in DOWNLOAD_APPS:
+                        if co.BYTES in conn.attr[co.D2S]:
+                            for interface in conn.attr[co.D2S][co.BYTES]:
+                                conn_bytes[interface] += conn.attr[co.D2S][co.BYTES][interface]
+                        for flow_id, flow in conn.flows.iteritems():
+                            if co.D2S not in flow.attr or co.REINJ_ORIG_BYTES not in flow.attr[co.D2S]:
+                                break
+                            interface = flow.attr[co.IF]
+                            conn_bytes[interface] -= flow.attr[co.D2S][co.REINJ_ORIG_BYTES]
+
+
+                    if conn_bytes['cellular'] + conn_bytes['wifi'] > limit_bytes:
+                        frac_cell = (min(1.0, (conn_bytes['cellular'] + 0.0) / (conn_bytes['cellular'] + conn_bytes['wifi'])))
+                        data_frac[condition][app].append(frac_cell)
+                        data_bytes[condition][app].append(conn_bytes['cellular'] + conn_bytes['wifi'])
+
+    data_scatter = {}
+    for condition in data_bytes:
+        data_scatter[condition] = {}
+        for app in data_bytes[condition]:
+            data_scatter[condition][app] = zip(data_bytes[condition][app], data_frac[condition][app])
 
     co.scatter_plot_with_direction(data_scatter, "Bytes on connection", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, y_to_one=True, label_order=['Dailymotion', 'Drive', 'Dropbox', 'Facebook', 'Firefox', 'Messenger', 'Spotify', 'Youtube'])
 
