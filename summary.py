@@ -778,18 +778,18 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
         if 'mptcp_fm_' in condition:
             if 'both3' in condition and 20150214 <= fname_date and fname_date <= 20150220:
                 key = 'MPTCP 3G (3G: 100k)'
-            elif 'both4' in condition and 20150323 <= fname_date and 20150324 >= fname_date:
+            elif 'both4' in condition and 20150323 <= fname_date and 20150325 >= fname_date:
                 key = 'MPTCP 4G'
             elif 'both4' in condition and 20150304 <= fname_date and fname_date <= 20150308:
                 key = 'MPTCP 4G (WiFi: 1M)'
         else:
-            if 'wlan' in condition and ((20150214 <= fname_date and fname_date <= 20150220) or (20150323 <= fname_date and 20150324 >= fname_date)):
+            if 'wlan' in condition and ((20150214 <= fname_date and fname_date <= 20150220) or (20150323 <= fname_date and 20150325 >= fname_date)):
                 key = 'WiFi'
             elif 'wlan' in condition and 20150304 <= fname_date and fname_date <= 20150308:
                 key = 'WiFi (1M)'
-            elif 'rmnet3' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150324 >= fname_date)):
+            elif 'rmnet3' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150325 >= fname_date)):
                 key = '3G'
-            elif 'rmnet4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150324 >= fname_date)):
+            elif 'rmnet4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150325 >= fname_date)):
                 key = '4G'
 
         if key:
@@ -818,8 +818,8 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
         if to_plot:
             plt.boxplot(to_plot)
             plt.xticks(range(1, len(conds) + 1), conds)
-            plt.tick_params(axis='both', which='major', labelsize=10)
-            plt.tick_params(axis='both', which='minor', labelsize=8)
+            plt.tick_params(axis='both', which='major', labelsize=8)
+            plt.tick_params(axis='both', which='minor', labelsize=6)
             plt.ylabel("Duration [s]", fontsize=18)
             plt.savefig(base_graph_path_bytes + "_" + direction + ".pdf")
         plt.close()
@@ -834,8 +834,8 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
         if to_plot:
             plt.boxplot(to_plot)
             plt.xticks(range(1, len(conds) + 1), conds)
-            plt.tick_params(axis='both', which='major', labelsize=10)
-            plt.tick_params(axis='both', which='minor', labelsize=8)
+            plt.tick_params(axis='both', which='major', labelsize=8)
+            plt.tick_params(axis='both', which='minor', labelsize=6)
             plt.ylabel("Throughput [Bytes/s]", fontsize=18)
             plt.savefig(base_graph_path_bytes + "_throughput_" + direction + ".pdf")
         plt.close()
