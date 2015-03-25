@@ -1467,10 +1467,10 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
             for app in data_bytes[condition][direction]:
                 data_scatter[direction][condition][app] = zip(data_bytes[condition][direction][app], data_frac[condition][direction][app])
                 print(condition, direction, app, "NB ZERO", nb_zero[condition][direction][app], "BYTES ZERO", bytes_zero[condition][direction][app])
-                nb_zeros = nb_zero[condition][direction][app]
-                bytes_zeros = bytes_zero[condition][direction][app]
-                total_conn = tot_conn[condition][direction][app]
-                total_bytes = tot_bytes[condition][direction][app]
+                nb_zeros += nb_zero[condition][direction][app]
+                bytes_zeros += bytes_zero[condition][direction][app]
+                total_conn += tot_conn[condition][direction][app]
+                total_bytes += tot_bytes[condition][direction][app]
 
     print("TOTAL:", nb_zeros, "zero conns over", total_conn, nb_zeros / total_conn, "%", bytes_zeros, "zero bytes over", total_bytes, bytes_zeros / total_bytes, "%")
 
