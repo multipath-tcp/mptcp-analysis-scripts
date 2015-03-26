@@ -564,7 +564,7 @@ def hist_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_bytes=
                 hist_data[direction][condition].append(single_hist_data)
 
     for direction in hist_data:
-        for condition in hist_data[condition]:
+        for condition in hist_data[direction]:
             plt.figure()
             fig, ax = plt.subplots()
             if hist_data[direction][condition]:
