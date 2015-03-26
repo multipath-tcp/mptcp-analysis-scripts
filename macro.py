@@ -454,7 +454,134 @@ def cdf_rtt_mptcp_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
     co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black', 'orange', 'purple'], 'RTT (ms)', graph_full_path, ncol=3, xlim=xlim)
 
 
+def hist_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_bytes=0):
+    hist_base_graph_name_bytes = "hist_cellular_comparison_" + start_time + '_' + stop_time
+    hist_base_graph_path_bytes = os.path.join(sums_dir_exp, hist_base_graph_name_bytes)
+
+    hist_data = {co.S2D: {'both3': [], 'both4': []}, co.D2S: {'both3': [], 'both4': []}}
+
+    for dataset_name, connections in datasets.iteritems():
+        data_bytes = {'both3': {}, 'both4': {}}
+        data_frac = {'both3': {}, 'both4': {}}
+        nb_zero = {'both3': {}, 'both4': {}}
+        bytes_zero = {'both3': {}, 'both4': {}}
+        nb_one = {'both3': {}, 'both4': {}}
+        bytes_one = {'both3': {}, 'both4': {}}
+        tot_conn = {'both3': {}, 'both4': {}}
+        tot_bytes = {'both3': {}, 'both4': {}}
+
+        for cond in data_frac:
+            data_frac[cond] = {co.S2D: {}, co.D2S: {}}
+
+        for cond in data_bytes:
+            data_bytes[cond] = {co.S2D: {}, co.D2S: {}}
+
+        for cond in nb_zero:
+            nb_zero[cond] = {co.S2D: {}, co.D2S: {}}
+
+        for cond in bytes_zero:
+            bytes_zero[cond] = {co.S2D: {}, co.D2S: {}}
+
+        for cond in nb_one:
+            nb_one[cond] = {co.S2D: {}, co.D2S: {}}
+
+        for cond in bytes_one:
+            bytes_one[cond] = {co.S2D: {}, co.D2S: {}}
+
+        for cond in tot_conn:
+            tot_conn[cond] = {co.S2D: {}, co.D2S: {}}
+
+        for cond in tot_bytes:
+            tot_bytes[cond] = {co.S2D: {}, co.D2S: {}}
+
+        for fname, data in connections.iteritems():
+            condition = get_experiment_condition(fname)
+            if 'both' in condition and 'mptcp_fm_' in condition:
+                condition = condition[9:]
+                app = get_app_name(fname).title()
+                for conn_id, conn in data.iteritems():
+                    if app not in data_frac[condition][co.S2D]:
+                        for direction in data_frac[condition].keys():
+                            data_frac[condition][direction][app] = []
+                            data_bytes[condition][direction][app] = []
+                            nb_zero[condition][direction][app] = 0
+                            bytes_zero[condition][direction][app] = 0
+                            nb_one[condition][direction][app] = 0
+                            bytes_one[condition][direction][app] = 0
+                            tot_conn[condition][direction][app] = 0
+                            tot_bytes[condition][direction][app] = 0
+
+                    # Only interested on MPTCP connections
+                    if isinstance(conn, mptcp.MPTCPConnection):
+                        if conn.attr[co.DURATION] < limit_duration:
+                            continue
+                        conn_bytes_s2d = {'cellular': 0, 'wifi': 0}
+                        conn_bytes_d2s = {'cellular': 0, 'wifi': 0}
+                        if co.BYTES in conn.attr[co.S2D]:
+                            for interface in conn.attr[co.S2D][co.BYTES]:
+                                conn_bytes_s2d[interface] += conn.attr[co.S2D][co.BYTES][interface]
+                        if co.BYTES in conn.attr[co.D2S]:
+                            for interface in conn.attr[co.D2S][co.BYTES]:
+                                conn_bytes_d2s[interface] += conn.attr[co.D2S][co.BYTES][interface]
+                        for flow_id, flow in conn.flows.iteritems():
+                            if co.S2D not in flow.attr or co.D2S not in flow.attr or co.REINJ_ORIG_BYTES not in flow.attr[co.S2D] or co.REINJ_ORIG_BYTES not in flow.attr[co.D2S]:
+                                break
+                            interface = flow.attr[co.IF]
+                            conn_bytes_s2d[interface] -= flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
+                            conn_bytes_d2s[interface] -= flow.attr[co.D2S][co.REINJ_ORIG_BYTES]
+
+                        if conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'] > limit_bytes:
+                            frac_cell_s2d = (min(1.0, (conn_bytes_s2d['cellular'] + 0.0) / (conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'])))
+                            if frac_cell_s2d == 0:
+                                nb_zero[condition][co.S2D][app] += 1
+                                bytes_zero[condition][co.S2D][app] += conn_bytes_s2d['wifi']
+                            elif frac_cell_s2d == 1:
+                                nb_one[condition][co.S2D][app] += 1
+                                bytes_one[condition][co.S2D][app] += conn_bytes_s2d['cellular']
+                            data_frac[condition][co.S2D][app].append(frac_cell_s2d)
+                            data_bytes[condition][co.S2D][app].append(conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'])
+                            tot_conn[condition][co.S2D][app] += 1
+                            tot_bytes[condition][co.S2D][app] += conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi']
+
+                        if conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'] > limit_bytes:
+                            frac_cell_d2s = min(1.0, ((conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'])))
+                            if frac_cell_d2s == 0:
+                                nb_zero[condition][co.D2S][app] += 1
+                                bytes_zero[condition][co.D2S][app] += conn_bytes_d2s['wifi']
+                            elif frac_cell_d2s == 1:
+                                nb_one[condition][co.D2S][app] += 1
+                                bytes_one[condition][co.D2S][app] += conn_bytes_d2s['cellular']
+                            data_frac[condition][co.D2S][app].append(frac_cell_d2s)
+                            data_bytes[condition][co.D2S][app].append(conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'])
+                            tot_conn[condition][co.D2S][app] += 1
+                            tot_bytes[condition][co.D2S][app] += conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi']
+
+        for direction in co.DIRECTIONS:
+            for condition in data_frac:
+                single_hist_data = []
+                for app in data_frac[condition][direction]:
+                    single_hist_data += data_frac[condition][direction][app]
+                hist_data[direction][condition].append(single_hist_data)
+
+    for direction in hist_data:
+        for condition in hist_data[condition]:
+            plt.figure()
+            fig, ax = plt.subplots()
+            if hist_data[direction][condition]:
+                weights = np.ones_like(hist_data[direction][condition])/len(hist_data[direction][condition])
+                plt.hist(hist_data[direction][condition], bins=50, weights=weights)
+                plt.xlabel("Fraction of bytes on cellular", fontsize=18)
+                plt.ylabel("Fraction of connections", fontsize=18)
+                plt.xlim([0.0, 1.0])
+                plt.savefig(hist_base_graph_path_bytes + "_hist_" + cond + "_" + direction + ".pdf")
+            plt.close()
+
+
+
+
+
 cellular_percentage_boxplot()
 reinjection_boxplot()
 cdf_rtt_single_graph_all(xlim=400.0)
 cdf_rtt_mptcp_single_graph_all(xlim=400.0)
+hist_cellular_percentage()
