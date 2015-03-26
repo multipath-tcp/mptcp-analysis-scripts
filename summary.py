@@ -1453,7 +1453,7 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                             bytes_zero[condition][co.S2D][app] += conn_bytes_s2d['wifi']
                         elif frac_cell_s2d == 1:
                             nb_one[condition][co.S2D][app] += 1
-                            bytes_one[condition][co.S2D][app] += conn_bytes_s2d['celullar']
+                            bytes_one[condition][co.S2D][app] += conn_bytes_s2d['cellular']
                         data_frac[condition][co.S2D][app].append(frac_cell_s2d)
                         data_bytes[condition][co.S2D][app].append(conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'])
                         tot_conn[condition][co.S2D][app] += 1
@@ -1466,7 +1466,7 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                             bytes_zero[condition][co.D2S][app] += conn_bytes_d2s['wifi']
                         elif frac_cell_d2s == 1:
                             nb_one[condition][co.D2S][app] += 1
-                            bytes_one[condition][co.D2S][app] += conn_bytes_d2s['celullar']
+                            bytes_one[condition][co.D2S][app] += conn_bytes_d2s['cellular']
                         data_frac[condition][co.D2S][app].append(frac_cell_d2s)
                         data_bytes[condition][co.D2S][app].append(conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'])
                         tot_conn[condition][co.D2S][app] += 1
