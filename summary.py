@@ -1495,6 +1495,23 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
 
     co.scatter_plot_with_direction(data_scatter, "Bytes on connection", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, y_to_one=True, label_order=['Dailymotion', 'Drive', 'Dropbox', 'Facebook', 'Firefox', 'Messenger', 'Spotify', 'Youtube'])
 
+    for cond, data_cond in data_frac.iteritems():
+        for direction, data_dir in data_cond.iteritems():
+            plt.figure()
+            fig, ax = plt.subplots()
+            apps = data_dir.keys()
+            to_plot = []
+            for app in apps:
+                to_plot.append(data_frac[cond][direction][app])
+            if to_plot:
+                plt.hist(to_plot, bins=100)
+                plt.xticks(range(1, len(apps) + 1), apps)
+                plt.tick_params(axis='both', which='major', labelsize=10)
+                plt.tick_params(axis='both', which='minor', labelsize=8)
+                plt.ylabel("Fraction of bytes on cellular", fontsize=18)
+                # plt.ylim([0.0, 1.0])
+                plt.savefig(base_graph_path_bytes + "_hist_" + cond + "_" + direction + ".pdf")
+            plt.close()
 
     for cond, data_cond in data_frac.iteritems():
         for direction, data_dir in data_cond.iteritems():
