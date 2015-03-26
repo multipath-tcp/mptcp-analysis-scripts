@@ -775,9 +775,9 @@ def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plo
             x_val = [x[0] for x in data_cond[app_name]]
             y_val = [x[1] for x in data_cond[app_name]]
             if s:
-                scatters.append(ax.scatter(x_val, y_val, s=s[condition][app_name], label=app_name, color=color[app_name], alpha=0.05))
+                scatters.append(ax.scatter(x_val, y_val, s=s[condition][app_name], label=app_name, color=color[app_name], alpha=0.15))
             else:
-                scatters.append(ax.scatter(x_val, y_val, label=app_name, color=color[app_name], alpha=0.05))
+                scatters.append(ax.scatter(x_val, y_val, label=app_name, color=color[app_name], alpha=0.15))
             apps.append(app_name)
 
         if plot_identity:
@@ -801,7 +801,7 @@ def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plo
         plt.grid()
         plt.xlim(0.0, plt.xlim()[1])
         if y_to_one:
-            plt.ylim(0.0, 1.0)
+            plt.ylim(0.0, 1.02)
         else:
             plt.ylim(0.0, max(plt.ylim()[1], 1))
 
