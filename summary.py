@@ -1508,7 +1508,7 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                 plt.hist(to_plot, bins=50)
                 plt.xlabel("Fraction of bytes on cellular", fontsize=18)
                 plt.ylabel("Number of connections", fontsize=18)
-                # plt.ylim([0.0, 1.0])
+                plt.xlim([0.0, 1.0])
                 plt.savefig(base_graph_path_bytes + "_hist_" + cond + "_" + direction + ".pdf")
             plt.close()
 
