@@ -183,17 +183,17 @@ def fetch_data(dir_exp, dir_exp_two):
                     except IOError as e:
                         print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
 
-        for dirpath, dirnames, filenames in os.walk(dir_exp_two):
-            if check_in_list(dirpath, args.dirs_two):
-                for fname in filenames:
-                    fname_date = co.get_date_as_int(fname)
-                    if is_app_name(fname, args.app) and (fname_date and (int(start_time) <= fname_date <= int(stop_time))) and check_conditions(fname) and (not apps_to_load or get_app_name(fname) in apps_to_load):
-                        try:
-                            stat_file = open(os.path.join(dirpath, fname), 'r')
-                            dico["dirs_two"][fname] = pickle.load(stat_file)
-                            stat_file.close()
-                        except IOError as e:
-                            print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
+    for dirpath, dirnames, filenames in os.walk(dir_exp_two):
+        if check_in_list(dirpath, args.dirs_two):
+            for fname in filenames:
+                fname_date = co.get_date_as_int(fname)
+                if is_app_name(fname, args.app) and (fname_date and (int(start_time) <= fname_date <= int(stop_time))) and check_conditions(fname) and (not apps_to_load or get_app_name(fname) in apps_to_load):
+                    try:
+                        stat_file = open(os.path.join(dirpath, fname), 'r')
+                        dico["dirs_two"][fname] = pickle.load(stat_file)
+                        stat_file.close()
+                    except IOError as e:
+                        print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
     return dico
 
 datasets = fetch_data(stat_dir_exp, stat_two_dir_exp)
