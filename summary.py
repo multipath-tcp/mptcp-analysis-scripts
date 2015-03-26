@@ -778,12 +778,12 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
         if 'mptcp_fm_' in condition:
             if 'both3' in condition and 20150214 <= fname_date and fname_date <= 20150220:
                 key = 'MPTCP 3G (3G 100k)'
-            elif 'both4' in condition and 20150323 <= fname_date and 20150325 >= fname_date:
+            elif 'both4' in condition and 20150326 <= fname_date and fname_date <= 20150327:
                 key = 'MPTCP 4G'
-            elif 'both4' in condition and 20150304 <= fname_date and fname_date <= 20150308:
+            elif 'both4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and fname_date <= 20150325)):
                 key = 'MPTCP 4G (WiFi 1M)'
         else:
-            if 'wlan' in condition and ((20150214 <= fname_date and fname_date <= 20150220) or (20150323 <= fname_date and 20150325 >= fname_date)):
+            if 'wlan' in condition and ((20150214 <= fname_date and fname_date <= 20150220) or (20150326 <= fname_date and 20150327 >= fname_date)):
                 key = 'WiFi'
             elif 'rmnet3' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150325 >= fname_date)):
                 key = '3G'
