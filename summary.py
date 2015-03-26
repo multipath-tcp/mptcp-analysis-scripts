@@ -1502,7 +1502,8 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
             apps = data_dir.keys()
             to_plot = []
             for app in apps:
-                to_plot.append(data_frac[cond][direction][app])
+                for point in data_frac[cond][direction][app]:
+                    to_plot.append(point)
             if to_plot:
                 plt.hist(to_plot, bins=20)
                 plt.ylabel("Fraction of bytes on cellular", fontsize=18)
