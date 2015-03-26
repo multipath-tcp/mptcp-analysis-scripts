@@ -1471,7 +1471,7 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                 bytes_zeros += bytes_zero[condition][direction][app]
                 total_conn += tot_conn[condition][direction][app]
                 total_bytes += tot_bytes[condition][direction][app]
-            print("TOTAL:", nb_zeros, "zero conns over", total_conn, nb_zeros / total_conn, "%", bytes_zeros, "zero bytes over", total_bytes, bytes_zeros / total_bytes, "%")
+            print("TOTAL:", nb_zeros, "zero conns over", total_conn, nb_zeros / total_conn * 100., "%", bytes_zeros, "zero bytes over", total_bytes, bytes_zeros / total_bytes * 100., "%")
 
     co.scatter_plot_with_direction(data_scatter, "Bytes on connection", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, y_to_one=True, label_order=['Dailymotion', 'Drive', 'Dropbox', 'Facebook', 'Firefox', 'Messenger', 'Spotify', 'Youtube'])
 
