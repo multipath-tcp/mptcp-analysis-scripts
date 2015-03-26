@@ -1381,6 +1381,8 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
     data_frac = {'both3': {}, 'both4': {}}
     nb_zero = {'both3': {}, 'both4': {}}
     bytes_zero = {'both3': {}, 'both4': {}}
+    nb_one = {'both3': {}, 'both4': {}}
+    bytes_one = {'both3': {}, 'both4': {}}
     tot_conn = {'both3': {}, 'both4': {}}
     tot_bytes = {'both3': {}, 'both4': {}}
 
@@ -1395,6 +1397,12 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
 
     for cond in bytes_zero:
         bytes_zero[cond] = {co.S2D: {}, co.D2S: {}}
+
+    for cond in nb_one:
+        nb_one[cond] = {co.S2D: {}, co.D2S: {}}
+
+    for cond in bytes_one:
+        bytes_one[cond] = {co.S2D: {}, co.D2S: {}}
 
     for cond in tot_conn:
         tot_conn[cond] = {co.S2D: {}, co.D2S: {}}
@@ -1414,6 +1422,8 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                         data_bytes[condition][direction][app] = []
                         nb_zero[condition][direction][app] = 0
                         bytes_zero[condition][direction][app] = 0
+                        nb_one[condition][direction][app] = 0
+                        bytes_one[condition][direction][app] = 0
                         tot_conn[condition][direction][app] = 0
                         tot_bytes[condition][direction][app] = 0
 
@@ -1441,6 +1451,9 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                         if frac_cell_s2d == 0:
                             nb_zero[condition][co.S2D][app] += 1
                             bytes_zero[condition][co.S2D][app] += conn_bytes_s2d['wifi']
+                        elif frac_cell_s2d == 1:
+                            nb_one[condition][co.S2D][app] += 1
+                            bytes_one[condition][co.S2D][app] += conn_bytes_s2d['celullar']
                         data_frac[condition][co.S2D][app].append(frac_cell_s2d)
                         data_bytes[condition][co.S2D][app].append(conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'])
                         tot_conn[condition][co.S2D][app] += 1
@@ -1451,6 +1464,9 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                         if frac_cell_d2s == 0:
                             nb_zero[condition][co.D2S][app] += 1
                             bytes_zero[condition][co.D2S][app] += conn_bytes_d2s['wifi']
+                        elif frac_cell_d2s == 1:
+                            nb_one[condition][co.D2S][app] += 1
+                            bytes_one[condition][co.D2S][app] += conn_bytes_d2s['celullar']
                         data_frac[condition][co.D2S][app].append(frac_cell_d2s)
                         data_bytes[condition][co.D2S][app].append(conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'])
                         tot_conn[condition][co.D2S][app] += 1
@@ -1461,17 +1477,21 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
         for direction in data_bytes[condition]:
             nb_zeros = 0.
             bytes_zeros = 0.
+            nb_ones = 0.
+            bytes_ones = 0.
             total_conn = 0.
             total_bytes = 0.
             data_scatter[direction][condition] = {}
             for app in data_bytes[condition][direction]:
                 data_scatter[direction][condition][app] = zip(data_bytes[condition][direction][app], data_frac[condition][direction][app])
-                print(condition, direction, app, "NB ZERO", nb_zero[condition][direction][app], "BYTES ZERO", bytes_zero[condition][direction][app])
+                print(condition, direction, app, "NB ZERO", nb_zero[condition][direction][app], "BYTES ZERO", bytes_zero[condition][direction][app], "NB ONE", nb_one[condition][direction][app], "BYTES ONE", bytes_one[condition][direction][app])
                 nb_zeros += nb_zero[condition][direction][app]
                 bytes_zeros += bytes_zero[condition][direction][app]
+                nb_ones += nb_one[condition][direction][app]
+                bytes_ones += bytes_one[condition][direction][app]
                 total_conn += tot_conn[condition][direction][app]
                 total_bytes += tot_bytes[condition][direction][app]
-            print("TOTAL:", nb_zeros, "zero conns over", total_conn, nb_zeros / total_conn * 100., "%", bytes_zeros, "zero bytes over", total_bytes, bytes_zeros / total_bytes * 100., "%")
+            print("TOTAL:", nb_zeros, "zero conns over", total_conn, nb_zeros / total_conn * 100., "%", bytes_zeros, "zero bytes over", total_bytes, bytes_zeros / total_bytes * 100., "%", nb_ones, "connections full cellular", nb_ones / total_conn * 100., "%", bytes_ones, "bytes cellular", bytes_ones / total_bytes * 100., "%")
 
     co.scatter_plot_with_direction(data_scatter, "Bytes on connection", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, y_to_one=True, label_order=['Dailymotion', 'Drive', 'Dropbox', 'Facebook', 'Firefox', 'Messenger', 'Spotify', 'Youtube'])
 
