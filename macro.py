@@ -568,7 +568,9 @@ def hist_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_bytes=
             plt.figure()
             fig, ax = plt.subplots()
             if hist_data[direction][condition]:
-                weights = np.ones_like(hist_data[direction][condition])/len(hist_data[direction][condition])
+                weights = []
+                for dataset_results in hist_data[direction][condition]:
+                    weights.append(np.ones_like(dataset_results) / len(dataset_results))
                 plt.hist(hist_data[direction][condition], bins=50, weights=weights)
                 plt.xlabel("Fraction of bytes on cellular", fontsize=18)
                 plt.ylabel("Fraction of connections", fontsize=18)
