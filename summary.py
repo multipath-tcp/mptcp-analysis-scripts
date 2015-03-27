@@ -2167,6 +2167,9 @@ def textual_summary_app(log_file=sys.stdout):
             if isinstance(conn, tcp.TCPConnection):
                 bytes_s2d += conn.flow.attr[co.S2D][co.BYTES]
                 bytes_d2s += conn.flow.attr[co.D2S][co.BYTES]
+            elif isinstance(conn, mptcp.MPTCPConnection):
+                bytes_s2d += conn.attr[co.S2D][co.BYTES_MPTCPTRACE]
+                bytes_d2s += conn.attr[co.D2S][co.BYTES_MPTCPTRACE]
 
         results[condition][app]['bytes_s2d'].append(bytes_s2d)
         results[condition][app]['bytes_d2s'].append(bytes_d2s)
