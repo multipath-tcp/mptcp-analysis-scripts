@@ -2203,6 +2203,8 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
 
                 for flow_id, flow in conn.flows.iteritems():
                     for direction in co.DIRECTIONS:
+                        if direction not in flow.attr:
+                            continue
                         if co.BYTES in flow.attr[direction]:
                             # total_bytes[direction] += flow.attr[direction][co.BYTES_FRAMES_TOTAL]
                             total_bytes[direction] = total_bytes[direction] + flow.attr[direction][co.BYTES]
