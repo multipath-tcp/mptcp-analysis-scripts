@@ -2157,7 +2157,7 @@ def textual_summary_app(log_file=sys.stdout):
         if condition not in results:
             results[condition] = {}
         if app not in results[condition]:
-            results[condition][app] = {'conn': [], 'bytes_s2d': {}, 'bytes_d2s': {}}
+            results[condition][app] = {'conn': [], 'bytes_s2d': [], 'bytes_d2s': []}
 
         results[condition][app]['conn'].append(len(data))
 
@@ -2174,9 +2174,9 @@ def textual_summary_app(log_file=sys.stdout):
 
     for condition in results:
         print(condition, file=log_file)
-        print("Application & \# connections & Bytes smartphone to server & Bytes server to smartphone", file=log_file)
+        print("Application & \# connections & Bytes smartphone to server & Bytes server to smartphone & Number of tests", file=log_file)
         for app in results[condition]:
-            print(app, "&", np.mean(results[condition][app]['conn']), "&", np.mean(results[condition][app]['bytes_s2d']), "&", np.mean(results[condition][app]['bytes_d2s']), r"\\", file=log_file)
+            print(app, "&", np.mean(results[condition][app]['conn']), "&", np.mean(results[condition][app]['bytes_s2d']), "&", np.mean(results[condition][app]['bytes_d2s']), "&", len(results[condition][app]['conn']), r"\\", file=log_file)
             print("\hline", file=log_file)
 
 
