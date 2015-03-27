@@ -1483,14 +1483,14 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
             data_scatter[direction][condition] = {}
             for app in data_bytes[condition][direction]:
                 data_scatter[direction][condition][app] = zip(data_bytes[condition][direction][app], data_frac[condition][direction][app])
-                print(condition, direction, app, "NB ZERO", nb_zero[condition][direction][app], "BYTES ZERO", bytes_zero[condition][direction][app], "NB ONE", nb_one[condition][direction][app], "BYTES ONE", bytes_one[condition][direction][app])
+                print(condition, direction, app, "NB ZERO", nb_zero[condition][direction][app], "BYTES ZERO", bytes_zero[condition][direction][app], "NB ONE", nb_one[condition][direction][app], "BYTES ONE", bytes_one[condition][direction][app], file=log_file)
                 nb_zeros += nb_zero[condition][direction][app]
                 bytes_zeros += bytes_zero[condition][direction][app]
                 nb_ones += nb_one[condition][direction][app]
                 bytes_ones += bytes_one[condition][direction][app]
                 total_conn += tot_conn[condition][direction][app]
                 total_bytes += tot_bytes[condition][direction][app]
-            print("TOTAL:", nb_zeros, "zero conns over", total_conn, nb_zeros / total_conn * 100., "%", bytes_zeros, "zero bytes over", total_bytes, bytes_zeros / total_bytes * 100., "%", nb_ones, "connections full cellular", nb_ones / total_conn * 100., "%", bytes_ones, "bytes cellular", bytes_ones / total_bytes * 100., "%")
+            print("TOTAL:", nb_zeros, "zero conns over", total_conn, nb_zeros / total_conn * 100., "%", bytes_zeros, "zero bytes over", total_bytes, bytes_zeros / total_bytes * 100., "%", nb_ones, "connections full cellular", nb_ones / total_conn * 100., "%", bytes_ones, "bytes cellular", bytes_ones / total_bytes * 100., "%", file=log_file)
 
     co.scatter_plot_with_direction(data_scatter, "Bytes on connection", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, y_to_one=True, label_order=['Dailymotion', 'Drive', 'Dropbox', 'Facebook', 'Firefox', 'Messenger', 'Spotify', 'Youtube'])
 
