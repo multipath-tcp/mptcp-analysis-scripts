@@ -2303,7 +2303,7 @@ def cdf_duration_mptcp_tcp(log_file=sys.stdout, limit_bytes=10000):
             elif isinstance(conn, mptcp.MPTCPConnection):
                 if 'both4' in condition:
                     for direction in co.DIRECTIONS:
-                        if conn.attr[direction][co.BYTES_MPTCPTRACE] >= limit_bytes:
+                        if co.BYTES_MPTCPTRACE in conn.attr[direction] and conn.attr[direction][co.BYTES_MPTCPTRACE] >= limit_bytes:
                             results[direction]['MPTCP Both4'].append(conn.attr[co.DURATION])
 
     co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black'], 'Duration (s)', graph_full_path)
