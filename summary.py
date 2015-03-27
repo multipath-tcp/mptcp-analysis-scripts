@@ -2549,9 +2549,13 @@ def count_mptcp_best_rtt_flow(log_file=sys.stdout):
                         avg_rtt = {co.WIFI: 100000., co.CELL: 100000.}
                         max_rtt = {co.WIFI: 100000., co.CELL: 100000.}
                         for flow_id, flow in conn.flows.iteritems():
+                            if direction not in flow.attr:
+                                continue
                             avg_rtt[flow.attr[co.IF]] = flow.attr[direction][co.RTT_AVG]
                             max_rtt[flow.attr[co.IF]] = flow.attr[direction][co.RTT_MAX]
 
+                        if avg_rtt[co.WIFI] == 100000. and avg_rtt[co.CELL] == 100000.:
+                            continue
                         if avg_rtt[co.WIFI] <= avg_rtt[co.CELL]:
                             wifi_best_avg_rtt[condition][direction] += 1
                         else:
