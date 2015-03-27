@@ -1325,8 +1325,8 @@ def textual_summary(log_file=sys.stdout):
         condition = get_experiment_condition(fname)
 
         if condition not in data.keys():
-            data[condition] = {'<1s': 0, '1-30s': 0, '30-60s': 0, '>=60s': 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0}
-            count[condition] = {'<1s': 0, '1-30s': 0, '30-60s': 0, '>=60s': 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0}
+            data[condition] = {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0}
+            count[condition] = {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0}
             tot_count[condition] = 0.0
 
         for conn_id, conn in conns.iteritems():
@@ -1348,15 +1348,13 @@ def textual_summary(log_file=sys.stdout):
             if duration < 1:
                 data[condition]['<1s'] += nb_bytes_s2d + nb_bytes_d2s
                 count[condition]['<1s'] += 1
-            elif duration < 30:
-                data[condition]['1-30s'] += nb_bytes_s2d + nb_bytes_d2s
-                count[condition]['1-30s'] += 1
-            elif duration < 60:
-                data[condition]['30-60s'] += nb_bytes_s2d + nb_bytes_d2s
-                count[condition]['30-60s'] += 1
             else:
-                data[condition]['>=60s'] += nb_bytes_s2d + nb_bytes_d2s
-                count[condition]['>=60s'] += 1
+                if nb_bytes_s2d + nb_bytes_d2s < 10000:
+                    data[condition][">=1s<10K"] += nb_bytes_s2d + nb_bytes_d2s
+                    count[condition][">=1s<10K"] += 1
+                else:
+                    data[condition][">=1s>=10K"] += nb_bytes_s2d + nb_bytes_d2s
+                    count[condition][">=1s>=10K"] += 1
 
             if duration < 9:
                 data[condition]["<9s"] += nb_bytes_s2d + nb_bytes_d2s
