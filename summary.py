@@ -2532,6 +2532,39 @@ def fog_plot_cellular_percentage_scenario(log_file=sys.stdout, limit_duration=0,
     co.scatter_plot(data_scatter, "Bytes on connection", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, y_to_one=True, label_order=['Dailymotion', 'Drive', 'Dropbox', 'Facebook', 'Firefox', 'Messenger', 'Spotify', 'Youtube'])
 
 
+def count_mptcp_best_rtt_flow(log_file=sys.stdout):
+    wifi_best_avg_rtt = {'both3': {co.S2D: 0, co.D2S: 0}, 'both4': {co.S2D: 0, co.D2S: 0}}
+    cell_best_avg_rtt = {'both3': {co.S2D: 0, co.D2S: 0}, 'both4': {co.S2D: 0, co.D2S: 0}}
+    wifi_best_max_rtt = {'both3': {co.S2D: 0, co.D2S: 0}, 'both4': {co.S2D: 0, co.D2S: 0}}
+    cell_best_max_rtt = {'both3': {co.S2D: 0, co.D2S: 0}, 'both4': {co.S2D: 0, co.D2S: 0}}
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        if 'both' in condition and 'mptcp_fm_' in condition:
+            condition = condition[9:]
+            for conn_id, conn in data.iteritems():
+                # Only interested on MPTCP connections
+                if isinstance(conn, mptcp.MPTCPConnection):
+                    for direction in co.DIRECTIONS:
+                        avg_rtt = {co.WIFI: 100000., co.CELL: 100000.}
+                        max_rtt = {co.WIFI: 100000., co.CELL: 100000.}
+                        for flow_id, flow in conn.flows.iteritems():
+                            avg_rtt[flow.attr[co.IF]] = flow.attr[direction][co.RTT_AVG]
+                            max_rtt[flow.attr[co.IF]] = flow.attr[direction][co.RTT_MAX]
+
+                        if avg_rtt[co.WIFI] <= avg_rtt[co.CELL]:
+                            wifi_best_avg_rtt[condition][direction] += 1
+                        else:
+                            cell_best_avg_rtt[condition][direction] += 1
+                        if max_rtt[co.WIFI] <= max_rtt[co.CELL]:
+                            wifi_best_max_rtt[condition][direction] += 1
+                        else:
+                            cell_best_max_rtt[condition][direction] += 1
+
+    for condition in wifi_best_avg_rtt:
+        for direction in co.DIRECTIONS:
+            print(condition, direction, (wifi_best_avg_rtt[condition][direction] + 0.) / (wifi_best_avg_rtt[condition][direction] + cell_best_avg_rtt[condition][direction]) * 100, "% where WiFi is better on average", (wifi_best_max_rtt[condition][direction] + 0.0) / (wifi_best_max_rtt[condition][direction] + cell_best_max_rtt[condition][direction]) * 100 , "% where WiFi is better on max", file=log_file)
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary_' + args.app + '_' + args.cond + '_' + split_agg[0] + '_' + split_agg[1] + '-' + str(millis) + '.txt'), 'w')
@@ -2595,5 +2628,6 @@ else:
     plot_total_bytes_reinj_bytes(log_file=log_file)
     cdf_overhead_retrans_reinj_new(log_file=log_file)
     fog_plot_cellular_percentage_all(log_file=log_file)
+    count_mptcp_best_rtt_flow(log_file=log_file)
 log_file.close()
 print("End of summary")
