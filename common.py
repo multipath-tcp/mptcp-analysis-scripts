@@ -777,7 +777,7 @@ def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plo
             if s:
                 scatters.append(ax.scatter(x_val, y_val, s=s[condition][app_name], label=app_name, color=color[app_name], alpha=0.15))
             else:
-                scatters.append(ax.scatter(x_val, y_val, label=app_name, color=color[app_name], alpha=0.15))
+                scatters.append(ax.scatter(x_val, y_val, label=app_name, color=color[app_name], alpha=0.25))
             apps.append(app_name)
 
         if plot_identity:
