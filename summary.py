@@ -2416,7 +2416,7 @@ def cdf_overhead_retrans_reinj_new(log_file=sys.stdout):
                     if reinj_data_bytes[direction] > 0:
                         number_overhead[direction][condition] += 1
                         max_overhead_bytes[direction][condition] = max(max_overhead_bytes[direction][condition], reinj_data_bytes[direction])
-                        max_overhead_frac[direction][condition] = max(max_overhead_frac[direction][condition], (reinj_data_bytes[direction]) + 0.0) / total_data_bytes[direction])
+                        max_overhead_frac[direction][condition] = max(max_overhead_frac[direction][condition], (reinj_data_bytes[direction] + 0.0) / total_data_bytes[direction])
 
     for direction in results:
         for condition in results[direction]:
