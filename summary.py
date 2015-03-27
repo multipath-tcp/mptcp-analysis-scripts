@@ -1446,7 +1446,7 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                         conn_bytes_d2s[interface] -= flow.attr[co.D2S][co.REINJ_ORIG_BYTES]
 
                     if conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'] > limit_bytes:
-                        frac_cell_s2d = (min(1.0, (conn_bytes_s2d['cellular'] + 0.0) / (conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'])))
+                        frac_cell_s2d = (max(0.0, min(1.0, (conn_bytes_s2d['cellular'] + 0.0) / (conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi']))))
                         if frac_cell_s2d == 0:
                             nb_zero[condition][co.S2D][app] += 1
                             bytes_zero[condition][co.S2D][app] += conn_bytes_s2d['wifi']
@@ -1459,7 +1459,7 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                         tot_bytes[condition][co.S2D][app] += conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi']
 
                     if conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'] > limit_bytes:
-                        frac_cell_d2s = min(1.0, ((conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'])))
+                        frac_cell_d2s = max(0.0, min(1.0, ((conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi']))))
                         if frac_cell_d2s == 0:
                             nb_zero[condition][co.D2S][app] += 1
                             bytes_zero[condition][co.D2S][app] += conn_bytes_d2s['wifi']
@@ -2445,7 +2445,7 @@ def fog_plot_cellular_percentage_all(log_file=sys.stdout, limit_duration=0, limi
                         conn_bytes[interface] -= flow.attr[co.D2S][co.REINJ_ORIG_BYTES]
 
                     if conn_bytes['cellular'] + conn_bytes['wifi'] > limit_bytes:
-                        frac_cell = (min(1.0, (conn_bytes['cellular'] + 0.0) / (conn_bytes['cellular'] + conn_bytes['wifi'])))
+                        frac_cell = (max(0.0, min(1.0, (conn_bytes['cellular'] + 0.0) / (conn_bytes['cellular'] + conn_bytes['wifi']))))
                         data_frac[condition][app].append(frac_cell)
                         data_bytes[condition][app].append(conn_bytes['cellular'] + conn_bytes['wifi'])
 
@@ -2507,7 +2507,7 @@ def fog_plot_cellular_percentage_scenario(log_file=sys.stdout, limit_duration=0,
 
 
                     if conn_bytes['cellular'] + conn_bytes['wifi'] > limit_bytes:
-                        frac_cell = (min(1.0, (conn_bytes['cellular'] + 0.0) / (conn_bytes['cellular'] + conn_bytes['wifi'])))
+                        frac_cell = (max(0.0, min(1.0, (conn_bytes['cellular'] + 0.0) / (conn_bytes['cellular'] + conn_bytes['wifi']))))
                         data_frac[condition][app].append(frac_cell)
                         data_bytes[condition][app].append(conn_bytes['cellular'] + conn_bytes['wifi'])
 
