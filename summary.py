@@ -2377,6 +2377,7 @@ def cdf_overhead_retrans_reinj_new(log_file=sys.stdout):
     number_total = {co.S2D: {}, co.D2S: {}}
     max_overhead_bytes = {co.S2D: {}, co.D2S: {}}
     max_overhead_frac = {co.S2D: {}, co.D2S: {}}
+    max_overhead_tot_bytes = {co.S2D: {}, co.D2S: {}}
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         if 'mptcp_fm' in condition and 'both' in condition:
@@ -2387,6 +2388,7 @@ def cdf_overhead_retrans_reinj_new(log_file=sys.stdout):
                     number_total[direction][condition] = 0.
                     max_overhead_bytes[direction][condition] = 0.
                     max_overhead_frac[direction][condition] = 0.
+                    max_overhead_tot_bytes[direction][condition] = 0.
 
             for conn_id, conn in data.iteritems():
                 for direction in co.DIRECTIONS:
@@ -2415,7 +2417,10 @@ def cdf_overhead_retrans_reinj_new(log_file=sys.stdout):
                     number_total[direction][condition] += 1
                     if reinj_data_bytes[direction] > 0:
                         number_overhead[direction][condition] += 1
+                        old = max_overhead_bytes[direction][condition]
                         max_overhead_bytes[direction][condition] = max(max_overhead_bytes[direction][condition], reinj_data_bytes[direction])
+                        if old < max_overhead_bytes[direction][condition]:
+                            max_overhead_tot_bytes[direction][condition] = total_data_bytes[direction]
                         max_overhead_frac[direction][condition] = max(max_overhead_frac[direction][condition], (reinj_data_bytes[direction] + 0.0) / total_data_bytes[direction])
 
     for direction in results:
@@ -2429,7 +2434,7 @@ def cdf_overhead_retrans_reinj_new(log_file=sys.stdout):
                 i += 1
             tot_graph_full_path = graph_full_path + "_details_" + direction + "_" + condition + ".pdf"
             co.plot_line_graph(to_plot, ['Total', 'Reinjections'], ['b', 'r'], 'Connections', 'Number of data bytes', '', tot_graph_full_path, y_log=True)
-            print(condition, direction, number_overhead[direction][condition], number_total[direction][condition], number_overhead[direction][condition] / number_total[direction][condition], max_overhead_bytes[direction][condition], max_overhead_frac[direction][condition], file=log_file)
+            print(condition, direction, number_overhead[direction][condition], number_total[direction][condition], number_overhead[direction][condition] / number_total[direction][condition], max_overhead_bytes[direction][condition], max_overhead_tot_bytes[direction][condition], max_overhead_frac[direction][condition], file=log_file)
 
 def fog_plot_cellular_percentage_all(log_file=sys.stdout, limit_duration=0, limit_bytes=0):
 
