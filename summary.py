@@ -811,8 +811,10 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
         fig, ax = plt.subplots()
         to_plot = []
         conds = ['WiFi', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
+        print(direction, file=log_file)
         for cond in ['WiFi', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']:
             to_plot.append(results[direction][cond])
+            print(cond, results[direction], file=log_file)
         if to_plot:
             plt.boxplot(to_plot)
             plt.xticks(range(1, len(conds) + 1), conds)
