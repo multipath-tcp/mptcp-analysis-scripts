@@ -48,6 +48,8 @@ MPTCP_SF_FNAME = '_sf_'
 MPTCP_RTT_FNAME = '_rtt_seq_'
 # mptcptrace stats files prefix in csv filename of a subflow
 MPTCP_STATS_PREFIX = 'stats_'
+# mptcptrace file identifier in csv filename for gput information
+MPTCP_GPUT_FNAME = 'gput'
 
 
 ##################################################
@@ -539,6 +541,30 @@ def plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all):
                                graph_filepath, ymin=0)
 
 
+def process_gput_csv(csv_fname, connections):
+    """ Collect the goodput of a connection """
+    conn_id = get_connection_id(csv_fname)
+    is_reversed = is_reverse_connection(csv_fname)
+    try:
+        gput_file = open(csv_fname)
+        data = gput_file.readlines()
+        gput_file.close()
+
+        gput_data = []
+        for line in data:
+            split_line = line.split(',')
+            if split_line[2] == '3':
+                # Because it's in MByte/s, make it comparable with tcptrace
+                gput_data.append(float(split_line[1]) * 1000000)
+
+        if len(gput_data) > 0:
+            direction = co.D2S if is_reversed else co.S2D
+            connections[conn_id].attr[direction][co.THGPT_MPTCPTRACE] = np.mean(gput_data)
+    except IOError as e:
+        print(e, file=sys.stderr)
+        print("No throughput info for " + csv_fname, file=sys.stderr)
+
+
 # We can't change dir per thread, we should use processes
 def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot_cwin, min_bytes=0):
     """ Process a mptcp pcap file and generate graphs of its subflows """
@@ -579,6 +605,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
 
             # And by default, save all csv files
             for csv_fname in glob.glob('*.csv'):
+                if MPTCP_GPUT_FNAME in csv_fname:
+                    process_gput_csv(csv_fname, connections)
                 try:
                     co.move_file(csv_fname, os.path.join(
                         graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
