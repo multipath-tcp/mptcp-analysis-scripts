@@ -858,16 +858,16 @@ def time_completion_big_connections_new(log_file=sys.stdout, min_bytes=15000000,
         if 'mptcp_fm_' in condition:
             if 'both3' in condition and 20150214 <= fname_date and fname_date <= 20150220:
                 key = 'MPTCP 3G (3G 100k)'
-            elif 'both4' in condition and 20150326 <= fname_date and fname_date <= 20150327:
+            elif 'both4' in condition and 20150326 <= fname_date and fname_date <= 20150327 or fname_date == 20150330:
                 key = 'MPTCP 4G'
-            elif 'both4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and fname_date <= 20150325)):
+            elif 'both4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and fname_date <= 20150325) or (fname_date == 20150329)):
                 key = 'MPTCP 4G (WiFi 1M)'
         else:
-            if 'wlan' in condition and ((20150214 <= fname_date and fname_date <= 20150220) or (20150326 <= fname_date and 20150327 >= fname_date)):
+            if 'wlan' in condition and ((20150214 <= fname_date and fname_date <= 20150220) or (20150326 <= fname_date and 20150327 >= fname_date) or fname_date == 20150330):
                 key = 'WiFi'
-            elif 'rmnet3' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150325 >= fname_date)):
+            elif 'rmnet3' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150325 >= fname_date) or fname_date == 20150330):
                 key = '3G'
-            elif 'rmnet4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150325 >= fname_date)):
+            elif 'rmnet4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150325 >= fname_date) or fname_date == 20150330):
                 key = '4G'
 
         if key:
