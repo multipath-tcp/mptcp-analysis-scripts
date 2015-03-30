@@ -996,6 +996,7 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=15000
         to_plot = []
         for cond in conds:
             to_plot.append(results_two[direction][cond])
+            print(direction, cond, np.mean(results_two[direction][cond]))
         if to_plot:
             plt.boxplot(to_plot)
             plt.xticks(range(1, len(conds) + 1), conds)
