@@ -921,6 +921,86 @@ def time_completion_big_connections_new(log_file=sys.stdout, min_bytes=15000000,
         plt.close()
 
 
+def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=15000000, max_bytes=25000000):
+    results = {co.S2D: {}, co.D2S: {}}
+    results_two = {co.S2D: {}, co.D2S: {}}
+    base_graph_name_bytes = "boxplot_duration_" + args.app + "_" + start_time + '_' + stop_time
+    base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
+
+    for direction in co.DIRECTIONS:
+        results[direction] = {'WiFi': [], '3G': [], 'MPTCP 3G (3G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
+        results_two[direction] = {'WiFi': [], '3G': [], 'MPTCP 3G (3G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
+
+    for fname, data in connections.iteritems():
+        condition = get_experiment_condition(fname)
+        fname_date = co.get_date_as_int(fname)
+        key = None
+        if 'mptcp_fm_' in condition:
+            if 'both3' in condition and 20150214 <= fname_date and fname_date <= 20150220:
+                key = 'MPTCP 3G (3G 100k)'
+            elif 'both4' in condition and 20150326 <= fname_date and fname_date <= 20150327 or fname_date == 20150330:
+                key = 'MPTCP 4G'
+            elif 'both4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and fname_date <= 20150325) or (fname_date == 20150329)):
+                key = 'MPTCP 4G (WiFi 1M)'
+        elif 'mptcp' not in condition:
+            if 'wlan' in condition and ((20150214 <= fname_date and fname_date <= 20150220) or (20150326 <= fname_date and 20150327 >= fname_date) or fname_date == 20150330):
+                key = 'WiFi'
+            elif 'rmnet3' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150325 >= fname_date) or fname_date == 20150330):
+                key = '3G'
+            elif 'rmnet4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150325 >= fname_date) or fname_date == 20150330):
+                key = '4G'
+
+        if key:
+            for conn_id, conn in data.iteritems():
+                if isinstance(conn, tcp.TCPConnection):
+                    for direction in co.DIRECTIONS:
+                        if direction in conn.flow.attr:
+                            if conn.flow.attr[direction][co.BYTES] >= min_bytes and conn.flow.attr[direction][co.BYTES] <= max_bytes and co.THGPT_TCPTRACE in conn.flow.attr[direction]:
+                                results[direction][key].append(conn.flow.attr[co.DURATION])
+                                results_two[direction][key].append(conn.flow.attr[direction][co.THGPT_TCPTRACE])
+                elif isinstance(conn, mptcp.MPTCPConnection):
+                    for direction in co.DIRECTIONS:
+                        if direction in conn.attr:
+                            if co.BYTES_MPTCPTRACE in conn.attr[direction] and conn.attr[direction][co.BYTES_MPTCPTRACE] >= min_bytes and conn.attr[direction][co.BYTES_MPTCPTRACE] <= max_bytes and co.THGPT_MPTCPTRACE in conn.attr[direction]:
+                                results[direction][key].append(conn.attr[co.DURATION])
+                                results_two[direction][key].append(conn.attr[direction][co.THGPT_MPTCPTRACE])
+
+
+    for direction, data_dir in results.iteritems():
+        plt.figure()
+        fig, ax = plt.subplots()
+        to_plot = []
+        conds = ['WiFi', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
+        print(direction, file=log_file)
+        for cond in ['WiFi', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']:
+            to_plot.append(results[direction][cond])
+            print(cond, results[direction], file=log_file)
+        if to_plot:
+            plt.boxplot(to_plot)
+            plt.xticks(range(1, len(conds) + 1), conds)
+            plt.tick_params(axis='both', which='major', labelsize=7)
+            plt.tick_params(axis='both', which='minor', labelsize=5)
+            plt.ylabel("Duration [s]", fontsize=18)
+            plt.savefig(base_graph_path_bytes + "_" + direction + ".pdf")
+        plt.close()
+
+    for direction, data_dir in results_two.iteritems():
+        plt.figure()
+        fig, ax = plt.subplots()
+        to_plot = []
+        conds = ['WiFi', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
+        for cond in ['WiFi', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']:
+            to_plot.append(results_two[direction][cond])
+        if to_plot:
+            plt.boxplot(to_plot)
+            plt.xticks(range(1, len(conds) + 1), conds)
+            plt.tick_params(axis='both', which='major', labelsize=7)
+            plt.tick_params(axis='both', which='minor', labelsize=5)
+            plt.ylabel("Throughput [Bytes/s]", fontsize=18)
+            plt.savefig(base_graph_path_bytes + "_throughput_" + direction + ".pdf")
+        plt.close()
+
+
 def percentage_cell_by_app_with_conditions(log_file=sys.stdout):
     xlabels = ['dailymotion', 'drive', 'dropbox', 'facebook', 'firefox', 'firefoxspdy', 'messenger', 'spotify', 'youtube']
     x = range(len(xlabels))
@@ -2706,6 +2786,8 @@ if args.app:
     time_completion_big_connections(log_file=log_file)
     print("Plot boxplot duration new", file=log_file)
     time_completion_big_connections_new(log_file=log_file)
+    print("Plot boxplot duration new new", file=log_file)
+    time_completion_big_connections_new_new(log_file=log_file)
 elif args.cond:
     print("To be implemented after", file=log_file)
 else:
