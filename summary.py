@@ -808,7 +808,7 @@ def time_completion_big_connections(log_file=sys.stdout, min_bytes=10000):
                                 results_two[direction][key].append((conn.attr[direction][co.BYTES_MPTCPTRACE] + 0.0) / conn.attr[co.DURATION])
 
 
-    conds = ['WiFi', 'WiFi 1M', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
+    conds = ['WiFi', 'WiFi 1M', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
     for direction, data_dir in results.iteritems():
         plt.figure()
         fig, ax = plt.subplots()
@@ -889,7 +889,7 @@ def time_completion_big_connections_new(log_file=sys.stdout, min_bytes=15000000,
                                 results_two[direction][key].append((conn.attr[direction][co.BYTES_MPTCPTRACE] + 0.0) / conn.attr[co.DURATION])
 
 
-    conds = ['WiFi', 'WiFi 1M', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
+    conds = ['WiFi', 'WiFi 1M', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
     for direction, data_dir in results.iteritems():
         plt.figure()
         fig, ax = plt.subplots()
@@ -972,7 +972,7 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=15000
                                 print(key, conn.attr[direction][co.THGPT_MPTCPTRACE])
 
 
-    conds = ['WiFi', 'WiFi 1M', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
+    conds = ['WiFi', 'WiFi 1M', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
     for direction, data_dir in results.iteritems():
         plt.figure()
         fig, ax = plt.subplots()
