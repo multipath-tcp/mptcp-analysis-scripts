@@ -962,12 +962,14 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=15000
                             if conn.flow.attr[direction][co.BYTES] >= min_bytes and conn.flow.attr[direction][co.BYTES] <= max_bytes and co.THGPT_TCPTRACE in conn.flow.attr[direction]:
                                 results[direction][key].append(conn.flow.attr[co.DURATION])
                                 results_two[direction][key].append(conn.flow.attr[direction][co.THGPT_TCPTRACE])
+                                print(key, conn.flow.attr[direction][co.THGPT_TCPTRACE])
                 elif isinstance(conn, mptcp.MPTCPConnection):
                     for direction in co.DIRECTIONS:
                         if direction in conn.attr:
                             if co.BYTES_MPTCPTRACE in conn.attr[direction] and conn.attr[direction][co.BYTES_MPTCPTRACE] >= min_bytes and conn.attr[direction][co.BYTES_MPTCPTRACE] <= max_bytes and co.THGPT_MPTCPTRACE in conn.attr[direction]:
                                 results[direction][key].append(conn.attr[co.DURATION])
                                 results_two[direction][key].append(conn.attr[direction][co.THGPT_MPTCPTRACE])
+                                print(key, conn.attr[direction][co.THGPT_MPTCPTRACE])
 
 
     conds = ['WiFi', 'WiFi 1M', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
