@@ -848,8 +848,8 @@ def time_completion_big_connections_new(log_file=sys.stdout, min_bytes=15000000,
     base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
 
     for direction in co.DIRECTIONS:
-        results[direction] = {'WiFi': [], 'WiFi 1M': [], '3G': [], 'MPTCP 3G (3G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
-        results_two[direction] = {'WiFi': [], 'WiFi 1M': [], '3G': [], 'MPTCP 3G (3G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
+        results[direction] = {'WiFi': [], '3G': [], 'MPTCP 3G (3G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
+        results_two[direction] = {'WiFi': [], '3G': [], 'MPTCP 3G (3G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
@@ -865,8 +865,6 @@ def time_completion_big_connections_new(log_file=sys.stdout, min_bytes=15000000,
         else:
             if 'wlan' in condition and ((20150214 <= fname_date and fname_date <= 20150220) or (20150326 <= fname_date and 20150327 >= fname_date) or fname_date == 20150330):
                 key = 'WiFi'
-            elif 'wlan' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or fname_date == 20150329):
-                key = 'WiFi 1M'
             elif 'rmnet3' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150325 >= fname_date) or fname_date == 20150330):
                 key = '3G'
             elif 'rmnet4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150325 >= fname_date) or fname_date == 20150330):
@@ -892,9 +890,9 @@ def time_completion_big_connections_new(log_file=sys.stdout, min_bytes=15000000,
         plt.figure()
         fig, ax = plt.subplots()
         to_plot = []
-        conds = ['WiFi', 'WiFi 1M', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
+        conds = ['WiFi', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
         print(direction, file=log_file)
-        for cond in ['WiFi', 'WiFi 1M', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']:
+        for cond in ['WiFi', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']:
             to_plot.append(results[direction][cond])
             print(cond, results[direction], file=log_file)
         if to_plot:
@@ -910,8 +908,8 @@ def time_completion_big_connections_new(log_file=sys.stdout, min_bytes=15000000,
         plt.figure()
         fig, ax = plt.subplots()
         to_plot = []
-        conds = ['WiFi', 'WiFi 1M', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
-        for cond in ['WiFi', 'WiFi 1M', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']:
+        conds = ['WiFi', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
+        for cond in ['WiFi', '3G', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']:
             to_plot.append(results_two[direction][cond])
         if to_plot:
             plt.boxplot(to_plot)
