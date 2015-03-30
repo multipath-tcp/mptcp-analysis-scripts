@@ -809,14 +809,14 @@ def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plo
         else:
             plt.ylim(0.0, max(plt.ylim()[1], 1))
 
-        plt.annotate('1', xy=(20000, 1),  xycoords="axes fraction",
-                xytext=(50000, 1), textcoords='axes fraction',
+        plt.annotate('1', xy=(0.65, 1),  xycoords="axes fraction",
+                xytext=(0.85, 0.85), textcoords='axes fraction',
                 arrowprops=dict(facecolor='black', shrink=0.05),
                 horizontalalignment='right', verticalalignment='bottom',
                 )
 
-        plt.annotate('2', xy=(150, 0.04),  xycoords="axes fraction",
-                xytext=(1, 0.2), textcoords='axes fraction',
+        plt.annotate('2', xy=(0.33, 0.04),  xycoords="axes fraction",
+                xytext=(0.125, 0.2), textcoords='axes fraction',
                 arrowprops=dict(facecolor='black', shrink=0.05),
                 horizontalalignment='left', verticalalignment='top',
                 )
