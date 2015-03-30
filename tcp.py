@@ -28,6 +28,7 @@ from __future__ import print_function
 
 import common as co
 import glob
+import numpy as np
 import os
 import subprocess
 import sys
@@ -702,6 +703,35 @@ def plot_aggregated_results(pcap_filepath, graph_dir_exp, aggregate_dict):
                            aggl_dir, os.path.basename(pcap_filepath)[:-5] + "_" + direction + "_all.pdf"))
 
 
+def collect_throughput(xpl_filepath, connections, flow_name, is_reversed):
+    """ Add throughput information to connections """
+    try:
+        xpl_file = open(xpl_filepath)
+        data = xpl_file.readlines()
+        xpl_file.close()
+        tput_data = []
+
+        next_interesting = False
+        count = 0
+        for line in data:
+            if next_interesting:
+                # Interested in lines starting with dot
+                tput_data.append(int(line.split(' ')[2]))
+                next_interesting = False
+            elif line.startswith('red'):
+                count += 1
+                if count >= 250:
+                    next_interesting = True
+
+        if len(tput_data) > 0:
+            direction = co.D2S if is_reversed else co.S2D
+            connections[flow_name].flow.attr[direction][co.THGPT_TCPTRACE] = np.mean(tput_data)
+
+    except IOError as e:
+        print(e, file=sys.stderr)
+        print("No throughput data for " + xpl_filepath, file=sys.stderr)
+
+
 def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot_cwin, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
@@ -712,7 +742,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
     # --csv for csv file
     cmd = ['tcptrace', '--output_dir=' + os.getcwd(),
            '--output_prefix=' +
-           os.path.basename(pcap_filepath[:-5]) + '_', '-C', '-S', '-T', '-zxy',
+           os.path.basename(pcap_filepath[:-5]) + '_', '-C', '-S', '-T', '-A250', '-zxy',
            '-n', '-y', '-l', '--csv', '-r', pcap_filepath]
 
     try:
@@ -740,6 +770,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
         if interesting_graph(flow_name, is_reversed, connections) and 'tsg' in os.path.basename(xpl_filepath):
             process_tsg_xpl_file(pcap_filepath, xpl_filepath, graph_dir_exp, connections, aggregate_dict, cwin_data_all,
                                  flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id)
+        elif 'tput' in os.path.basename(xpl_filepath) and not mptcp_connections:
+            collect_throughput(xpl_filepath, connections, flow_name, is_reversed)
 
         try:
             if mptcp_connections:

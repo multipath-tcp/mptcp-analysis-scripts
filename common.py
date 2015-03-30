@@ -165,6 +165,10 @@ FRAMES_TOTAL = 'frames_total'
 BYTES_FRAMES_RETRANS = 'bytes_frames_retrans'
 # Total number of retransmitted frames
 FRAMES_RETRANS = 'frames_retrans'
+# Throughput returned by tpctrace
+THGPT_TCPTRACE = 'throughput_tcptrace'
+# Throughput returned by mptcptrace
+THGPT_MPTCPTRACE = 'throughput_mptcptrace'
 
 # RTT info
 RTT_SAMPLES = 'rtt_samples'
