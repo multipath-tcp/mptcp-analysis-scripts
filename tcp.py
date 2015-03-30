@@ -712,16 +712,14 @@ def collect_throughput(xpl_filepath, connections, flow_name, is_reversed):
         tput_data = []
 
         next_interesting = False
-        count = 0
         for line in data:
-            if next_interesting:
+            if next_interesting and 'dot' in line:
+                print("OK!")
                 # Interested in lines starting with dot
                 tput_data.append(int(line.split(' ')[2]))
                 next_interesting = False
             elif line.startswith('red'):
-                count += 1
-                if count >= 250:
-                    next_interesting = True
+                next_interesting = True
 
         if len(tput_data) > 0:
             direction = co.D2S if is_reversed else co.S2D
