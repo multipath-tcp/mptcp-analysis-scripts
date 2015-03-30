@@ -812,13 +812,13 @@ def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plo
         plt.annotate('1', xy=(20000, 1),  xycoords='data',
                 xytext=(50000, 1), textcoords='axes fraction',
                 arrowprops=dict(facecolor='black', shrink=0.05),
-                horizontalalignment='right', verticalalignment='top',
+                horizontalalignment='right', verticalalignment='bottom',
                 )
 
         plt.annotate('2', xy=(150, 0.04),  xycoords='data',
                 xytext=(1, 0.2), textcoords='axes fraction',
                 arrowprops=dict(facecolor='black', shrink=0.05),
-                horizontalalignment='right', verticalalignment='top',
+                horizontalalignment='left', verticalalignment='top',
                 )
 
         graph_fname = base_graph_name + "_" + condition + ".pdf"
