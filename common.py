@@ -791,11 +791,11 @@ def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plo
             plt.ylim(0.0, 100000000)
 
         # Shrink current axis by 20%
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-
-        # Put a legend to the right of the current axis
-        ax.legend(scatters, apps, loc='center left', bbox_to_anchor=(1, 0.5), fontsize='large', scatterpoints=1)
+        # box = ax.get_position()
+        # ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+        #
+        # # Put a legend to the right of the current axis
+        # ax.legend(scatters, apps, loc='center left', bbox_to_anchor=(1, 0.5), fontsize='large', scatterpoints=1)
         plt.xlabel(xlabel, fontsize=18)
         plt.ylabel(ylabel, fontsize=16)
         if log_scale_y:
