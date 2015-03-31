@@ -923,23 +923,23 @@ def time_completion_big_connections_new(log_file=sys.stdout, min_bytes=15000000,
         plt.close()
 
 
-def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=15000000, max_bytes=25000000):
+def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=2000000, max_bytes=80000000):
     results = {co.S2D: {}, co.D2S: {}}
     results_two = {co.S2D: {}, co.D2S: {}}
-    base_graph_name_bytes = "boxplot_duration_" + args.app + "_" + start_time + '_' + stop_time
+    base_graph_name_bytes = "boxplot_throughput_" + args.app + "_" + start_time + '_' + stop_time
     base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
 
     for direction in co.DIRECTIONS:
-        results[direction] = {'WiFi': [], 'WiFi 1M': [], '3G': [], 'MPTCP 3G (3G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
-        results_two[direction] = {'WiFi': [], 'WiFi 1M': [], '3G': [], 'MPTCP 3G (3G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
+        results[direction] = {'WiFi': [], '3G': [], 'MPTCP 4G (4G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
+        results_two[direction] = {'WiFi': [], '3G': [], 'MPTCP 4G (4G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
         fname_date = co.get_date_as_int(fname)
         key = None
         if 'mptcp_fm_' in condition:
-            if 'both3' in condition and 20150214 <= fname_date and fname_date <= 20150220:
-                key = 'MPTCP 3G (3G 100k)'
+            if 'both4' in condition and (20150214 <= fname_date and fname_date <= 20150220) or fname_date == 20150331:
+                key = 'MPTCP 4G (4G 100k)'
             elif 'both4' in condition and 20150326 <= fname_date and fname_date <= 20150327 or fname_date == 20150330:
                 key = 'MPTCP 4G'
             elif 'both4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and fname_date <= 20150325) or (fname_date == 20150329)):
@@ -947,8 +947,6 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=15000
         elif 'mptcp' not in condition:
             if 'wlan' in condition and ((20150214 <= fname_date and fname_date <= 20150220) or (20150326 <= fname_date and 20150327 >= fname_date) or fname_date == 20150330):
                 key = 'WiFi'
-            elif 'wlan' in condition and fname_date == 20150329:
-                key = 'WiFi 1M'
             elif 'rmnet3' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150325 >= fname_date) or fname_date == 20150330):
                 key = '3G'
             elif 'rmnet4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and 20150325 >= fname_date) or fname_date == 20150330):
@@ -960,19 +958,20 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=15000
                     for direction in co.DIRECTIONS:
                         if direction in conn.flow.attr:
                             if conn.flow.attr[direction][co.BYTES] >= min_bytes and conn.flow.attr[direction][co.BYTES] <= max_bytes and co.THGPT_TCPTRACE in conn.flow.attr[direction]:
-                                results[direction][key].append(conn.flow.attr[co.DURATION])
-                                results_two[direction][key].append(conn.flow.attr[direction][co.THGPT_TCPTRACE])
-                                print(key, conn.flow.attr[direction][co.THGPT_TCPTRACE])
+                                results_two[direction][key].append(conn.flow.attr[direction][co.THGPT_TCPTRACE] * 8.0 / 1000000)
                 elif isinstance(conn, mptcp.MPTCPConnection):
                     for direction in co.DIRECTIONS:
                         if direction in conn.attr:
                             if co.BYTES_MPTCPTRACE in conn.attr[direction] and conn.attr[direction][co.BYTES_MPTCPTRACE] >= min_bytes and conn.attr[direction][co.BYTES_MPTCPTRACE] <= max_bytes and co.THGPT_MPTCPTRACE in conn.attr[direction]:
-                                results[direction][key].append(conn.attr[co.DURATION])
-                                results_two[direction][key].append(conn.attr[direction][co.THGPT_MPTCPTRACE])
-                                print(key, conn.attr[direction][co.THGPT_MPTCPTRACE])
+                                bytes_cell = 0
+                                for flow_id, flow in conn.flows.iteritems():
+                                    if flow.attr[co.IF] == co.CELL:
+                                        bytes_cell = flow.attr[direction][co.BYTES] - flow.attr[direction][co.REINJ_ORIG_BYTES] + 0.
+                                results[direction][key].append(bytes_cell * 100.0 / conn.attr[direction][co.BYTES_MPTCPTRACE])
+                                results_two[direction][key].append(conn.attr[direction][co.THGPT_MPTCPTRACE] * 8.0 / 1000000)
 
 
-    conds = ['WiFi', 'WiFi 1M', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
+    conds = ['WiFi', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 4G (4G 100k)', 'MPTCP 4G']
     for direction, data_dir in results.iteritems():
         plt.figure()
         fig, ax = plt.subplots()
@@ -986,7 +985,7 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=15000
             plt.xticks(range(1, len(conds) + 1), conds)
             plt.tick_params(axis='both', which='major', labelsize=7)
             plt.tick_params(axis='both', which='minor', labelsize=5)
-            plt.ylabel("Duration [s]", fontsize=18)
+            plt.ylabel("Percetage on cellular", fontsize=18)
             plt.savefig(base_graph_path_bytes + "_" + direction + ".pdf")
         plt.close()
 
@@ -1002,7 +1001,7 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=15000
             plt.xticks(range(1, len(conds) + 1), conds)
             plt.tick_params(axis='both', which='major', labelsize=7)
             plt.tick_params(axis='both', which='minor', labelsize=5)
-            plt.ylabel("Throughput [Bytes/s]", fontsize=18)
+            plt.ylabel("Throughput [Mbits/s]", fontsize=18)
             plt.savefig(base_graph_path_bytes + "_throughput_" + direction + ".pdf")
         plt.close()
 
