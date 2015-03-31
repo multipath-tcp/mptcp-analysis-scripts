@@ -971,7 +971,7 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=20000
                                 for flow_id, flow in conn.flows.iteritems():
                                     if flow.attr[co.IF] == co.CELL:
                                         bytes_cell[direction][key] += flow.attr[direction][co.BYTES] - flow.attr[direction][co.REINJ_ORIG_BYTES] + 0.
-                                results[direction][key].append(bytes_cell * 100.0 / conn.attr[direction][co.BYTES_MPTCPTRACE])
+                                # results[direction][key].append(bytes_cell * 100.0 / conn.attr[direction][co.BYTES_MPTCPTRACE])
                                 results_two[direction][key].append(conn.attr[direction][co.THGPT_MPTCPTRACE] * 8.0 / 1000000)
 
 
