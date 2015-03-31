@@ -938,8 +938,8 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=20000
         fname_date = co.get_date_as_int(fname)
         key = None
         if 'mptcp_fm_' in condition:
-            if 'both4' in condition and (20150214 <= fname_date and fname_date <= 20150220) or fname_date == 20150331:
-                key = 'MPTCP 4G (4G 100k)'
+            if 'both3' in condition and (20150214 <= fname_date and fname_date <= 20150220) or fname_date == 20150331:
+                key = 'MPTCP 3G (3G 100k)'
             elif 'both4' in condition and 20150326 <= fname_date and fname_date <= 20150327 or fname_date == 20150330:
                 key = 'MPTCP 4G'
             elif 'both4' in condition and ((20150304 <= fname_date and fname_date <= 20150308) or (20150323 <= fname_date and fname_date <= 20150325) or (fname_date == 20150329)):
@@ -971,7 +971,7 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=20000
                                 results_two[direction][key].append(conn.attr[direction][co.THGPT_MPTCPTRACE] * 8.0 / 1000000)
 
 
-    conds = ['WiFi', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 4G (4G 100k)', 'MPTCP 4G']
+    conds = ['WiFi', '4G', 'MPTCP 4G (WiFi 1M)', 'MPTCP 3G (3G 100k)', 'MPTCP 4G']
     for direction, data_dir in results.iteritems():
         plt.figure()
         fig, ax = plt.subplots()
@@ -983,8 +983,8 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=20000
         if to_plot:
             plt.boxplot(to_plot)
             plt.xticks(range(1, len(conds) + 1), conds)
-            plt.tick_params(axis='both', which='major', labelsize=7)
-            plt.tick_params(axis='both', which='minor', labelsize=5)
+            plt.tick_params(axis='both', which='major', labelsize=8)
+            plt.tick_params(axis='both', which='minor', labelsize=6)
             plt.ylabel("Percetage on cellular", fontsize=18)
             plt.savefig(base_graph_path_bytes + "_" + direction + ".pdf")
         plt.close()
@@ -999,8 +999,8 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=20000
         if to_plot:
             plt.boxplot(to_plot)
             plt.xticks(range(1, len(conds) + 1), conds)
-            plt.tick_params(axis='both', which='major', labelsize=7)
-            plt.tick_params(axis='both', which='minor', labelsize=5)
+            plt.tick_params(axis='both', which='major', labelsize=8)
+            plt.tick_params(axis='both', which='minor', labelsize=6)
             plt.ylabel("Throughput [Mbits/s]", fontsize=18)
             plt.savefig(base_graph_path_bytes + "_throughput_" + direction + ".pdf")
         plt.close()
