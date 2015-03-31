@@ -934,7 +934,7 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=20000
     for direction in co.DIRECTIONS:
         results[direction] = {'WiFi': [], '3G': [], 'MPTCP 3G (3G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
         results_two[direction] = {'WiFi': [], '3G': [], 'MPTCP 3G (3G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
-        results[direction] = {'WiFi': 0, '3G': 0, 'MPTCP 3G (3G 100k)': 0, 'MPTCP 4G': 0, '4G': 0, 'MPTCP 4G (WiFi 1M)': 0}
+        bytes_cell[direction] = {'WiFi': 0, '3G': 0, 'MPTCP 3G (3G 100k)': 0, 'MPTCP 4G': 0, '4G': 0, 'MPTCP 4G (WiFi 1M)': 0}
         bytes_total[direction] = {'WiFi': 0, '3G': 0, 'MPTCP 3G (3G 100k)': 0, 'MPTCP 4G': 0, '4G': 0, 'MPTCP 4G (WiFi 1M)': 0}
 
     for fname, data in connections.iteritems():
