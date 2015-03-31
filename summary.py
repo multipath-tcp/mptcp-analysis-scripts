@@ -930,8 +930,8 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=20000
     base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
 
     for direction in co.DIRECTIONS:
-        results[direction] = {'WiFi': [], '3G': [], 'MPTCP 4G (4G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
-        results_two[direction] = {'WiFi': [], '3G': [], 'MPTCP 4G (4G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
+        results[direction] = {'WiFi': [], '3G': [], 'MPTCP 3G (3G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
+        results_two[direction] = {'WiFi': [], '3G': [], 'MPTCP 3G (3G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
