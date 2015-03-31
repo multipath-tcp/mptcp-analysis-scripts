@@ -926,12 +926,16 @@ def time_completion_big_connections_new(log_file=sys.stdout, min_bytes=15000000,
 def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=2000000, max_bytes=80000000):
     results = {co.S2D: {}, co.D2S: {}}
     results_two = {co.S2D: {}, co.D2S: {}}
+    bytes_cell = {co.S2D: {}, co.D2S: {}}
+    bytes_total = {co.S2D: {}, co.D2S: {}}
     base_graph_name_bytes = "boxplot_throughput_" + args.app + "_" + start_time + '_' + stop_time
     base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
 
     for direction in co.DIRECTIONS:
         results[direction] = {'WiFi': [], '3G': [], 'MPTCP 3G (3G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
         results_two[direction] = {'WiFi': [], '3G': [], 'MPTCP 3G (3G 100k)': [], 'MPTCP 4G': [], '4G': [], 'MPTCP 4G (WiFi 1M)': []}
+        results[direction] = {'WiFi': 0, '3G': 0, 'MPTCP 3G (3G 100k)': 0, 'MPTCP 4G': 0, '4G': 0, 'MPTCP 4G (WiFi 1M)': 0}
+        bytes_total[direction] = {'WiFi': 0, '3G': 0, 'MPTCP 3G (3G 100k)': 0, 'MPTCP 4G': 0, '4G': 0, 'MPTCP 4G (WiFi 1M)': 0}
 
     for fname, data in connections.iteritems():
         condition = get_experiment_condition(fname)
@@ -963,10 +967,10 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=20000
                     for direction in co.DIRECTIONS:
                         if direction in conn.attr:
                             if co.BYTES_MPTCPTRACE in conn.attr[direction] and conn.attr[direction][co.BYTES_MPTCPTRACE] >= min_bytes and conn.attr[direction][co.BYTES_MPTCPTRACE] <= max_bytes and co.THGPT_MPTCPTRACE in conn.attr[direction]:
-                                bytes_cell = 0
+                                bytes_total[direction][key] += conn.attr[direction][co.BYTES_MPTCPTRACE]
                                 for flow_id, flow in conn.flows.iteritems():
                                     if flow.attr[co.IF] == co.CELL:
-                                        bytes_cell = flow.attr[direction][co.BYTES] - flow.attr[direction][co.REINJ_ORIG_BYTES] + 0.
+                                        bytes_cell[direction][key] += flow.attr[direction][co.BYTES] - flow.attr[direction][co.REINJ_ORIG_BYTES] + 0.
                                 results[direction][key].append(bytes_cell * 100.0 / conn.attr[direction][co.BYTES_MPTCPTRACE])
                                 results_two[direction][key].append(conn.attr[direction][co.THGPT_MPTCPTRACE] * 8.0 / 1000000)
 
@@ -995,7 +999,8 @@ def time_completion_big_connections_new_new(log_file=sys.stdout, min_bytes=20000
         to_plot = []
         for cond in conds:
             to_plot.append(results_two[direction][cond])
-            print(direction, cond, np.mean(results_two[direction][cond]))
+            if bytes_total[direction][cond] > 0:
+                print(direction, cond, 100.0 * bytes_cell[direction][cond] / bytes_total[direction][cond])
         if to_plot:
             plt.boxplot(to_plot)
             plt.xticks(range(1, len(conds) + 1), conds)
