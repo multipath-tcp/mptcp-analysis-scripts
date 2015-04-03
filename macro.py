@@ -426,6 +426,8 @@ def cdf_rtt_mptcp_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
                 for conn_id, conn in data.iteritems():
                     if isinstance(conn, mptcp.MPTCPConnection):
                         for flow_id, flow in conn.flows.iteritems():
+                            if co.S2D not in flow.attr:
+                                continue
                             if dataset_name == 'dirs':
                                 if co.RTT_SAMPLES not in flow.attr[co.S2D]:
                                     break
