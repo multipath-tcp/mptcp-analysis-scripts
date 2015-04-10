@@ -2401,7 +2401,7 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
 
                 for direction in co.DIRECTIONS:
                     if total_bytes[direction] > 0:
-                        results[direction][condition]['Retransmission'].append((reinj_bytes[direction] + 0.0) / total_data_bytes[direction])
+                        results[direction][condition]['Retransmission'].append((retrans_bytes[direction] + 0.0) / total_data_bytes[direction])
                         results[direction][condition]['Reinjection'].append((reinj_data_bytes[direction] + 0.0) / total_data_bytes[direction])
                         results_two[direction][condition].append([total_data_bytes[direction], reinj_data_bytes[direction]])
 
