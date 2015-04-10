@@ -2401,8 +2401,8 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
 
                 for direction in co.DIRECTIONS:
                     if total_bytes[direction] > 0:
-                        results[direction][condition]['Retransmission'].append((reinj_bytes[direction] + 0.0) / total_bytes[direction])
-                        results[direction][condition]['Reinjection'].append((retrans_bytes[direction] + 0.0) / total_bytes[direction])
+                        results[direction][condition]['Retransmission'].append((reinj_bytes[direction] + 0.0) / total_data_bytes[direction])
+                        results[direction][condition]['Reinjection'].append((reinj_data_bytes[direction] + 0.0) / total_data_bytes[direction])
                         results_two[direction][condition].append([total_data_bytes[direction], reinj_data_bytes[direction]])
 
     co.plot_cdfs_with_direction(results, ['red', 'blue'], 'Fraction of total bytes', graph_full_path, natural=True, ylim=0.8)
@@ -2415,7 +2415,7 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
                 to_plot[0].append([i, point[0]])
                 to_plot[1].append([i, point[1]])
                 i += 1
-            tot_graph_full_path = graph_full_path + "_details_" + direction + "_" + condition + ".pdf"
+            tot_graph_full_path = os.path.splitext(graph_full_path)[0] + "_details_" + direction + "_" + condition + ".pdf"
             co.plot_line_graph(to_plot, ['Total', 'Reinjections'], ['b', 'r'], 'Connections', 'Number of data bytes', '', tot_graph_full_path, y_log=True)
 
 def fog_rtt_bytes(log_file=sys.stdout):
