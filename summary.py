@@ -2405,7 +2405,7 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
                         results[direction][condition]['Reinjection'].append((retrans_bytes[direction] + 0.0) / total_bytes[direction])
                         results_two[direction][condition].append([total_data_bytes[direction], reinj_data_bytes[direction]])
 
-    co.plot_cdfs_with_direction(results, ['red', 'blue'], 'Fraction of total bytes', graph_full_path, natural=True)
+    co.plot_cdfs_with_direction(results, ['red', 'blue'], 'Fraction of total bytes', graph_full_path, natural=True, ylim=0.8)
     for direction in results_two:
         for condition in results_two[direction]:
             sorted_data = sorted(results_two[direction][condition], key=lambda elem: elem[0])
