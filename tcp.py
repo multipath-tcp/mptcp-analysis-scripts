@@ -714,7 +714,6 @@ def collect_throughput(xpl_filepath, connections, flow_name, is_reversed):
         next_interesting = False
         for line in data:
             if next_interesting and 'dot' in line:
-                print("OK!")
                 # Interested in lines starting with dot
                 tput_data.append(int(line.split(' ')[2]))
                 next_interesting = False
