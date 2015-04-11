@@ -730,7 +730,23 @@ def collect_throughput(xpl_filepath, connections, flow_name, is_reversed):
         print("No throughput data for " + xpl_filepath, file=sys.stderr)
 
 
-def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot_cwin, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
+def collect_rtt(xpl_filepath, rtt_all, flow_name, is_reversed):
+    """ Store in rtt_all all RTTs perceived for the connection flow_name """
+    direction = co.D2S if is_reversed else co.S2D
+    xpl_file = open(xpl_filepath)
+    data = xpl_file.readlines()
+    xpl_file.close()
+
+    rtts = []
+    for line in data:
+        split_line = line.split(" ")
+        if split_line[0] == 'dot':
+            rtts.append(float(split_line[2]))
+
+    rtt_all[direction][flow_name] = rtts
+
+
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, plot_cwin, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0
@@ -740,7 +756,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
     # --csv for csv file
     cmd = ['tcptrace', '--output_dir=' + os.getcwd(),
            '--output_prefix=' +
-           os.path.basename(pcap_filepath[:-5]) + '_', '-C', '-S', '-T', '-A250', '-zxy',
+           os.path.basename(pcap_filepath[:-5]) + '_', '-C', '-S', '-T', '-A250', '-zxy', '-R',
            '-n', '-y', '-l', '--csv', '-r', pcap_filepath]
 
     try:
@@ -757,6 +773,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
 
     # The dictionary where all cwin data of the scenario will be stored
     cwin_data_all = {}
+    # The dictionary where all RTTs will be stored
+    rtt_all = {co.S2D: {}, co.D2S: {}}
 
     # The tcptrace call will generate .xpl files to cope with
     for xpl_filepath in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_filepath[:-5]) + '*.xpl')):
@@ -776,7 +794,11 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
                 # If mptcp, don't keep tcptrace plots
                 os.remove(xpl_filepath)
             else:
-                co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR), print_out=print_out)
+                if '_rtt.xpl' in os.path.basename(xpl_filepath):
+                    collect_rtt(xpl_filepath, rtt_all, flow_name, is_reversed)
+                    co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR), print_out=print_out)
+                else:
+                    co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR), print_out=print_out)
         except OSError as e:
             print(str(e) + ": skipped", file=sys.stderr)
         except IOError as e:
@@ -795,4 +817,5 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
     else:
         if plot_cwin:
             plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all)
+        co.save_data(pcap_filepath, rtt_dir_exp, rtt_all)
         co.save_data(pcap_filepath, stat_dir_exp, connections)

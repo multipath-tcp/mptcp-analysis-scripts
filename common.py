@@ -97,6 +97,8 @@ DEF_STAT_DIR = 'stats'
 DEF_AGGL_DIR = 'aggls'
 # The default sums directory
 DEF_SUMS_DIR = 'sums'
+# The default rtt directory
+DEF_RTT_DIR = 'rtt'
 # The default interface to analyse
 DEF_IFACE = 'any'
 

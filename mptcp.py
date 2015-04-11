@@ -565,8 +565,23 @@ def process_gput_csv(csv_fname, connections):
         print("No throughput info for " + csv_fname, file=sys.stderr)
 
 
+def collect_rtt(csv_fname, rtt_all):
+    """ Collect RTTs of all packets at MPTCP level """
+    direction = co.D2S if is_reverse_connection(csv_fname) else co.S2D
+    csv_file = open(csv_fname)
+    data = csv_file.readlines()
+    csv_file.close()
+    rtts = []
+
+    for line in data:
+        split_line = line.split(",")
+        if len(split_line) >= 2:
+            rtts.append(float(split_line[1]))
+
+    rtt_all[direction][get_connection_id(csv_fname)] = rtts
+
 # We can't change dir per thread, we should use processes
-def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot_cwin, min_bytes=0):
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, plot_cwin, min_bytes=0):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     if not check_mptcp_joins(pcap_filepath):
         print("WARNING: no mptcp joins on " + pcap_filepath, file=sys.stderr)
@@ -590,6 +605,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
             # First see all xpl files, to detect the relative 0 of all connections
             # Also, compute the duration and number of bytes of the MPTCP connection
             relative_start = first_pass_on_files(connections)
+            rtt_all = {co.S2D: {}, co.D2S: {}}
 
             # Then really process xpl files
             for xpl_fname in glob.glob('*.xpl'):
@@ -607,9 +623,15 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
             for csv_fname in glob.glob('*.csv'):
                 if MPTCP_GPUT_FNAME in csv_fname:
                     process_gput_csv(csv_fname, connections)
+                elif MPTCP_RTT_FNAME in csv_fname:
+                    collect_rtt(csv_fname, rtt_all)
                 try:
-                    co.move_file(csv_fname, os.path.join(
-                        graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
+                    if MPTCP_RTT_FNAME in csv_fname:
+                        co.move_file(csv_fname, os.path.join(
+                            graph_dir_exp, co.DEF_RTT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
+                    else:
+                        co.move_file(csv_fname, os.path.join(
+                            graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
                 except IOError as e:
                     print(str(e), file=sys.stderr)
 
@@ -623,7 +645,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot
     # Create aggregated graphes and add per interface information on MPTCPConnection
     # This will save the mptcp connections
     if connections and do_tcp_processing:
-        cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, plot_cwin, mptcp_connections=connections)
+        cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, plot_cwin, mptcp_connections=connections)
+        co.save_data(pcap_filepath, rtt_dir_exp, rtt_all)
         co.save_data(pcap_filepath, stat_dir_exp, connections)
         if plot_cwin:
             plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all)
