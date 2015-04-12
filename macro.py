@@ -637,7 +637,7 @@ def rtt_application_smartphone_pdf():
                 for conn_id in data[co.S2D]:
                     rtts[cond] += data[co.S2D][conn_id]
 
-    co.density_plot(rtts, "RTT seen by smartphone [ms]", color, graph_full_path)
+    co.density_plot(rtts, "RTT seen by smartphone [ms]", color, graph_full_path, xlim=1000.0)
 
 
 # cellular_percentage_boxplot()

@@ -851,9 +851,10 @@ def scatter_plot_with_direction(data, xlabel, ylabel, color, sums_dir_exp, base_
             scatter_plot(data_dir, xlabel, ylabel, color, sums_dir_exp, os.path.splitext(base_graph_name)[0] + "_" + direction, plot_identity=plot_identity, log_scale_x=log_scale_x, log_scale_y=log_scale_y, y_to_one=y_to_one, label_order=label_order)
 
 
-def density_plot(data, xlabel, color, graph_fname):
+def density_plot(data, xlabel, color, graph_fname, xlim=None):
     plt.figure()
     plt.clf()
+
     max_value = 0
     # First find the max value
     for condition, cond_data in data.iteritems():
@@ -870,6 +871,9 @@ def density_plot(data, xlabel, color, graph_fname):
             plt.plot(xs, density(xs), color=color[condition], label=condition)
 
     plt.legend(loc='upper right')
+
+    if xlim:
+        plt.xlim([0.0, xlim])
 
     plt.xlabel(xlabel, fontsize=18)
     plt.ylabel("Density function", fontsize=18)
