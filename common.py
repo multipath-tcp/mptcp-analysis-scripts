@@ -864,7 +864,7 @@ def density_plot(data, xlabel, color, graph_fname):
     for condition, cond_data in data.iteritems():
         if cond_data:
             density = gaussian_kde(cond_data)
-            xs = np.linspace(0, max_value, 100000)
+            xs = np.linspace(0, max_value, 1500)
             density.covariance_factor = lambda: .25
             density._compute_covariance()
             plt.plot(xs, density(xs), color=color[condition], label=condition)
