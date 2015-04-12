@@ -51,6 +51,8 @@ parser.add_argument("-s",
                     "--stat", help="directory where the stat files of dataset 1 are stored", default=co.DEF_STAT_DIR+'_'+co.DEF_IFACE)
 parser.add_argument("-T",
                     "--stat-two", help="directory where the stat files of dataset 2 are stored", default=co.DEF_STAT_DIR+'_'+co.DEF_IFACE)
+parser.add_argument("-V",
+                    "--stat-three", help="directory where the stat files of dataset 3 are stored", default=co.DEF_STAT_DIR+'_'+co.DEF_IFACE)
 parser.add_argument('-S',
                     "--sums", help="directory where the summary graphs will be stored", default=co.DEF_SUMS_DIR+'_'+co.DEF_IFACE)
 parser.add_argument("-a",
@@ -61,6 +63,8 @@ parser.add_argument("-d",
                     "--dirs", help="list of directories of dataset 1 to aggregate", nargs="+")
 parser.add_argument("-t",
                     "--dirs-two", help="list of directories of dataset 2 to aggregate", nargs="+")
+parser.add_argument("-v",
+                    "--dirs-three", help="list of directories of dataset 3 to aggregate", nargs="+")
 parser.add_argument("-c",
                     "--cond", help="(exact) condition to show", default="")
 parser.add_argument("-p",
@@ -95,6 +99,7 @@ if int(start_time) > int(stop_time):
 
 stat_dir_exp = os.path.abspath(os.path.expanduser(args.stat))
 stat_two_dir_exp = os.path.abspath(os.path.expanduser(args.stat_two))
+stat_three_dir_exp = os.path.abspath(os.path.expanduser(args.stat_three))
 sums_dir_exp = os.path.abspath(os.path.expanduser(args.sums))
 
 if args.prot or args.cond:
@@ -111,6 +116,11 @@ elif args.download:
     apps_to_load = ['dailymotion', 'firefox', 'spotify', 'youtube']
 elif args.all:
     apps_to_load = ['drive', 'dropbox', 'facebook', 'messenger'] + ['dailymotion', 'firefox', 'spotify', 'youtube']
+
+
+DS_1 = "dataset_1"
+DS_2 = "dataset_2"
+DS_3 = "dataset_3"
 
 ##################################################
 ##                 GET THE DATA                 ##
@@ -167,10 +177,10 @@ def check_conditions(fname):
     return condition.startswith(args.prot) and condition.endswith(args.cond)
 
 
-def fetch_data(dir_exp, dir_exp_two):
+def fetch_data(dir_exp, dir_exp_two, dir_exp_three):
     co.check_directory_exists(dir_exp)
     co.check_directory_exists(dir_exp_two)
-    dico = {"dirs": {}, "dirs_two": {}}
+    dico = {DS_1: {}, DS_2: {}, DS_3: {}}
     for dirpath, dirnames, filenames in os.walk(dir_exp):
         if check_in_list(dirpath, args.dirs):
             for fname in filenames:
@@ -178,7 +188,7 @@ def fetch_data(dir_exp, dir_exp_two):
                 if is_app_name(fname, args.app) and (fname_date and (int(start_time) <= fname_date <= int(stop_time))) and check_conditions(fname) and (not apps_to_load or get_app_name(fname) in apps_to_load):
                     try:
                         stat_file = open(os.path.join(dirpath, fname), 'r')
-                        dico["dirs"][fname] = pickle.load(stat_file)
+                        dico[DS_1][fname] = pickle.load(stat_file)
                         stat_file.close()
                     except IOError as e:
                         print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
@@ -190,13 +200,25 @@ def fetch_data(dir_exp, dir_exp_two):
                 if is_app_name(fname, args.app) and (fname_date and (int(start_time) <= fname_date <= int(stop_time))) and check_conditions(fname) and (not apps_to_load or get_app_name(fname) in apps_to_load):
                     try:
                         stat_file = open(os.path.join(dirpath, fname), 'r')
-                        dico["dirs_two"][fname] = pickle.load(stat_file)
+                        dico[DS_2][fname] = pickle.load(stat_file)
+                        stat_file.close()
+                    except IOError as e:
+                        print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
+
+    for dirpath, dirnames, filenames in os.walk(dir_exp_three):
+        if check_in_list(dirpath, args.dirs_three):
+            for fname in filenames:
+                fname_date = co.get_date_as_int(fname)
+                if is_app_name(fname, args.app) and (fname_date and (int(start_time) <= fname_date <= int(stop_time))) and check_conditions(fname) and (not apps_to_load or get_app_name(fname) in apps_to_load):
+                    try:
+                        stat_file = open(os.path.join(dirpath, fname), 'r')
+                        dico[DS_3][fname] = pickle.load(stat_file)
                         stat_file.close()
                     except IOError as e:
                         print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
     return dico
 
-datasets = fetch_data(stat_dir_exp, stat_two_dir_exp)
+datasets = fetch_data(stat_dir_exp, stat_two_dir_exp, stat_three_dir_exp)
 
 ##################################################
 ##               PLOTTING RESULTS               ##
@@ -581,11 +603,46 @@ def hist_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_bytes=
             plt.close()
 
 
+def rtt_application_smartphone_pdf():
+    """ WARNING: must take rtt objects """
+    # Dataset 1
+    tcp_3g = "TCP 3G"
+    tcp_4g = "TCP 4G"
+    # Dataset 2
+    tcp_wifi = "TCP WiFi"
+    # Dataset 3
+    mptcp_3g = "MPTCP 3G"
+    mptcp_4g = "MPTCP 4G"
+
+    color = {tcp_3g: "purple", tcp_4g: "orange", tcp_wifi: "red", mptcp_3g: "blue", mptcp_4g: "green"}
+    rtts = {tcp_3g: [], tcp_4g: [], tcp_wifi: [], mptcp_3g: [], mptcp_4g: []}
+
+    graph_fname = "rtt_density_smartphone_all_" + start_time + "_" + stop_time + '.pdf'
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+    for dataset_name, connections in datasets.iteritems():
+        for fname, data in connections.iteritems():
+            condition = get_experiment_condition(fname)
+            if 'TC' in condition:
+                continue
+            cond = None
+            if dataset_name == DS_1 and condition.startswith('tcp') and 'rmnet' in condition:
+                cond = tcp_4g if 'rmnet4' in condition else tcp_3g if 'rmnet3' in condition else None
+            elif dataset_name == DS_2 and condition.startswith('tcp') and 'wlan' in condition:
+                cond = tcp_wifi
+            elif dataset_name == DS_3 and condition.startswith('mptcp_fm') and 'both' in condition:
+                cond = mptcp_4g if 'both4' in condition else mptcp_3g if 'both3' in condition else None
+
+            if cond:
+                for conn_id in data[co.S2D]:
+                    rtts[cond] += data[co.S2D][conn_id]
+
+    co.density_plot(rtts, "RTT seen by smartphone [ms]", color, graph_full_path)
 
 
-
-cellular_percentage_boxplot()
-reinjection_boxplot()
-cdf_rtt_single_graph_all(xlim=400.0)
-cdf_rtt_mptcp_single_graph_all(xlim=400.0)
-hist_cellular_percentage()
+# cellular_percentage_boxplot()
+# reinjection_boxplot()
+# cdf_rtt_single_graph_all(xlim=400.0)
+# cdf_rtt_mptcp_single_graph_all(xlim=400.0)
+# hist_cellular_percentage()
+rtt_application_smartphone_pdf()

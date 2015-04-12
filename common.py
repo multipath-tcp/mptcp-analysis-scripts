@@ -30,6 +30,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
+from scipy.stats import gaussian_kde
 import statsmodels.api as sm
 import subprocess
 import sys
@@ -848,3 +849,29 @@ def scatter_plot_with_direction(data, xlabel, ylabel, color, sums_dir_exp, base_
             scatter_plot(data_dir, xlabel, ylabel, color, sums_dir_exp, os.path.splitext(base_graph_name)[0] + "_" + direction, plot_identity=plot_identity, s=s[direction], log_scale_x=log_scale_x, log_scale_y=log_scale_y, y_to_one=y_to_one, label_order=label_order)
         else:
             scatter_plot(data_dir, xlabel, ylabel, color, sums_dir_exp, os.path.splitext(base_graph_name)[0] + "_" + direction, plot_identity=plot_identity, log_scale_x=log_scale_x, log_scale_y=log_scale_y, y_to_one=y_to_one, label_order=label_order)
+
+
+def density_plot(data, xlabel, color, graph_fname):
+    plt.figure()
+    plt.clf()
+    max_value = 0
+    # First find the max value
+    for condition, cond_data in data.iteritems():
+        if cond_data:
+            max_value = max(max_value, max(cond_data))
+
+    # Then do the plot work
+    for condition, cond_data in data.iteritems():
+        if cond_data:
+            density = gaussian_kde(cond_data)
+            xs = np.linspace(0, max_value, 100000)
+            density.covariance_factor = lambda: .25
+            density._compute_covariance()
+            plt.plot(xs, density(xs), color=color[condition], label=condition)
+
+    plt.legend(loc='upper right')
+
+    plt.xlabel(xlabel, fontsize=18)
+    plt.ylabel("Density function", fontsize=18)
+    plt.savefig(graph_fname)
+    plt.close('all')
