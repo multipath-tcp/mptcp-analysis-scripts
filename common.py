@@ -182,6 +182,10 @@ RTT_MAX = 'rtt_max'
 RTT_AVG = 'rtt_avg'
 RTT_STDEV = 'rtt_stdev'
 RTT_3WHS = 'rtt_from_3whs'
+RTT_99P = 'rtt_99p'
+RTT_98P = 'rtt_98p'
+RTT_90P = 'rtt_90p'
+RTT_MED = 'rtt_median'
 
 # For aggregation
 S2D = 'source2destination'
