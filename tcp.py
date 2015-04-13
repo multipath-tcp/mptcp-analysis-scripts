@@ -468,7 +468,7 @@ def interesting_graph(flow_name, is_reversed, connections):
         This function assumes that a graph is interesting if it has at least one connection that
         is not 127.0.0.1 -> 127.0.0.1 and if there are data packets sent
     """
-    if (not connections[flow_name].flow.attr[co.TYPE] == 'IPv4' or connections[flow_name].flow.attr[co.IF]):
+    if (not connections[flow_name].flow.attr[co.TYPE] == co.IPv4 or connections[flow_name].flow.attr[co.IF]):
         direction = co.D2S if is_reversed else co.S2D
         return (connections[flow_name].flow.attr[direction][co.PACKS] > 0)
 

@@ -193,6 +193,9 @@ D2S = 'destination2source'
 
 DIRECTIONS = [S2D, D2S]
 
+IPv4 = 'IPv4'
+IPv6 = 'IPv6'
+
 # IPv4 localhost address
 LOCALHOST_IPv4 = '127.0.0.1'
 # Port number of RedSocks

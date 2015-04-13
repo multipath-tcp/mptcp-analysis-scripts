@@ -192,7 +192,7 @@ def interesting_graph(csv_fname, connections):
     connection_id = get_connection_id(csv_fname)
     for sub_flow_id, conn in connections[connection_id].flows.iteritems():
         # Only had the case for IPv4, but what is its equivalent in IPv6?
-        if not conn.attr[co.TYPE] == 'IPv4':
+        if not conn.attr[co.TYPE] == co.IPv4:
             return True
         if not (conn.attr[co.SADDR] == co.LOCALHOST_IPv4 and conn.attr[co.DADDR] == co.LOCALHOST_IPv4):
             return True
