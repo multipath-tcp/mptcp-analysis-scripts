@@ -244,7 +244,9 @@ class BasicFlow(object):
         num_saddr = saddr.split('.')
         num_daddr = daddr.split('.')
         if len(num_saddr) == 4 and len(num_daddr) == 4:
-            self.attr[TYPE] = 'IPv4'
+            self.attr[TYPE] = IPv4
+        elif ":" in saddr and ":" in daddr:
+            self.attr[TYPE] = IPv6
 
 
 class BasicConnection(object):
@@ -408,7 +410,9 @@ def detect_ipv4(data):
     num_saddr = saddr.split('.')
     num_daddr = daddr.split('.')
     if len(num_saddr) == 4 and len(num_daddr) == 4:
-        data[TYPE] = 'IPv4'
+        data[TYPE] = IPv4
+    elif ":" in saddr and ":" in daddr:
+        data[TYPE] = IPv6
 
 
 def get_date_as_int(pcap_fname):
