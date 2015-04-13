@@ -270,6 +270,15 @@ def process_tcptrace_cmd(cmd, pcap_filepath, keep_csv=False, graph_dir_exp=None)
 ##                RETRANSMISSION                ##
 ##################################################
 
+def get_ip_port_tshark(str_data):
+    """ Given the line of interest, return the ip and port
+        Manage cases with IPv6 addresses
+    """
+    separator = str_data.rindex(":")
+    ip = str_data[:separator]
+    port = str_data[separator+1:]
+    return ip, port
+
 
 def get_total_and_retrans_frames(pcap_filepath, connections):
     """ Fill informations for connections based on tshark """
@@ -292,8 +301,9 @@ def get_total_and_retrans_frames(pcap_filepath, connections):
     for line in data:
         split_line = " ".join(line.split()).split(" ")
         if len(split_line) == 11:
-            ip_src, port_src = split_line[0].split(":")
-            ip_dst, port_dst = split_line[2].split(":")
+            # Manage case with ipv6
+            ip_src, port_src = get_ip_port_tshark(split_line[0])
+            ip_dst, port_dst = get_ip_port_tshark(split_line[2])
             for conn_id, conn in connections.iteritems():
                 if conn.flow.attr[co.SADDR] == ip_src and conn.flow.attr[co.SPORT] == port_src and conn.flow.attr[co.DADDR] == ip_dst and conn.flow.attr[co.DPORT]:
                     connections[conn_id].flow.attr[co.D2S][co.FRAMES_TOTAL] = int(split_line[3])
@@ -315,8 +325,8 @@ def get_total_and_retrans_frames(pcap_filepath, connections):
     for line in data:
         split_line = " ".join(line.split()).split(" ")
         if len(split_line) == 11:
-            ip_src, port_src = split_line[0].split(":")
-            ip_dst, port_dst = split_line[2].split(":")
+            ip_src, port_src = get_ip_port_tshark(split_line[0])
+            ip_dst, port_dst = get_ip_port_tshark(split_line[2])
             for conn_id, conn in connections.iteritems():
                 if conn.flow.attr[co.SADDR] == ip_src and conn.flow.attr[co.SPORT] == port_src and conn.flow.attr[co.DADDR] == ip_dst and conn.flow.attr[co.DPORT]:
                     connections[conn_id].flow.attr[co.D2S][co.FRAMES_RETRANS] = int(split_line[3])
