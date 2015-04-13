@@ -363,7 +363,7 @@ def rewrite_xpl(xpl_fname, xpl_data, begin_time, begin_seq, connections, conn_id
 
 def check_mptcp_joins(pcap_fullpath, print_out=sys.stdout):
     """ Check if the pcap given in argument has mp joins in a SYN->SYN/ACK->ACK fashion (only for both scenarios) """
-    if 'both' not in os.path.basename(pcap_fullpath):
+    if 'rmnet' in os.path.basename(pcap_fullpath) or 'wlan' in os.path.basename(pcap_fullpath):
         return True
     mp_joins_fname = os.path.basename(pcap_fullpath[:-5]) + "_joins"
     mp_joins_file = open(mp_joins_fname, 'w')
