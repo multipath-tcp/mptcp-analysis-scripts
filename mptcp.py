@@ -307,8 +307,10 @@ def rewrite_xpl(xpl_fname, xpl_data, begin_time, begin_seq, connections, conn_id
     """ Rewrite the xpl file with filename xpl_fname in order to have the same relative time
         Number 1 is wifi (green), number 2 is cell (red)
     """
+    rewrite_interface = True
     if len(connections[conn_id].flows) > 2:
-        print("WARNING: xpl plot only show two curves (green = wifi, red = cellular)", file=sys.stderr)
+        print("WARNING: too much flows, xpl plot will not follow (green = wifi, red = cellular)", file=sys.stderr)
+        rewrite_interface = False
 
     is_title = False
     xpl_file = open(xpl_fname, 'w')
@@ -318,9 +320,12 @@ def rewrite_xpl(xpl_fname, xpl_data, begin_time, begin_seq, connections, conn_id
         split_line = line.split(' ')
 
         if co.is_number(split_line[0]):
-            interface = connections[conn_id].flows[str(int(split_line[0]) - 1)].attr[co.IF]
-            number = 1 if interface == co.WIFI else 2 if interface == co.CELL else 3
-            xpl_file.write(str(number) + "\n")
+            if rewrite_interface:
+                interface = connections[conn_id].flows[str(int(split_line[0]) - 1)].attr[co.IF]
+                number = 1 if interface == co.WIFI else 2 if interface == co.CELL else 3
+                xpl_file.write(str(number) + "\n")
+            else:
+                xpl_file.write(split_line[0])
 
         elif split_line[0] in co.XPL_ONE_POINT:
             # time = float(split_line[1]) - begin_time
