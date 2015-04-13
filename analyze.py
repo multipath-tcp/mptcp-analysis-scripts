@@ -100,6 +100,8 @@ parser.add_argument("-b",
                     "--min-bytes", help="only plot graphs of connections with at least a given amount of bytes", default=0)
 parser.add_argument("-W",
                     "--cwin", help="plot congestion window graphs and aggregation graphs", action="store_true")
+parser.add_argument("-M",
+                    "--is-mptcp", help="don't check on filename, always process traces as MPTCP ones", action="store_true")
 
 args = parser.parse_args()
 
@@ -202,7 +204,7 @@ def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge, cwin):
     if clean:
         co.clean_loopback_pcap(pcap_filepath, print_out=print_out)
     # Prefix of the name determine the protocol used
-    if pcap_filename.startswith('mptcp'):
+    if args.is_mptcp or pcap_filename.startswith('mptcp'):
         if correct:
             tcp.correct_trace(pcap_filepath, print_out=print_out)
         # we need to change dir, do that in a new process
