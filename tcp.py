@@ -729,9 +729,8 @@ def collect_throughput(xpl_filepath, connections, flow_name, is_reversed):
         print("No throughput data for " + xpl_filepath, file=sys.stderr)
 
 
-def collect_rtt(xpl_filepath, rtt_all, flow_name, is_reversed):
-    """ Store in rtt_all all RTTs perceived for the connection flow_name """
-    direction = co.D2S if is_reversed else co.S2D
+def extract_rtt_from_xpl(xpl_filepath):
+    """ Given the filepath of a xpl file containing RTT info, returns an array of the values of the RTT """
     xpl_file = open(xpl_filepath)
     data = xpl_file.readlines()
     xpl_file.close()
@@ -742,10 +741,29 @@ def collect_rtt(xpl_filepath, rtt_all, flow_name, is_reversed):
         if split_line[0] == 'dot':
             rtts.append(float(split_line[2]))
 
+    return rtts
+
+
+def collect_rtt(xpl_filepath, rtt_all, flow_name, is_reversed, connections):
+    """ Store in rtt_all all RTTs perceived for the connection flow_name """
+    direction = co.D2S if is_reversed else co.S2D
+    rtts = extract_rtt_from_xpl(xpl_filepath)
     rtt_all[direction][flow_name] = rtts
 
 
-def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, plot_cwin, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
+def collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mptcp_connections):
+    """ Store in rtt_all all RTTs perceived by subflow for conn_id by interface """
+    if not conn_id or not flow_id:
+        return
+    direction = co.D2S if is_reversed else co.S2D
+    interface = mptcp_connections[conn_id].flows[flow_id].attr[co.IF]
+    if conn_id not in rtt_all[direction]:
+        rtt_all[direction][conn_id] = {}
+    rtts = extract_rtt_from_xpl(xpl_filepath)
+    rtt_all[direction][conn_id][interface] = rtts
+
+
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, plot_cwin, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0
@@ -790,11 +808,15 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
 
         try:
             if mptcp_connections:
-                # If mptcp, don't keep tcptrace plots
-                os.remove(xpl_filepath)
+                # If mptcp, don't keep tcptrace plots, except RTT ones
+                if '_rtt.xpl' in os.path.basename(xpl_filepath):
+                    collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mptcp_connections)
+                    co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR), print_out=print_out)
+                else:
+                    os.remove(xpl_filepath)
             else:
                 if '_rtt.xpl' in os.path.basename(xpl_filepath):
-                    collect_rtt(xpl_filepath, rtt_all, flow_name, is_reversed)
+                    collect_rtt(xpl_filepath, rtt_all, flow_name, is_reversed, connections)
                     co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR), print_out=print_out)
                 else:
                     co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR), print_out=print_out)
@@ -811,6 +833,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
 
     # Save connections info
     if mptcp_connections:
+        # First save RTT data of subflows
+        co.save_data(pcap_filepath, rtt_subflow_dir_exp, rtt_all)
         # Returns to the caller the data to plot cwin
         return cwin_data_all
     else:

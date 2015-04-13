@@ -76,6 +76,8 @@ parser.add_argument("-a",
                     "--aggl", help="directory where data of agglomerated graphs will be stored", default=co.DEF_AGGL_DIR)
 parser.add_argument("-r",
                     "--rtt", help="directory where data of round-trip-time will be stored", default=co.DEF_RTT_DIR)
+parser.add_argument("-R",
+                    "--rtt-subflow", help="directory where data of round-trip-time of subflows of MPTCP will be stored", default=co.DEF_RTT_SUBFLOW_DIR)
 parser.add_argument("-p", "--pcap",
                     help="analyze only pcap files containing the given string (default any, wlan0 and rmnet0)",
                     nargs="+", default=["_" + co.DEF_IFACE + ".", "_wlan0.", "_rmnet0."])
@@ -108,6 +110,7 @@ graph_dir_exp = co.get_dir_from_arg(args.graph, args.pcap[0])
 stat_dir_exp = co.get_dir_from_arg(args.stat,  args.pcap[0])
 aggl_dir_exp = co.get_dir_from_arg(args.aggl,  args.pcap[0])
 rtt_dir_exp = co.get_dir_from_arg(args.rtt,  args.pcap[0])
+rtt_subflow_dir_exp = co.get_dir_from_arg(args.rtt_subflow,  args.pcap[0])
 
 if os.path.isdir(in_dir_exp):
     # add the basename of the input dir
@@ -118,6 +121,7 @@ if os.path.isdir(in_dir_exp):
     stat_dir_exp = os.path.join(stat_dir_exp,  parent_dir, base_dir)
     aggl_dir_exp = os.path.join(aggl_dir_exp,  parent_dir, base_dir)
     rtt_dir_exp = os.path.join(rtt_dir_exp,  parent_dir, base_dir)
+    rtt_subflow_dir_exp = os.path.join(rtt_subflow_dir_exp, parent_dir, base_dir)
 
 if args.stderr:
     print_out = sys.stderr
@@ -204,14 +208,14 @@ def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge, cwin):
         # we need to change dir, do that in a new process
         if graph:
             p = Process(target=mptcp.process_trace, args=(
-                pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, cwin,), kwargs={'min_bytes': args.min_bytes})
+                pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, cwin,), kwargs={'min_bytes': args.min_bytes})
             p.start()
             p.join()
     elif pcap_filename.startswith('tcp'):
         if correct:
             tcp.correct_trace(pcap_filepath, print_out=print_out)
         if graph:
-            tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, cwin,
+            tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, cwin,
                               print_out=print_out, min_bytes=args.min_bytes)
     else:
         print(pcap_filepath + ": don't know the protocol used; skipped", file=sys.stderr)
@@ -250,6 +254,7 @@ co.check_directory_exists(os.path.join(graph_dir_exp, co.DEF_RTT_DIR))
 co.check_directory_exists(stat_dir_exp)
 co.check_directory_exists(aggl_dir_exp)
 co.check_directory_exists(rtt_dir_exp)
+co.check_directory_exists(rtt_subflow_dir_exp)
 # If file is a .pcap, use it for (mp)tcptrace
 pcap_list.reverse()  # we will use pop: use the natural order
 

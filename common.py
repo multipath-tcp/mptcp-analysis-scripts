@@ -100,6 +100,8 @@ DEF_AGGL_DIR = 'aggls'
 DEF_SUMS_DIR = 'sums'
 # The default rtt directory
 DEF_RTT_DIR = 'rtt'
+# Another rtt directory, for mptcp subflows
+DEF_RTT_SUBFLOW_DIR = 'rtt_subflow'
 # The default interface to analyse
 DEF_IFACE = 'any'
 
