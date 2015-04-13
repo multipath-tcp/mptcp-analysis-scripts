@@ -355,6 +355,39 @@ def tshark_stats(filtering, src_path, print_out=sys.stderr):
         raise TSharkError("Error with filtering " + filtering + " for source " + src_path)
 
 
+def long_ipv6_address(ip):
+    """ Return ip in long format, ex. 2001:db8::1 will be 2001:0db8:0000:0000:0000:0000:0000:0001 """
+    if ":" not in ip:
+        # IPv4 address, don't do anything
+        return ip
+    # Before ::, after ::
+    split_ip = []
+    decomposed_ip = [[], []]
+    # Compressed 0 in IPv6
+    split_ip = ip.split("::")
+
+    # Treat splitted parts of ip
+    for i in range(0, len(split_ip)):
+        decomposed_ip[i] = split_ip[i].split(":")
+        for j in range(0, len(decomposed_ip[i])):
+            while not len(decomposed_ip[i][j]) == 4:
+                decomposed_ip[i][j] = "0" + decomposed_ip[i][j]
+
+    # Putting everything together
+    long_ip = ""
+    for d_ip in decomposed_ip[0]:
+        long_ip += d_ip + ":"
+
+    for i in range(0, 8 - len(decomposed_ip[0]) - len(decomposed_ip[1])):
+        long_ip += "0000:"
+
+    for d_ip in decomposed_ip[1]:
+        long_ip += d_ip + ":"
+
+    # Remove the last :
+    return long_ip[:-1]
+
+
 ##################################################
 ##                   PCAP                       ##
 ##################################################

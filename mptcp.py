@@ -119,6 +119,9 @@ def extract_flow_data(out_file):
             while index + 1 < len(words):
                 attri = words[index]
                 value = words[index + 1]
+                # Cope with different format from tcptrace and mptcptrace
+                if attri == co.SADDR or attri == co.DADDR:
+                    value = co.long_ipv6_address(value)
                 subflow.attr[attri] = value
                 index += 2
 
