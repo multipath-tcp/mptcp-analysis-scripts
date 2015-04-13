@@ -33,3 +33,17 @@ Once this first analysis done, you can agglomerate the different statistics obta
 Again, to have more details about the possibilities of this script, please type
 
 `./summary -h`
+
+Details about the stats generated
+---------------------------------
+Statistics about analyzed traces are contained in a stats folder, by default `stats_any`.
+Each file contains a dictionary of objects representing the connections, that can be read using `pickle.load(file)`.
+Depending of the protocol indicated on the file, those objects are either `TCPConnection`s or `MPTCPConnection`s.
+Both of them inherit from `BasicConnection`, defined in `common.py`.
+Information related to connections is stored in the `attr` attribute, containing a dictionary.
+
+The main difference between `TCPConnection` and `MPTCPConnection` is related to the number of (sub)flows they contain.
+`TCPConnection` only has one flow, in the `flow` attribute, whereas `MPTPCConnection` can have more than one, in the dictionary `flows`.
+In both cases, flows inherit from (or are) `BasicFlow`, which has the `attr` dictionary containing all information related to the flow.
+
+Keys of `attr` dictionary are defined in `common.py`.
