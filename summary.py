@@ -2507,21 +2507,21 @@ def plot_total_bytes_reinj_bytes(log_file=sys.stdout):
                     results[direction][condition] = [[], []]
                     results_raw[direction][condition] = []
 
-                for conn_id, conn in data.iteritems():
-                    if isinstance(conn, mptcp.MPTCPConnection):
-                        reinj_bytes = {co.S2D: 0, co.D2S: 0}
-                        total_bytes = {co.S2D: 0, co.D2S: 0}
+            for conn_id, conn in data.iteritems():
+                if isinstance(conn, mptcp.MPTCPConnection):
+                    reinj_bytes = {co.S2D: 0, co.D2S: 0}
+                    total_bytes = {co.S2D: 0, co.D2S: 0}
 
-                        for flow_id, flow in conn.flows.iteritems():
-                            for direction in co.DIRECTIONS:
-                                if direction not in flow.attr:
-                                    continue
-                                if co.BYTES in flow.attr[direction]:
-                                    total_bytes[direction] += flow.attr[direction][co.BYTES]
-                                    reinj_bytes[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
-
+                    for flow_id, flow in conn.flows.iteritems():
                         for direction in co.DIRECTIONS:
-                            results_raw[direction][condition].append([total_bytes[direction], reinj_bytes[direction]])
+                            if direction not in flow.attr:
+                                continue
+                            if co.BYTES in flow.attr[direction]:
+                                total_bytes[direction] += flow.attr[direction][co.BYTES]
+                                reinj_bytes[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
+
+                    for direction in co.DIRECTIONS:
+                        results_raw[direction][condition].append([total_bytes[direction], reinj_bytes[direction]])
 
     for direction in results_raw:
         for condition in results_raw[direction]:
