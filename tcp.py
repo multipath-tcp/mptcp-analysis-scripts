@@ -126,9 +126,9 @@ def extract_flow_data(out_file):
                 # Note that this count is about unique_data_bytes
                 # Check for strange values (too high or negative)
                 if int(info[21]) < 0 or int(info[21]) >= 100000000:
-                    print("WARNING: strange value here S2D; see " + int(info[21]) + " for " + info[21])
+                    print("WARNING: strange value here S2D; see " + info[21] + " for " + conn)
                 if int(info[22]) < 0 or int(info[22]) >= 100000000:
-                    print("WARNING: strange value here D2S; see " + int(info[22]) + " for " + info[22])
+                    print("WARNING: strange value here D2S; see " + info[22] + " for " + conn)
                 connection.flow.attr[co.S2D][co.BYTES] = int(info[21])
                 connection.flow.attr[co.D2S][co.BYTES] = int(info[22])
                 # This is about actual data bytes
