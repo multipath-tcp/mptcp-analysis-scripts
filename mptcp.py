@@ -583,8 +583,8 @@ def process_gput_csv(csv_fname, connections):
 # We can't change dir per thread, we should use processes
 def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, plot_cwin, min_bytes=0):
     """ Process a mptcp pcap file and generate graphs of its subflows """
-    if not check_mptcp_joins(pcap_filepath):
-        print("WARNING: no mptcp joins on " + pcap_filepath, file=sys.stderr)
+    # if not check_mptcp_joins(pcap_filepath):
+    #     print("WARNING: no mptcp joins on " + pcap_filepath, file=sys.stderr)
     csv_tmp_dir = tempfile.mkdtemp(dir=os.getcwd())
     connections = None
     do_tcp_processing = False
