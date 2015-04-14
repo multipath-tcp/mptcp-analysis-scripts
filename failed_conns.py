@@ -98,8 +98,8 @@ connections = fetch_data(stat_dir_exp)
 
 def count_failed_connections(log_file=sys.stdout):
     count = 0
-    for fname, data in connections.iteritems():
-        count += len(data)
+    for fname, conns in connections.iteritems():
+        count += len(conns)
 
     print("Number of failed TCP connections:", count, file=log_file)
 
