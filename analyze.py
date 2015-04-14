@@ -144,9 +144,9 @@ def uncompress_file(filename, dirpath):
         # Files from UI tests will be compressed; unzip them
         if filename.endswith('.pcap.gz'):
             output_filepath = os.path.join(trace_dir_exp, filename[:-3])
-            if args.not_correct:
-                return output_filepath
-            elif os.path.exists(output_filepath):
+            # if args.not_correct:
+            #     return output_filepath
+            if os.path.exists(output_filepath):
                 print("Do no uncompress file: already exists " + filename, file=sys.stderr)
                 return output_filepath
             else:
@@ -163,9 +163,9 @@ def uncompress_file(filename, dirpath):
                     return output_filepath
         elif filename.endswith('.pcap'):
             output_filepath = os.path.join(trace_dir_exp, filename)
-            if args.not_correct:
-                return output_filepath
-            elif os.path.exists(output_filepath):
+            # if args.not_correct:
+            #     return output_filepath
+            if os.path.exists(output_filepath):
                 print("Do no copy file: already exists " + filename, file=sys.stderr)
                 return output_filepath
             else:
