@@ -220,6 +220,28 @@ def cdf_number_subflows(log_file=sys.stdout):
     co.plot_cdfs_natural(subflows, color, '# of subflows', base_graph_path_subflows)
 
 
+def count_unused_subflows(log_file=sys.stdout):
+    count = 0
+    count_total = 0
+    for fname, conns in connections.iteritems():
+        for conn_id, conn in conns.iteritems():
+            # Still make sure it's MPTCPConnections
+            if isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    unused_subflow = True
+                    for direction in co.DIRECTIONS:
+                        # Count data bytes
+                        if flow.attr[direction][co.BYTES_DATA] > 0:
+                            unused_subflow = False
+
+                    count_total += 1
+                    if unused_subflow:
+                        count += 1
+
+    print("Number of unused subflows:", count, file=log_file)
+    print("Number of total subflows:", count_total, file=log_file)
+
+
 def textual_summary(log_file=sys.stdout):
     data = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0}}
     count = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0}}
