@@ -203,6 +203,23 @@ def cdfs_bytes(log_file=sys.stdout):
     co.plot_cdfs_with_direction(data_bytes_with_dir, color, 'Bytes', base_graph_path_bytes, natural=True)
 
 
+def cdf_number_subflows(log_file=sys.stdout):
+    subflows = {'all': {'Subflows': []}}
+    color = ['red']
+    base_graph_name_subflows = "cdf_number_subflows"
+    base_graph_path_subflows = os.path.join(sums_dir_exp, base_graph_name_subflows)
+
+    for fname, conns in connections.iteritems():
+        for conn_id, conn in conns.iteritems():
+            # Make sure we have MPTCPConnections, but it should always be the case
+            if isinstance(conn, mptcp.MPTCPConnection):
+                subflows['all']['Subflows'].append(len(conn.flows))
+            elif isinstance(conn, tcp.TCPConnection):
+                print("WARNING: there is a TCPConnection!")
+
+    co.plot_cdfs_natural(subflows, color, '# of subflows', base_graph_path_subflows)
+
+
 def textual_summary(log_file=sys.stdout):
     data = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0}}
     count = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0}}
@@ -1025,6 +1042,7 @@ fog_plot_with_packs_wifi_cell_per_condition(log_file=log_file)
 fog_duration_bytes(log_file=log_file)
 cdf_duration(log_file=log_file)
 cdfs_bytes(log_file=log_file)
+cdf_number_subflows(log_file=log_file)
 textual_summary(log_file=log_file)
 box_plot_cellular_percentage(log_file=log_file, limit_bytes=0)
 cdf_bytes_all(log_file=log_file)
