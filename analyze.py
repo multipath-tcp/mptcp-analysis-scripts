@@ -34,6 +34,7 @@ import common as co
 import mptcp
 import os
 import os.path
+from pymongo import Connection
 import subprocess
 import sys
 import tcp
@@ -104,6 +105,8 @@ parser.add_argument("-W",
                     "--cwin", help="plot congestion window graphs and aggregation graphs", action="store_true")
 parser.add_argument("-M",
                     "--is-mptcp", help="don't check on filename, always process traces as MPTCP ones", action="store_true")
+parser.add_argument("-D",
+                    "--use-db", help="ask IP address of each interface to the MongoDB", action="store_true")
 
 args = parser.parse_args()
 
@@ -196,6 +199,18 @@ else:
                                             os.path.dirname(in_dir_exp)))
 
 pcap_list_len = len(pcap_list)
+
+
+##################################################
+##                  FETCH DB                    ##
+##################################################
+
+if args.use_db:
+    connection = Connection('localhost', 27017)
+    db = connection.mpctrl
+    collection = db.handover
+    co.IP_WIFI = collection.distinct('ipWifi4') + collection.distinct('ipWifi6')
+    co.IP_CELL = collection.distinct('ipRMNet4') + collection.distinct('ipRMNet6')
 
 
 ##################################################

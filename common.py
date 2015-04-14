@@ -213,6 +213,9 @@ FRAME_MPTCP_OVERHEAD = 88
 
 PREFIX_IP_WIFI = False
 
+IP_WIFI = False
+IP_CELL = False
+
 if os.path.isfile('config.py'):
     import config as conf
     IP_PROXY = conf.IP_PROXY
@@ -234,10 +237,12 @@ class BasicFlow(object):
 
     def indicates_wifi_or_cell(self):
         """ Given data of a mptcp connection subflow, indicates if comes from wifi or cell """
-        if self.attr[SADDR].startswith(PREFIX_WIFI_IF) or self.attr[DADDR].startswith(PREFIX_WIFI_IF) or self.attr[SADDR].startswith(PREFIX_IP_WIFI) or self.attr[DADDR].startswith(PREFIX_IP_WIFI):
+        if self.attr[SADDR].startswith(PREFIX_WIFI_IF) or self.attr[DADDR].startswith(PREFIX_WIFI_IF) or self.attr[SADDR].startswith(PREFIX_IP_WIFI) or self.attr[DADDR].startswith(PREFIX_IP_WIFI) or (IP_WIFI and (self.attr[SADDR] in IP_WIFI)):
             self.attr[IF] = WIFI
-        else:
+        elif not IP_CELL or (self.attr[SADDR] in IP_CELL):
             self.attr[IF] = CELL
+        else:
+            self.attr[IF] = "?"
 
     def detect_ipv4(self):
         """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
