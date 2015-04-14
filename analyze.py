@@ -213,6 +213,8 @@ if args.use_db:
     collection = db.handover
     co.IP_WIFI = collection.distinct('ipWifi4') + collection.distinct('ipWifi6')
     co.IP_CELL = collection.distinct('ipRMNet4') + collection.distinct('ipRMNet6')
+    print("IP_WIFI", co.IP_WIFI)
+    print("IP_CELL", co.IP_CELL)
 
 
 ##################################################
