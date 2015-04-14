@@ -790,7 +790,7 @@ def collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mp
     mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_MED] = np.percentile(np_rtts, 50)
 
 
-def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, plot_cwin, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, plot_cwin, mptcp_connections=None, print_out=sys.stdout, min_bytes=0, light=False):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0
@@ -832,20 +832,22 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
         if interesting_graph(flow_name, is_reversed, connections) and 'tsg' in os.path.basename(xpl_filepath):
             process_tsg_xpl_file(pcap_filepath, xpl_filepath, graph_dir_exp, connections, aggregate_dict, cwin_data_all,
                                  flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id)
-        elif 'tput' in os.path.basename(xpl_filepath) and not mptcp_connections:
+        elif 'tput' in os.path.basename(xpl_filepath) and not mptcp_connections and not light:
             collect_throughput(xpl_filepath, connections, flow_name, is_reversed)
 
         try:
             if mptcp_connections:
                 # If mptcp, don't keep tcptrace plots, except RTT ones
                 if '_rtt.xpl' in os.path.basename(xpl_filepath):
-                    collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mptcp_connections)
+                    if not light:
+                        collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mptcp_connections)
                     co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR), print_out=print_out)
                 else:
                     os.remove(xpl_filepath)
             else:
                 if '_rtt.xpl' in os.path.basename(xpl_filepath):
-                    collect_rtt(xpl_filepath, rtt_all, flow_name, is_reversed, connections)
+                    if not light:
+                        collect_rtt(xpl_filepath, rtt_all, flow_name, is_reversed, connections)
                     co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR), print_out=print_out)
                 else:
                     co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR), print_out=print_out)
