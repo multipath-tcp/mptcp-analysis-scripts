@@ -430,8 +430,13 @@ def process_stats_csv(csv_fname, connections):
             # Notice that these values remove the reinjected bytes
             connections[conn_id].attr[co.S2D][co.BYTES_MPTCPTRACE] = int(last_acks[1]) - int(first_seqs[0])
             connections[conn_id].attr[co.D2S][co.BYTES_MPTCPTRACE] = int(last_acks[0]) - int(first_seqs[1])
+        else:
+            connections[conn_id].attr[co.S2D][co.BYTES_MPTCPTRACE] = 0
+            connections[conn_id].attr[co.D2S][co.BYTES_MPTCPTRACE] = 0
         if con_time:
             connections[conn_id].attr[co.DURATION] = float(con_time)
+        else:
+            connections[conn_id].attr[co.DURATION] = 0
 
         csv_file.close()
 
