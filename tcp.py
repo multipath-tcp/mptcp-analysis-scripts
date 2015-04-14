@@ -569,8 +569,9 @@ def get_flow_name_connection(connection, connections):
     return None, None
 
 
-def copy_info_to_mptcp_connections(connection, mptcp_connections):
+def copy_info_to_mptcp_connections(connection, mptcp_connections, failed_conns):
     """ Given a tcp connection, copy its start and duration to the corresponding mptcp connection
+        If connection is a failed subflow of a MPTCPConnection, add it in failed_conns
         Return the corresponding connection and flow ids of the mptcp connection
     """
     conn_id, flow_id = get_flow_name_connection(connection, mptcp_connections)
@@ -599,6 +600,10 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections):
             if co.BYTES_FRAMES_RETRANS in connection.flow.attr[direction]:
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_FRAMES_RETRANS] = connection.flow.attr[direction][co.BYTES_FRAMES_RETRANS]
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.FRAMES_RETRANS] = connection.flow.attr[direction][co.FRAMES_RETRANS]
+
+    else:
+        # This is a TCPConnection that failed to be a MPTCP subflow: add it in failed_conns
+        failed_conns[connection.conn_id] = connection
 
     return conn_id, flow_id
 
@@ -785,7 +790,7 @@ def collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mp
     mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_MED] = np.percentile(np_rtts, 50)
 
 
-def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, plot_cwin, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, plot_cwin, mptcp_connections=None, print_out=sys.stdout, min_bytes=0):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0
@@ -814,13 +819,15 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     cwin_data_all = {}
     # The dictionary where all RTTs will be stored
     rtt_all = {co.S2D: {}, co.D2S: {}}
+    # Directory containing all TCPConnections that tried to be MPTCP subflows, but failed to
+    failed_conns = {}
 
     # The tcptrace call will generate .xpl files to cope with
     for xpl_filepath in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_filepath[:-5]) + '*.xpl')):
         conn_id, flow_id = None, None
         flow_name, is_reversed = get_flow_name(xpl_filepath)
         if mptcp_connections:
-            conn_id, flow_id = copy_info_to_mptcp_connections(connections[flow_name], mptcp_connections)
+            conn_id, flow_id = copy_info_to_mptcp_connections(connections[flow_name], mptcp_connections, failed_conns)
 
         if interesting_graph(flow_name, is_reversed, connections) and 'tsg' in os.path.basename(xpl_filepath):
             process_tsg_xpl_file(pcap_filepath, xpl_filepath, graph_dir_exp, connections, aggregate_dict, cwin_data_all,
@@ -857,6 +864,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     if mptcp_connections:
         # First save RTT data of subflows
         co.save_data(pcap_filepath, rtt_subflow_dir_exp, rtt_all)
+        # Also save TCP connections that failed to be MPTCP subflows
+        co.save_data(pcap_filepath, failed_conns_dir_exp, failed_conns)
         # Returns to the caller the data to plot cwin
         return cwin_data_all
     else:

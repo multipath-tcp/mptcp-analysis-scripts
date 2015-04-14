@@ -102,6 +102,8 @@ DEF_SUMS_DIR = 'sums'
 DEF_RTT_DIR = 'rtt'
 # Another rtt directory, for mptcp subflows
 DEF_RTT_SUBFLOW_DIR = 'rtt_subflow'
+# Directory with information about failed establishment of subflows (TCPConnections)
+DEF_FAILED_CONNS_DIR = 'failed_conns'
 # The default interface to analyse
 DEF_IFACE = 'any'
 

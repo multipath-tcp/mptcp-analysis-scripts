@@ -581,7 +581,7 @@ def process_gput_csv(csv_fname, connections):
 
 
 # We can't change dir per thread, we should use processes
-def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, plot_cwin, min_bytes=0):
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, plot_cwin, min_bytes=0):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     if not check_mptcp_joins(pcap_filepath):
         print("WARNING: no mptcp joins on " + pcap_filepath, file=sys.stderr)
@@ -643,7 +643,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     # Create aggregated graphes and add per interface information on MPTCPConnection
     # This will save the mptcp connections
     if connections and do_tcp_processing:
-        cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, plot_cwin, mptcp_connections=connections)
+        cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, plot_cwin, mptcp_connections=connections)
         co.save_data(pcap_filepath, rtt_dir_exp, rtt_all)
         co.save_data(pcap_filepath, stat_dir_exp, connections)
         if plot_cwin:
