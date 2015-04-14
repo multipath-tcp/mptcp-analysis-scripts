@@ -221,11 +221,13 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
     except IOError:
         print('IOError for ' + csv_fname + ': no data extracted from csv', file=sys.stderr)
 
-    reinject_offsets = {0: 0, 1: 0, 2: 0, 3: 0}
-    reinject_nb = {0: 0, 1: 0, 2: 0, 3: 0}
+    reinject_offsets = {}
+    reinject_nb = {}
     reinject = {}
     for i in range(0, len(connections[conn_id].flows)):
         reinject[i] = {}
+        reinject_offsets[i] = 0
+        reinject_nb[i] = 0
 
     for line in data:
         split_line = line.split(',')
@@ -480,12 +482,14 @@ def first_pass_on_files(connections):
         if csv_fname.startswith(MPTCP_STATS_PREFIX):
             process_stats_csv(csv_fname, connections)
 
-    relative_start = float("inf")
-    for xpl_fname in glob.glob('*.xpl'):
-        if MPTCP_SEQ_FNAME in xpl_fname and MPTCP_RTT_FNAME not in xpl_fname:
-            relative_start = first_pass_on_seq_xpl(xpl_fname, relative_start)
-
-    return relative_start
+    # relative_start is not used, don't lose time on it
+    # relative_start = float("inf")
+    # for xpl_fname in glob.glob('*.xpl'):
+    #     if MPTCP_SEQ_FNAME in xpl_fname and MPTCP_RTT_FNAME not in xpl_fname:
+    #         relative_start = first_pass_on_seq_xpl(xpl_fname, relative_start)
+    #
+    # return relative_start
+    return 0
 
 
 def process_seq_xpl(xpl_fname, connections, relative_start, min_bytes):
@@ -522,19 +526,19 @@ def process_rtt_xpl(xpl_fname, rtt_all, connections, relative_start, min_bytes):
     try:
         conn_id = get_connection_id(xpl_fname)
         is_reversed = is_reverse_connection(xpl_fname)
-        xpl_file = open(xpl_fname)
-        data = xpl_file.readlines()
-        xpl_file.close()
+        # xpl_file = open(xpl_fname)
+        # data = xpl_file.readlines()
+        # xpl_file.close()
         # Check if there is data in file (and not only one line of 0s)
-        if not data == [] and len(data) > 1:
-            direction = co.D2S if is_reversed else co.S2D
-            if connections[conn_id].attr[direction][co.BYTES_MPTCPTRACE] >= min_bytes:
-                # Collect begin time and seq num to plot graph starting at 0
-                try:
-                    csv_fname = xpl_fname[:-4] + '.csv'
-                    process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed)
-                except ValueError:
-                    print('ValueError for ' + xpl_fname + ': skipped', file=sys.stderr)
+        # if not data == [] and len(data) > 1:
+        direction = co.D2S if is_reversed else co.S2D
+        if connections[conn_id].attr[direction][co.BYTES_MPTCPTRACE] >= min_bytes:
+            # Collect begin time and seq num to plot graph starting at 0
+            try:
+                csv_fname = xpl_fname[:-4] + '.csv'
+                process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed)
+            except ValueError:
+                print('ValueError for ' + xpl_fname + ': skipped', file=sys.stderr)
 
     except IOError:
         print('IOError for ' + xpl_fname + ': skipped', file=sys.stderr)
