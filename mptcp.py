@@ -623,8 +623,9 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                 elif MPTCP_SEQ_FNAME in xpl_fname:
                     process_seq_xpl(xpl_fname, connections, relative_start, min_bytes)
                 try:
+                    directory = co.DEF_RTT_DIR if MPTCP_RTT_FNAME in xpl_fname else co.TSG_THGPT_DIR
                     co.move_file(xpl_fname, os.path.join(
-                        graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + xpl_fname))
+                        graph_dir_exp, directory, os.path.basename(pcap_filepath[:-5]) + "_" + xpl_fname))
                 except IOError as e:
                     print(str(e), file=sys.stderr)
 
