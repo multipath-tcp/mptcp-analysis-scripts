@@ -852,16 +852,16 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                 if '_rtt.xpl' in os.path.basename(xpl_filepath):
                     if not light:
                         collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mptcp_connections)
-                    shutil.move(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR), print_out=print_out)
+                    shutil.move(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR))
                 else:
                     os.remove(xpl_filepath)
             else:
                 if '_rtt.xpl' in os.path.basename(xpl_filepath):
                     if not light:
                         collect_rtt(xpl_filepath, rtt_all, flow_name, is_reversed, connections)
-                    shutil.move(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR), print_out=print_out)
+                    shutil.move(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR))
                 else:
-                    shutil.move(xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR), print_out=print_out)
+                    shutil.move(xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR))
         except OSError as e:
             print(str(e) + ": skipped", file=sys.stderr)
         except IOError as e:
