@@ -30,6 +30,7 @@ import common as co
 import glob
 import numpy as np
 import os
+import shutil
 import subprocess
 import sys
 
@@ -257,7 +258,7 @@ def process_tcptrace_cmd(cmd, pcap_filepath, keep_csv=False, graph_dir_exp=None)
     flow_data_file.close()
     if keep_csv:
         try:
-            co.move_file(pcap_flow_data_path, os.path.join(
+            shutil.move(pcap_flow_data_path, os.path.join(
                 graph_dir_exp, co.CSV_DIR, os.path.basename(pcap_flow_data_path)))
         except IOError as e:
             print(str(e), file=sys.stderr)
@@ -388,7 +389,7 @@ def split_and_replace(pcap_filepath, remain_pcap_filepath, conn, other_conn, num
     condition = "!(" + condition + ")"
     co.tshark_filter(condition, remain_pcap_filepath, tmp_remain_filepath, print_out=print_out)
 
-    co.move_file(tmp_remain_filepath, remain_pcap_filepath, print_out=print_out)
+    shutil.move(tmp_remain_filepath, remain_pcap_filepath, print_out=print_out)
 
     # Replace meaningless IP and port with the "real" values
     split_filepath = pcap_filepath[:-5] + "__" + str(num) + ".pcap"
@@ -452,7 +453,7 @@ def correct_trace(pcap_filepath, print_out=sys.stdout):
         tmp_filter_filepath = pcap_filepath[:-5] + "__tmp_any.pcap"
         try:
             co.tshark_filter(condition, pcap_filepath, tmp_filter_filepath, print_out=print_out)
-            co.move_file(tmp_filter_filepath, pcap_filepath, print_out=print_out)
+            shutil.move(tmp_filter_filepath, pcap_filepath, print_out=print_out)
         except Exception as e:
             print(str(e) + ": clean skipped", file=sys.stderr)
 
@@ -841,16 +842,16 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                 if '_rtt.xpl' in os.path.basename(xpl_filepath):
                     if not light:
                         collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mptcp_connections)
-                    co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR), print_out=print_out)
+                    shutil.move(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR), print_out=print_out)
                 else:
                     os.remove(xpl_filepath)
             else:
                 if '_rtt.xpl' in os.path.basename(xpl_filepath):
                     if not light:
                         collect_rtt(xpl_filepath, rtt_all, flow_name, is_reversed, connections)
-                    co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR), print_out=print_out)
+                    shutil.move(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR), print_out=print_out)
                 else:
-                    co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR), print_out=print_out)
+                    shutil.move(xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR), print_out=print_out)
         except OSError as e:
             print(str(e) + ": skipped", file=sys.stderr)
         except IOError as e:

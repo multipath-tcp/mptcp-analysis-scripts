@@ -643,7 +643,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                     process_seq_xpl(xpl_fname, connections, relative_start, min_bytes)
                 try:
                     directory = co.DEF_RTT_DIR if MPTCP_RTT_FNAME in xpl_fname else co.TSG_THGPT_DIR
-                    co.move_file(xpl_fname, os.path.join(
+                    shutil.move(xpl_fname, os.path.join(
                         graph_dir_exp, directory, os.path.basename(pcap_filepath[:-5]) + "_" + xpl_fname))
                 except IOError as e:
                     print(str(e), file=sys.stderr)
@@ -655,10 +655,10 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                         process_gput_csv(csv_fname, connections)
                 try:
                     if MPTCP_RTT_FNAME in csv_fname:
-                        co.move_file(csv_fname, os.path.join(
+                        shutil.move(csv_fname, os.path.join(
                             graph_dir_exp, co.DEF_RTT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
                     else:
-                        co.move_file(csv_fname, os.path.join(
+                        shutil.move(csv_fname, os.path.join(
                             graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
                 except IOError as e:
                     print(str(e), file=sys.stderr)
