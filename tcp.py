@@ -809,8 +809,10 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     # --csv for csv file
     cmd = ['tcptrace', '--output_dir=' + os.getcwd(),
            '--output_prefix=' +
-           os.path.basename(pcap_filepath[:-5]) + '_', '-C', '-S', '-T', '-A250', '-zxy', '-R',
+           os.path.basename(pcap_filepath[:-5]) + '_', '-C', '-S', '-zxy',
            '-n', '-y', '-l', '--csv', '-r', pcap_filepath]
+    if not light:
+        cmd += ['-T', '-A250', '-R']
 
     try:
         connections = process_tcptrace_cmd(cmd, pcap_filepath, keep_csv=True, graph_dir_exp=graph_dir_exp)
