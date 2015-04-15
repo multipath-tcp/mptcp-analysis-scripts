@@ -686,10 +686,11 @@ def process_tsg_xpl_file(pcap_filepath, xpl_filepath, graph_dir_exp, connections
     """ Prepare gpl file for the (possible) plot and aggregate its content
         Also update connections or mptcp_connections with the processed data
     """
-    prepare_xpl_file(xpl_filepath, connections, flow_name, relative_start)
-    aggregate_tsg, adv_rwin = get_upper_packets_in_flight_and_adv_rwin(xpl_filepath, flow_name)
-    create_congestion_window_data(
-        aggregate_tsg, adv_rwin, pcap_filepath, cwin_data_all, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id)
+    if not mptcp_connections:
+        prepare_xpl_file(xpl_filepath, connections, flow_name, relative_start)
+        aggregate_tsg, adv_rwin = get_upper_packets_in_flight_and_adv_rwin(xpl_filepath, flow_name)
+        create_congestion_window_data(
+            aggregate_tsg, adv_rwin, pcap_filepath, cwin_data_all, is_reversed, connections, flow_name, mptcp_connections, conn_id, flow_id)
     interface = connections[flow_name].flow.attr[co.IF]
     direction = co.D2S if is_reversed else co.S2D
     if mptcp_connections:
