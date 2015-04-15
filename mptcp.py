@@ -655,9 +655,13 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                         process_gput_csv(csv_fname, connections)
                 try:
                     if MPTCP_RTT_FNAME in csv_fname:
+                        if os.path.exists(os.path.join(graph_dir_exp, co.DEF_RTT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname)):
+                            os.remove(os.path.join(graph_dir_exp, co.DEF_RTT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
                         shutil.move(csv_fname, os.path.join(
                             graph_dir_exp, co.DEF_RTT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
                     else:
+                        if os.path.exists(os.path.join(graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname)):
+                            os.remove(os.path.join(graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
                         shutil.move(csv_fname, os.path.join(
                             graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
                 except IOError as e:
@@ -675,7 +679,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     if connections and do_tcp_processing:
         # Save a first version as backup here; should be removed when no problem anymore
         co.save_data(pcap_filepath, stat_dir_exp, connections)
-        cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, plot_cwin, mptcp_connections=connections)
+        cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, plot_cwin, mptcp_connections=connections, light=light)
         co.save_data(pcap_filepath, rtt_dir_exp, rtt_all)
         co.save_data(pcap_filepath, stat_dir_exp, connections)
         if plot_cwin:
