@@ -215,6 +215,7 @@ if args.use_db:
     co.IP_CELL = collection.distinct('ipRMNet4') + collection.distinct('ipRMNet6')
     print("IP_WIFI", co.IP_WIFI)
     print("IP_CELL", co.IP_CELL)
+    connection.close()
 
 
 ##################################################
