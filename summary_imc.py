@@ -92,19 +92,24 @@ def fetch_data(dir_exp):
 connections = fetch_data(stat_dir_exp)
 
 
-def get_multiflow_connections():
+def get_multiflow_connections(connections):
     multiflow_connections = {}
     singleflow_connections = {}
-    for conn_id, conn in connections.iteritems():
-        if isinstance(conn, mptcp.MPTCPConnection):
-            if len(conn.flows) > 1:
-                multiflow_connections[conn_id] = conn
-            else:
-                singleflow_connections[conn_id] = conn
+    for fname, conns_fname in connections.iteritems():
+        for conn_id, conn in conns_fname.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                if len(conn.flows) > 1:
+                    if fname not in multiflow_connections:
+                        multiflow_connections[fname] = {}
+                    multiflow_connections[fname][conn_id] = conn
+                else:
+                    if fname not in singleflow_connections:
+                        singleflow_connections[fname] = {}
+                    singleflow_connections[fname][conn_id] = conn
 
     return multiflow_connections, singleflow_connections
 
-multiflow_connections, singleflow_connections = get_multiflow_connections()
+multiflow_connections, singleflow_connections = get_multiflow_connections(connections)
 
 ##################################################
 ##               PLOTTING RESULTS               ##
@@ -912,7 +917,7 @@ def textual_summary_global(log_file=sys.stdout):
 def cdf_overhead_retrans_reinj(log_file=sys.stdout):
     results = {co.S2D: {'all': {'Reinjection': [], 'Retransmission': []}}, co.D2S: {'all': {'Reinjection': [], 'Retransmission': []}}}
     results_two = {co.S2D: {'all': []}, co.D2S: {'all': []}}
-    graph_fname = "overhead_retrans_reinj_all.pdf"
+    graph_fname = "overhead_retrans_reinj_multiflow.pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
     for fname, data in multiflow_connections.iteritems():
         for conn_id, conn in data.iteritems():
@@ -955,6 +960,54 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
                 i += 1
             tot_graph_full_path = os.path.splitext(graph_full_path)[0] + "_details_" + direction + "_" + condition + ".pdf"
             co.plot_line_graph(to_plot, ['Total', 'Reinjections'], ['b', 'r'], 'Connections', 'Number of data bytes', '', tot_graph_full_path, y_log=True)
+
+
+def cdf_overhead_retrans_reinj_singleflow(log_file=sys.stdout):
+    results = {co.S2D: {'all': {'Reinjection': [], 'Retransmission': []}}, co.D2S: {'all': {'Reinjection': [], 'Retransmission': []}}}
+    results_two = {co.S2D: {'all': []}, co.D2S: {'all': []}}
+    graph_fname = "overhead_retrans_reinj_singleflow.pdf"
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+    for fname, data in singleflow_connections.iteritems():
+        for conn_id, conn in data.iteritems():
+            retrans_bytes = {co.S2D: 0, co.D2S: 0}
+            reinj_bytes = {co.S2D: 0, co.D2S: 0}
+            total_bytes = {co.S2D: 0, co.D2S: 0}
+            total_data_bytes = {co.S2D: 0, co.D2S: 0}
+            reinj_data_bytes = {co.S2D: 0, co.D2S: 0}
+
+            for flow_id, flow in conn.flows.iteritems():
+                for direction in co.DIRECTIONS:
+                    if direction not in flow.attr:
+                        continue
+                    if co.BYTES in flow.attr[direction]:
+                        # total_bytes[direction] += flow.attr[direction][co.BYTES_FRAMES_TOTAL]
+                        total_bytes[direction] = total_bytes[direction] + flow.attr[direction][co.BYTES]
+                        # retrans_bytes[direction] += flow.attr[direction].get(co.BYTES_FRAMES_RETRANS, 0)
+                        retrans_bytes[direction] = retrans_bytes[direction] + flow.attr[direction].get(co.BYTES_RETRANS, 0)
+                        # reinj_bytes[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0) + (flow.attr[direction].get(co.REINJ_ORIG_PACKS, 0) * co.FRAME_MPTCP_OVERHEAD)
+                        reinj_bytes[direction] = reinj_bytes[direction] + flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
+                        total_data_bytes[direction] = total_data_bytes[direction] + flow.attr[direction].get(co.BYTES, 0)
+                        reinj_data_bytes[direction] = reinj_data_bytes[direction] + flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
+
+            for direction in co.DIRECTIONS:
+                if total_bytes[direction] > 0:
+                    results[direction]['all']['Retransmission'].append((retrans_bytes[direction] + 0.0) / total_data_bytes[direction])
+                    results[direction]['all']['Reinjection'].append((reinj_data_bytes[direction] + 0.0) / total_data_bytes[direction])
+                    results_two[direction]['all'].append([total_data_bytes[direction], retrans_bytes[direction]])
+
+    co.plot_cdfs_with_direction(results, ['red', 'blue'], 'Fraction of total bytes', graph_full_path, natural=True, ylim=0.8)
+    co.plot_cdfs_with_direction(results, ['red', 'blue'], 'Fraction of total bytes', os.path.splitext(graph_full_path)[0] + '_cut.pdf', natural=True, ylim=0.8, xlim=1)
+    for direction in results_two:
+        for condition in results_two[direction]:
+            sorted_data = sorted(results_two[direction][condition], key=lambda elem: elem[0])
+            to_plot = [[], []]
+            i = 0
+            for point in sorted_data:
+                to_plot[0].append([i, point[0]])
+                to_plot[1].append([i, point[1]])
+                i += 1
+            tot_graph_full_path = os.path.splitext(graph_full_path)[0] + "_details_" + direction + "_" + condition + ".pdf"
+            co.plot_line_graph(to_plot, ['Total', 'Retransmissions'], ['b', 'r'], 'Connections', 'Number of data bytes', '', tot_graph_full_path, y_log=True)
 
 
 def plot_total_bytes_reinj_bytes(log_file=sys.stdout):
@@ -1079,25 +1132,26 @@ millis = int(round(time.time() * 1000))
 log_file = open(os.path.join(sums_dir_exp, 'log_summary-' + str(millis) + '.txt'), 'w')
 
 print("Summary plots", file=log_file)
-fog_plot_with_bytes_wifi_cell_per_condition(log_file=log_file)
-fog_plot_with_packs_wifi_cell_per_condition(log_file=log_file)
-fog_duration_bytes(log_file=log_file)
-cdf_duration(log_file=log_file)
-cdfs_bytes(log_file=log_file)
-cdf_number_subflows(log_file=log_file)
-textual_summary(log_file=log_file)
-box_plot_cellular_percentage(log_file=log_file, limit_bytes=0)
-cdf_bytes_all(log_file=log_file)
-cdf_rtt_s2d_all(log_file=log_file, min_samples=5)
-cdf_rtt_d2s_all(log_file=log_file, min_samples=5)
+# fog_plot_with_bytes_wifi_cell_per_condition(log_file=log_file)
+# fog_plot_with_packs_wifi_cell_per_condition(log_file=log_file)
+# fog_duration_bytes(log_file=log_file)
+# cdf_duration(log_file=log_file)
+# cdfs_bytes(log_file=log_file)
+# cdf_number_subflows(log_file=log_file)
+# textual_summary(log_file=log_file)
+# box_plot_cellular_percentage(log_file=log_file, limit_bytes=0)
+# cdf_bytes_all(log_file=log_file)
+# cdf_rtt_s2d_all(log_file=log_file, min_samples=5)
+# cdf_rtt_d2s_all(log_file=log_file, min_samples=5)
 reinject_plot(log_file=log_file, min_bytes=9999.9)
 reinject_plot_relative_to_data(log_file=log_file, min_bytes=9999.9)
 retrans_plot(log_file=log_file)
-fog_plot_cellular_percentage_rtt_wifi(log_file=log_file)
-textual_summary_global(log_file=log_file)
+# fog_plot_cellular_percentage_rtt_wifi(log_file=log_file)
+# textual_summary_global(log_file=log_file)
 cdf_overhead_retrans_reinj(log_file=log_file)
+cdf_overhead_retrans_reinj_singleflow(log_file=log_file)
 plot_total_bytes_reinj_bytes(log_file=log_file)
-fog_plot_cellular_percentage_all(log_file=log_file)
-count_mptcp_best_rtt_flow(log_file=log_file)
+# fog_plot_cellular_percentage_all(log_file=log_file)
+# count_mptcp_best_rtt_flow(log_file=log_file)
 log_file.close()
 print("End of summary")
