@@ -31,6 +31,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pickle
 from scipy.stats import gaussian_kde
+import shutil
 import statsmodels.api as sm
 import subprocess
 import sys
@@ -333,10 +334,13 @@ def count_mptcp_subflows(data):
 
 
 def move_file(from_path, to_path, print_out=sys.stderr):
-    """ Move a file, raise an IOError if it fails """
-    cmd = ['mv', from_path, to_path]
-    if subprocess.call(cmd, stdout=print_out) != 0:
-        raise IOError("Error when moving " + from_path + " to " + to_path)
+    """ Move a file, overwrite if needed """
+    try:
+        shutil.move(from_path, to_path)
+    except Exception as e:
+        # Destination already exists; remove it
+        os.remove(os.path.join(to_path, os.path.basename(from_path)))
+        shutil.move(from_path, to_path)
 
 
 def tshark_filter(condition, src_path, dst_path, print_out=sys.stderr):
