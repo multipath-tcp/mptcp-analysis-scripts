@@ -97,22 +97,22 @@ connections = fetch_data(stat_dir_exp)
 
 
 def fog_plot_with_bytes_wifi_cell_per_condition(log_file=sys.stdout):
-    data = {co.S2D: {'all': {'all': {}}}, co.D2S: {'all': {'all': {}}}}
+    data = {co.S2D: {'all': {'Connections': []}}, co.D2S: {'all': {'Connections': []}}}
     color = {'Connections': 'orange'}
     base_graph_name = "fog_bytes"
 
     for fname, conns in connections.iteritems():
         for conn_id, conn in conns.iteritems():
             if co.BYTES in conn.attr[co.S2D]:
-                data[co.S2D]['all']['all'].append([conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0), conn.attr[co.S2D][co.BYTES].get(co.CELL, 0)])
+                data[co.S2D]['all']['Connections'].append([conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0), conn.attr[co.S2D][co.BYTES].get(co.CELL, 0)])
             if co.BYTES in conn.attr[co.D2S]:
-                data[co.D2S]['all']['all'].append([conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0), conn.attr[co.D2S][co.BYTES].get(co.CELL, 0)])
+                data[co.D2S]['all']['Connections'].append([conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0), conn.attr[co.D2S][co.BYTES].get(co.CELL, 0)])
 
     co.scatter_plot_with_direction(data, "Bytes on Wi-Fi", "Bytes on cellular", color, sums_dir_exp, base_graph_name)
 
 
 def fog_plot_with_packs_wifi_cell_per_condition(log_file=sys.stdout):
-    data = {co.S2D: {'all': {'all': {}}}, co.D2S: {'all': {'all': {}}}}
+    data = {co.S2D: {'all': {'Connections': []}}, co.D2S: {'all': {'Connections': []}}}
     color = {'Connections': 'orange'}
     base_graph_name = "fog_packs"
 
@@ -133,14 +133,14 @@ def fog_plot_with_packs_wifi_cell_per_condition(log_file=sys.stdout):
                 if packs[co.S2D][co.CELL] == 0 and packs[co.S2D][co.WIFI] == 0 and packs[co.D2S][co.CELL] == 0 and packs[co.D2S][co.WIFI] == 0:
                     continue
 
-                data[co.S2D]['all']['all'].append([packs[co.S2D][co.WIFI], packs[co.S2D][co.CELL]])
-                data[co.D2S]['all']['all'].append([packs[co.D2S][co.WIFI], packs[co.D2S][co.CELL]])
+                data[co.S2D]['all']['Connections'].append([packs[co.S2D][co.WIFI], packs[co.S2D][co.CELL]])
+                data[co.D2S]['all']['Connections'].append([packs[co.D2S][co.WIFI], packs[co.D2S][co.CELL]])
 
     co.scatter_plot_with_direction(data, "Packets on wifi", "Packets on cellular", color, sums_dir_exp, base_graph_name)
 
 
 def fog_duration_bytes(log_file=sys.stdout):
-    data = {'all': {'all': {}}}
+    data = {'all': {'Connections': []}}
     color = {'Connections': 'orange'}
     base_graph_name = "fog_duration_bytes"
 
@@ -155,7 +155,7 @@ def fog_duration_bytes(log_file=sys.stdout):
                 nb_bytes = conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0) + conn.attr[co.S2D][co.BYTES].get(co.CELL, 0)
             if co.BYTES in conn.attr[co.D2S]:
                 nb_bytes += conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0) + conn.attr[co.D2S][co.BYTES].get(co.CELL, 0)
-            data['all']['all'].append([duration, nb_bytes])
+            data['all']['Connections'].append([duration, nb_bytes])
 
     co.scatter_plot(data, "Duration [s]", "Bytes on connection", color, sums_dir_exp, base_graph_name, plot_identity=False)
 
