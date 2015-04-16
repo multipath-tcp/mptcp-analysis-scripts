@@ -120,7 +120,7 @@ def fog_plot_with_packs_wifi_cell_per_condition(log_file=sys.stdout):
         for conn_id, conn in conns.iteritems():
             # conn is then a MPTCPConnection, be still better to be sure of
             if isinstance(conn, mptcp.MPTCPConnection):
-                packs = {co.S2D: {co.CELL: 0, co.WIFI: 0}, co.D2S: {co.CELL: 0, co.WIFI: 0}}
+                packs = {co.S2D: {co.CELL: 0, co.WIFI: 0, '?': 0}, co.D2S: {co.CELL: 0, co.WIFI: 0, '?': 0}}
                 for flow_id, flow in conn.flows.iteritems():
                     if co.S2D not in flow.attr:
                         continue
@@ -180,7 +180,7 @@ def cdf_duration(log_file=sys.stdout):
 
 def cdfs_bytes(log_file=sys.stdout):
     data_bytes = {'all': {co.BYTES: []}}
-    data_bytes_with_dir = {co.S2D: {{'all': {co.BYTES: []}}}, co.D2S: {{'all': {co.BYTES: []}}}}
+    data_bytes_with_dir = {co.S2D: {'all': {co.BYTES: []}}, co.D2S: {'all': {co.BYTES: []}}}
     color = ['red']
     base_graph_name_bytes = "summary_cdf_bytes"
     base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
@@ -356,8 +356,8 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                 if isinstance(conn, mptcp.MPTCPConnection):
                     if conn.attr[co.DURATION] < limit_duration:
                         continue
-                    conn_bytes_s2d = {'cellular': 0, 'wifi': 0}
-                    conn_bytes_d2s = {'cellular': 0, 'wifi': 0}
+                    conn_bytes_s2d = {'cellular': 0, 'wifi': 0, '?': 0}
+                    conn_bytes_d2s = {'cellular': 0, 'wifi': 0, '?': 0}
                     if co.BYTES in conn.attr[co.S2D]:
                         for interface in conn.attr[co.S2D][co.BYTES]:
                             conn_bytes_s2d[interface] += conn.attr[co.S2D][co.BYTES][interface]
@@ -416,7 +416,8 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
                 bytes_ones += bytes_one[condition][direction][app]
                 total_conn += tot_conn[condition][direction][app]
                 total_bytes += tot_bytes[condition][direction][app]
-            print("TOTAL:", nb_zeros, "zero conns over", total_conn, nb_zeros / total_conn * 100., "%", bytes_zeros, "zero bytes over", total_bytes, bytes_zeros / total_bytes * 100., "%", nb_ones, "connections full cellular", nb_ones / total_conn * 100., "%", bytes_ones, "bytes cellular", bytes_ones / total_bytes * 100., "%", file=log_file)
+            if total_bytes > 0 and total_bytes > 0:
+                print("TOTAL:", nb_zeros, "zero conns over", total_conn, nb_zeros / total_conn * 100., "%", bytes_zeros, "zero bytes over", total_bytes, bytes_zeros / total_bytes * 100., "%", nb_ones, "connections full cellular", nb_ones / total_conn * 100., "%", bytes_ones, "bytes cellular", bytes_ones / total_bytes * 100., "%", file=log_file)
 
     co.scatter_plot_with_direction(data_scatter, "Bytes on connection", "Fraction of bytes on cellular", color, sums_dir_exp, fog_base_graph_path_bytes, plot_identity=False, log_scale_y=False, y_to_one=True, label_order=['Dailymotion', 'Drive', 'Dropbox', 'Facebook', 'Firefox', 'Messenger', 'Spotify', 'Youtube'])
 
@@ -476,8 +477,8 @@ def cdf_bytes_all(log_file=sys.stdout):
 
             # Only interested on MPTCP connections
             elif isinstance(conn, mptcp.MPTCPConnection):
-                conn_bytes_s2d = {'cellular': 0, 'wifi': 0}
-                conn_bytes_d2s = {'cellular': 0, 'wifi': 0}
+                conn_bytes_s2d = {'cellular': 0, 'wifi': 0, '?': 0}
+                conn_bytes_d2s = {'cellular': 0, 'wifi': 0, '?': 0}
                 if co.BYTES in conn.attr[co.S2D]:
                     for interface in conn.attr[co.S2D][co.BYTES]:
                         conn_bytes_s2d[interface] += conn.attr[co.S2D][co.BYTES][interface]
@@ -499,7 +500,7 @@ def cdf_bytes_all(log_file=sys.stdout):
 def cdf_rtt_s2d_all(log_file=sys.stdout, min_samples=5, min_bytes=100):
     wifi = "wifi"
     cell = "cellular"
-    aggl_res = {'all': {wifi: [], cell: []}}
+    aggl_res = {'all': {wifi: [], cell: [], '?': []}}
     graph_fname = "rtt_avg_s2d_all.pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
@@ -524,7 +525,7 @@ def cdf_rtt_s2d_all(log_file=sys.stdout, min_samples=5, min_bytes=100):
 def cdf_rtt_d2s_all(log_file=sys.stdout, min_samples=5):
     wifi = "wifi"
     cell = "cellular"
-    aggl_res = {'all': {wifi: [], cell: []}}
+    aggl_res = {'all': {wifi: [], cell: [], '?': []}}
     graph_fname = "rtt_avg_d2s_all.pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
@@ -791,8 +792,8 @@ def fog_plot_cellular_percentage_rtt_wifi(log_file=sys.stdout, limit_duration=0,
             if isinstance(conn, mptcp.MPTCPConnection):
                 if conn.attr[co.DURATION] < limit_duration:
                     continue
-                conn_bytes_s2d = {'cellular': 0, 'wifi': 0}
-                conn_bytes_d2s = {'cellular': 0, 'wifi': 0}
+                conn_bytes_s2d = {'cellular': 0, 'wifi': 0, '?': 0}
+                conn_bytes_d2s = {'cellular': 0, 'wifi': 0, '?': 0}
                 rtt_max_wifi_s2d = None
                 rtt_max_wifi_d2s = None
                 if co.BYTES in conn.attr[co.S2D]:
@@ -810,19 +811,21 @@ def fog_plot_cellular_percentage_rtt_wifi(log_file=sys.stdout, limit_duration=0,
                     conn_bytes_s2d[interface] -= flow.attr[co.S2D][co.REINJ_ORIG_BYTES]
                     conn_bytes_d2s[interface] -= flow.attr[co.D2S][co.REINJ_ORIG_BYTES]
                     if interface == co.WIFI:
-                        rtt_max_wifi_s2d = flow.attr[co.S2D][co.RTT_MAX]
-                        rtt_max_wifi_d2s = flow.attr[co.D2S][co.RTT_MAX]
+                        if co.RTT_MAX in flow.attr[co.S2D]:
+                            rtt_max_wifi_s2d = flow.attr[co.S2D][co.RTT_MAX]
+                        if co.RTT_MAX in flow.attr[co.D2S]:
+                            rtt_max_wifi_d2s = flow.attr[co.D2S][co.RTT_MAX]
 
                 if conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'] > limit_bytes:
-                    if (conn_bytes_s2d['cellular'] + 0.0) / (conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi']) > 0.6:
-                        print("S2D: " + str((conn_bytes_s2d['cellular'] + 0.0) / (conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'])) + " " + str(conn_bytes_s2d['cellular']) + " " + str(conn_bytes_s2d['wifi']) + " " + fname + " " + conn_id + " " + str(conn.attr[co.DURATION]) + " " + conn.flows['0'].attr[co.IF] + " " + str(conn.flows['0'].attr[co.S2D][co.RTT_STDEV]) + " " + conn.flows['1'].attr[co.IF] + " " + str(conn.flows['1'].attr[co.S2D][co.RTT_STDEV]))
+                    # if (conn_bytes_s2d['cellular'] + 0.0) / (conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi']) > 0.6:
+                    #     print("S2D: " + str((conn_bytes_s2d['cellular'] + 0.0) / (conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'])) + " " + str(conn_bytes_s2d['cellular']) + " " + str(conn_bytes_s2d['wifi']) + " " + fname + " " + conn_id + " " + str(conn.attr[co.DURATION]) + " " + conn.flows['0'].attr[co.IF] + " " + str(conn.flows['0'].attr[co.S2D][co.RTT_STDEV]) + " " + conn.flows['1'].attr[co.IF] + " " + str(conn.flows['1'].attr[co.S2D][co.RTT_STDEV]))
                     frac_cell_s2d = (min(1.0, (conn_bytes_s2d['cellular'] + 0.0) / (conn_bytes_s2d['cellular'] + conn_bytes_s2d['wifi'])))
                     data_frac['all'][co.S2D][app].append(frac_cell_s2d)
                     data_rtt['all'][co.S2D][app].append(rtt_max_wifi_s2d)
 
                 if conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'] > limit_bytes:
-                    if (conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi']) > 0.6:
-                        print("D2S: " + str((conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'])) + " " + str(conn_bytes_d2s['cellular']) + " " + str(conn_bytes_d2s['wifi']) + " " + fname + " " + conn_id + " " + str(conn.attr[co.DURATION]) + " " + conn.flows['0'].attr[co.IF] + " " + str(conn.flows['0'].attr[co.D2S][co.RTT_STDEV]) + " " + conn.flows['1'].attr[co.IF] + " " + str(conn.flows['1'].attr[co.D2S][co.RTT_STDEV]))
+                    # if (conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi']) > 0.6:
+                    #     print("D2S: " + str((conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'])) + " " + str(conn_bytes_d2s['cellular']) + " " + str(conn_bytes_d2s['wifi']) + " " + fname + " " + conn_id + " " + str(conn.attr[co.DURATION]) + " " + conn.flows['0'].attr[co.IF] + " " + str(conn.flows['0'].attr[co.D2S][co.RTT_STDEV]) + " " + conn.flows['1'].attr[co.IF] + " " + str(conn.flows['1'].attr[co.D2S][co.RTT_STDEV]))
                     frac_cell_d2s = min(1.0, ((conn_bytes_d2s['cellular'] + 0.0) / (conn_bytes_d2s['cellular'] + conn_bytes_d2s['wifi'])))
                     data_frac['all'][co.D2S][app].append(frac_cell_d2s)
                     data_rtt['all'][co.D2S][app].append(rtt_max_wifi_d2s)
@@ -846,7 +849,7 @@ def check_ok(value):
 def textual_summary_global(log_file=sys.stdout):
     conn_number = {'all': 0}
     tests_number = {'all': 0}
-    bytes_number = {'all': {co.S2D: {co.CELL: 0, co.WIFI: 0}, co.D2S: {co.CELL: 0, co.WIFI: 0}}}
+    bytes_number = {'all': {co.S2D: {co.CELL: 0, co.WIFI: 0, '?': 0}, co.D2S: {co.CELL: 0, co.WIFI: 0, '?': 0}}}
 
     for fname, data in connections.iteritems():
         conn_number['all'] += len(data)
@@ -992,7 +995,7 @@ def fog_plot_cellular_percentage_all(log_file=sys.stdout, limit_duration=0, limi
             if isinstance(conn, mptcp.MPTCPConnection):
                 if conn.attr[co.DURATION] < limit_duration:
                     continue
-                conn_bytes = {'cellular': 0, 'wifi': 0}
+                conn_bytes = {'cellular': 0, 'wifi': 0, '?': 0}
                 if co.BYTES in conn.attr[co.S2D]:
                     for interface in conn.attr[co.S2D][co.BYTES]:
                         conn_bytes[interface] += conn.attr[co.S2D][co.BYTES][interface]
@@ -1034,7 +1037,7 @@ def count_mptcp_best_rtt_flow(log_file=sys.stdout):
                     avg_rtt = {co.WIFI: 100000., co.CELL: 100000.}
                     max_rtt = {co.WIFI: 100000., co.CELL: 100000.}
                     for flow_id, flow in conn.flows.iteritems():
-                        if direction not in flow.attr:
+                        if direction not in flow.attr or co.RTT_AVG not in flow.attr[direction] or co.RTT_MAX not in flow.attr[direction]:
                             continue
                         avg_rtt[flow.attr[co.IF]] = flow.attr[direction][co.RTT_AVG]
                         max_rtt[flow.attr[co.IF]] = flow.attr[direction][co.RTT_MAX]
