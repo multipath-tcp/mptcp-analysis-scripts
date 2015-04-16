@@ -694,7 +694,7 @@ def plot_bar_chart(aggl_res, label_names, color, ecolor, ylabel, title, graph_fn
     plt_lock.release()
 
 
-def plot_cdfs(aggl_res, color, xlabel, base_graph_fname, ylim=None):
+def plot_cdfs(aggl_res, color, xlabel, base_graph_fname, ylim=None, xlim=None):
     """ Plot all possible CDFs based on aggl_res.
         aggl_res is a dictionary with the structure aggl_res[condition][element] = list of data
         base_graph_fname does not have any extension
@@ -734,6 +734,9 @@ def plot_cdfs(aggl_res, color, xlabel, base_graph_fname, ylim=None):
 
         if ylim:
             plt.ylim(ylim, 1.0)
+
+        if xlim:
+            plt.xlim(0.0, xlim)
 
         # Put a legend above current axis
         ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=len(aggl_res))
@@ -806,7 +809,7 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ylim
         plt.close('all')
 
 
-def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname, natural=False, ylim=None):
+def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname, natural=False, ylim=None, xlim=None):
     """ Plot all possible CDFs based on aggl_res.
         aggl_res is a dictionary with the structure aggl_res[direction][condition][element] = list of data
         WARNING: this function assumes that the list of elements will remain the same for all conditions
@@ -815,9 +818,9 @@ def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname, natural=
         return
     for direction in aggl_res.keys():
         if natural:
-            plot_cdfs_natural(aggl_res[direction], color, xlabel, os.path.splitext(base_graph_fname)[0] + '_' + direction, ylim=ylim)
+            plot_cdfs_natural(aggl_res[direction], color, xlabel, os.path.splitext(base_graph_fname)[0] + '_' + direction, ylim=ylim, xlim=xlim)
         else:
-            plot_cdfs(aggl_res[direction], color, xlabel, os.path.splitext(base_graph_fname)[0] + '_' + direction, ylim=ylim)
+            plot_cdfs(aggl_res[direction], color, xlabel, os.path.splitext(base_graph_fname)[0] + '_' + direction, ylim=ylim, xlim=xlim)
 
 
 def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plot_identity=True, s=None, log_scale_x=True, log_scale_y=True, y_to_one=False, label_order=None):
