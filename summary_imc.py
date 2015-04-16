@@ -91,6 +91,21 @@ def fetch_data(dir_exp):
 
 connections = fetch_data(stat_dir_exp)
 
+
+def get_multiflow_connections():
+    multiflow_connections = {}
+    singleflow_connections = {}
+    for conn_id, conn in connections.iteritems():
+        if isinstance(conn, mptcp.MPTCPConnection):
+            if len(conn.flows) > 1:
+                multiflow_connections[conn_id] = conn
+            else:
+                singleflow_connections[conn_id] = conn
+
+    return multiflow_connections, singleflow_connections
+
+multiflow_connections, singleflow_connections = get_multiflow_connections()
+
 ##################################################
 ##               PLOTTING RESULTS               ##
 ##################################################
@@ -152,9 +167,9 @@ def fog_duration_bytes(log_file=sys.stdout):
                 duration = conn.attr[co.DURATION]
             nb_bytes = 0
             if co.BYTES in conn.attr[co.S2D]:
-                nb_bytes = conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0) + conn.attr[co.S2D][co.BYTES].get(co.CELL, 0)
+                nb_bytes = conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0) + conn.attr[co.S2D][co.BYTES].get(co.CELL, 0) + conn.attr[co.S2D][co.BYTES].get('?', 0)
             if co.BYTES in conn.attr[co.D2S]:
-                nb_bytes += conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0) + conn.attr[co.D2S][co.BYTES].get(co.CELL, 0)
+                nb_bytes += conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0) + conn.attr[co.D2S][co.BYTES].get(co.CELL, 0) + conn.attr[co.D2S][co.BYTES].get('?', 0)
             data['all']['Connections'].append([duration, nb_bytes])
 
     co.scatter_plot(data, "Duration [s]", "Bytes on connection", color, sums_dir_exp, base_graph_name, plot_identity=False)
@@ -261,9 +276,9 @@ def textual_summary(log_file=sys.stdout):
             # nb_bytes_s2d = conn.attr[co.S2D][co.BYTES_MPTCPTRACE]
             # nb_bytes_d2s = conn.attr[co.D2S][co.BYTES_MPTCPTRACE]
             if co.BYTES in conn.attr[co.S2D]:
-                nb_bytes_s2d = conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0) + conn.attr[co.S2D][co.BYTES].get(co.CELL, 0)
+                nb_bytes_s2d = conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0) + conn.attr[co.S2D][co.BYTES].get(co.CELL, 0) + conn.attr[co.S2D][co.BYTES].get('?', 0)
             if co.BYTES in conn.attr[co.D2S]:
-                nb_bytes_d2s = conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0) + conn.attr[co.D2S][co.BYTES].get(co.CELL, 0)
+                nb_bytes_d2s = conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0) + conn.attr[co.D2S][co.BYTES].get(co.CELL, 0) + conn.attr[co.D2S][co.BYTES].get('?', 0)
 
             if duration < 1:
                 data['all']['<1s'] += nb_bytes_s2d + nb_bytes_d2s
@@ -520,6 +535,7 @@ def cdf_rtt_s2d_all(log_file=sys.stdout, min_samples=5, min_bytes=100):
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
     co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
+    co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', os.path.splitext(graph_full_path)[0] + '_cut.pdf', xlim=1000)
 
 
 def cdf_rtt_d2s_all(log_file=sys.stdout, min_samples=5):
@@ -544,7 +560,7 @@ def cdf_rtt_d2s_all(log_file=sys.stdout, min_samples=5):
                     aggl_res['all'][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.D2S][co.RTT_AVG], fname)]
 
     co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
-    co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
+    co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', os.path.splitext(graph_full_path)[0] + '_cut.pdf', xlim=1000)
 
 
 def reinject_plot(log_file=sys.stdout, min_bytes=0.0):
@@ -552,7 +568,7 @@ def reinject_plot(log_file=sys.stdout, min_bytes=0.0):
     base_graph_full_path = os.path.join(sums_dir_exp, base_graph_fname)
     results = {co.S2D: {'all': {'all': []}}, co.D2S: {'all': {'all': []}}}
     results_packs = {co.S2D: {'all': {'all': []}}, co.D2S: {'all': {'all': []}}}
-    for fname, data in connections.iteritems():
+    for fname, data in multiflow_connections.iteritems():
         for conn_id, conn in data.iteritems():
             reinject_bytes_s2d = 0.0
             reinject_bytes_d2s = 0.0
@@ -634,7 +650,7 @@ def retrans_plot(log_file=sys.stdout, min_bytes=0.0):
     base_graph_full_path = os.path.join(sums_dir_exp, base_graph_fname)
     results = {co.S2D: {'all': {'all': []}}, co.D2S: {'all': {'all': []}}}
     results_packs = {co.S2D: {'all': {'all': []}}, co.D2S: {'all': {'all': []}}}
-    for fname, data in connections.iteritems():
+    for fname, data in singleflow_connections.iteritems():
         for conn_id, conn in data.iteritems():
             bytes_retrans_s2d = 0.0
             bytes_retrans_d2s = 0.0
@@ -715,7 +731,7 @@ def reinject_plot_relative_to_data(log_file=sys.stdout, min_bytes=0.0):
     base_graph_fname = "reinject_data_bytes"
     base_graph_full_path = os.path.join(sums_dir_exp, base_graph_fname)
     results = {co.S2D: {'all': {'all': []}}, co.D2S: {'all': {'all': []}}}
-    for fname, data in connections.iteritems():
+    for fname, data in multiflow_connections.iteritems():
         for conn_id, conn in data.iteritems():
             if co.S2D not in conn.attr or co.D2S not in conn.attr:
                 continue
@@ -885,7 +901,7 @@ def textual_summary_global(log_file=sys.stdout):
         for direction in co.DIRECTIONS:
             ratio = (bytes_number[cond][direction][co.CELL] + 0.0) / (bytes_number[cond][direction][co.WIFI] + bytes_number[cond][direction][co.CELL]) * 100 if bytes_number[cond][direction][co.WIFI] + bytes_number[cond][direction][co.CELL] > 0 else 0
             print(direction, bytes_number[cond][direction][co.CELL], " bytes cell and ", bytes_number[cond][direction][co.WIFI], "bytes wifi (", ratio, "% cell)", file=log_file)
-        for ith in [co.WIFI, co.CELL]:
+        for ith in [co.WIFI, co.CELL, '?']:
             total_s2d += bytes_number[cond][co.S2D][ith]
             total_d2s += bytes_number[cond][co.D2S][ith]
 
@@ -898,7 +914,7 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
     results_two = {co.S2D: {'all': []}, co.D2S: {'all': []}}
     graph_fname = "overhead_retrans_reinj_all.pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
-    for fname, data in connections.iteritems():
+    for fname, data in multiflow_connections.iteritems():
         for conn_id, conn in data.iteritems():
             retrans_bytes = {co.S2D: 0, co.D2S: 0}
             reinj_bytes = {co.S2D: 0, co.D2S: 0}
