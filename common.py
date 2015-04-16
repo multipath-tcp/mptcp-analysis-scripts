@@ -347,7 +347,7 @@ def tshark_filter(condition, src_path, dst_path, print_out=sys.stderr):
     """ Filter src_path using the condition and write the result to dst_path
         Raise a TSharkError in case of failure
     """
-    cmd = ['tshark', '-nr', src_path, '-Y', condition, '-w', dst_path]
+    cmd = ['tshark', '-n', '-r', src_path, '-Y', condition, '-w', dst_path]
     if subprocess.call(cmd, stdout=print_out) != 0:
         raise TSharkError("Error with condition " + condition + " for source " + src_path + " and destination "
                              + dst_path)
@@ -361,7 +361,7 @@ def tshark_stats(filtering, src_path, print_out=sys.stderr):
     if filtering:
         table += ',' + filtering
 
-    cmd = ['tshark', '-nr', src_path, '-z', table, '-q']
+    cmd = ['tshark', '-n', '-r', src_path, '-z', table, '-q']
     if subprocess.call(cmd, stdout=print_out) != 0:
         raise TSharkError("Error with filtering " + filtering + " for source " + src_path)
 
