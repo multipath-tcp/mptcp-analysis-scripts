@@ -927,6 +927,7 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
                     results_two[direction]['all'].append([total_data_bytes[direction], reinj_data_bytes[direction]])
 
     co.plot_cdfs_with_direction(results, ['red', 'blue'], 'Fraction of total bytes', graph_full_path, natural=True, ylim=0.8)
+    co.plot_cdfs_with_direction(results, ['red', 'blue'], 'Fraction of total bytes', os.path.splitext(graph_full_path)[0] + '_cut.pdf', natural=True, ylim=0.8, xlim=1)
     for direction in results_two:
         for condition in results_two[direction]:
             sorted_data = sorted(results_two[direction][condition], key=lambda elem: elem[0])
