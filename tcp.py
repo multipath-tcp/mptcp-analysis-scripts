@@ -821,7 +821,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
         print(str(e) + ": skip process", file=sys.stderr)
         return
 
-    get_total_and_retrans_frames(pcap_filepath, connections)
+    if not light:
+        get_total_and_retrans_frames(pcap_filepath, connections)
 
     relative_start = get_relative_start_time(connections)
     aggregate_dict = {
