@@ -587,9 +587,6 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections, failed_conns, 
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_DATA] = connection.flow.attr[direction][co.BYTES_DATA]
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.MISSED_DATA] = connection.flow.attr[direction][co.MISSED_DATA]
 
-            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_FRAMES_TOTAL] = connection.flow.attr[direction][co.BYTES_FRAMES_TOTAL]
-            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.FRAMES_TOTAL] = connection.flow.attr[direction][co.FRAMES_TOTAL]
-
             if co.RTT_SAMPLES in connection.flow.attr[direction]:
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_SAMPLES] = connection.flow.attr[direction][co.RTT_SAMPLES]
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_MIN] = connection.flow.attr[direction][co.RTT_MIN]
@@ -598,10 +595,9 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections, failed_conns, 
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_STDEV] = connection.flow.attr[direction][co.RTT_STDEV]
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_3WHS] = connection.flow.attr[direction][co.RTT_3WHS]
 
-            if not light:
-                if co.BYTES_FRAMES_RETRANS in connection.flow.attr[direction]:
-                    mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_FRAMES_RETRANS] = connection.flow.attr[direction][co.BYTES_FRAMES_RETRANS]
-                    mptcp_connections[conn_id].flows[flow_id].attr[direction][co.FRAMES_RETRANS] = connection.flow.attr[direction][co.FRAMES_RETRANS]
+            if co.BYTES_FRAMES_RETRANS in connection.flow.attr[direction]:
+                mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_FRAMES_RETRANS] = connection.flow.attr[direction][co.BYTES_FRAMES_RETRANS]
+                mptcp_connections[conn_id].flows[flow_id].attr[direction][co.FRAMES_RETRANS] = connection.flow.attr[direction][co.FRAMES_RETRANS]
 
     else:
         # This is a TCPConnection that failed to be a MPTCP subflow: add it in failed_conns
