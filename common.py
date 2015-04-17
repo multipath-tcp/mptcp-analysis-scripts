@@ -381,7 +381,7 @@ def long_ipv6_address(ip):
     for i in range(0, len(split_ip)):
         decomposed_ip[i] = split_ip[i].split(":")
         for j in range(0, len(decomposed_ip[i])):
-            while not len(decomposed_ip[i][j]) == 4:
+            while not len(decomposed_ip[i][j]) >= 4:
                 decomposed_ip[i][j] = "0" + decomposed_ip[i][j]
 
     # Putting everything together
