@@ -570,7 +570,7 @@ def get_flow_name_connection(connection, connections):
     return None, None
 
 
-def copy_info_to_mptcp_connections(connection, mptcp_connections, failed_conns):
+def copy_info_to_mptcp_connections(connection, mptcp_connections, failed_conns, light=False):
     """ Given a tcp connection, copy its start and duration to the corresponding mptcp connection
         If connection is a failed subflow of a MPTCPConnection, add it in failed_conns
         Return the corresponding connection and flow ids of the mptcp connection
@@ -598,9 +598,10 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections, failed_conns):
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_STDEV] = connection.flow.attr[direction][co.RTT_STDEV]
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_3WHS] = connection.flow.attr[direction][co.RTT_3WHS]
 
-            if co.BYTES_FRAMES_RETRANS in connection.flow.attr[direction]:
-                mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_FRAMES_RETRANS] = connection.flow.attr[direction][co.BYTES_FRAMES_RETRANS]
-                mptcp_connections[conn_id].flows[flow_id].attr[direction][co.FRAMES_RETRANS] = connection.flow.attr[direction][co.FRAMES_RETRANS]
+            if not light:
+                if co.BYTES_FRAMES_RETRANS in connection.flow.attr[direction]:
+                    mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_FRAMES_RETRANS] = connection.flow.attr[direction][co.BYTES_FRAMES_RETRANS]
+                    mptcp_connections[conn_id].flows[flow_id].attr[direction][co.FRAMES_RETRANS] = connection.flow.attr[direction][co.FRAMES_RETRANS]
 
     else:
         # This is a TCPConnection that failed to be a MPTCP subflow: add it in failed_conns
@@ -840,7 +841,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
         conn_id, flow_id = None, None
         flow_name, is_reversed = get_flow_name(xpl_filepath)
         if mptcp_connections:
-            conn_id, flow_id = copy_info_to_mptcp_connections(connections[flow_name], mptcp_connections, failed_conns)
+            conn_id, flow_id = copy_info_to_mptcp_connections(connections[flow_name], mptcp_connections, failed_conns, light=light)
 
         if interesting_graph(flow_name, is_reversed, connections) and 'tsg' in os.path.basename(xpl_filepath):
             process_tsg_xpl_file(pcap_filepath, xpl_filepath, graph_dir_exp, connections, aggregate_dict, cwin_data_all,
