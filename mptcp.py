@@ -621,15 +621,15 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     try:
         with co.cd(csv_tmp_dir):
             # If segmentation faults, remove the -S option
-            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-S', '-G', '250', '-r', '2', '-w', '0']
+            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-S', '-w', '0']
             if not light:
-                cmd += ['-F', '3']
+                cmd += ['-G', '250', '-r', '2', '-F', '3']
             connections = process_mptcptrace_cmd(cmd, pcap_filepath)
 
             # Useful to count the number of reinjected bytes
-            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-G', '250', '-r', '2', '-w', '2']
+            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-w', '2']
             if not light:
-                cmd += ['-F', '3']
+                cmd += ['-G', '250', '-r', '2', '-F', '3']
             devnull = open(os.devnull, 'w')
             if subprocess.call(cmd, stdout=devnull) != 0:
                 raise MPTCPTraceError("Error of mptcptrace with " + pcap_filepath)
@@ -664,8 +664,11 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                         co.move_file(csv_fname, os.path.join(
                             graph_dir_exp, co.DEF_RTT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
                     else:
-                        co.move_file(csv_fname, os.path.join(
-                            graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
+                        if not light:
+                            co.move_file(csv_fname, os.path.join(
+                                graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
+                        else:
+                            os.remove(csv_fname)
                 except IOError as e:
                     print(str(e), file=sys.stderr)
 
