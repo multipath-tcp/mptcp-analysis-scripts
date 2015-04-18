@@ -189,7 +189,7 @@ def process_pcap(pcap_filepath, ports):
                 decrypted_socks_cmd = decode(crypted_socks_cmd)
                 if decrypted_socks_cmd[0] == b'\x01': # Connect
                     add_port(decrypted_socks_cmd, ports)
-    except ValueError as e:
+    except Exception as e:
         print(e)
 
     file.close()
