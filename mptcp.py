@@ -260,7 +260,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
                 reinject[int(split_line[5]) - 1][packet_seqs] = 1
             else:
                 reinject[int(split_line[5]) - 1][packet_seqs] += 1
-                print("WARNING: reinjection " + str(reinject[int(split_line[5]) - 1][packet_seqs]) + " for " + csv_fname, file=sys.stderr)
+                print("WARNING: reinjection " + str(reinject[int(split_line[5]) - 1][packet_seqs]) + " for " + csv_fname)
 
     direction = co.D2S if is_reversed else co.S2D
     for i in range(0, len(connections[conn_id].flows)):
