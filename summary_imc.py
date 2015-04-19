@@ -317,6 +317,17 @@ def textual_summary(log_file=sys.stdout):
             print(dur_type + " (has " + str(count[cond][dur_type]) + " with " + str(count[cond][dur_type] * 100 / (tot_count[cond] + 0.00001)) + "%): " + str(value) + " bytes (" + str(value * 100 / (total+ 0.00001)) + "%)", file=log_file)
 
 
+def count_ip_type(log_file=sys.stdout):
+    results = {co.IPv4: 0, co.IPv6: 0}
+    for fname, data in connections.iteritems():
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    results[flow.attr[co.TYPE]] += 1
+
+    print("IPv4", results[co.IPv4], "IPv6", results[co.IPv6], file=log_file)
+
+
 def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_bytes=0):
     base_graph_name_bytes = "summary_fraction_cellular"
     base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
@@ -684,11 +695,11 @@ def retrans_plot(log_file=sys.stdout, min_bytes=0.0):
                         packs_s2d += flow.attr[co.S2D][co.PACKS]
                         packs_d2s += flow.attr[co.D2S][co.PACKS]
 
-            if bytes_s2d > min_bytes:
+            if bytes_s2d > min_bytes and packs_s2d > 0:
                 results[co.S2D]['all']['all'].append(bytes_retrans_s2d / bytes_s2d)
                 results_packs[co.S2D]['all']['all'].append(bytes_retrans_s2d / packs_s2d)
 
-            if bytes_d2s > min_bytes:
+            if bytes_d2s > min_bytes and packs_d2s > 0:
                 if (bytes_retrans_d2s / bytes_d2s) >= 0.5:
                     print("retrans: " + str(bytes_retrans_d2s) + " tot: " + str(bytes_d2s) + " " + fname + " " + conn_id)
                 results[co.D2S]['all']['all'].append(bytes_retrans_d2s / bytes_d2s)
@@ -1153,5 +1164,6 @@ cdf_overhead_retrans_reinj_singleflow(log_file=log_file)
 plot_total_bytes_reinj_bytes(log_file=log_file)
 fog_plot_cellular_percentage_all(log_file=log_file)
 count_mptcp_best_rtt_flow(log_file=log_file)
+count_ip_type(log_file=log_file)
 log_file.close()
 print("End of summary")
