@@ -602,11 +602,11 @@ def reinject_plot(log_file=sys.stdout, min_bytes=0.0):
                         packs_s2d += flow.attr[co.S2D][co.PACKS]
                         packs_d2s += flow.attr[co.D2S][co.PACKS]
 
-            if bytes_s2d > min_bytes:
+            if bytes_s2d > min_bytes and packs_s2d > 0:
                 results[co.S2D]['all']['all'].append(reinject_bytes_s2d / bytes_s2d)
                 results_packs[co.S2D]['all']['all'].append(reinject_packs_s2d / packs_s2d)
 
-            if bytes_d2s > min_bytes:
+            if bytes_d2s > min_bytes and packs_d2s > 0:
                 if (reinject_bytes_d2s / bytes_d2s) >= 0.5:
                     print("reinj: " + str(reinject_bytes_d2s) + " tot: " + str(bytes_d2s) + " " + fname + " " + conn_id)
                 results[co.D2S]['all']['all'].append(reinject_bytes_d2s / bytes_d2s)
