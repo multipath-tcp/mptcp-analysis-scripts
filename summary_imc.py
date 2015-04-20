@@ -347,6 +347,57 @@ def count_packet(log_file=sys.stdout):
     print("NB PACKETS S2D", count[co.S2D], "NB PACKETS D2S", count[co.D2S], file=log_file)
 
 
+def count_ports(log_file=sys.stdout):
+    count = {co.SPORT: {}, co.DPORT: {}}
+
+    for fname, data in connections.iteritems():
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    for port in [co.SPORT, co.DPORT]:
+                        if flow.attr[port] in count[port]:
+                            count[port][flow.attr[port]] += 1
+                        else:
+                            count[port][flow.attr[port]] = 1
+
+    print("PORT SOURCE", file=log_file)
+    print(count[co.SPORT], file=log_file)
+    print("PORT DEST", file=log_file)
+    print(count[co.DPORT], file=log_file)
+
+
+def count_on_filtered(min_bytes=1000000, log_file=sys.stdout):
+    count_bytes = {co.S2D: 0, co.D2S: 0}
+    count_packs = {co.S2D: 0, co.D2S: 0}
+    count_conn = 0
+    ports = {co.SPORT: {}, co.DPORT: {}}
+
+    for fname, data in connections.iteritems():
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                mptcp_bytes = conn.attr[co.S2D].get(co.BYTES_MPTCPTRACE, 0) + conn.attr[co.D2S].get(co.BYTES_MPTCPTRACE, 0)
+                if mptcp_bytes >= min_bytes:
+                    count_conn += 1
+                    for direction in co.DIRECTIONS:
+                        count_bytes[direction] += conn.attr[direction].get(co.BYTES_MPTCPTRACE, 0)
+                    for flow_id, flow in conn.flows.iteritems():
+                        for port in [co.SPORT, co.DPORT]:
+                            if flow.attr[port] in ports[port]:
+                                ports[port][flow.attr[port]] += 1
+                            else:
+                                ports[port][flow.attr[port]] = 1
+                        for direction in co.DIRECTIONS:
+                            count_packs[direction] += flow.attr[direction].get(co.PACKS, 0)
+
+    print("NB CONN FILTERED", count_conn, file=log_file)
+    print("BYTES S2D FILTERED", count_bytes[co.S2D], "BYTES D2S FILTERED", count_bytes[co.D2S], file=log_file)
+    print("BYTES S2D FILTERED", count_packs[co.S2D], "BYTES D2S FILTERED", count_packs[co.D2S], file=log_file)
+    print("PORT SOURCE FILTER", file=log_file)
+    print(ports[co.SPORT], file=log_file)
+    print("PORT DEST FILTER", file=log_file)
+    print(ports[co.DPORT], file=log_file)
+
+
 def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_bytes=0):
     base_graph_name_bytes = "summary_fraction_cellular"
     base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
@@ -1177,5 +1228,7 @@ fog_plot_cellular_percentage_all(log_file=log_file)
 count_mptcp_best_rtt_flow(log_file=log_file)
 count_ip_type(log_file=log_file)
 count_packet(log_file=log_file)
+count_ports(log_file=log_file)
+count_on_filtered(log_file=log_file)
 log_file.close()
 print("End of summary")
