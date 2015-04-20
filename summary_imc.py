@@ -327,10 +327,10 @@ def count_ip_type(log_file=sys.stdout):
                     if flow.attr[co.SADDR] not in results[ip_type]:
                         results[ip_type].append(flow.attr[co.SADDR])
 
-    print("IPv4")
-    print(results[co.IPv4])
-    print("IPv6")
-    print(results[co.IPv6])
+    print("IPv4", file=log_file)
+    print(results[co.IPv4], file=log_file)
+    print("IPv6", file=log_file)
+    print(results[co.IPv6], file=log_file)
     print("IPv4", len(results[co.IPv4]), "IPv6", len(results[co.IPv6]), file=log_file)
 
 
@@ -342,7 +342,7 @@ def count_packet(log_file=sys.stdout):
             if isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
                     for direction in co.DIRECTIONS:
-                        count[direction] += flow.attr[direction][co.PACKS]
+                        count[direction] += flow.attr[direction].get(co.PACKS, 0)
 
     print("NB PACKETS S2D", count[co.S2D], "NB PACKETS D2S", count[co.D2S], file=log_file)
 
@@ -648,10 +648,8 @@ def reinject_plot(log_file=sys.stdout, min_bytes=0.0):
             fig, ax = plt.subplots()
             apps = results[direction][condition].keys()
             to_plot = []
-            print("Reinject bytes boxplot", file=log_file)
             for app in apps:
                 to_plot.append(results[direction][condition][app])
-            print(to_plot, file=log_file)
             if to_plot:
                 plt.boxplot(to_plot)
                 plt.xticks(range(1, len(apps) + 1), apps)
@@ -730,10 +728,8 @@ def retrans_plot(log_file=sys.stdout, min_bytes=0.0):
             fig, ax = plt.subplots()
             apps = results[direction][condition].keys()
             to_plot = []
-            print("Retransmitted bytes boxplot", file=log_file)
             for app in apps:
                 to_plot.append(results[direction][condition][app])
-            print(to_plot, file=log_file)
             if to_plot:
                 plt.boxplot(to_plot)
                 plt.xticks(range(1, len(apps) + 1), apps)
@@ -748,10 +744,8 @@ def retrans_plot(log_file=sys.stdout, min_bytes=0.0):
             fig, ax = plt.subplots()
             apps = results_packs[direction][condition].keys()
             to_plot = []
-            print("Reinject packs boxplot", file=log_file)
             for app in apps:
                 to_plot.append(results_packs[direction][condition][app])
-            print(to_plot, file=log_file)
             if to_plot:
                 plt.boxplot(to_plot)
                 plt.xticks(range(1, len(apps) + 1), apps)
@@ -803,10 +797,8 @@ def reinject_plot_relative_to_data(log_file=sys.stdout, min_bytes=0.0):
             fig, ax = plt.subplots()
             apps = results[direction][condition].keys()
             to_plot = []
-            print("Reinject bytes boxplot", file=log_file)
             for app in apps:
                 to_plot.append(results[direction][condition][app])
-            print(to_plot, file=log_file)
             if to_plot:
                 plt.boxplot(to_plot)
                 plt.xticks(range(1, len(apps) + 1), apps)
