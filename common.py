@@ -368,9 +368,9 @@ def tshark_stats(filtering, src_path, print_out=sys.stderr):
 
 def long_ipv6_address(ip):
     """ Return ip in long format, ex. 2001:db8::1 will be 2001:0db8:0000:0000:0000:0000:0000:0001 """
-    if ":" not in ip:
-        # IPv4 address, don't do anything
-        return ip
+    if ":" not in ip or "." in ip:
+        # IPv4 address, don't do anything (clean possible ':')
+        return ip.replace(":", "")
     # Before ::, after ::
     split_ip = []
     decomposed_ip = [[], []]
