@@ -318,14 +318,33 @@ def textual_summary(log_file=sys.stdout):
 
 
 def count_ip_type(log_file=sys.stdout):
-    results = {co.IPv4: 0, co.IPv6: 0}
+    results = {co.IPv4: [], co.IPv6: []}
     for fname, data in connections.iteritems():
         for conn_id, conn in data.iteritems():
             if isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
-                    results[flow.attr[co.TYPE]] += 1
+                    ip_type = results[flow.attr[co.TYPE]]
+                    if flow.attr[co.SADDR] not in results[ip_type]:
+                        results[ip_type].append(flow.attr[co.SADDR])
 
-    print("IPv4", results[co.IPv4], "IPv6", results[co.IPv6], file=log_file)
+    print("IPv4")
+    print(results[co.IPv4])
+    print("IPv6")
+    print(results[co.IPv6])
+    print("IPv4", len(results[co.IPv4]), "IPv6", len(results[co.IPv6]), file=log_file)
+
+
+def count_packet(log_file=sys.stdout):
+    count = {co.S2D: 0, co.D2S: 0}
+
+    for fname, data in connections.iteritems():
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    for direction in co.DIRECTIONS:
+                        count[direction] += flow.attr[direction][co.PACKS]
+
+    print("NB PACKETS S2D", count[co.S2D], "NB PACKETS D2S", count[co.D2S], file=log_file)
 
 
 def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_bytes=0):
@@ -549,7 +568,7 @@ def cdf_rtt_s2d_all(log_file=sys.stdout, min_samples=5, min_bytes=100):
                 if conn.flow.attr[co.S2D][co.RTT_SAMPLES] >= min_samples and conn.flow.attr[co.S2D][co.BYTES] >= min_bytes:
                     aggl_res['all'][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.S2D][co.RTT_AVG], fname)]
 
-    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
+    co.log_outliers(aggl_res, remove=args.remove)
     co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
     co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', os.path.splitext(graph_full_path)[0] + '_cut.pdf', xlim=1000)
 
@@ -575,7 +594,7 @@ def cdf_rtt_d2s_all(log_file=sys.stdout, min_samples=5):
                 if conn.flow.attr[co.D2S][co.RTT_SAMPLES] >= min_samples:
                     aggl_res['all'][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.D2S][co.RTT_AVG], fname)]
 
-    co.log_outliers(aggl_res, remove=args.remove, log_file=log_file)
+    co.log_outliers(aggl_res, remove=args.remove)
     co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', os.path.splitext(graph_full_path)[0] + '_cut.pdf', xlim=1000)
 
 
@@ -1165,5 +1184,6 @@ plot_total_bytes_reinj_bytes(log_file=log_file)
 fog_plot_cellular_percentage_all(log_file=log_file)
 count_mptcp_best_rtt_flow(log_file=log_file)
 count_ip_type(log_file=log_file)
+count_packet(log_file=log_file)
 log_file.close()
 print("End of summary")
