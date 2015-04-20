@@ -114,8 +114,8 @@ def extract_flow_data(out_file):
                 # Case 3: line begin with number --> extract info
                 conn = convert_number_to_name(int(info[0]) - 1)
                 connection = TCPConnection(conn)
-                connection.flow.attr[co.SADDR] = info[1]
-                connection.flow.attr[co.DADDR] = info[2]
+                connection.flow.attr[co.SADDR] = co.long_ipv6_address(info[1])
+                connection.flow.attr[co.DADDR] = co.long_ipv6_address(info[2])
                 connection.flow.attr[co.SPORT] = info[3]
                 connection.flow.attr[co.DPORT] = info[4]
                 connection.flow.detect_ipv4()
