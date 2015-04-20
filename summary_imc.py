@@ -323,7 +323,7 @@ def count_ip_type(log_file=sys.stdout):
         for conn_id, conn in data.iteritems():
             if isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
-                    ip_type = results[flow.attr[co.TYPE]]
+                    ip_type = flow.attr[co.TYPE]
                     if flow.attr[co.SADDR] not in results[ip_type]:
                         results[ip_type].append(flow.attr[co.SADDR])
 
