@@ -157,6 +157,8 @@ BYTES_RETRANS = 'bytes_retrans'
 PACKS_OOO = 'packets_outoforder'
 # Congestion window graph data dictionary
 CWIN_DATA = 'congestion_window_data'
+# Timestamp of reinjected packets
+REINJ_ORIG_TIMESTAMP = 'reinjected_orig_timestamp'
 # Reinjected packets
 REINJ_ORIG_PACKS = 'reinjected_orig_packets'
 # Reinjected bytes

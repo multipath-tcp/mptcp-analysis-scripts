@@ -241,11 +241,13 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
 
     reinject_offsets = {}
     reinject_nb = {}
+    reinject_ts = {}
     reinject = {}
     for i in range(0, len(connections[conn_id].flows)):
         reinject[i] = {}
         reinject_offsets[i] = 0
         reinject_nb[i] = 0
+        reinject_ts[i] = []
 
     for line in data:
         split_line = line.split(',')
@@ -255,6 +257,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
             # Map and reinjected
             reinject_offsets[int(split_line[5]) - 1] += int(split_line[4]) - int(split_line[1])
             reinject_nb[int(split_line[5]) - 1] += 1
+            reinject_ts[int(split_line[5]) - 1].append(float(split_line[0]))
             packet_seqs = (int(split_line[4]), int(split_line[1]))
             if packet_seqs not in reinject[int(split_line[5]) - 1]:
                 reinject[int(split_line[5]) - 1][packet_seqs] = 1
@@ -266,6 +269,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
     for i in range(0, len(connections[conn_id].flows)):
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_PACKS] = reinject_nb[i]
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_BYTES] = reinject_offsets[i]
+        connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_TIMESTAMP] = reinject_ts[i]
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG] = reinject[i]
 
 
