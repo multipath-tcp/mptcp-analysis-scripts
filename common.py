@@ -153,6 +153,8 @@ MISSED_DATA = 'missed_data'
 PACKS_RETRANS = 'packets_retrans'
 # Number of bytes retransmitted
 BYTES_RETRANS = 'bytes_retrans'
+# Timestamp of retransmissions
+TIMESTAMP_RETRANS = 'timestamp_retrans'
 # Number of packets out of orders
 PACKS_OOO = 'packets_outoforder'
 # Congestion window graph data dictionary
