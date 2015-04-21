@@ -1243,6 +1243,30 @@ def time_retransmission(log_file=sys.stdout):
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
 
 
+def bursts_mptcp(log_file=sys.stdout):
+    bursts_mb = {co.S2D: {'all': {'Connections': []}}, co.D2S: {'all': {'Connections': []}}}
+    bursts_sec = {co.S2D: {'all': {'Connections': []}}, co.D2S: {'all': {'Connections': []}}}
+    color = ['red']
+    graph_fname_mb = "bursts_mb"
+    base_graph_path_mb = os.path.join(sums_dir_exp, graph_fname_mb)
+    graph_fname_sec = "bursts_sec"
+    base_graph_path_sec = os.path.join(sums_dir_exp, graph_fname_sec)
+    for fname, conns in connections.iteritems():
+        for conn_id, conn in conns.iteritems():
+            # We never know, still check
+            if isinstance(conn, mptcp.MPTCPConnection):
+                if conn.attr[co.DURATION] > 0.0 and len(conn.flows) >= 2:
+                    duration = conn.attr[co.DURATION]
+                    for direction in co.DIRECTIONS:
+                        if conn.attr[direction][co.BYTES_MPTCPTRACE] > 0:
+                            tot_bytes = conn.attr[direction][co.BYTES_MPTCPTRACE]
+                            bursts_mb[direction]['all']['Connections'].append((conn.attr[direction][co.BURSTS] - 1.0) / tot_bytes)
+                            bursts_sec[direction]['all']['Connections'].append((conn.attr[direction][co.BURSTS] - 1.0) / duration)
+
+    co.plot_cdfs_with_direction(bursts_mb, color, '# bursts / MB of data', base_graph_path_mb, natural=True)
+    co.plot_cdfs_with_direction(bursts_sec, color, '# bursts / second', base_graph_path_sec, natural=True)
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary-' + str(millis) + '.txt'), 'w')
@@ -1274,5 +1298,7 @@ count_packet(log_file=log_file)
 count_ports(log_file=log_file)
 count_on_filtered(log_file=log_file)
 time_reinjection(log_file=log_file)
+time_retransmission(log_file=log_file)
+bursts_mptcp(log_file=log_file)
 log_file.close()
 print("End of summary")
