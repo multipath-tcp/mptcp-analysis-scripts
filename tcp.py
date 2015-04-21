@@ -586,6 +586,7 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections, failed_conns, 
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.PACKS_OOO] = connection.flow.attr[direction][co.PACKS_OOO]
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_DATA] = connection.flow.attr[direction][co.BYTES_DATA]
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.MISSED_DATA] = connection.flow.attr[direction][co.MISSED_DATA]
+            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.TIMESTAMP_RETRANS] = connection.flow.attr[direction][co.TIMESTAMP_RETRANS]
 
             if co.RTT_SAMPLES in connection.flow.attr[direction]:
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_SAMPLES] = connection.flow.attr[direction][co.RTT_SAMPLES]
@@ -677,6 +678,34 @@ def plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all):
                 graph_filepath = os.path.join(cwin_graph_dir, graph_fname)
                 co.plot_line_graph([data], [interface], ['k'], "Time [s]",
                                    "Congestion window [Bytes]", "Congestion window", graph_filepath, ymin=0)
+
+
+def collect_retrans_xpl(pcap_filepath, xpl_filepath, connections, flow_name, is_reversed):
+    direction = co.D2S if is_reversed else co.S2D
+    retrans_ts = []
+    if connections[flow_name].flow.attr[direction][co.PACKS_RETRANS] == 0:
+        connections[flow_name].flow.attr[direction][co.TIMESTAMP_RETRANS] = retrans_ts
+        return
+    try:
+        # First read the file
+        xpl_file = open(xpl_filepath, 'r')
+    except IOError:
+        # Sometimes, no datasets file; skip the file
+        connections[flow_name].flow.attr[direction][co.TIMESTAMP_RETRANS] = retrans_ts
+        return
+    data = xpl_file.readlines()
+    xpl_file.close()
+    take_next = False
+    for line in data:
+        if take_next:
+            split_line = line.split(" ")
+            if split_line[0] in co.XPL_ONE_POINT:
+                retrans_ts.append(float(split_line[1]))
+                take_next = False
+        elif line.startswith("R"):
+            take_next = True
+
+    connections[flow_name].flow.attr[direction][co.TIMESTAMP_RETRANS] = retrans_ts
 
 
 def process_tsg_xpl_file(pcap_filepath, xpl_filepath, graph_dir_exp, connections, aggregate_dict, cwin_data_all, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id):
@@ -832,9 +861,13 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     # Directory containing all TCPConnections that tried to be MPTCP subflows, but failed to
     failed_conns = {}
 
-    # The tcptrace call will generate .xpl files to cope with
     for xpl_filepath in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_filepath[:-5]) + '*.xpl')):
         conn_id, flow_id = None, None
+        flow_name, is_reversed = get_flow_name(xpl_filepath)
+        collect_retrans_xpl(pcap_filepath, xpl_filepath, connections, flow_name, is_reversed)
+
+    # The tcptrace call will generate .xpl files to cope with
+    for xpl_filepath in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_filepath[:-5]) + '*.xpl')):
         flow_name, is_reversed = get_flow_name(xpl_filepath)
         if mptcp_connections:
             conn_id, flow_id = copy_info_to_mptcp_connections(connections[flow_name], mptcp_connections, failed_conns, light=light)
