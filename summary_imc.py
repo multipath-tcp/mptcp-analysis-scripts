@@ -1267,6 +1267,23 @@ def bursts_mptcp(log_file=sys.stdout):
     co.plot_cdfs_with_direction(bursts_sec, color, '# bursts / second', base_graph_path_sec, natural=True)
 
 
+def detect_handover(log_file=sys.stdout):
+    handover_conns = {}
+    for fname, conns in connections.iteritems():
+        handover_conns[fname] = []
+        for conn_id, conn in conns.iteritems():
+            # We never know, still check
+            if isinstance(conn, mptcp.MPTCPConnection):
+                start_time = float('inf')
+                for flow_id, flow in conn.flows.iteritems():
+                    start_time = min(start_time, flow.attr[co.START])
+                for flow_id, flow in conn.flows.iteritems():
+                    if flow.attr[co.START] - start_time >= 1.0:
+                        handover_conns[fname].append(conn_id)
+
+    print(handover_conns, file=log_file)
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary-' + str(millis) + '.txt'), 'w')
@@ -1300,5 +1317,6 @@ count_on_filtered(log_file=log_file)
 time_reinjection(log_file=log_file)
 time_retransmission(log_file=log_file)
 bursts_mptcp(log_file=log_file)
+detect_handover(log_file=log_file)
 log_file.close()
 print("End of summary")
