@@ -1200,6 +1200,49 @@ def count_mptcp_best_rtt_flow(log_file=sys.stdout):
         for direction in co.DIRECTIONS:
             print(condition, direction, (wifi_best_avg_rtt[condition][direction] + 0.) / (wifi_best_avg_rtt[condition][direction] + cell_best_avg_rtt[condition][direction]) * 100, "% where WiFi is better on average", (wifi_best_max_rtt[condition][direction] + 0.0) / (wifi_best_max_rtt[condition][direction] + cell_best_max_rtt[condition][direction]) * 100 , "% where WiFi is better on max", file=log_file)
 
+
+def time_reinjection(log_file=sys.stdout):
+    location_time = {co.S2D: {'all': {co.REINJ_ORIG_TIMESTAMP: []}}, co.D2S: {'all': {co.REINJ_ORIG_TIMESTAMP: []}}}
+    color = ['red']
+    graph_fname = "time_reinjection"
+    base_graph_path = os.path.join(sums_dir_exp, graph_fname)
+    for fname, conns in connections.iteritems():
+        for conn_id, conn in conns.iteritems():
+            # We never know, still check
+            if isinstance(conn, mptcp.MPTCPConnection):
+                start_time = float('inf')
+                duration = conn.attr[co.DURATION]
+                for flow_id, flow in conn.flows.iteritems():
+                    start_time = min(start_time, flow.attr[co.START])
+                for direction in co.DIRECTIONS:
+                    for flow_id, flow in conn.flows.iteritems():
+                        for ts in flow.attr[direction][co.REINJ_ORIG_TIMESTAMP]:
+                            location_time[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append((ts - start_time) / duration)
+
+    co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
+
+
+def time_retransmission(log_file=sys.stdout):
+    location_time = {co.S2D: {'all': {co.TIMESTAMP_RETRANS: []}}, co.D2S: {'all': {co.TIMESTAMP_RETRANS: []}}}
+    color = ['red']
+    graph_fname = "time_retransmission"
+    base_graph_path = os.path.join(sums_dir_exp, graph_fname)
+    for fname, conns in connections.iteritems():
+        for conn_id, conn in conns.iteritems():
+            # We never know, still check
+            if isinstance(conn, mptcp.MPTCPConnection):
+                start_time = float('inf')
+                duration = conn.attr[co.DURATION]
+                for flow_id, flow in conn.flows.iteritems():
+                    start_time = min(start_time, flow.attr[co.START])
+                for direction in co.DIRECTIONS:
+                    for flow_id, flow in conn.flows.iteritems():
+                        for ts in flow.attr[direction][co.TIMESTAMP_RETRANS]:
+                            location_time[direction]['all'][co.TIMESTAMP_RETRANS].append((ts - start_time) / duration)
+
+    co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary-' + str(millis) + '.txt'), 'w')
@@ -1230,5 +1273,6 @@ count_ip_type(log_file=log_file)
 count_packet(log_file=log_file)
 count_ports(log_file=log_file)
 count_on_filtered(log_file=log_file)
+time_reinjection(log_file=log_file)
 log_file.close()
 print("End of summary")
