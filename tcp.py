@@ -798,8 +798,12 @@ def collect_rtt(xpl_filepath, rtt_all, flow_name, is_reversed, connections):
             # Those info are stored in the connection itself, and not in flow, because app delay is at connection level for TCP
             connections[flow_name].attr[direction][co.RTT_99P] = np.percentile(np_rtts, 99)
             connections[flow_name].attr[direction][co.RTT_98P] = np.percentile(np_rtts, 98)
+            connections[flow_name].attr[direction][co.RTT_97P] = np.percentile(np_rtts, 97)
+            connections[flow_name].attr[direction][co.RTT_95P] = np.percentile(np_rtts, 95)
             connections[flow_name].attr[direction][co.RTT_90P] = np.percentile(np_rtts, 90)
+            connections[flow_name].attr[direction][co.RTT_75P] = np.percentile(np_rtts, 75)
             connections[flow_name].attr[direction][co.RTT_MED] = np.percentile(np_rtts, 50)
+            connections[flow_name].attr[direction][co.RTT_25P] = np.percentile(np_rtts, 25)
         except ValueError as e:
             print(str(e), xpl_filepath)
 
@@ -820,8 +824,12 @@ def collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mp
             # Those info are stored in the flows because these are not directly related to MPTCP, but to its flows
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_99P] = np.percentile(np_rtts, 99)
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_98P] = np.percentile(np_rtts, 98)
+            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_97P] = np.percentile(np_rtts, 97)
+            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_95P] = np.percentile(np_rtts, 95)
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_90P] = np.percentile(np_rtts, 90)
+            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_75P] = np.percentile(np_rtts, 75)
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_MED] = np.percentile(np_rtts, 50)
+            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_25P] = np.percentile(np_rtts, 25)
         except ValueError as e:
             print(str(e), xpl_filepath)
 

@@ -193,8 +193,12 @@ RTT_STDEV = 'rtt_stdev'
 RTT_3WHS = 'rtt_from_3whs'
 RTT_99P = 'rtt_99p'
 RTT_98P = 'rtt_98p'
+RTT_97P = 'rtt_97p'
+RTT_95P = 'rtt_95p'
 RTT_90P = 'rtt_90p'
+RTT_75P = 'rtt_75p'
 RTT_MED = 'rtt_median'
+RTT_25P = 'rtt_25p'
 
 # For aggregation
 S2D = 'source2destination'

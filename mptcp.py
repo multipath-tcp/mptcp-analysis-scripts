@@ -334,8 +334,12 @@ def process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed):
     # Those are stored in the MPTCP connection itself because app delay at MPTCP level (not at its flows)
     connections[conn_id].attr[direction][co.RTT_99P] = np.percentile(np_rtts, 99)
     connections[conn_id].attr[direction][co.RTT_98P] = np.percentile(np_rtts, 98)
+    connections[conn_id].attr[direction][co.RTT_97P] = np.percentile(np_rtts, 97)
+    connections[conn_id].attr[direction][co.RTT_95P] = np.percentile(np_rtts, 95)
     connections[conn_id].attr[direction][co.RTT_90P] = np.percentile(np_rtts, 90)
+    connections[conn_id].attr[direction][co.RTT_75P] = np.percentile(np_rtts, 75)
     connections[conn_id].attr[direction][co.RTT_MED] = np.percentile(np_rtts, 50)
+    connections[conn_id].attr[direction][co.RTT_25P] = np.percentile(np_rtts, 25)
 
 
 def generate_title(xpl_fname, connections):
