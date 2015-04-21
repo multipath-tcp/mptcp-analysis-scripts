@@ -181,6 +181,8 @@ FRAMES_RETRANS = 'frames_retrans'
 THGPT_TCPTRACE = 'throughput_tcptrace'
 # Throughput returned by mptcptrace
 THGPT_MPTCPTRACE = 'throughput_mptcptrace'
+# MPTCP bursts
+BURSTS = 'bursts'
 
 # RTT info
 RTT_SAMPLES = 'rtt_samples'

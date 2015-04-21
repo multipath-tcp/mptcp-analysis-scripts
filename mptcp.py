@@ -243,6 +243,12 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
     reinject_nb = {}
     reinject_ts = {}
     reinject = {}
+    bursts = []
+    current_flow = -1
+    first_seq_burst_on_flow = 0
+    last_seq_burst_on_flow = 0
+    begin_time_burst_on_flow = 0.0
+    last_time_burst_on_flow = 0.0
     for i in range(0, len(connections[conn_id].flows)):
         reinject[i] = {}
         reinject_offsets[i] = 0
@@ -253,6 +259,25 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
         split_line = line.split(',')
         if len(split_line) < 6:
             continue
+
+        if int(split_line[3]) == 1:
+            # Map
+            if not int(split_line[2]) - 1 == current_flow and current_flow >= 0:
+                # Save current burst (no way if start of connection)
+                total_seq = last_seq_burst_on_flow - first_seq_burst_on_flow
+                duration = last_time_burst_on_flow - begin_time_burst_on_flow
+                bursts.append((current_flow, total_seq, duration, begin_time_burst_on_flow))
+
+            if not int(split_line[2]) - 1 == current_flow:
+                # Prepare for the next burst
+                current_flow = int(split_line[2]) - 1
+                first_seq_burst_on_flow = int(split_line[1])
+                begin_time_burst_on_flow = float(split_line[0])
+
+            last_seq_burst_on_flow = int(split_line[4])
+            last_time_burst_on_flow = float(split_line[0])
+
+
         if int(split_line[3]) == 1 and (not int(split_line[5]) == -1):
             # Map and reinjected
             reinject_offsets[int(split_line[5]) - 1] += int(split_line[4]) - int(split_line[1])
@@ -265,7 +290,14 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
                 reinject[int(split_line[5]) - 1][packet_seqs] += 1
                 print("WARNING: reinjection " + str(reinject[int(split_line[5]) - 1][packet_seqs]) + " for " + csv_fname)
 
+    # Don't forget to consider the last burst
+    if current_flow >= 0:
+        total_seq = last_seq_burst_on_flow - first_seq_burst_on_flow
+        duration = last_time_burst_on_flow - begin_time_burst_on_flow
+        bursts.append((current_flow, total_seq, duration, begin_time_burst_on_flow))
+
     direction = co.D2S if is_reversed else co.S2D
+    connections[conn_id].attr[direction][co.BURSTS] = bursts
     for i in range(0, len(connections[conn_id].flows)):
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_PACKS] = reinject_nb[i]
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_BYTES] = reinject_offsets[i]
