@@ -201,7 +201,7 @@ def cdf_duration(log_file=sys.stdout):
     # weights = []
     # for dataset_results in data_duration['all'][co.DURATION]:
     #     weights.append(np.ones_like(dataset_results) / len(data_duration['all'][co.DURATION]))
-    plt.hist(data_duration['all'][co.DURATION], bins=np.logspace(0.01, 25000, 50))
+    plt.hist(data_duration['all'][co.DURATION], bins=np.logspace(-3, 5, 50))
     plt.xlabel("Duration of connections", fontsize=18)
     plt.ylabel("Fraction of connections", fontsize=18)
     plt.gca().set_xscale("log")
@@ -1269,7 +1269,7 @@ def time_retransmission(log_file=sys.stdout):
                     for flow_id, flow in conn.flows.iteritems():
                         if co.TIMESTAMP_RETRANS in flow.attr[direction] and co.START in flow.attr:
                             for ts in flow.attr[direction][co.TIMESTAMP_RETRANS]:
-                                location_time[direction]['all'][co.TIMESTAMP_RETRANS].append(min((ts - start_time) / duration, 1.0))
+                                location_time[direction]['all'][co.TIMESTAMP_RETRANS].append(min((ts) / duration, 1.0))
 
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
 
