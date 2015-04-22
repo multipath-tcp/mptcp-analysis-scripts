@@ -1312,12 +1312,12 @@ def bursts_mptcp(log_file=sys.stdout):
                             bursts_mb[direction]['all']['Connections'].append((len(conn.attr[direction][co.BURSTS]) - 1.0) / tot_bytes)
                             bursts_sec[direction]['all']['Connections'].append((len(conn.attr[direction][co.BURSTS]) - 1.0) / duration)
 
-    co.plot_cdfs_with_direction(bursts_mb, color, '# bursts / MB of data', base_graph_path_mb, natural=True)
-    co.plot_cdfs_with_direction(bursts_sec, color, '# bursts / second', base_graph_path_sec, natural=True)
-    co.plot_cdfs_with_direction(bursts_mb, color, '# bursts / MB of data', base_graph_path_mb + "_cut", xlim=5000, natural=True)
-    co.plot_cdfs_with_direction(bursts_sec, color, '# bursts / second', base_graph_path_sec + "_cut", xlim=200, natural=True)
-    co.plot_cdfs_with_direction(bursts_mb, color, '# bursts / MB of data', base_graph_path_mb + "_ccdf", natural=True, xlog=True, ylog=True, ccdf=True)
-    co.plot_cdfs_with_direction(bursts_sec, color, '# bursts / second', base_graph_path_sec + "_ccdf", natural=True, xlog=True, ylog=True, ccdf=True)
+    co.plot_cdfs_with_direction(bursts_mb, color, '# switches / MB of data', base_graph_path_mb, natural=True)
+    co.plot_cdfs_with_direction(bursts_sec, color, '# switches / second', base_graph_path_sec, natural=True)
+    co.plot_cdfs_with_direction(bursts_mb, color, '# switches / MB of data', base_graph_path_mb + "_cut", xlim=5000, natural=True)
+    co.plot_cdfs_with_direction(bursts_sec, color, '# switches / second', base_graph_path_sec + "_cut", xlim=200, natural=True)
+    co.plot_cdfs_with_direction(bursts_mb, color, '# switches / MB of data', base_graph_path_mb + "_ccdf", natural=True, xlog=True, ylog=True, ccdf=True)
+    co.plot_cdfs_with_direction(bursts_sec, color, '# switches / second', base_graph_path_sec + "_ccdf", natural=True, xlog=True, ylog=True, ccdf=True)
 
 
 def detect_handover(log_file=sys.stdout):
