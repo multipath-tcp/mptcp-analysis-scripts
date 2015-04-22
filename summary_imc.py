@@ -185,6 +185,8 @@ def cdf_duration(log_file=sys.stdout):
     color = ['red']
     base_graph_name_duration = "summary_cdf_duration"
     base_graph_path_duration = os.path.join(sums_dir_exp, base_graph_name_duration)
+    base_graph_name_duration_hist = "summary_hist_duration"
+    base_graph_path_duration_hist = os.path.join(sums_dir_exp, base_graph_name_duration_hist)
 
     for fname, conns in connections.iteritems():
         for conn_id, conn in conns.iteritems():
@@ -196,6 +198,14 @@ def cdf_duration(log_file=sys.stdout):
             data_duration['all'][co.DURATION].append(duration)
 
     co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration)
+    weights = []
+    for dataset_results in data_duration['all'][co.DURATION]:
+        weights.append(np.ones_like(dataset_results) / len(dataset_results))
+    plt.hist(data_duration['all'][co.DURATION], bins=50, weights=weights)
+    plt.xlabel("Duration of connections", fontsize=18)
+    plt.ylabel("Fraction of connections", fontsize=18)
+    plt.gca().set_xscale("log")
+    plt.savefig(base_graph_path_duration_hist + ".pdf")
 
 
 def cdfs_bytes(log_file=sys.stdout):
