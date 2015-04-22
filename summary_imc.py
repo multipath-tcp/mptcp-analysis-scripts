@@ -1291,8 +1291,8 @@ def bursts_mptcp(log_file=sys.stdout):
                     if duration == 0.0:
                         continue
                     for direction in co.DIRECTIONS:
-                        if conn.attr[direction][co.BYTES_MPTCPTRACE] > 0:
-                            tot_bytes = conn.attr[direction][co.BYTES_MPTCPTRACE]
+                        if conn.attr[direction][co.BYTES_MPTCPTRACE] > 1:
+                            tot_bytes = conn.attr[direction][co.BYTES_MPTCPTRACE] / 1000000.0 # For MBytes
                             bursts_mb[direction]['all']['Connections'].append((len(conn.attr[direction][co.BURSTS]) - 1.0) / tot_bytes)
                             bursts_sec[direction]['all']['Connections'].append((len(conn.attr[direction][co.BURSTS]) - 1.0) / duration)
 
