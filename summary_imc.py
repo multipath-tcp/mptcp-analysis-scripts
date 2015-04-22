@@ -201,11 +201,20 @@ def cdf_duration(log_file=sys.stdout):
     # weights = []
     # for dataset_results in data_duration['all'][co.DURATION]:
     #     weights.append(np.ones_like(dataset_results) / len(data_duration['all'][co.DURATION]))
+    plt.figure()
     plt.hist(data_duration['all'][co.DURATION], bins=np.logspace(-3, 5, 81), log=True)
     plt.xlabel("Duration of connections", fontsize=18)
     plt.ylabel("Fraction of connections", fontsize=18)
     plt.gca().set_xscale("log")
+    plt.savefig(base_graph_path_duration_hist + "_log.pdf")
+    plt.close()
+    plt.figure()
+    plt.hist(data_duration['all'][co.DURATION], bins=np.logspace(-3, 5, 81))
+    plt.xlabel("Duration of connections", fontsize=18)
+    plt.ylabel("Fraction of connections", fontsize=18)
+    plt.gca().set_xscale("log")
     plt.savefig(base_graph_path_duration_hist + ".pdf")
+    plt.close()
 
 
 def cdfs_bytes(log_file=sys.stdout):
@@ -1299,7 +1308,7 @@ def bursts_mptcp(log_file=sys.stdout):
     co.plot_cdfs_with_direction(bursts_mb, color, '# bursts / MB of data', base_graph_path_mb, natural=True)
     co.plot_cdfs_with_direction(bursts_sec, color, '# bursts / second', base_graph_path_sec, natural=True)
     co.plot_cdfs_with_direction(bursts_mb, color, '# bursts / MB of data', base_graph_path_mb + "_cut", xlim=5000, natural=True)
-    co.plot_cdfs_with_direction(bursts_sec, color, '# bursts / second', base_graph_path_sec + "_cut", xlim=1000, natural=True)
+    co.plot_cdfs_with_direction(bursts_sec, color, '# bursts / second', base_graph_path_sec + "_cut", xlim=200, natural=True)
 
 
 def detect_handover(log_file=sys.stdout):
