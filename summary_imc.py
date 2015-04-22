@@ -1239,7 +1239,7 @@ def time_reinjection(log_file=sys.stdout):
                     for flow_id, flow in conn.flows.iteritems():
                         if co.REINJ_ORIG_TIMESTAMP in flow.attr[direction] and co.START in flow.attr:
                             for ts in flow.attr[direction][co.REINJ_ORIG_TIMESTAMP]:
-                                location_time[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append((ts - start_time) / duration)
+                                location_time[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append(min((ts - start_time) / duration, 1.0))
                                 if (ts - start_time) <= 1.0:
                                     reinj_first_sec.append((conn_id, flow_id))
 
@@ -1269,7 +1269,7 @@ def time_retransmission(log_file=sys.stdout):
                     for flow_id, flow in conn.flows.iteritems():
                         if co.TIMESTAMP_RETRANS in flow.attr[direction] and co.START in flow.attr:
                             for ts in flow.attr[direction][co.TIMESTAMP_RETRANS]:
-                                location_time[direction]['all'][co.TIMESTAMP_RETRANS].append((ts - start_time) / duration)
+                                location_time[direction]['all'][co.TIMESTAMP_RETRANS].append(min((ts - start_time) / duration, 1.0))
 
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
 
