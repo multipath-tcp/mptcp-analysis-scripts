@@ -674,6 +674,7 @@ def cdf_rtt_d2s_all(log_file=sys.stdout, min_samples=5):
                     aggl_res['all'][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.D2S][co.RTT_AVG], fname)]
 
     co.log_outliers(aggl_res, remove=args.remove)
+    co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', os.path.splitext(graph_full_path)[0] + '.pdf')
     co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', os.path.splitext(graph_full_path)[0] + '_cut.pdf', xlim=1000)
 
 
