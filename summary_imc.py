@@ -573,10 +573,8 @@ def box_plot_cellular_percentage(log_file=sys.stdout, limit_duration=0, limit_by
             fig, ax = plt.subplots()
             apps = data_dir.keys()
             to_plot = []
-            print("Data", file=log_file)
             for app in apps:
                 to_plot.append(data_frac[cond][direction][app])
-            print(to_plot, file=log_file)
             if to_plot:
                 plt.boxplot(to_plot)
                 plt.xticks(range(1, len(apps) + 1), apps)
@@ -744,10 +742,8 @@ def reinject_plot(log_file=sys.stdout, min_bytes=0.0):
             fig, ax = plt.subplots()
             apps = results_packs[direction][condition].keys()
             to_plot = []
-            print("Reinject packs boxplot", file=log_file)
             for app in apps:
                 to_plot.append(results_packs[direction][condition][app])
-            print(to_plot, file=log_file)
             if to_plot:
                 plt.boxplot(to_plot)
                 plt.xticks(range(1, len(apps) + 1), apps)
