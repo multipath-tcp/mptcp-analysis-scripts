@@ -1262,6 +1262,7 @@ def time_reinjection(log_file=sys.stdout):
 
 def time_retransmission(log_file=sys.stdout):
     location_time = {co.S2D: {'all': {co.TIMESTAMP_RETRANS: []}}, co.D2S: {'all': {co.TIMESTAMP_RETRANS: []}}}
+    location_time_no_correct = {co.S2D: {'all': {co.TIMESTAMP_RETRANS: []}}, co.D2S: {'all': {co.TIMESTAMP_RETRANS: []}}}
     color = ['red']
     graph_fname = "time_retransmission"
     base_graph_path = os.path.join(sums_dir_exp, graph_fname)
@@ -1282,8 +1283,11 @@ def time_retransmission(log_file=sys.stdout):
                         if co.TIMESTAMP_RETRANS in flow.attr[direction] and co.START in flow.attr:
                             for ts in flow.attr[direction][co.TIMESTAMP_RETRANS]:
                                 location_time[direction]['all'][co.TIMESTAMP_RETRANS].append(min((ts) / duration, 1.0))
+                                location_time_no_correct[direction]['all'][co.TIMESTAMP_RETRANS].append(ts / duration)
 
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
+    co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path + '_nocorrect', natural=True)
+
 
 
 def bursts_mptcp(log_file=sys.stdout):
