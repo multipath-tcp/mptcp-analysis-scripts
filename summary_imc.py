@@ -201,7 +201,7 @@ def cdf_duration(log_file=sys.stdout):
     weights = []
     for dataset_results in data_duration['all'][co.DURATION]:
         weights.append(np.ones_like(dataset_results) / len(data_duration['all'][co.DURATION]))
-    plt.hist(data_duration['all'][co.DURATION], bins=50, weights=weights)
+    plt.hist(data_duration['all'][co.DURATION], bins=np.logspace(0.01, 25000, 50), weights=weights)
     plt.xlabel("Duration of connections", fontsize=18)
     plt.ylabel("Fraction of connections", fontsize=18)
     plt.gca().set_xscale("log")
