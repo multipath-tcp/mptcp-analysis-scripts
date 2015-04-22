@@ -1324,6 +1324,7 @@ def bursts_mptcp(log_file=sys.stdout):
     co.plot_cdfs_with_direction(bursts_pck, color, '# packets / # bursts', base_graph_path_pck, natural=True)
     co.plot_cdfs_with_direction(bursts_mb, color, '# switches / MB of data', base_graph_path_mb + "_cut", xlim=5000, natural=True)
     co.plot_cdfs_with_direction(bursts_sec, color, '# switches / second', base_graph_path_sec + "_cut", xlim=200, natural=True)
+    co.plot_cdfs_with_direction(bursts_pck, color, '# packets / # bursts', base_graph_path_pck + "_cut", xlim=1000, natural=True)
     co.plot_cdfs_with_direction(bursts_mb, color, '# switches / MB of data', base_graph_path_mb + "_ccdf", natural=True, xlog=True, ylog=True, ccdf=True)
     co.plot_cdfs_with_direction(bursts_sec, color, '# switches / second', base_graph_path_sec + "_ccdf", natural=True, xlog=True, ylog=True, ccdf=True)
     co.plot_cdfs_with_direction(bursts_pck, color, '# packets / # bursts', base_graph_path_pck + "_ccdf", natural=True, xlog=True, ylog=True, ccdf=True)
