@@ -198,6 +198,7 @@ def cdf_duration(log_file=sys.stdout):
             data_duration['all'][co.DURATION].append(duration)
 
     co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration)
+    co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration + '_log', xlog=True)
     # weights = []
     # for dataset_results in data_duration['all'][co.DURATION]:
     #     weights.append(np.ones_like(dataset_results) / len(data_duration['all'][co.DURATION]))
