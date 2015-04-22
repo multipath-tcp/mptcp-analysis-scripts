@@ -1251,7 +1251,7 @@ def time_reinjection(log_file=sys.stdout):
                     for flow_id, flow in conn.flows.iteritems():
                         if co.REINJ_ORIG_TIMESTAMP in flow.attr[direction] and co.START in flow.attr:
                             for ts in flow.attr[direction][co.REINJ_ORIG_TIMESTAMP]:
-                                location_time[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append(min((ts - start_time) / duration, 1.0))
+                                location_time[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append(max(min((ts - start_time) / duration, 1.0), 0.0))
                                 if (ts - start_time) <= 1.0:
                                     reinj_first_sec.append((conn_id, flow_id))
 
