@@ -1230,10 +1230,12 @@ def time_reinjection(log_file=sys.stdout):
                 start_time = float('inf')
                 duration = conn.attr[co.DURATION]
                 for flow_id, flow in conn.flows.iteritems():
+                    if co.START not in flow.attr:
+                        continue
                     start_time = min(start_time, flow.attr[co.START])
                 for direction in co.DIRECTIONS:
                     for flow_id, flow in conn.flows.iteritems():
-                        if co.REINJ_ORIG_TIMESTAMP in flow.attr[direction]:
+                        if co.REINJ_ORIG_TIMESTAMP in flow.attr[direction] and co.START in flow.attr:
                             for ts in flow.attr[direction][co.REINJ_ORIG_TIMESTAMP]:
                                 location_time[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append((ts - start_time) / duration)
                                 if (ts - start_time) <= 1.0:
@@ -1256,10 +1258,12 @@ def time_retransmission(log_file=sys.stdout):
                 start_time = float('inf')
                 duration = conn.attr[co.DURATION]
                 for flow_id, flow in conn.flows.iteritems():
+                    if co.START not in flow.attr:
+                        continue
                     start_time = min(start_time, flow.attr[co.START])
                 for direction in co.DIRECTIONS:
                     for flow_id, flow in conn.flows.iteritems():
-                        if co.TIMESTAMP_RETRANS in flow.attr[direction]:
+                        if co.TIMESTAMP_RETRANS in flow.attr[direction] and co.START in flow.attr:
                             for ts in flow.attr[direction][co.TIMESTAMP_RETRANS]:
                                 location_time[direction]['all'][co.TIMESTAMP_RETRANS].append((ts - start_time) / duration)
 
@@ -1299,9 +1303,11 @@ def detect_handover(log_file=sys.stdout):
             if isinstance(conn, mptcp.MPTCPConnection):
                 start_time = float('inf')
                 for flow_id, flow in conn.flows.iteritems():
+                    if co.START not in flow.attr:
+                        continue
                     start_time = min(start_time, flow.attr[co.START])
                 for flow_id, flow in conn.flows.iteritems():
-                    if flow.attr[co.START] - start_time >= 1.0:
+                    if co.START in flow.attr and flow.attr[co.START] - start_time >= 1.0:
                         handover_conns[fname].append(conn_id)
 
     print(handover_conns, file=log_file)
