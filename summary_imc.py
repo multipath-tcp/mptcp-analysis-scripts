@@ -1229,7 +1229,7 @@ def time_reinjection(log_file=sys.stdout):
             if isinstance(conn, mptcp.MPTCPConnection):
                 start_time = float('inf')
                 duration = conn.attr[co.DURATION]
-                if duration == 0.0:
+                if duration <= 0.01:
                     continue
                 for flow_id, flow in conn.flows.iteritems():
                     if co.START not in flow.attr:
@@ -1259,7 +1259,7 @@ def time_retransmission(log_file=sys.stdout):
             if isinstance(conn, mptcp.MPTCPConnection):
                 start_time = float('inf')
                 duration = conn.attr[co.DURATION]
-                if duration == 0.0:
+                if duration <= 0.01:
                     continue
                 for flow_id, flow in conn.flows.iteritems():
                     if co.START not in flow.attr:
