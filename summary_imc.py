@@ -200,7 +200,7 @@ def cdf_duration(log_file=sys.stdout):
     co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration)
     weights = []
     for dataset_results in data_duration['all'][co.DURATION]:
-        weights.append(np.ones_like(dataset_results) / len(dataset_results))
+        weights.append(np.ones_like(dataset_results) / data_duration['all'][co.DURATION])
     plt.hist(data_duration['all'][co.DURATION], bins=50, weights=weights)
     plt.xlabel("Duration of connections", fontsize=18)
     plt.ylabel("Fraction of connections", fontsize=18)
