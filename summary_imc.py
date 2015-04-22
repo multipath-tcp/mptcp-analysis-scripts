@@ -394,6 +394,19 @@ def count_ports(log_file=sys.stdout):
     print(count[co.DPORT], file=log_file)
 
 
+def count_ports_mptcp(log_file=sys.stdout):
+    count_mptcp = {}
+    for fname, data in connections.iteritems():
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                if conn.flows['0'].attr[co.DPORT] in count_mptcp:
+                    count_mptcp[conn.flows['0'].attr[co.DPORT]] += 1
+                else:
+                    count_mptcp[conn.flows['0'].attr[co.DPORT]] = 1
+
+    print("PORT DEST MPTCP", file=log_file)
+    print(count_mptcp, file=log_file)
+
 def count_on_filtered(min_bytes=1000000, log_file=sys.stdout):
     count_bytes = {co.S2D: 0, co.D2S: 0}
     count_packs = {co.S2D: 0, co.D2S: 0}
@@ -1375,6 +1388,7 @@ count_mptcp_best_rtt_flow(log_file=log_file)
 count_ip_type(log_file=log_file)
 count_packet(log_file=log_file)
 count_ports(log_file=log_file)
+count_ports_mptcp(log_file=log_file)
 count_on_filtered(log_file=log_file)
 time_reinjection(log_file=log_file)
 time_retransmission(log_file=log_file)
