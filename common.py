@@ -761,7 +761,7 @@ def plot_cdfs(aggl_res, color, xlabel, base_graph_fname, ylim=None, xlim=None):
         plt.close('all')
 
 
-def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ylim=None, ncol=None, label_order=None, loglog=False, ccdf=False):
+def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ylim=None, ncol=None, label_order=None, xlog=False, ylog=False, ccdf=False):
     """ Plot all possible CDFs based on aggl_res.
         aggl_res is a dictionary with the structure aggl_res[condition][element] = list of data
         base_graph_fname does not have any extension
@@ -797,7 +797,7 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ylim
                     yvals = np.append(yvals, 1.0)
                     if ccdf:
                         yvals = 1.0 - yvals
-                    plt.plot(sorted_array, yvals, color=color[aggl_res[cond].keys().index(element)], label=element)
+                    ax.plot(sorted_array, yvals, color=color[aggl_res[cond].keys().index(element)], label=element)
             except ZeroDivisionError as e:
                 print(str(e))
 
@@ -815,9 +815,11 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ylim
         if not ncol:
             ncol = len(aggl_res[cond])
 
-        if loglog:
-            plt.set_xscale('symlog', linthreshy=0.0000001)
-            plt.set_yscale('symlog', linthreshy=0.0000001)
+        if xlog:
+            ax.set_xscale('symlog', linthreshy=0.0000001)
+
+        if ylog:
+            ax.set_yscale('symlog', linthreshy=0.0000001)
 
         # Put a legend above current axis
         # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
@@ -832,7 +834,7 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ylim
         plt.close('all')
 
 
-def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname, natural=False, ylim=None, xlim=None, loglog=False, ccdf=False):
+def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname, natural=False, ylim=None, xlim=None, xlog=False, ylog=False, ccdf=False):
     """ Plot all possible CDFs based on aggl_res.
         aggl_res is a dictionary with the structure aggl_res[direction][condition][element] = list of data
         WARNING: this function assumes that the list of elements will remain the same for all conditions
@@ -841,7 +843,7 @@ def plot_cdfs_with_direction(aggl_res, color, xlabel, base_graph_fname, natural=
         return
     for direction in aggl_res.keys():
         if natural:
-            plot_cdfs_natural(aggl_res[direction], color, xlabel, os.path.splitext(base_graph_fname)[0] + '_' + direction, ylim=ylim, xlim=xlim, loglog=loglog, ccdf=ccdf)
+            plot_cdfs_natural(aggl_res[direction], color, xlabel, os.path.splitext(base_graph_fname)[0] + '_' + direction, ylim=ylim, xlim=xlim, xlog=xlog, ylog=ylog, ccdf=ccdf)
         else:
             plot_cdfs(aggl_res[direction], color, xlabel, os.path.splitext(base_graph_fname)[0] + '_' + direction, ylim=ylim, xlim=xlim)
 

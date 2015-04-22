@@ -1309,8 +1309,8 @@ def bursts_mptcp(log_file=sys.stdout):
     co.plot_cdfs_with_direction(bursts_sec, color, '# bursts / second', base_graph_path_sec, natural=True)
     co.plot_cdfs_with_direction(bursts_mb, color, '# bursts / MB of data', base_graph_path_mb + "_cut", xlim=5000, natural=True)
     co.plot_cdfs_with_direction(bursts_sec, color, '# bursts / second', base_graph_path_sec + "_cut", xlim=200, natural=True)
-    co.plot_cdfs_with_direction(bursts_mb, color, '# bursts / MB of data', base_graph_path_mb + "_ccdf", natural=True, loglog=True, ccdf=True)
-    co.plot_cdfs_with_direction(bursts_sec, color, '# bursts / second', base_graph_path_sec + "_ccdf", natural=True, loglog=True, ccdf=True)
+    co.plot_cdfs_with_direction(bursts_mb, color, '# bursts / MB of data', base_graph_path_mb + "_ccdf", natural=True, xlog=True, ylog=True, ccdf=True)
+    co.plot_cdfs_with_direction(bursts_sec, color, '# bursts / second', base_graph_path_sec + "_ccdf", natural=True, xlog=True, ylog=True, ccdf=True)
 
 
 def detect_handover(log_file=sys.stdout):
