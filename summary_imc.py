@@ -198,10 +198,10 @@ def cdf_duration(log_file=sys.stdout):
             data_duration['all'][co.DURATION].append(duration)
 
     co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration)
-    weights = []
-    for dataset_results in data_duration['all'][co.DURATION]:
-        weights.append(np.ones_like(dataset_results) / len(data_duration['all'][co.DURATION]))
-    plt.hist(data_duration['all'][co.DURATION], bins=np.logspace(0.01, 25000, 50), weights=weights)
+    # weights = []
+    # for dataset_results in data_duration['all'][co.DURATION]:
+    #     weights.append(np.ones_like(dataset_results) / len(data_duration['all'][co.DURATION]))
+    plt.hist(data_duration['all'][co.DURATION], bins=np.logspace(0.01, 25000, 50))
     plt.xlabel("Duration of connections", fontsize=18)
     plt.ylabel("Fraction of connections", fontsize=18)
     plt.gca().set_xscale("log")
