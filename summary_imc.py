@@ -1229,6 +1229,8 @@ def time_reinjection(log_file=sys.stdout):
             if isinstance(conn, mptcp.MPTCPConnection):
                 start_time = float('inf')
                 duration = conn.attr[co.DURATION]
+                if duration == 0.0:
+                    continue
                 for flow_id, flow in conn.flows.iteritems():
                     if co.START not in flow.attr:
                         continue
@@ -1257,6 +1259,8 @@ def time_retransmission(log_file=sys.stdout):
             if isinstance(conn, mptcp.MPTCPConnection):
                 start_time = float('inf')
                 duration = conn.attr[co.DURATION]
+                if duration == 0.0:
+                    continue
                 for flow_id, flow in conn.flows.iteritems():
                     if co.START not in flow.attr:
                         continue
@@ -1284,6 +1288,8 @@ def bursts_mptcp(log_file=sys.stdout):
             if isinstance(conn, mptcp.MPTCPConnection):
                 if conn.attr[co.DURATION] > 0.0 and len(conn.flows) >= 2:
                     duration = conn.attr[co.DURATION]
+                    if duration == 0.0:
+                        continue
                     for direction in co.DIRECTIONS:
                         if conn.attr[direction][co.BYTES_MPTCPTRACE] > 0:
                             tot_bytes = conn.attr[direction][co.BYTES_MPTCPTRACE]
