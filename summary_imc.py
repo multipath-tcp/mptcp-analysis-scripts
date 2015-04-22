@@ -1213,6 +1213,7 @@ def count_mptcp_best_rtt_flow(log_file=sys.stdout):
 
 def time_reinjection(log_file=sys.stdout):
     location_time = {co.S2D: {'all': {co.REINJ_ORIG_TIMESTAMP: []}}, co.D2S: {'all': {co.REINJ_ORIG_TIMESTAMP: []}}}
+    reinj_first_sec = []
     color = ['red']
     graph_fname = "time_reinjection"
     base_graph_path = os.path.join(sums_dir_exp, graph_fname)
@@ -1228,8 +1229,12 @@ def time_reinjection(log_file=sys.stdout):
                     for flow_id, flow in conn.flows.iteritems():
                         for ts in flow.attr[direction][co.REINJ_ORIG_TIMESTAMP]:
                             location_time[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append((ts - start_time) / duration)
+                            if (ts - start_time) <= 1.0:
+                                reinj_first_sec.append((conn_id, flow_id))
 
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
+    print(reinj_first_sec, file=log_file)
+    print(len(reinj_first_sec), "reinjections in 1 second", file=log_file)
 
 
 def time_retransmission(log_file=sys.stdout):
