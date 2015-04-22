@@ -216,6 +216,8 @@ def cdf_duration(log_file=sys.stdout):
     plt.gca().set_xscale("log")
     plt.savefig(base_graph_path_duration_hist + ".pdf")
     plt.close()
+    print("60th percentile", np.percentile(data_duration['all'][co.DURATION], 60), file=log_file)
+    print("70th percentile", np.percentile(data_duration['all'][co.DURATION], 70), file=log_file)
 
 
 def cdfs_bytes(log_file=sys.stdout):
