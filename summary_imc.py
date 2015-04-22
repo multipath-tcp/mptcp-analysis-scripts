@@ -1233,10 +1233,11 @@ def time_reinjection(log_file=sys.stdout):
                     start_time = min(start_time, flow.attr[co.START])
                 for direction in co.DIRECTIONS:
                     for flow_id, flow in conn.flows.iteritems():
-                        for ts in flow.attr[direction][co.REINJ_ORIG_TIMESTAMP]:
-                            location_time[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append((ts - start_time) / duration)
-                            if (ts - start_time) <= 1.0:
-                                reinj_first_sec.append((conn_id, flow_id))
+                        if co.REINJ_ORIG_TIMESTAMP in flow.attr[direction]:
+                            for ts in flow.attr[direction][co.REINJ_ORIG_TIMESTAMP]:
+                                location_time[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append((ts - start_time) / duration)
+                                if (ts - start_time) <= 1.0:
+                                    reinj_first_sec.append((conn_id, flow_id))
 
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
     print(reinj_first_sec, file=log_file)
@@ -1258,8 +1259,9 @@ def time_retransmission(log_file=sys.stdout):
                     start_time = min(start_time, flow.attr[co.START])
                 for direction in co.DIRECTIONS:
                     for flow_id, flow in conn.flows.iteritems():
-                        for ts in flow.attr[direction][co.TIMESTAMP_RETRANS]:
-                            location_time[direction]['all'][co.TIMESTAMP_RETRANS].append((ts - start_time) / duration)
+                        if co.TIMESTAMP_RETRANS in flow.attr[direction]:
+                            for ts in flow.attr[direction][co.TIMESTAMP_RETRANS]:
+                                location_time[direction]['all'][co.TIMESTAMP_RETRANS].append((ts - start_time) / duration)
 
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
 
