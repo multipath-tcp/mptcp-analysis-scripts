@@ -235,6 +235,7 @@ def cdfs_bytes(log_file=sys.stdout):
 
 def cdf_number_subflows(log_file=sys.stdout):
     subflows = {'all': {'Subflows': []}}
+    nb_subflows = {}
     color = ['red']
     base_graph_name_subflows = "cdf_number_subflows"
     base_graph_path_subflows = os.path.join(sums_dir_exp, base_graph_name_subflows)
@@ -244,10 +245,15 @@ def cdf_number_subflows(log_file=sys.stdout):
             # Make sure we have MPTCPConnections, but it should always be the case
             if isinstance(conn, mptcp.MPTCPConnection):
                 subflows['all']['Subflows'].append(len(conn.flows))
+                if len(conn.flows) not in nb_subflows:
+                    nb_subflows[len(conn.flows)] = 1
+                else:
+                    nb_subflows[len(conn.flows)] += 1
             elif isinstance(conn, tcp.TCPConnection):
                 print("WARNING: there is a TCPConnection!")
 
     co.plot_cdfs_natural(subflows, color, '# of subflows', base_graph_path_subflows)
+    print(nb_subflows, file=log_file)
 
 
 def count_unused_subflows(log_file=sys.stdout):
