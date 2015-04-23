@@ -1241,6 +1241,7 @@ def count_mptcp_best_rtt_flow(log_file=sys.stdout):
 
 def time_reinjection(log_file=sys.stdout):
     location_time = {co.S2D: {'all': {co.REINJ_ORIG_TIMESTAMP: []}}, co.D2S: {'all': {co.REINJ_ORIG_TIMESTAMP: []}}}
+    location_time_nocorrect = {co.S2D: {'all': {co.REINJ_ORIG_TIMESTAMP: []}}, co.D2S: {'all': {co.REINJ_ORIG_TIMESTAMP: []}}}
     reinj_first_sec = []
     color = ['red']
     graph_fname = "time_reinjection"
@@ -1262,10 +1263,12 @@ def time_reinjection(log_file=sys.stdout):
                         if co.REINJ_ORIG_TIMESTAMP in flow.attr[direction] and co.START in flow.attr:
                             for ts in flow.attr[direction][co.REINJ_ORIG_TIMESTAMP]:
                                 location_time[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append(max(min((ts - start_time) / duration, 1.0), 0.0))
+                                location_time_nocorrect[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append((ts - start_time) / duration)
                                 if (ts - start_time) <= 1.0:
                                     reinj_first_sec.append((conn_id, flow_id))
 
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
+    co.plot_cdfs_with_direction(location_time_nocorrect, color, 'Fraction of connection duration', base_graph_path + '_nocorrect', natural=True)
     print(reinj_first_sec, file=log_file)
     print(len(reinj_first_sec), "reinjections in 1 second", file=log_file)
 
