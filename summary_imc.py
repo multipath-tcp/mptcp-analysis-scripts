@@ -111,6 +111,21 @@ def get_multiflow_connections(connections):
 
 multiflow_connections, singleflow_connections = get_multiflow_connections(connections)
 
+def filter_connections(connections, min_bytes=None, max_bytes=None):
+    filtered = {}
+
+    for fname, data in connections.iteritems():
+        filtered[fname] = {}
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                mptcp_bytes = conn.attr[co.S2D].get(co.BYTES_MPTCPTRACE, 0) + conn.attr[co.D2S].get(co.BYTES_MPTCPTRACE, 0)
+                if (min_bytes and mptcp_bytes >= min_bytes) or (max_bytes and mptcp_bytes <= max_bytes):
+                    filtered[fname][conn_id] = conn
+
+    return filtered
+
+# connections = filter_connections(connections)
+
 ##################################################
 ##               PLOTTING RESULTS               ##
 ##################################################
@@ -1300,7 +1315,6 @@ def time_retransmission(log_file=sys.stdout):
 
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path + '_nocorrect', natural=True)
-
 
 
 def bursts_mptcp(log_file=sys.stdout):
