@@ -673,6 +673,8 @@ def cdf_rtt_s2d_all(log_file=sys.stdout, min_samples=5, min_bytes=100):
                 if conn.flow.attr[co.S2D][co.RTT_SAMPLES] >= min_samples and conn.flow.attr[co.S2D][co.BYTES] >= min_bytes:
                     aggl_res['all'][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.S2D][co.RTT_AVG], fname)]
 
+    aggl_res['all'].pop('?', None)
+
     co.log_outliers(aggl_res, remove=args.remove)
     co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', graph_full_path)
     co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', os.path.splitext(graph_full_path)[0] + '_cut.pdf', xlim=1000)
@@ -698,6 +700,8 @@ def cdf_rtt_d2s_all(log_file=sys.stdout, min_samples=5):
                     break
                 if conn.flow.attr[co.D2S][co.RTT_SAMPLES] >= min_samples:
                     aggl_res['all'][conn.flow.attr[co.IF]] += [(conn.flow.attr[co.D2S][co.RTT_AVG], fname)]
+
+    aggl_res['all'].pop('?', None)
 
     co.log_outliers(aggl_res, remove=args.remove)
     co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', os.path.splitext(graph_full_path)[0] + '.pdf')
