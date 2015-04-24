@@ -1102,7 +1102,8 @@ def list_bytes_all(log_file=sys.stdout):
             for direction in co.DIRECTIONS:
                 if direction not in conn.attr:
                         continue
-                total_data_bytes += conn.attr[direction].get(co.BYTES_MPTCPTRACE, 0)
+                if conn.attr[direction].get(co.BYTES_MPTCPTRACE, 0) > 0:
+                    total_data_bytes += conn.attr[direction].get(co.BYTES_MPTCPTRACE, 0)
             results_two['both']['all'].append(total_data_bytes)
 
     for direction in results_two:
