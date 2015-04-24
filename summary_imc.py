@@ -1095,19 +1095,16 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
 def list_bytes_all(log_file=sys.stdout):
     graph_fname = "list_bytes.pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
-    results_two = {co.S2D: {'all': []}, co.D2S: {'all': []}}
+    results_two = {'both': {'all': []}}
     for fname, data in connections.iteritems():
         for conn_id, conn in data.iteritems():
-            total_data_bytes = {co.S2D: 0, co.D2S: 0}
-            for flow_id, flow in conn.flows.iteritems():
-                for direction in co.DIRECTIONS:
-                    if direction not in flow.attr:
-                        continue
-                    if co.BYTES in flow.attr[direction]:
-                        total_data_bytes[direction] = total_data_bytes[direction] + flow.attr[direction].get(co.BYTES, 0)
+            total_data_bytes = 0
             for direction in co.DIRECTIONS:
-                if total_data_bytes[direction] > 0:
-                    results_two[direction]['all'].append(total_data_bytes[direction])
+                if direction not in conn.attr:
+                        continue
+                total_data_bytes += conn.attr[direction].get(co.BYTES_MPTCPTRACE, 0)
+            results_two['both']['all'].append(total_data_bytes)
+
     for direction in results_two:
         for condition in results_two[direction]:
             sorted_data = sorted(results_two[direction][condition])
