@@ -785,10 +785,10 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ylim
         for element in cond_list:
             try:
                 sample = np.array(sorted(aggl_res[cond][element]))
-                f = open(os.path.splitext(base_graph_fname)[0] + '_' + cond + '_' + element, 'w')
-                for i in range(len(sample)):
-                    f.write(str(sample[i]) + "\n")
-                f.close()
+                # f = open(os.path.splitext(base_graph_fname)[0] + '_' + cond + '_' + element, 'w')
+                # for i in range(len(sample)):
+                #     f.write(str(sample[i]) + "\n")
+                # f.close()
 
                 sorted_array = np.sort(sample)
                 yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
