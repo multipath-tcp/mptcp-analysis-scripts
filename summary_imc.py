@@ -1279,6 +1279,8 @@ def time_reinjection(log_file=sys.stdout):
                             for ts in flow.attr[direction][co.REINJ_ORIG_TIMESTAMP]:
                                 location_time[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append(max(min((ts - start_time) / duration, 1.0), 0.0))
                                 location_time_nocorrect[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append((ts - start_time) / duration)
+                                if (ts - start_time) / duration < 0.0 or (ts - start_time) / duration > 1.0:
+                                    print("WARNING reinj", fname, conn_id, flow_id, (ts - start_time) / duration, file=log_file)
                                 if (ts - start_time) <= 1.0:
                                     reinj_first_sec.append((conn_id, flow_id))
 
@@ -1312,6 +1314,8 @@ def time_retransmission(log_file=sys.stdout):
                             for ts in flow.attr[direction][co.TIMESTAMP_RETRANS]:
                                 location_time[direction]['all'][co.TIMESTAMP_RETRANS].append(min((ts) / duration, 1.0))
                                 location_time_no_correct[direction]['all'][co.TIMESTAMP_RETRANS].append(ts / duration)
+                                if ts / duration < 0.0 or ts / duration > 1.0:
+                                    print("WARNING retrans", fname, conn_id, flow_id, ts / duration, file=log_file)
 
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path + '_nocorrect', natural=True)
