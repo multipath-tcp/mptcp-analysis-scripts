@@ -709,6 +709,31 @@ def cdf_rtt_d2s_all(log_file=sys.stdout, min_samples=5):
     co.plot_cdfs_natural(aggl_res, ['red', 'blue', 'green', 'black'], 'RTT (ms)', os.path.splitext(graph_full_path)[0] + '_cut.pdf', xlim=1000)
 
 
+def difference_rtt_d2s(log_file=sys.stdout, min_bytes=1000000):
+    # Computed only on MPTCP connections with 2 subflows and at least 1MB
+    results = {'two_sf': {'diff': []}}
+    graph_fname = "rtt_avg_diff_2sf.pdf"
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+    for fname, data in connections.iteritems():
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                if len(conn.flows) == 2:
+                    if conn.attr[co.D2S].get(co.BYTES_MPTCPTRACE, 0) >= min_bytes:
+                        time_init_sf = float('inf')
+                        rtt_init_sf = -1.0
+                        rtt_second_sf = -1.0
+                        for flow_id, flow in conn.flows.iteritems():
+                            if flow.attr[co.D2S][co.START] < time_init_sf:
+                                time_init_sf = flow.attr[co.D2S][co.START]
+                                rtt_second_sf = rtt_init_sf
+                                rtt_init_sf = flow.attr[co.D2S][co.RTT_AVG]
+                            else:
+                                rtt_second_sf = flow.attr[co.D2S][co.RTT_AVG]
+                        results['two_sf']['diff'].append(rtt_init_sf - rtt_second_sf)
+
+    co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black'], 'Initial SF AVG RTT - Second SF AVG RTT', os.path.splitext(graph_full_path)[0] + '.pdf')
+
+
 def reinject_plot(log_file=sys.stdout, min_bytes=0.0):
     base_graph_fname = "reinject_bytes"
     base_graph_full_path = os.path.join(sums_dir_exp, base_graph_fname)
@@ -1447,5 +1472,6 @@ time_retransmission(log_file=log_file)
 bursts_mptcp(log_file=log_file)
 detect_handover(log_file=log_file)
 list_bytes_all(log_file=log_file)
+difference_rtt_d2s(log_file=log_file)
 log_file.close()
 print("End of summary")
