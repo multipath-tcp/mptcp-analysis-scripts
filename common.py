@@ -183,6 +183,8 @@ THGPT_TCPTRACE = 'throughput_tcptrace'
 THGPT_MPTCPTRACE = 'throughput_mptcptrace'
 # MPTCP bursts
 BURSTS = 'bursts'
+# Flights information
+FLIGHT = 'flight'
 
 # RTT info
 RTT_SAMPLES = 'rtt_samples'
@@ -816,7 +818,7 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ylim
             ncol = len(aggl_res[cond])
 
         if xlog:
-            ax.set_xscale('symlog', linthreshy=0.0000001)
+            ax.set_xscale('log')
 
         if ylog:
             ax.set_yscale('symlog', linthreshy=0.0000001)
