@@ -719,6 +719,13 @@ def difference_rtt_d2s(log_file=sys.stdout, min_bytes=1000000):
             if isinstance(conn, mptcp.MPTCPConnection):
                 if len(conn.flows) == 2:
                     if conn.attr[co.D2S].get(co.BYTES_MPTCPTRACE, 0) >= min_bytes:
+                        is_ok = True
+                        for flow_id, flow in conn.flows.iteritems():
+                            if co.START not in flow.attr:
+                                is_ok = False
+
+                        if not is_ok:
+                            continue
                         time_init_sf = float('inf')
                         rtt_init_sf = -1.0
                         rtt_second_sf = -1.0
