@@ -277,7 +277,6 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
             last_seq_burst_on_flow = int(split_line[4])
             last_time_burst_on_flow = float(split_line[0])
 
-
         if int(split_line[3]) == 1 and (not int(split_line[5]) == -1):
             # Map and reinjected
             reinject_offsets[int(split_line[5]) - 1] += int(split_line[4]) - int(split_line[1])
@@ -479,6 +478,7 @@ def process_stats_csv(csv_fname, connections):
         first_seqs = None
         last_acks = None
         con_time = None
+        begin_time = None
         for line in data:
             if 'firstSeq' in line:
                 first_seqs = line.split(';')[-2:]
@@ -486,7 +486,10 @@ def process_stats_csv(csv_fname, connections):
                 last_acks = line.split(';')[-2:]
             elif 'conTime' in line:
                 # Only takes one of the values, because they are the same
-                con_time = line.split(';')[-1]
+                con_time = line.split(';')[-2]
+            elif 'beginTime' in line:
+                # Only takes one of the values, because they are the same
+                begin_time = line.split(';')[-2]
 
         if first_seqs and last_acks:
             # Notice that these values remove the reinjected bytes
@@ -498,7 +501,11 @@ def process_stats_csv(csv_fname, connections):
         if con_time:
             connections[conn_id].attr[co.DURATION] = float(con_time)
         else:
-            connections[conn_id].attr[co.DURATION] = 0
+            connections[conn_id].attr[co.DURATION] = 0.0
+        if begin_time:
+            connections[conn_id].attr[co.START] = float(begin_time)
+        else:
+            connections[conn_id].attr[co.START] = 0.0
 
         csv_file.close()
 
