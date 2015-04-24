@@ -1092,6 +1092,34 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
             co.plot_line_graph(to_plot, ['Total', 'Reinjections'], ['b', 'r'], 'Connections', 'Number of data bytes', '', tot_graph_full_path, y_log=True)
 
 
+def list_bytes_all(log_file=sys.stdout):
+    graph_fname = "list_bytes.pdf"
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+    results_two = {co.S2D: {'all': []}, co.D2S: {'all': []}}
+    for fname, data in connections.iteritems():
+        for conn_id, conn in data.iteritems():
+            total_data_bytes = {co.S2D: 0, co.D2S: 0}
+            for flow_id, flow in conn.flows.iteritems():
+                for direction in co.DIRECTIONS:
+                    if direction not in flow.attr:
+                        continue
+                    if co.BYTES in flow.attr[direction]:
+                        total_data_bytes[direction] = total_data_bytes[direction] + flow.attr[direction].get(co.BYTES, 0)
+            for direction in co.DIRECTIONS:
+                if total_data_bytes[direction] > 0:
+                    results_two[direction]['all'].append(total_data_bytes[direction])
+    for direction in results_two:
+        for condition in results_two:
+            sorted_data = sorted(results_two[direction][condition])
+            to_plot = [[]]
+            i = 0
+            for point in sorted_data:
+                to_plot[0].append([i, point])
+                i += 1
+            tot_graph_full_path = os.path.splitext(graph_full_path)[0] + "_" + direction + "_" + condition + ".pdf"
+            co.plot_line_graph(to_plot, ['Total'], ['b'], 'Connections', 'Number of data bytes', '', tot_graph_full_path, y_log=True)
+
+
 def cdf_overhead_retrans_reinj_singleflow(log_file=sys.stdout):
     results = {co.S2D: {'all': {'Reinjection': [], 'Retransmission': []}}, co.D2S: {'all': {'Reinjection': [], 'Retransmission': []}}}
     results_two = {co.S2D: {'all': []}, co.D2S: {'all': []}}
@@ -1419,5 +1447,6 @@ time_reinjection(log_file=log_file)
 time_retransmission(log_file=log_file)
 bursts_mptcp(log_file=log_file)
 detect_handover(log_file=log_file)
+list_bytes_all(log_file=log_file)
 log_file.close()
 print("End of summary")
