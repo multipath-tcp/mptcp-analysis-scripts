@@ -1109,7 +1109,7 @@ def list_bytes_all(log_file=sys.stdout):
                 if total_data_bytes[direction] > 0:
                     results_two[direction]['all'].append(total_data_bytes[direction])
     for direction in results_two:
-        for condition in results_two:
+        for condition in results_two[direction]:
             sorted_data = sorted(results_two[direction][condition])
             to_plot = [[]]
             i = 0
