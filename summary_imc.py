@@ -723,8 +723,8 @@ def difference_rtt_d2s(log_file=sys.stdout, min_bytes=1000000):
                         rtt_init_sf = -1.0
                         rtt_second_sf = -1.0
                         for flow_id, flow in conn.flows.iteritems():
-                            if flow.attr[co.D2S][co.START] < time_init_sf:
-                                time_init_sf = flow.attr[co.D2S][co.START]
+                            if flow.attr[co.START] < time_init_sf:
+                                time_init_sf = flow.attr[co.START]
                                 rtt_second_sf = rtt_init_sf
                                 rtt_init_sf = flow.attr[co.D2S][co.RTT_AVG]
                             else:
