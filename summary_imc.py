@@ -1443,26 +1443,82 @@ def detect_handover(log_file=sys.stdout):
     print(handover_conns, file=log_file)
 
 
+def delay_mpcapable_mpjoin_quantify_handover(log_file=sys.stdout, threshold_handover=1.0):
+    syn_additional_sfs = []
+    handover_conns = {}
+    # Look only at multiple subflows connections
+    for fname, conns in multiflow_connections.iteritems():
+        handover_conns[fname] = {}
+        for conn_id, conn in conns.iteritems():
+            # First find initial subflow timestamp
+            initial_sf_ts = int('inf')
+            for flow_id, flow in conn.flows.iteritems():
+                if flow.attr[co.START] < initial_sf_ts:
+                    initial_sf_ts = flow.attr[co.START]
+
+            # Now store the delta and record connections with handover
+            handover_detected = False
+            for flow_id, flow in conn.flows.iteritems():
+                delta = flow.attt[co.START] - initial_sf_ts
+                if delta > 0.0:
+                    syn_additional_sfs.append(delta)
+                    if delta >= threshold_handover and not handover_detected:
+                        handover_detected = True
+                        handover_conns[fname][conn_id] = conn
+
+    # Do a first CDF plot of the delta between initial SYN and additional ones
+    base_graph_path = os.path.join(sums_dir_exp, 'cdf_delta_addtitional_syns')
+    co.plot_cdfs_natural({'multiflow': {'delta': syn_additional_sfs}}, ['red'], 'Seconds', base_graph_path)
+
+    # Now quantify in handover connections the amount of data not on the initial subflows
+    bytes_init_sf = 0.0
+    bytes_init_sfs = 0.0
+    bytes_total = 0.0
+    for fname, conns in handover_conns.iteritems():
+        for conn_id, conn in conns.iteritems():
+            # First find initial subflow timestamp
+            initial_sf_ts = int('inf')
+            for flow_id, flow in conn.flows.iteritems():
+                if flow.attr[co.START] < initial_sf_ts:
+                    initial_sf_ts = flow.attr[co.START]
+
+            # Now collect the amount of data on all subflows
+            for flow_id, flow in conn.flows.iteritems():
+                delta = flow.attt[co.START] - initial_sf_ts
+                for direction in co.DIRECTIONS:
+                    bytes_total += flow.attr[direction].get(co.BYTES, 0)
+                    if delta < threshold_handover:
+                        # Initial subflows
+                        bytes_init_sfs += flow.attr[direction].get(co.BYTES, 0)
+                        if delta == 0.0:
+                            # Initial subflow
+                            bytes_init_sf += flow.attr[direction].get(co.BYTES, 0)
+
+    # Log those values in the log file
+
+
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary-' + str(millis) + '.txt'), 'w')
 
 print("Summary plots", file=log_file)
-fog_plot_with_bytes_wifi_cell_per_condition(log_file=log_file)
-fog_plot_with_packs_wifi_cell_per_condition(log_file=log_file)
-fog_duration_bytes(log_file=log_file)
+# fog_plot_with_bytes_wifi_cell_per_condition(log_file=log_file)
+# fog_plot_with_packs_wifi_cell_per_condition(log_file=log_file)
+# fog_duration_bytes(log_file=log_file)
 cdf_duration(log_file=log_file)
 cdfs_bytes(log_file=log_file)
 cdf_number_subflows(log_file=log_file)
 textual_summary(log_file=log_file)
 box_plot_cellular_percentage(log_file=log_file, limit_bytes=0)
 cdf_bytes_all(log_file=log_file)
-cdf_rtt_s2d_all(log_file=log_file, min_samples=5)
+# cdf_rtt_s2d_all(log_file=log_file, min_samples=5)
 cdf_rtt_d2s_all(log_file=log_file, min_samples=5)
-reinject_plot(log_file=log_file, min_bytes=9999.9)
-reinject_plot_relative_to_data(log_file=log_file, min_bytes=9999.9)
-retrans_plot(log_file=log_file)
-fog_plot_cellular_percentage_rtt_wifi(log_file=log_file)
+# reinject_plot(log_file=log_file, min_bytes=9999.9)
+# reinject_plot_relative_to_data(log_file=log_file, min_bytes=9999.9)
+# retrans_plot(log_file=log_file)
+# fog_plot_cellular_percentage_rtt_wifi(log_file=log_file)
 textual_summary_global(log_file=log_file)
 cdf_overhead_retrans_reinj(log_file=log_file)
 cdf_overhead_retrans_reinj_singleflow(log_file=log_file)
@@ -1480,5 +1536,6 @@ bursts_mptcp(log_file=log_file)
 detect_handover(log_file=log_file)
 list_bytes_all(log_file=log_file)
 difference_rtt_d2s(log_file=log_file)
+delay_mpcapable_mpjoin_quantify_handover(log_file=log_file, threshold_handover=1.0)
 log_file.close()
 print("End of summary")
