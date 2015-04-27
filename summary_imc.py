@@ -1337,6 +1337,10 @@ def time_reinjection(log_file=sys.stdout):
                     if co.START not in flow.attr:
                         continue
                     start_time = min(start_time, flow.attr[co.START])
+
+                if start_time == float('inf'):
+                    continue
+
                 start_time_int = int(start_time)
                 start_time_dec = float(str(start_time - start_time_int)[1:])
                 start_time_dec = ceil(start_time_dec * 1000000) / 1000000.0
