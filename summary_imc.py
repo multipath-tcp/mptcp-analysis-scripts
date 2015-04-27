@@ -1490,6 +1490,7 @@ def delay_mpcapable_mpjoin_quantify_handover(log_file=sys.stdout, threshold_hand
     # Do a first CDF plot of the delta between initial SYN and additional ones
     base_graph_path = os.path.join(sums_dir_exp, 'cdf_delta_addtitional_syns')
     co.plot_cdfs_natural({'multiflow': {'delta': syn_additional_sfs}}, ['red'], 'Seconds', base_graph_path)
+    co.plot_cdfs_natural({'multiflow': {'delta': syn_additional_sfs}}, ['red'], 'Seconds', base_graph_path + '_cut', xlim=5.0)
 
     # Now quantify in handover connections the amount of data not on the initial subflows
     bytes_init_sf = 0.0
