@@ -1333,10 +1333,8 @@ def time_reinjection(log_file=sys.stdout):
                 duration = conn.attr[co.DURATION]
                 if duration <= 0.01:
                     continue
-                for flow_id, flow in conn.flows.iteritems():
-                    if co.START not in flow.attr:
-                        continue
-                    start_time = min(start_time, flow.attr[co.START])
+
+                start_time = conn.attr.get(co.START_TIME, float('inf'))
 
                 if start_time == float('inf'):
                     continue
@@ -1383,10 +1381,7 @@ def time_retransmission(log_file=sys.stdout):
                 duration = conn.attr[co.DURATION]
                 if duration <= 0.01:
                     continue
-                for flow_id, flow in conn.flows.iteritems():
-                    if co.START not in flow.attr:
-                        continue
-                    start_time = min(start_time, flow.attr[co.START])
+                start_time = conn.attr.get(co.START_TIME, float('inf'))
                 for direction in co.DIRECTIONS:
                     for flow_id, flow in conn.flows.iteritems():
                         if co.TIMESTAMP_RETRANS in flow.attr[direction] and co.START in flow.attr:
