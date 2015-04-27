@@ -1344,7 +1344,7 @@ def time_reinjection(log_file=sys.stdout):
                 start_time_int = int(start_time)
                 start_time_dec = float(str(start_time - start_time_int)[1:])
                 start_time_dec = ceil(start_time_dec * 1000000) / 1000000.0
-                for direction in co.DIRECTIONS:
+                for direction in [co.D2S]:
                     for flow_id, flow in conn.flows.iteritems():
                         if co.REINJ_ORIG_TIMESTAMP in flow.attr[direction] and co.START in flow.attr:
                             for ts in flow.attr[direction][co.REINJ_ORIG_TIMESTAMP]:
