@@ -1459,7 +1459,7 @@ def delay_mpcapable_mpjoin_quantify_handover(log_file=sys.stdout, threshold_hand
             # Now store the delta and record connections with handover
             handover_detected = False
             for flow_id, flow in conn.flows.iteritems():
-                delta = flow.attt[co.START] - initial_sf_ts
+                delta = flow.attr[co.START] - initial_sf_ts
                 if delta > 0.0:
                     syn_additional_sfs.append(delta)
                     if delta >= threshold_handover and not handover_detected:
@@ -1484,7 +1484,7 @@ def delay_mpcapable_mpjoin_quantify_handover(log_file=sys.stdout, threshold_hand
 
             # Now collect the amount of data on all subflows
             for flow_id, flow in conn.flows.iteritems():
-                delta = flow.attt[co.START] - initial_sf_ts
+                delta = flow.attr[co.START] - initial_sf_ts
                 for direction in co.DIRECTIONS:
                     bytes_total += flow.attr[direction].get(co.BYTES, 0)
                     if delta < threshold_handover:
