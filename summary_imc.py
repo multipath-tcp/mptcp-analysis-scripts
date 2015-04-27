@@ -28,6 +28,7 @@ from __future__ import print_function
 
 import argparse
 import common as co
+from math import ceil
 import matplotlib
 # Do not use any X11 backend
 matplotlib.use('Agg')
@@ -1336,15 +1337,24 @@ def time_reinjection(log_file=sys.stdout):
                     if co.START not in flow.attr:
                         continue
                     start_time = min(start_time, flow.attr[co.START])
+                start_time_int = int(start_time)
+                start_time_dec = str(start_time - start_time_int)[1:]
+                start_time_dec = ceil(start_time_dec * 1000000) / 1000000.0
                 for direction in co.DIRECTIONS:
                     for flow_id, flow in conn.flows.iteritems():
                         if co.REINJ_ORIG_TIMESTAMP in flow.attr[direction] and co.START in flow.attr:
                             for ts in flow.attr[direction][co.REINJ_ORIG_TIMESTAMP]:
-                                location_time[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append(max(min((ts - start_time) / duration, 1.0), 0.0))
-                                location_time_nocorrect[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append((ts - start_time) / duration)
-                                if direction == co.D2S and (ts - start_time) / duration < 0.0 or (ts - start_time) / duration > 1.0:
-                                    print("WARNING reinj", fname, conn_id, flow_id, (ts - start_time) / duration, file=log_file)
-                                if direction == co.D2S and (ts - start_time) <= 1.0:
+                                # Some tricks to avoid floating errors
+                                ts_int = int(ts)
+                                ts_dec = str(ts - ts_int)[1:]
+                                ts_dec = ceil(ts_dec * 1000000) / 1000000.0
+                                ts_dec_delta = ts_dec - start_time_dec
+                                ts_fix = ts_int + ts_dec_delta
+                                location_time[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append(max(min(ts_fix / duration, 1.0), 0.0))
+                                location_time_nocorrect[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append(ts_fix / duration)
+                                if direction == co.D2S and ts_fix / duration < 0.0 or ts_fix / duration > 1.0:
+                                    print("WARNING reinj", fname, conn_id, flow_id, ts_fix / duration, file=log_file)
+                                if direction == co.D2S and ts_fix <= 1.0:
                                     reinj_first_sec.append((conn_id, flow_id))
 
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
@@ -1453,12 +1463,19 @@ def delay_mpcapable_mpjoin_quantify_handover(log_file=sys.stdout, threshold_hand
             # First find initial subflow timestamp
             initial_sf_ts = float('inf')
             for flow_id, flow in conn.flows.iteritems():
+                if co.START not in flow.attr:
+                    continue
                 if flow.attr[co.START] < initial_sf_ts:
                     initial_sf_ts = flow.attr[co.START]
+
+            if initial_sf_ts == float('inf'):
+                continue
 
             # Now store the delta and record connections with handover
             handover_detected = False
             for flow_id, flow in conn.flows.iteritems():
+                if co.START not in flow.attr:
+                    continue
                 delta = flow.attr[co.START] - initial_sf_ts
                 if delta > 0.0:
                     syn_additional_sfs.append(delta)
@@ -1495,8 +1512,10 @@ def delay_mpcapable_mpjoin_quantify_handover(log_file=sys.stdout, threshold_hand
                             bytes_init_sf += flow.attr[direction].get(co.BYTES, 0)
 
     # Log those values in the log file
-
-
+    print("QUANTIFY HANDOVER", file=log_file)
+    print(bytes_init_sf, "BYTES ON INIT SF", bytes_init_sf * 100 / bytes_total, "%", file=log_file)
+    print(bytes_init_sfs, "BYTES ON INIT SFS", bytes_init_sfs * 100 / bytes_total, "%", file=log_file)
+    print("TOTAL BYTES", bytes_total, file=log_file)
 
 
 millis = int(round(time.time() * 1000))
