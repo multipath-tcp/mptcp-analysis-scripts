@@ -710,6 +710,9 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                     if MPTCP_RTT_FNAME in csv_fname:
                         co.move_file(csv_fname, os.path.join(
                             graph_dir_exp, co.DEF_RTT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
+                    elif MPTCP_SEQ_FNAME in csv_fname:
+                        co.move_file(csv_fname, os.path.join(
+                            graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
                     else:
                         if not light:
                             co.move_file(csv_fname, os.path.join(
@@ -730,7 +733,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     # This will save the mptcp connections
     if connections and do_tcp_processing:
         # Save a first version as backup here; should be removed when no problem anymore
-        co.save_data(pcap_filepath, stat_dir_exp, connections)
+        # co.save_data(pcap_filepath, stat_dir_exp, connections)
         cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, plot_cwin, mptcp_connections=connections, light=light)
         co.save_data(pcap_filepath, rtt_dir_exp, rtt_all)
         co.save_data(pcap_filepath, stat_dir_exp, connections)
