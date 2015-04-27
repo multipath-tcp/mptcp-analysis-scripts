@@ -1500,6 +1500,8 @@ def delay_mpcapable_mpjoin_quantify_handover(log_file=sys.stdout, threshold_hand
             # First find initial subflow timestamp
             initial_sf_ts = float('inf')
             for flow_id, flow in conn.flows.iteritems():
+                if co.START not in flow.attr:
+                    continue
                 if flow.attr[co.START] < initial_sf_ts:
                     initial_sf_ts = flow.attr[co.START]
 
