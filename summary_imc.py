@@ -1353,7 +1353,7 @@ def time_reinjection(log_file=sys.stdout):
                                 ts_dec = float(str(ts - ts_int)[1:])
                                 ts_dec = ceil(ts_dec * 1000000) / 1000000.0
                                 ts_dec_delta = ts_dec - start_time_dec
-                                ts_fix = ts_int + ts_dec_delta
+                                ts_fix = ts_int - start_time_int + ts_dec_delta
                                 location_time[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append(max(min(ts_fix / duration, 1.0), 0.0))
                                 location_time_nocorrect[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append(ts_fix / duration)
                                 if direction == co.D2S and ts_fix / duration < 0.0 or ts_fix / duration > 1.0:
