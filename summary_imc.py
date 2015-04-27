@@ -1507,6 +1507,8 @@ def delay_mpcapable_mpjoin_quantify_handover(log_file=sys.stdout, threshold_hand
 
             # Now collect the amount of data on all subflows
             for flow_id, flow in conn.flows.iteritems():
+                if co.START not in flow.attr:
+                    continue
                 delta = flow.attr[co.START] - initial_sf_ts
                 for direction in co.DIRECTIONS:
                     bytes_total += flow.attr[direction].get(co.BYTES, 0)
