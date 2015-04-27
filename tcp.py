@@ -561,8 +561,8 @@ def get_flow_name_connection(connection, connections):
     """
     for conn_id, conn in connections.iteritems():
         # Let a little margin, but don't think it's needed
-        if (connection.flow.attr[co.START] >= conn.attr[co.START] - 3.0 and
-            connection.flow.attr[co.START] + connection.flow.attr[co.DURATION] <= conn.attr[co.START] + conn.attr[co.DURATION] + 3.0):
+        if (connection.flow.attr[co.START] >= conn.attr[co.START] - 120.0 and
+            connection.flow.attr[co.START] + connection.flow.attr[co.DURATION] <= conn.attr[co.START] + conn.attr[co.DURATION] + 120.0):
             for flow_id, flow in conn.flows.iteritems():
                 if (connection.flow.attr[co.SADDR] == flow.attr[co.SADDR] and
                         connection.flow.attr[co.DADDR] == flow.attr[co.DADDR] and
