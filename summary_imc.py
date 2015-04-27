@@ -1338,7 +1338,7 @@ def time_reinjection(log_file=sys.stdout):
                         continue
                     start_time = min(start_time, flow.attr[co.START])
                 start_time_int = int(start_time)
-                start_time_dec = str(start_time - start_time_int)[1:]
+                start_time_dec = float(str(start_time - start_time_int)[1:])
                 start_time_dec = ceil(start_time_dec * 1000000) / 1000000.0
                 for direction in co.DIRECTIONS:
                     for flow_id, flow in conn.flows.iteritems():
@@ -1346,7 +1346,7 @@ def time_reinjection(log_file=sys.stdout):
                             for ts in flow.attr[direction][co.REINJ_ORIG_TIMESTAMP]:
                                 # Some tricks to avoid floating errors
                                 ts_int = int(ts)
-                                ts_dec = str(ts - ts_int)[1:]
+                                ts_dec = float(str(ts - ts_int)[1:])
                                 ts_dec = ceil(ts_dec * 1000000) / 1000000.0
                                 ts_dec_delta = ts_dec - start_time_dec
                                 ts_fix = ts_int + ts_dec_delta
