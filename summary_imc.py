@@ -296,7 +296,7 @@ def count_unused_subflows(log_file=sys.stdout):
                     unused_subflow = True
                     for direction in co.DIRECTIONS:
                         # Count data bytes
-                        if flow.attr[direction][co.BYTES_DATA] > 0:
+                        if flow.attr[direction].get(co.BYTES_DATA, 0) > 0:
                             unused_subflow = False
 
                     count_total += 1
