@@ -1385,10 +1385,12 @@ def time_retransmission(log_file=sys.stdout):
                 for direction in co.DIRECTIONS:
                     for flow_id, flow in conn.flows.iteritems():
                         if co.TIMESTAMP_RETRANS in flow.attr[direction] and co.START in flow.attr:
+                            start_flow_time = flow.attr[co.START]
+                            time_diff = start_flow_time - start_time
                             for ts in flow.attr[direction][co.TIMESTAMP_RETRANS]:
-                                location_time[direction]['all'][co.TIMESTAMP_RETRANS].append(min((ts) / duration, 1.0))
-                                location_time_no_correct[direction]['all'][co.TIMESTAMP_RETRANS].append(ts / duration)
-                                if direction == co.D2S and ts / duration < 0.0 or ts / duration > 1.0:
+                                location_time[direction]['all'][co.TIMESTAMP_RETRANS].append(min((ts + time_diff) / duration, 1.0))
+                                location_time_no_correct[direction]['all'][co.TIMESTAMP_RETRANS].append((ts + time_diff) / duration)
+                                if direction == co.D2S and (ts + time_diff) / duration < 0.0 or (ts + time_diff) / duration > 1.0:
                                     print("WARNING retrans", fname, conn_id, flow_id, ts / duration, file=log_file)
 
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
