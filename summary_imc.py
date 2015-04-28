@@ -303,8 +303,23 @@ def count_unused_subflows(log_file=sys.stdout):
                     if unused_subflow:
                         count += 1
 
+    count_multiflow = 0
+    count_multiflow_additional = 0
+    for fname, conns, in multiflow_connections.iteritems():
+        for conn_id, conn in conns.iteritems():
+            # Still make sure it's MPTCPConnections
+            if isinstance(conn, mptcp.MPTCPConnection):
+                first = True
+                for flow_id, flow in conn.flows.iteritems():
+                    count_multiflow += 1
+                    if not first:
+                        count_multiflow_additional += 1
+                    first = False
+
     print("Number of unused subflows:", count, file=log_file)
     print("Number of total subflows:", count_total, file=log_file)
+    print("Number of subflows in multiflow connections", count_multiflow, file=log_file)
+    print("Number of additional subflows in multiflow connections", count_multiflow_additional, file=log_file)
 
 
 def textual_summary(log_file=sys.stdout):
@@ -1567,5 +1582,6 @@ detect_handover(log_file=log_file)
 list_bytes_all(log_file=log_file)
 difference_rtt_d2s(log_file=log_file)
 delay_mpcapable_mpjoin_quantify_handover(log_file=log_file, threshold_handover=1.0)
+count_unused_subflows(log_file=log_file)
 log_file.close()
 print("End of summary")
