@@ -304,6 +304,7 @@ def count_unused_subflows(log_file=sys.stdout):
                         count += 1
 
     count_multiflow = 0
+    count_unused_multiflow = 0
     count_multiflow_additional = 0
     for fname, conns, in multiflow_connections.iteritems():
         for conn_id, conn in conns.iteritems():
@@ -311,6 +312,13 @@ def count_unused_subflows(log_file=sys.stdout):
             if isinstance(conn, mptcp.MPTCPConnection):
                 first = True
                 for flow_id, flow in conn.flows.iteritems():
+                    unused_subflow = True
+                    for direction in co.DIRECTIONS:
+                        # Count data bytes
+                        if flow.attr[direction].get(co.BYTES_DATA, 0) > 0:
+                            unused_subflow = False
+                    if unused_subflow:
+                        count_unused_multiflow += 1
                     count_multiflow += 1
                     if not first:
                         count_multiflow_additional += 1
@@ -320,6 +328,7 @@ def count_unused_subflows(log_file=sys.stdout):
     print("Number of total subflows:", count_total, file=log_file)
     print("Number of subflows in multiflow connections", count_multiflow, file=log_file)
     print("Number of additional subflows in multiflow connections", count_multiflow_additional, file=log_file)
+    print("Number of unused subflows on multiflow connections", count_unused_multiflow, file=log_file)
 
 
 def textual_summary(log_file=sys.stdout):
