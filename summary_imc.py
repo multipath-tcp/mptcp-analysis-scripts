@@ -1485,7 +1485,7 @@ def delay_mpcapable_mpjoin_quantify_handover(log_file=sys.stdout, threshold_hand
                     if delta >= threshold_handover and not handover_detected:
                         handover_detected = True
                         handover_conns[fname][conn_id] = conn
-                    if delta >= 5000:
+                    if delta >= 50000:
                         print("HUGE DELTA", fname, conn_id, flow_id, delta, file=log_file)
 
     # Do a first CDF plot of the delta between initial SYN and additional ones
