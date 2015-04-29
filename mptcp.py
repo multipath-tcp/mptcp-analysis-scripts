@@ -686,7 +686,7 @@ def collect_acksize_csv(csv_fname, acksize_dict):
 
 
 # We can't change dir per thread, we should use processes
-def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, plot_cwin, min_bytes=0, light=False):
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, plot_cwin, min_bytes=0, light=False):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     # if not check_mptcp_joins(pcap_filepath):
     #     print("WARNING: no mptcp joins on " + pcap_filepath, file=sys.stderr)
@@ -766,7 +766,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     if connections and do_tcp_processing:
         # Save a first version as backup here; should be removed when no problem anymore
         # co.save_data(pcap_filepath, stat_dir_exp, connections)
-        cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, plot_cwin, mptcp_connections=connections, light=light)
+        cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, plot_cwin, mptcp_connections=connections, light=light)
         co.save_data(pcap_filepath, acksize_dir_exp, acksize_all)
         co.save_data(pcap_filepath, rtt_dir_exp, rtt_all)
         co.save_data(pcap_filepath, stat_dir_exp, connections)

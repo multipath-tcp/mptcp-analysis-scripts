@@ -124,6 +124,7 @@ rtt_dir_exp = co.get_dir_from_arg(args.rtt,  args.pcap[0])
 rtt_subflow_dir_exp = co.get_dir_from_arg(args.rtt_subflow,  args.pcap[0])
 failed_conns_dir_exp = co.get_dir_from_arg(args.failed_conns,  args.pcap[0])
 acksize_dir_exp = co.get_dir_from_arg(args.acksize, args.pcap[0])
+acksize_tcp_dir_exp = acksize_dir_exp + '_tcp'
 
 if os.path.isdir(in_dir_exp):
     # add the basename of the input dir
@@ -137,6 +138,7 @@ if os.path.isdir(in_dir_exp):
     rtt_subflow_dir_exp = os.path.join(rtt_subflow_dir_exp, parent_dir, base_dir)
     failed_conns_dir_exp = os.path.join(failed_conns_dir_exp, parent_dir, base_dir)
     acksize_dir_exp = os.path.join(acksize_dir_exp, parent_dir, base_dir)
+    acksize_tcp_dir_exp = os.path.join(acksize_tcp_dir_exp, parent_dir, base_dir)
 
 if args.stderr:
     print_out = sys.stderr
@@ -238,14 +240,14 @@ def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge, cwin):
         # we need to change dir, do that in a new process
         if graph:
             p = Process(target=mptcp.process_trace, args=(
-                pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, cwin,), kwargs={'min_bytes': args.min_bytes, 'light': args.light})
+                pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, cwin,), kwargs={'min_bytes': args.min_bytes, 'light': args.light})
             p.start()
             p.join()
     elif pcap_filename.startswith('tcp'):
         if correct:
             tcp.correct_trace(pcap_filepath, print_out=print_out)
         if graph:
-            tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, cwin,
+            tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, cwin,
                               print_out=print_out, min_bytes=args.min_bytes, light=args.light)
     else:
         print(pcap_filepath + ": don't know the protocol used; skipped", file=sys.stderr)
@@ -287,6 +289,7 @@ co.check_directory_exists(rtt_dir_exp)
 co.check_directory_exists(rtt_subflow_dir_exp)
 co.check_directory_exists(failed_conns_dir_exp)
 co.check_directory_exists(acksize_dir_exp)
+co.check_directory_exists(acksize_tcp_dir_exp)
 # If file is a .pcap, use it for (mp)tcptrace
 pcap_list.reverse()  # we will use pop: use the natural order
 

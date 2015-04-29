@@ -573,7 +573,7 @@ def get_flow_name_connection(connection, connections):
     return None, None
 
 
-def copy_info_to_mptcp_connections(connection, mptcp_connections, failed_conns, light=False):
+def copy_info_to_mptcp_connections(connection, mptcp_connections, failed_conns, acksize_all, acksize_all_mptcp, flow_name, light=False):
     """ Given a tcp connection, copy its start and duration to the corresponding mptcp connection
         If connection is a failed subflow of a MPTCPConnection, add it in failed_conns
         Return the corresponding connection and flow ids of the mptcp connection
@@ -602,6 +602,11 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections, failed_conns, 
             if co.BYTES_FRAMES_RETRANS in connection.flow.attr[direction]:
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_FRAMES_RETRANS] = connection.flow.attr[direction][co.BYTES_FRAMES_RETRANS]
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.FRAMES_RETRANS] = connection.flow.attr[direction][co.FRAMES_RETRANS]
+
+            if flow_name in acksize_all[direction]:
+                if conn_id not in acksize_all_mptcp[direction]:
+                    acksize_all_mptcp[direction][conn_id] = {}
+                acksize_all_mptcp[direction][conn_id][flow_id] = acksize_all[direction][flow_name]
 
     else:
         # This is a TCPConnection that failed to be a MPTCP subflow: add it in failed_conns
@@ -683,9 +688,10 @@ def plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all):
                                    "Congestion window [Bytes]", "Congestion window", graph_filepath, ymin=0)
 
 
-def collect_retrans_xpl(pcap_filepath, xpl_filepath, connections, flow_name, is_reversed):
+def collect_retrans_acksize_xpl(pcap_filepath, xpl_filepath, connections, acksize_dict, flow_name, is_reversed):
     direction = co.D2S if is_reversed else co.S2D
     retrans_ts = []
+    acksize_conn = {}
     if connections[flow_name].flow.attr[direction][co.PACKS_RETRANS] == 0:
         connections[flow_name].flow.attr[direction][co.TIMESTAMP_RETRANS] = retrans_ts
         return
@@ -699,6 +705,8 @@ def collect_retrans_xpl(pcap_filepath, xpl_filepath, connections, flow_name, is_
     data = xpl_file.readlines()
     xpl_file.close()
     take_next = False
+    green_line = False
+    next_is_ack = False
     for line in data:
         if take_next:
             split_line = line.split(" ")
@@ -707,8 +715,33 @@ def collect_retrans_xpl(pcap_filepath, xpl_filepath, connections, flow_name, is_
                 take_next = False
         elif line.startswith("R"):
             take_next = True
+        elif line.startswith("green"):
+            green_line = True
+        elif green_line and next_is_ack:
+            # This is the vertical line: take it
+            split_line = line.split(" ")
+            if split_line[0] == "line":
+                acksize = int(split_line[4]) - int(split_line[2])
+                if acksize < 0:
+                    print("LOOK", xpl_filepath, split_line[1], acksize, file=sys.stdout)
+                if acksize not in acksize_conn:
+                    acksize_conn[acksize] = 1
+                else:
+                    acksize_conn[acksize] += 1
+            elif split_line[0] == "dtick":
+                # Ack size == 0
+                if 0 not in acksize_conn:
+                    acksize_conn[0] = 1
+                else:
+                    acksize_conn[0] += 1
+            green_line = False
+            next_is_ack = False
+        elif green_line and line.startswith("line"):
+            # This is the horizontal line, not interested in
+            next_is_ack = True
 
     connections[flow_name].flow.attr[direction][co.TIMESTAMP_RETRANS] = retrans_ts
+    acksize_dict[direction][flow_name] = acksize_conn
 
 
 def process_tsg_xpl_file(pcap_filepath, xpl_filepath, graph_dir_exp, connections, aggregate_dict, cwin_data_all, flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id):
@@ -837,7 +870,7 @@ def collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mp
             print(str(e), xpl_filepath)
 
 
-def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, plot_cwin, mptcp_connections=None, print_out=sys.stdout, min_bytes=0, light=False):
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, plot_cwin, mptcp_connections=None, print_out=sys.stdout, min_bytes=0, light=False):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0
@@ -872,16 +905,19 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     # Directory containing all TCPConnections that tried to be MPTCP subflows, but failed to
     failed_conns = {}
 
+    acksize_all = {co.D2S: {}, co.S2D: {}}
+    acksize_all_mptcp = {co.D2S: {}, co.S2D: {}}
+
     for xpl_filepath in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_filepath[:-5]) + '*.xpl')):
         conn_id, flow_id = None, None
         flow_name, is_reversed = get_flow_name(xpl_filepath)
-        collect_retrans_xpl(pcap_filepath, xpl_filepath, connections, flow_name, is_reversed)
+        collect_retrans_acksize_xpl(pcap_filepath, xpl_filepath, connections, acksize_all, flow_name, is_reversed)
 
     # The tcptrace call will generate .xpl files to cope with
     for xpl_filepath in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_filepath[:-5]) + '*.xpl')):
         flow_name, is_reversed = get_flow_name(xpl_filepath)
         if mptcp_connections:
-            conn_id, flow_id = copy_info_to_mptcp_connections(connections[flow_name], mptcp_connections, failed_conns, light=light)
+            conn_id, flow_id = copy_info_to_mptcp_connections(connections[flow_name], mptcp_connections, failed_conns, acksize_all, acksize_all_mptcp, flow_name, light=light)
 
         if interesting_graph(flow_name, is_reversed, connections) and 'tsg' in os.path.basename(xpl_filepath):
             process_tsg_xpl_file(pcap_filepath, xpl_filepath, graph_dir_exp, connections, aggregate_dict, cwin_data_all,
@@ -918,6 +954,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
 
     # Save connections info
     if mptcp_connections:
+        co.save_data(pcap_filepath, acksize_tcp_dir_exp, acksize_all_mptcp)
         # First save RTT data of subflows
         co.save_data(pcap_filepath, rtt_subflow_dir_exp, rtt_all)
         # Also save TCP connections that failed to be MPTCP subflows
@@ -927,5 +964,6 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     else:
         if plot_cwin:
             plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all)
+        co.save_data(pcap_filepath, acksize_tcp_dir_exp, acksize_all)
         co.save_data(pcap_filepath, rtt_dir_exp, rtt_all)
         co.save_data(pcap_filepath, stat_dir_exp, connections)
