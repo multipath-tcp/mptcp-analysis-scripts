@@ -722,8 +722,6 @@ def collect_retrans_acksize_xpl(pcap_filepath, xpl_filepath, connections, acksiz
             split_line = line.split(" ")
             if split_line[0] == "line":
                 acksize = int(split_line[4]) - int(split_line[2])
-                if acksize < 0:
-                    print("LOOK", xpl_filepath, split_line[1], acksize, file=sys.stdout)
                 if acksize not in acksize_conn:
                     acksize_conn[acksize] = 1
                 else:
@@ -967,3 +965,112 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
         co.save_data(pcap_filepath, acksize_tcp_dir_exp, acksize_all)
         co.save_data(pcap_filepath, rtt_dir_exp, rtt_all)
         co.save_data(pcap_filepath, stat_dir_exp, connections)
+
+
+def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, plot_cwin, mptcp_connections=None, print_out=sys.stdout, min_bytes=0, light=False):
+    """ Process a tcp pcap file and generate graphs of its connections """
+    cwd = os.getcwd()
+    os.chdir(directory_path)
+    # -C for color, -S for sequence numbers, -T for throughput graph
+    # -zxy to plot both axes to 0
+    # -n to avoid name resolution
+    # -y to remove some noise in sequence graphs
+    # -l for long output
+    # --csv for csv file
+    cmd = ['tcptrace', '--output_dir=' + os.getcwd(),
+           '--output_prefix=' +
+           os.path.basename(directory_path[:-5]) + '_', '-C', '-S']
+    if not light:
+        cmd += ['-T', '-A250', '-R']
+    cmd += ['-zxy', '-n', '-y', '-l', '--csv', '-r'] + glob.glob(os.path.join(os.getcwd(), '*.pcap'))
+
+    try:
+        # Compatibility hack
+        connections = process_tcptrace_cmd(cmd, directory_path + '.pcap', keep_csv=True, graph_dir_exp=graph_dir_exp)
+    except TCPTraceError as e:
+        print(str(e) + ": skip process", file=sys.stderr)
+        return
+
+    if not light:
+        # Compatibility hack
+        get_total_and_retrans_frames(directory_path + '.pcap', connections)
+
+    relative_start = get_relative_start_time(connections)
+    aggregate_dict = {
+        co.S2D: {co.WIFI: [], co.CELL: []}, co.D2S: {co.WIFI: [], co.CELL: []}}
+
+    # The dictionary where all cwin data of the scenario will be stored
+    cwin_data_all = {}
+    # The dictionary where all RTTs will be stored
+    rtt_all = {co.S2D: {}, co.D2S: {}}
+    # Directory containing all TCPConnections that tried to be MPTCP subflows, but failed to
+    failed_conns = {}
+
+    acksize_all = {co.D2S: {}, co.S2D: {}}
+    acksize_all_mptcp = {co.D2S: {}, co.S2D: {}}
+
+    print("Collect retrans acksize")
+
+    for xpl_filepath in glob.glob(os.path.join(os.getcwd(), '*.xpl')):
+        conn_id, flow_id = None, None
+        flow_name, is_reversed = get_flow_name(xpl_filepath)
+        collect_retrans_acksize_xpl(directory_path + '.pcap', xpl_filepath, connections, acksize_all, flow_name, is_reversed)
+
+    print("Match MPTCP and TCP connections")
+
+    # The tcptrace call will generate .xpl files to cope with
+    for xpl_filepath in glob.glob(os.path.join(os.getcwd(), '*.xpl')):
+        flow_name, is_reversed = get_flow_name(xpl_filepath)
+        if mptcp_connections:
+            conn_id, flow_id = copy_info_to_mptcp_connections(connections[flow_name], mptcp_connections, failed_conns, acksize_all, acksize_all_mptcp, flow_name, light=light)
+
+        if interesting_graph(flow_name, is_reversed, connections) and 'tsg' in os.path.basename(xpl_filepath):
+            process_tsg_xpl_file(directory_path + '.pcap', xpl_filepath, graph_dir_exp, connections, aggregate_dict, cwin_data_all,
+                                 flow_name, relative_start, is_reversed, mptcp_connections, conn_id, flow_id)
+        elif 'tput' in os.path.basename(xpl_filepath) and not mptcp_connections and not light:
+            collect_throughput(xpl_filepath, connections, flow_name, is_reversed)
+
+        try:
+            if mptcp_connections:
+                # If mptcp, don't keep tcptrace plots, except RTT ones
+                if '_rtt.xpl' in os.path.basename(xpl_filepath):
+                    if not light:
+                        collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mptcp_connections)
+                    co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR))
+                else:
+                    os.remove(xpl_filepath)
+            else:
+                if '_rtt.xpl' in os.path.basename(xpl_filepath):
+                    if not light:
+                        collect_rtt(xpl_filepath, rtt_all, flow_name, is_reversed, connections)
+                    co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR))
+                else:
+                    co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR))
+        except OSError as e:
+            print(str(e) + ": skipped", file=sys.stderr)
+        except IOError as e:
+            print(str(e) + ": skipped", file=sys.stderr)
+
+    os.chdir(cwd)
+
+    if plot_cwin:
+        plot_aggregated_results(directory_path + '.pcap', graph_dir_exp, aggregate_dict)
+
+    # Save aggregated graphs (even it's not connections)
+    co.save_data(directory_path + '.pcap', aggl_dir_exp, aggregate_dict)
+
+    # Save connections info
+    if mptcp_connections:
+        co.save_data(directory_path + '.pcap', acksize_tcp_dir_exp, acksize_all_mptcp)
+        # First save RTT data of subflows
+        co.save_data(directory_path + '.pcap', rtt_subflow_dir_exp, rtt_all)
+        # Also save TCP connections that failed to be MPTCP subflows
+        co.save_data(directory_path + '.pcap', failed_conns_dir_exp, failed_conns)
+        # Returns to the caller the data to plot cwin
+        return cwin_data_all
+    else:
+        if plot_cwin:
+            plot_congestion_graphs(directory_path + '.pcap', graph_dir_exp, cwin_data_all)
+        co.save_data(directory_path + '.pcap', acksize_tcp_dir_exp, acksize_all)
+        co.save_data(directory_path + '.pcap', rtt_dir_exp, rtt_all)
+        co.save_data(directory_path + '.pcap', stat_dir_exp, connections)

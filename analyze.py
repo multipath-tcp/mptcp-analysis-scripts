@@ -66,6 +66,8 @@ parser = argparse.ArgumentParser(
     description="Analyze pcap files of TCP or MPTCP connections")
 parser.add_argument("-i",
                     "--input", help="input directory/file of the (possibly compressed) pcap files", default=DEF_IN_DIR)
+parser.add_argument("-I",
+                    "--dir-input", help="analyze all files together", action='store_true')
 parser.add_argument("-t",
                     "--trace", help="temporary directory that will be used to store uncompressed "
                     + "pcap files", default=DEF_TRACE_DIR)
@@ -198,13 +200,14 @@ def add_if_valid(list, item):
 
 pcap_list = []
 co.check_directory_exists(trace_dir_exp)
-if os.path.isdir(in_dir_exp):
-    for dirpath, dirnames, filenames in os.walk(in_dir_exp):
-        for filename in filenames:
-            add_if_valid(pcap_list, uncompress_file(filename, dirpath))
-else:
-    add_if_valid(pcap_list, uncompress_file(os.path.basename(in_dir_exp),
-                                            os.path.dirname(in_dir_exp)))
+if not args.dir_input:
+    if os.path.isdir(in_dir_exp):
+        for dirpath, dirnames, filenames in os.walk(in_dir_exp):
+            for filename in filenames:
+                add_if_valid(pcap_list, uncompress_file(filename, dirpath))
+    else:
+        add_if_valid(pcap_list, uncompress_file(os.path.basename(in_dir_exp),
+                                                os.path.dirname(in_dir_exp)))
 
 pcap_list_len = len(pcap_list)
 
@@ -293,21 +296,29 @@ co.check_directory_exists(acksize_tcp_dir_exp)
 # If file is a .pcap, use it for (mp)tcptrace
 pcap_list.reverse()  # we will use pop: use the natural order
 
-threads = []
-args.threads = min(args.threads, pcap_list_len)
-if args.threads > 1:
-    # Launch new thread
-    for thread_id in range(args.threads):
-        thread = threading.Thread(target=thread_launch,
-                                  args=(thread_id, args.clean,
-                                        not args.not_correct, not args.not_graph, not args.not_purge, args.cwin))
-        thread.start()
-        threads.append(thread)
-    # Wait
-    for thread in threads:
-        thread.join()
+if not args.dir_input:
+    threads = []
+    args.threads = min(args.threads, pcap_list_len)
+    if args.threads > 1:
+        # Launch new thread
+        for thread_id in range(args.threads):
+            thread = threading.Thread(target=thread_launch,
+                                      args=(thread_id, args.clean,
+                                            not args.not_correct, not args.not_graph, not args.not_purge, args.cwin))
+            thread.start()
+            threads.append(thread)
+        # Wait
+        for thread in threads:
+            thread.join()
+    else:
+        thread_launch(0, args.clean, not args.not_correct, not args.not_graph, not args.not_purge, args.cwin)
+
 else:
-    thread_launch(0, args.clean, not args.not_correct, not args.not_graph, not args.not_purge, args.cwin)
+    # p = Process(target=mptcp.process_trace, args=(
+    #             in_dir_exp, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, cwin,), kwargs={'min_bytes': args.min_bytes, 'light': args.light})
+    # p.start()
+    # p.join()
+    mptcp.process_trace_directory(in_dir_exp, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, False, min_bytes=args.min_bytes, light=args.light)
 
 
 print('End of analyze', file=print_out)

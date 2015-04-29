@@ -772,3 +772,89 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
         co.save_data(pcap_filepath, stat_dir_exp, connections)
         if plot_cwin:
             plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all)
+
+
+def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, plot_cwin, min_bytes=0, light=False):
+    """ Process a mptcp pcap file and generate graphs of its subflows """
+    # if not check_mptcp_joins(pcap_filepath):
+    #     print("WARNING: no mptcp joins on " + pcap_filepath, file=sys.stderr)
+    connections = None
+    do_tcp_processing = False
+    try:
+        with co.cd(directory_path):
+            # If segmentation faults, remove the -S option
+            cmd = ['mptcptrace', '-d', '.', '-s', '-S', '-t', '5000', '-w', '0']
+            if not light:
+                cmd += ['-G', '250', '-r', '2', '-F', '3', '-a']
+            # Compatibility hack
+            connections = process_mptcptrace_cmd(cmd, directory_path + '.pcap')
+
+            # Useful to count the number of reinjected bytes
+            cmd = ['mptcptrace', '-d', '.', '-s', '-a', '-t', '5000', '-w', '2']
+            if not light:
+                cmd += ['-G', '250', '-r', '2', '-F', '3']
+            devnull = open(os.devnull, 'w')
+            if subprocess.call(cmd, stdout=devnull) != 0:
+                raise MPTCPTraceError("Error of mptcptrace with " + directory_path)
+            devnull.close()
+
+            # The mptcptrace call will generate .xpl files to cope with
+            # First see all xpl files, to detect the relative 0 of all connections
+            # Also, compute the duration and number of bytes of the MPTCP connection
+            relative_start = first_pass_on_files(connections)
+            rtt_all = {co.S2D: {}, co.D2S: {}}
+            acksize_all = {co.S2D: {}, co.D2S: {}}
+
+            # Then really process xpl files
+            for xpl_fname in glob.glob('*.xpl'):
+                if not light and MPTCP_RTT_FNAME in xpl_fname:
+                    process_rtt_xpl(xpl_fname, rtt_all, connections, relative_start, min_bytes)
+                elif MPTCP_SEQ_FNAME in xpl_fname:
+                    process_seq_xpl(xpl_fname, connections, relative_start, min_bytes)
+                try:
+                    directory = co.DEF_RTT_DIR if MPTCP_RTT_FNAME in xpl_fname else co.TSG_THGPT_DIR
+                    shutil.move(xpl_fname, os.path.join(
+                        graph_dir_exp, directory, os.path.basename(directory_path) + "_" + xpl_fname))
+                except IOError as e:
+                    print(str(e), file=sys.stderr)
+
+            # And by default, save all csv files
+            for csv_fname in glob.glob('*.csv'):
+                if not light:
+                    if MPTCP_GPUT_FNAME in csv_fname:
+                        process_gput_csv(csv_fname, connections)
+                try:
+                    if MPTCP_RTT_FNAME in csv_fname:
+                        co.move_file(csv_fname, os.path.join(
+                            graph_dir_exp, co.DEF_RTT_DIR, os.path.basename(directory_path) + "_" + csv_fname))
+                    elif MPTCP_SEQ_FNAME in csv_fname:
+                        co.move_file(csv_fname, os.path.join(
+                            graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(directory_path) + "_" + csv_fname))
+                    elif MPTCP_ACKSIZE_FNAME in csv_fname:
+                        collect_acksize_csv(csv_fname, acksize_all)
+                        os.remove(csv_fname)
+                    else:
+                        if not light:
+                            co.move_file(csv_fname, os.path.join(
+                                graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(directory_path) + "_" + csv_fname))
+                        else:
+                            os.remove(csv_fname)
+                except IOError as e:
+                    print(str(e), file=sys.stderr)
+
+            do_tcp_processing = True
+
+    except MPTCPTraceError as e:
+        print(str(e) + "; skip mptcp process", file=sys.stderr)
+
+    # Create aggregated graphes and add per interface information on MPTCPConnection
+    # This will save the mptcp connections
+    if connections and do_tcp_processing:
+        # Save a first version as backup here; should be removed when no problem anymore
+        # co.save_data(pcap_filepath, stat_dir_exp, connections)
+        cwin_data_all = tcp.process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, plot_cwin, mptcp_connections=connections, light=light)
+        co.save_data(directory_path + '.pcap', acksize_dir_exp, acksize_all)
+        co.save_data(directory_path + '.pcap', rtt_dir_exp, rtt_all)
+        co.save_data(directory_path + '.pcap', stat_dir_exp, connections)
+        if plot_cwin:
+            plot_congestion_graphs(directory_path + '.pcap', graph_dir_exp, cwin_data_all)
