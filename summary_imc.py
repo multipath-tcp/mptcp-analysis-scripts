@@ -1355,8 +1355,8 @@ def time_reinjection(log_file=sys.stdout):
             if isinstance(conn, mptcp.MPTCPConnection):
                 start_time = float('inf')
                 duration = conn.attr[co.DURATION]
-                if duration <= 0.01:
-                    continue
+                # if duration <= 0.01:
+                #     continue
 
                 start_time = conn.attr.get(co.START, float('inf'))
 
@@ -1403,8 +1403,8 @@ def time_retransmission(log_file=sys.stdout):
             if isinstance(conn, mptcp.MPTCPConnection):
                 start_time = float('inf')
                 duration = conn.attr[co.DURATION]
-                if duration <= 0.01:
-                    continue
+                # if duration <= 0.01:
+                #     continue
                 start_time = conn.attr.get(co.START, float('inf'))
                 for direction in co.DIRECTIONS:
                     for flow_id, flow in conn.flows.iteritems():
@@ -1417,7 +1417,7 @@ def time_retransmission(log_file=sys.stdout):
                                 if direction == co.D2S and (ts + time_diff) / duration < 0.0 or (ts + time_diff) / duration > 1.0:
                                     print("WARNING retrans", fname, conn_id, flow_id, ts / duration, file=log_file)
 
-    co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
+    co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True, xlim=1.0)
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path + '_nocorrect', natural=True)
 
 
