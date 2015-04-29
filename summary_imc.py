@@ -1434,14 +1434,20 @@ def total_retrans_reinj(log_file=sys.stdout):
     reinject_packs = {co.S2D: 0, co.D2S: 0}
     retrans = {co.S2D: 0, co.D2S: 0}
     retrans_packs = {co.S2D: 0, co.D2S: 0}
+    reinject_list = {}
     for fname, conns in connections.iteritems():
+        reinject_list[fname] = []
         for conn_id, conn in conns.iteritems():
             # We never know, still check
             if isinstance(conn, mptcp.MPTCPConnection):
                 for flow_id, flow in conn.flows.iteritems():
+                    added = False
                     for direction in co.DIRECTIONS:
                         if direction in flow.attr:
                             if flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0) > 0:
+                                if not added:
+                                    reinject_list[fname].append(conn_id)
+                                    added = True
                                 reinject[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
                                 reinject_packs[direction] += flow.attr[direction].get(co.REINJ_ORIG_PACKS, 0)
                             if flow.attr[direction].get(co.BYTES_RETRANS, 0) > 0:
@@ -1453,6 +1459,9 @@ def total_retrans_reinj(log_file=sys.stdout):
         print("REINJECT PACKS", direction, reinject_packs[direction], file=log_file)
         print("RETRANS", direction, retrans[direction], file=log_file)
         print("RETRANS PACKS", direction, retrans_packs[direction], file=log_file)
+
+    print("LIST OF REINJECTION CONNECTIONS", file=log_file)
+    print(reinject_list, file=log_file)
 
 
 def bursts_mptcp(log_file=sys.stdout):
