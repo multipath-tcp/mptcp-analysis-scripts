@@ -105,6 +105,8 @@ DEF_RTT_DIR = 'rtt'
 DEF_RTT_SUBFLOW_DIR = 'rtt_subflow'
 # Directory with information about failed establishment of subflows (TCPConnections)
 DEF_FAILED_CONNS_DIR = 'failed_conns'
+# Directory of acksize info
+DEF_ACKSIZE_DIR = 'acksize'
 # The default interface to analyse
 DEF_IFACE = 'any'
 

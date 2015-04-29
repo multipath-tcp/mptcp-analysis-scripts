@@ -81,6 +81,8 @@ parser.add_argument("-R",
                     "--rtt-subflow", help="directory where data of round-trip-time of subflows of MPTCP will be stored", default=co.DEF_RTT_SUBFLOW_DIR)
 parser.add_argument("-F",
                     "--failed-conns", help="directory that contains failed TCP connections to establish subflow", default=co.DEF_FAILED_CONNS_DIR)
+parser.add_argument("-A",
+                    "--acksize", help="directory where acksize info of connections are stored", default=co.DEF_ACKSIZE_DIR)
 parser.add_argument("-p", "--pcap",
                     help="analyze only pcap files containing the given string (default any, wlan0 and rmnet0)",
                     nargs="+", default=["_" + co.DEF_IFACE + ".", "_wlan0.", "_rmnet0."])
@@ -121,6 +123,7 @@ aggl_dir_exp = co.get_dir_from_arg(args.aggl,  args.pcap[0])
 rtt_dir_exp = co.get_dir_from_arg(args.rtt,  args.pcap[0])
 rtt_subflow_dir_exp = co.get_dir_from_arg(args.rtt_subflow,  args.pcap[0])
 failed_conns_dir_exp = co.get_dir_from_arg(args.failed_conns,  args.pcap[0])
+acksize_dir_exp = co.get_dir_from_arg(args.acksize, args.pcap[0])
 
 if os.path.isdir(in_dir_exp):
     # add the basename of the input dir
@@ -133,6 +136,7 @@ if os.path.isdir(in_dir_exp):
     rtt_dir_exp = os.path.join(rtt_dir_exp,  parent_dir, base_dir)
     rtt_subflow_dir_exp = os.path.join(rtt_subflow_dir_exp, parent_dir, base_dir)
     failed_conns_dir_exp = os.path.join(failed_conns_dir_exp, parent_dir, base_dir)
+    acksize_dir_exp = os.path.join(acksize_dir_exp, parent_dir, base_dir)
 
 if args.stderr:
     print_out = sys.stderr
@@ -234,7 +238,7 @@ def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge, cwin):
         # we need to change dir, do that in a new process
         if graph:
             p = Process(target=mptcp.process_trace, args=(
-                pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, cwin,), kwargs={'min_bytes': args.min_bytes, 'light': args.light})
+                pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, cwin,), kwargs={'min_bytes': args.min_bytes, 'light': args.light})
             p.start()
             p.join()
     elif pcap_filename.startswith('tcp'):
@@ -282,6 +286,7 @@ co.check_directory_exists(aggl_dir_exp)
 co.check_directory_exists(rtt_dir_exp)
 co.check_directory_exists(rtt_subflow_dir_exp)
 co.check_directory_exists(failed_conns_dir_exp)
+co.check_directory_exists(acksize_dir_exp)
 # If file is a .pcap, use it for (mp)tcptrace
 pcap_list.reverse()  # we will use pop: use the natural order
 

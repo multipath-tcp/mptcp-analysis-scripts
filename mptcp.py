@@ -50,6 +50,8 @@ MPTCP_RTT_FNAME = '_rtt_seq_'
 MPTCP_STATS_PREFIX = 'stats_'
 # mptcptrace file identifier in csv filename for gput information
 MPTCP_GPUT_FNAME = 'gput'
+# mptcptrace file identifier in csv filename for acksize information
+MPTCP_ACKSIZE_FNAME = '_acksize_'
 
 
 ##################################################
@@ -657,8 +659,34 @@ def process_gput_csv(csv_fname, connections):
         print("No throughput info for " + csv_fname, file=sys.stderr)
 
 
+def collect_acksize_csv(csv_fname, acksize_dict):
+    """ Collect the ack size at the MPTCP level """
+    conn_id = get_connection_id(csv_fname)
+    direction = co.D2S if is_reverse_connection(csv_fname) else co.S2D
+    try:
+        acksize_file = open(csv_fname)
+        data = acksize_file.readlines()
+        acksize_file.close()
+
+        acksize_conn = {}
+
+        for line in data:
+            split_line = line.split(',')
+            # Ack info is the second number (don't convert in int, not needed now)
+            if split_line[1] not in acksize_dict:
+                acksize_conn[split_line[1]] = 1
+            else:
+                acksize_conn[split_line[1]] += 1
+
+        acksize_dict[direction][conn_id] = acksize_conn
+
+    except IOError as e:
+        print(e, file=sys.stderr)
+        print("No acksize info for " + csv_fname, file=sys.stderr)
+
+
 # We can't change dir per thread, we should use processes
-def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, plot_cwin, min_bytes=0, light=False):
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, plot_cwin, min_bytes=0, light=False):
     """ Process a mptcp pcap file and generate graphs of its subflows """
     # if not check_mptcp_joins(pcap_filepath):
     #     print("WARNING: no mptcp joins on " + pcap_filepath, file=sys.stderr)
@@ -670,11 +698,11 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
             # If segmentation faults, remove the -S option
             cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-S', '-t', '5000', '-w', '0']
             if not light:
-                cmd += ['-G', '250', '-r', '2', '-F', '3']
+                cmd += ['-G', '250', '-r', '2', '-F', '3', '-a']
             connections = process_mptcptrace_cmd(cmd, pcap_filepath)
 
             # Useful to count the number of reinjected bytes
-            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-t', '5000', '-w', '2']
+            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-a', '-t', '5000', '-w', '2']
             if not light:
                 cmd += ['-G', '250', '-r', '2', '-F', '3']
             devnull = open(os.devnull, 'w')
@@ -687,6 +715,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
             # Also, compute the duration and number of bytes of the MPTCP connection
             relative_start = first_pass_on_files(connections)
             rtt_all = {co.S2D: {}, co.D2S: {}}
+            acksize_all = {co.S2D: {}, co.D2S: {}}
 
             # Then really process xpl files
             for xpl_fname in glob.glob('*.xpl'):
@@ -713,6 +742,9 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                     elif MPTCP_SEQ_FNAME in csv_fname:
                         co.move_file(csv_fname, os.path.join(
                             graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
+                    elif MPTCP_ACKSIZE_FNAME in csv_fname:
+                        collect_acksize_csv(csv_fname, acksize_all)
+                        os.remove(csv_fname)
                     else:
                         if not light:
                             co.move_file(csv_fname, os.path.join(
@@ -735,6 +767,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
         # Save a first version as backup here; should be removed when no problem anymore
         # co.save_data(pcap_filepath, stat_dir_exp, connections)
         cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, plot_cwin, mptcp_connections=connections, light=light)
+        co.save_data(pcap_filepath, acksize_dir_exp, acksize_all)
         co.save_data(pcap_filepath, rtt_dir_exp, rtt_all)
         co.save_data(pcap_filepath, stat_dir_exp, connections)
         if plot_cwin:
