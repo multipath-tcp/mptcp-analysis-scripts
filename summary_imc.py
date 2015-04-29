@@ -1431,7 +1431,9 @@ def time_retransmission(log_file=sys.stdout):
 
 def total_retrans_reinj(log_file=sys.stdout):
     reinject = {co.S2D: 0, co.D2S: 0}
+    reinject_packs = {co.S2D: 0, co.D2S: 0}
     retrans = {co.S2D: 0, co.D2S: 0}
+    retrans_packs = {co.S2D: 0, co.D2S: 0}
     for fname, conns in connections.iteritems():
         for conn_id, conn in conns.iteritems():
             # We never know, still check
@@ -1441,12 +1443,16 @@ def total_retrans_reinj(log_file=sys.stdout):
                         if direction in flow.attr:
                             if flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0) > 0:
                                 reinject[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
+                                reinject_packs[direction] += flow.attr[direction].get(co.REINJ_ORIG_PACKS, 0)
                             if flow.attr[direction].get(co.BYTES_RETRANS, 0) > 0:
                                 retrans[direction] += flow.attr[direction].get(co.BYTES_RETRANS, 0)
+                                retrans_packs[direction] += flow.attr[direction].get(co.PACKS_RETRANS, 0)
 
     for direction in co.DIRECTIONS:
         print("REINJECT", direction, reinject[direction], file=log_file)
+        print("REINJECT PACKS", direction, reinject_packs[direction], file=log_file)
         print("RETRANS", direction, retrans[direction], file=log_file)
+        print("RETRANS PACKS", direction, retrans_packs[direction], file=log_file)
 
 
 def bursts_mptcp(log_file=sys.stdout):
