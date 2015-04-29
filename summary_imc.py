@@ -1355,8 +1355,8 @@ def time_reinjection(log_file=sys.stdout):
             if isinstance(conn, mptcp.MPTCPConnection):
                 start_time = float('inf')
                 duration = conn.attr[co.DURATION]
-                # if duration <= 0.01:
-                #     continue
+                if duration <= 0.001:
+                    continue
 
                 start_time = conn.attr.get(co.START, float('inf'))
 
@@ -1403,8 +1403,8 @@ def time_retransmission(log_file=sys.stdout):
             if isinstance(conn, mptcp.MPTCPConnection):
                 start_time = float('inf')
                 duration = conn.attr[co.DURATION]
-                # if duration <= 0.01:
-                #     continue
+                if duration <= 0.001:
+                    continue
                 start_time = conn.attr.get(co.START, float('inf'))
                 for direction in co.DIRECTIONS:
                     for flow_id, flow in conn.flows.iteritems():
@@ -1419,6 +1419,26 @@ def time_retransmission(log_file=sys.stdout):
 
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True, xlim=1.0)
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path + '_nocorrect', natural=True)
+
+
+def total_retrans_reinj(log_file=sys.stdout):
+    reinject = {co.S2D: 0, co.D2S: 0}
+    retrans = {co.S2D: 0, co.D2S: 0}
+    for fname, conns in connections.iteritems():
+        for conn_id, conn in conns.iteritems():
+            # We never know, still check
+            if isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    for direction in co.DIRECTIONS:
+                        if direction in flow.attr:
+                            if flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0) > 0:
+                                reinject[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
+                            if flow.attr[direction].get(co.BYTES_RETRANS, 0) > 0:
+                                retrans[direction] += flow.attr[direction].get(co.BYTES_RETRANS, 0)
+
+    for direction in co.DIRECTIONS:
+        print("REINJECT", direction, reinject[direction], file=log_file)
+        print("RETRANS", direction, retrans[direction], file=log_file)
 
 
 def bursts_mptcp(log_file=sys.stdout):
