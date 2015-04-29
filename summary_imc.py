@@ -1390,8 +1390,10 @@ def time_reinjection(log_file=sys.stdout):
                                     print("WARNING reinj", fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=log_file)
                                 if direction == co.D2S and ts_fix <= 1.0:
                                     reinj_first_sec.append((conn_id, flow_id))
-                                if direction == co.D2S and ts_fix / duration >= 0.28 and ts_fix / duration <= 0.35:
-                                    print("TO LOOK AT", fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=log_file)
+                                if direction == co.D2S and ts_fix / duration >= 0.92 and ts_fix / duration <= 0.97:
+                                    print("95 LOOK", fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=log_file)
+                                if direction == co.D2S and ts_fix / duration >= 0.99:
+                                    print("100 LOOK", fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=log_file)
 
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
     co.plot_cdfs_with_direction(location_time_nocorrect, color, 'Fraction of connection duration', base_graph_path + '_nocorrect', natural=True)
