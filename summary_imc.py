@@ -305,12 +305,17 @@ def count_unused_subflows(log_file=sys.stdout):
 
     count_multiflow = 0
     count_unused_multiflow = 0
+    count_unused_additional = 0
     count_multiflow_additional = 0
     for fname, conns, in multiflow_connections.iteritems():
         for conn_id, conn in conns.iteritems():
             # Still make sure it's MPTCPConnections
             if isinstance(conn, mptcp.MPTCPConnection):
-                first = True
+                start_time = float('inf')
+                for flow_id, flow in conn.flows.iteritems():
+                    start_time = min(start_time, flow.attr.get(co.START, float('inf')))
+                if start_time == float('inf'):
+                    continue
                 for flow_id, flow in conn.flows.iteritems():
                     unused_subflow = True
                     for direction in co.DIRECTIONS:
@@ -320,8 +325,10 @@ def count_unused_subflows(log_file=sys.stdout):
                     if unused_subflow:
                         count_unused_multiflow += 1
                     count_multiflow += 1
-                    if not first:
+                    if not start_time == flow.attr.get(co.START, float('inf')):
                         count_multiflow_additional += 1
+                        if unused_subflow:
+                            count_unused_additional += 1
                     first = False
 
     print("Number of unused subflows:", count, file=log_file)
@@ -329,6 +336,7 @@ def count_unused_subflows(log_file=sys.stdout):
     print("Number of subflows in multiflow connections", count_multiflow, file=log_file)
     print("Number of additional subflows in multiflow connections", count_multiflow_additional, file=log_file)
     print("Number of unused subflows on multiflow connections", count_unused_multiflow, file=log_file)
+    print("Number of unused additional subflows on multiflow connections", count_unused_additional, file=log_file)
 
 
 def textual_summary(log_file=sys.stdout):
@@ -1613,5 +1621,6 @@ list_bytes_all(log_file=log_file)
 difference_rtt_d2s(log_file=log_file)
 delay_mpcapable_mpjoin_quantify_handover(log_file=log_file, threshold_handover=1.0)
 count_unused_subflows(log_file=log_file)
+total_retrans_reinj(log_file=log_file)
 log_file.close()
 print("End of summary")
