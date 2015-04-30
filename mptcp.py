@@ -240,6 +240,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
         csv_file.close()
     except IOError:
         print('IOError for ' + csv_fname + ': no data extracted from csv', file=sys.stderr)
+        return
 
     reinject_offsets = {}
     reinject_nb = {}
@@ -314,6 +315,7 @@ def process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed):
         csv_file.close()
     except IOError:
         print('IOError for ' + csv_fname + ': no data extracted from csv', file=sys.stderr)
+        return
 
     rtt_data = []
 
