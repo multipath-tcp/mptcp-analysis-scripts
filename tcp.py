@@ -721,11 +721,12 @@ def collect_retrans_acksize_xpl(pcap_filepath, xpl_filepath, connections, acksiz
             # This is the vertical line: take it
             split_line = line.split(" ")
             if split_line[0] == "line":
-                acksize = int(split_line[4]) - int(split_line[2])
-                if acksize not in acksize_conn:
-                    acksize_conn[acksize] = 1
-                else:
-                    acksize_conn[acksize] += 1
+                if len(split_line) >= 5:
+                    acksize = int(split_line[4]) - int(split_line[2])
+                    if acksize not in acksize_conn:
+                        acksize_conn[acksize] = 1
+                    else:
+                        acksize_conn[acksize] += 1
             elif split_line[0] == "dtick":
                 # Ack size == 0
                 if 0 not in acksize_conn:
