@@ -334,6 +334,7 @@ def process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed):
     connections[conn_id].attr[direction][co.RTT_SAMPLES] = len(rtt_data)
     if not rtt_data:
         return
+    print('Added', conn_id, direction)
     connections[conn_id].attr[direction][co.RTT_MIN] = np.min(rtt_data)
     connections[conn_id].attr[direction][co.RTT_MAX] = np.max(rtt_data)
     connections[conn_id].attr[direction][co.RTT_AVG] = np.mean(rtt_data)
@@ -721,7 +722,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                 raise MPTCPTraceError("Error of mptcptrace with " + pcap_filepath)
             devnull.close()
 
-            cmd = ['mptcptrace', '-d', '.', '-r', '2', '-t', '5000', '-w', '2']
+            cmd = ['mptcptrace', '-f', pcap_filepath, '-r', '2', '-t', '5000', '-w', '2']
             if not light:
                 cmd += ['-G', '250', '-r', '2', '-F', '3']
             devnull = open(os.devnull, 'w')
@@ -752,20 +753,20 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
             # And by default, save all csv files
             for csv_fname in glob.glob(os.path.join(os.getcwd(), '*.csv')):
                 if not light:
-                    if MPTCP_GPUT_FNAME in csv_fname:
+                    if MPTCP_GPUT_FNAME in os.path.basename(csv_fname):
                         process_gput_csv(csv_fname, connections)
                 try:
-                    if MPTCP_RTT_FNAME in csv_fname:
+                    if MPTCP_RTT_FNAME in os.path.basename(csv_fname):
                         conn_id = get_connection_id(os.path.basename(csv_fname))
                         is_reversed = is_reverse_connection(os.path.basename(csv_fname))
                         process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed)
                         os.remove(csv_fname)
                         # co.move_file(csv_fname, os.path.join(
                         #    graph_dir_exp, co.DEF_RTT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
-                    elif MPTCP_SEQ_FNAME in csv_fname:
+                    elif MPTCP_SEQ_FNAME in os.path.basename(csv_fname):
                         co.move_file(csv_fname, os.path.join(
                             graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + os.path.basename(csv_fname)))
-                    elif MPTCP_ACKSIZE_FNAME in csv_fname:
+                    elif MPTCP_ACKSIZE_FNAME in os.path.basename(csv_fname):
                         collect_acksize_csv(csv_fname, acksize_all)
                         os.remove(csv_fname)
                     else:
