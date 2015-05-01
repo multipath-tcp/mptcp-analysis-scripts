@@ -688,7 +688,7 @@ def plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all):
                                    "Congestion window [Bytes]", "Congestion window", graph_filepath, ymin=0)
 
 
-def collect_retrans_acksize_xpl(pcap_filepath, xpl_filepath, connections, acksize_dict, flow_name, is_reversed):
+def collect_retrans_acksize_xpl(pcap_filepath, xpl_filepath, connections, acksize_dict, flow_name, is_reversed, count=0):
     direction = co.D2S if is_reversed else co.S2D
     retrans_ts = []
     acksize_conn = {}
@@ -698,10 +698,14 @@ def collect_retrans_acksize_xpl(pcap_filepath, xpl_filepath, connections, acksiz
     try:
         # First read the file
         xpl_file = open(xpl_filepath, 'r')
-    except IOError:
-        # Sometimes, no datasets file; skip the file
-        connections[flow_name].flow.attr[direction][co.TIMESTAMP_RETRANS] = retrans_ts
-        return
+    except IOError as e:
+        print(str(e), file=sys.stderr)
+        if count < 10:
+            collect_retrans_acksize_xpl(pcap_filepath, xpl_filepath, connections, acksize_dict, flow_name, is_reversed, count=count+1)
+        else:
+            # Sometimes, no datasets file; skip the file
+            connections[flow_name].flow.attr[direction][co.TIMESTAMP_RETRANS] = retrans_ts
+            return
     data = xpl_file.readlines()
     xpl_file.close()
     take_next = False
@@ -807,11 +811,18 @@ def collect_throughput(xpl_filepath, connections, flow_name, is_reversed):
         print("No throughput data for " + xpl_filepath, file=sys.stderr)
 
 
-def extract_rtt_from_xpl(xpl_filepath):
+def extract_rtt_from_xpl(xpl_filepath, count=0):
     """ Given the filepath of a xpl file containing RTT info, returns an array of the values of the RTT """
-    xpl_file = open(xpl_filepath)
-    data = xpl_file.readlines()
-    xpl_file.close()
+    try:
+        xpl_file = open(xpl_filepath)
+        data = xpl_file.readlines()
+        xpl_file.close()
+    except IOError as e:
+        print(str(e), file=sys.stderr)
+        if count < 10:
+            extract_rtt_from_xpl(xpl_filepath, count=count+1)
+        else:
+            return []
 
     rtts = []
     for line in data:
@@ -980,7 +991,7 @@ def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_di
     # --csv for csv file
     cmd = ['tcptrace', '--output_dir=' + os.getcwd(),
            '--output_prefix=' +
-           os.path.basename(directory_path[:-5]) + '_', '-C', '-S']
+           os.path.basename(directory_path[:-5]) + '_', '-C', '-S', '-R']
     if not light:
         cmd += ['-T', '-A250', '-R']
     cmd += ['-zxy', '-n', '-y', '-l', '--csv', '-r'] + glob.glob(os.path.join(os.getcwd(), '*.pcap'))
@@ -1035,11 +1046,11 @@ def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_di
             if mptcp_connections:
                 # If mptcp, don't keep tcptrace plots, except RTT ones
                 if '_rtt.xpl' in os.path.basename(xpl_filepath):
-                    if not light:
-                        collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mptcp_connections)
-                    co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR))
-                else:
-                    os.remove(xpl_filepath)
+                    # if not light:
+                    collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mptcp_connections)
+                    #co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR))
+                # else:
+                os.remove(xpl_filepath)
             else:
                 if '_rtt.xpl' in os.path.basename(xpl_filepath):
                     if not light:

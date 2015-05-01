@@ -801,7 +801,7 @@ def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_di
             connections = process_mptcptrace_cmd(cmd, directory_path + '.pcap')
 
             # Useful to count the number of reinjected bytes
-            cmd = ['mptcptrace', '-d', '.', '-s', '-a', '-t', '5000', '-w', '2']
+            cmd = ['mptcptrace', '-d', '.', '-s', '-a', '-r', '2', '-t', '5000', '-w', '2']
             if not light:
                 cmd += ['-G', '250', '-r', '2', '-F', '3']
             devnull = open(os.devnull, 'w')
@@ -835,7 +835,7 @@ def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_di
                     if MPTCP_GPUT_FNAME in csv_fname:
                         process_gput_csv(csv_fname, connections)
                 try:
-                    if MPTCP_RTT_FNAME in csv_fname:
+                    if not light and MPTCP_RTT_FNAME in csv_fname:
                         co.move_file(csv_fname, os.path.join(
                             graph_dir_exp, co.DEF_RTT_DIR, os.path.basename(directory_path) + "_" + csv_fname))
                     elif MPTCP_SEQ_FNAME in csv_fname:
