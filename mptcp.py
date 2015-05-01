@@ -313,6 +313,9 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
 
 def process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed):
     """ Process the csv with rtt given in argument """
+    if conn_id not in connections:
+        print(conn_id, "not in connections", file=sys.stderr)
+        return
     try:
         csv_file = open(csv_fname)
         data = csv_file.readlines()
@@ -332,7 +335,6 @@ def process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed):
     connections[conn_id].attr[direction][co.RTT_SAMPLES] = len(rtt_data)
     if not rtt_data:
         return
-    print('Added', conn_id, direction)
     connections[conn_id].attr[direction][co.RTT_MIN] = np.min(rtt_data)
     connections[conn_id].attr[direction][co.RTT_MAX] = np.max(rtt_data)
     connections[conn_id].attr[direction][co.RTT_AVG] = np.mean(rtt_data)
