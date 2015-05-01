@@ -721,6 +721,14 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                 raise MPTCPTraceError("Error of mptcptrace with " + pcap_filepath)
             devnull.close()
 
+            cmd = ['mptcptrace', '-d', '.', '-r', '2', '-t', '5000', '-w', '2']
+            if not light:
+                cmd += ['-G', '250', '-r', '2', '-F', '3']
+            devnull = open(os.devnull, 'w')
+            if subprocess.call(cmd, stdout=devnull) != 0:
+                raise MPTCPTraceError("Error of mptcptrace with " + pcap_filepath)
+            devnull.close()
+
             # The mptcptrace call will generate .xpl files to cope with
             # First see all xpl files, to detect the relative 0 of all connections
             # Also, compute the duration and number of bytes of the MPTCP connection
@@ -748,8 +756,12 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                         process_gput_csv(csv_fname, connections)
                 try:
                     if MPTCP_RTT_FNAME in csv_fname:
-                        co.move_file(csv_fname, os.path.join(
-                            graph_dir_exp, co.DEF_RTT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
+                        conn_id = get_connection_id(csv_fname)
+                        is_reversed = is_reverse_connection(csv_fname)
+                        process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed)
+                        os.remove(csv_fname)
+                        # co.move_file(csv_fname, os.path.join(
+                        #    graph_dir_exp, co.DEF_RTT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
                     elif MPTCP_SEQ_FNAME in csv_fname:
                         co.move_file(csv_fname, os.path.join(
                             graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
@@ -843,9 +855,11 @@ def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_di
                     if MPTCP_GPUT_FNAME in csv_fname:
                         process_gput_csv(csv_fname, connections)
                 try:
-                    if not light and MPTCP_RTT_FNAME in csv_fname:
-                        co.move_file(csv_fname, os.path.join(
-                            graph_dir_exp, co.DEF_RTT_DIR, os.path.basename(directory_path) + "_" + csv_fname))
+                    if MPTCP_RTT_FNAME in csv_fname:
+                        conn_id = get_connection_id(csv_fname)
+                        is_reversed = is_reverse_connection(csv_fname)
+                        process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed)
+                        os.remove(csv_fname)
                     elif MPTCP_SEQ_FNAME in csv_fname:
                         co.move_file(csv_fname, os.path.join(
                             graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(directory_path) + "_" + csv_fname))
