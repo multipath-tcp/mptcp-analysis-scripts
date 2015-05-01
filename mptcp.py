@@ -756,8 +756,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                         process_gput_csv(csv_fname, connections)
                 try:
                     if MPTCP_RTT_FNAME in csv_fname:
-                        conn_id = get_connection_id(csv_fname)
-                        is_reversed = is_reverse_connection(csv_fname)
+                        conn_id = get_connection_id(os.path.basename(csv_fname))
+                        is_reversed = is_reverse_connection(os.path.basename(csv_fname))
                         process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed)
                         os.remove(csv_fname)
                         # co.move_file(csv_fname, os.path.join(
@@ -856,8 +856,8 @@ def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_di
                         process_gput_csv(csv_fname, connections)
                 try:
                     if MPTCP_RTT_FNAME in csv_fname:
-                        conn_id = get_connection_id(csv_fname)
-                        is_reversed = is_reverse_connection(csv_fname)
+                        conn_id = get_connection_id(os.path.basename(csv_fname))
+                        is_reversed = is_reverse_connection(os.path.basename(csv_fname))
                         process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed)
                         os.remove(csv_fname)
                     elif MPTCP_SEQ_FNAME in csv_fname:
