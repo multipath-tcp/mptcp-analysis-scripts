@@ -232,14 +232,17 @@ def get_begin_values_from_xpl(xpl_filepath):
     return time, seq
 
 
-def process_csv(csv_fname, connections, conn_id, is_reversed):
+def process_csv(csv_fname, connections, conn_id, is_reversed, count=0):
     """ Process the csv given in argument and after delete the file """
     try:
         csv_file = open(csv_fname)
         data = csv_file.readlines()
         csv_file.close()
-    except IOError:
+    except IOError as e:
+        print(str(e), file=sys.stderr)
         print('IOError for ' + csv_fname + ': no data extracted from csv', file=sys.stderr)
+        if count < 10:
+            process_csv(csv_fname, connections, conn_id, is_reversed, count=count+1)
         return
 
     reinject_offsets = {}
@@ -282,6 +285,9 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
 
         if int(split_line[3]) == 1 and (not int(split_line[5]) == -1):
             # Map and reinjected
+            # Secucrity
+            if int(split_line[5]) - 1 not in reinject_offsets:
+                continue
             reinject_offsets[int(split_line[5]) - 1] += int(split_line[4]) - int(split_line[1])
             reinject_nb[int(split_line[5]) - 1] += 1
             reinject_ts[int(split_line[5]) - 1].append(float(split_line[0]))
@@ -473,7 +479,7 @@ def check_mptcp_joins(pcap_fullpath, print_out=sys.stdout):
 ##################################################
 
 
-def process_stats_csv(csv_fname, connections):
+def process_stats_csv(csv_fname, connections, count=0):
     """ Add information in connections based on the stats csv file, and remove it """
     try:
         csv_file = open(csv_fname)
@@ -515,8 +521,11 @@ def process_stats_csv(csv_fname, connections):
 
         # Remove now stats files
         # os.remove(csv_fname)
-    except IOError:
+    except IOError as e:
+        print(str(e), file=sys.stderr)
         print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
+        if count < 10:
+            process_stats_csv(csv_fname, connections, count=count+1)
         return
     except ValueError:
         print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)
