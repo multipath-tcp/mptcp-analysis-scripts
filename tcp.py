@@ -991,7 +991,7 @@ def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_di
     # --csv for csv file
     cmd = ['tcptrace', '--output_dir=' + os.getcwd(),
            '--output_prefix=' +
-           os.path.basename(directory_path[:-5]) + '_', '-C', '-S', '-R']
+           os.path.basename(directory_path[:-5]) + '_', '-C', '-S']
     if not light:
         cmd += ['-T', '-A250', '-R']
     cmd += ['-zxy', '-n', '-y', '-l', '--csv', '-r'] + glob.glob(os.path.join(os.getcwd(), '*.pcap'))
@@ -1002,6 +1002,15 @@ def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_di
     except TCPTraceError as e:
         print(str(e) + ": skip process", file=sys.stderr)
         return
+
+    cmd = ['tcptrace', '--output_dir=' + os.getcwd(),
+           '--output_prefix=' +
+           os.path.basename(directory_path[:-5]) + '_', '-C', '-R']
+    cmd += ['-zxy', '-n', '-y'] + glob.glob(os.path.join(os.getcwd(), '*.pcap'))
+    devnull = open(os.devnull, 'w')
+    if subprocess.call(cmd, stdout=devnull) != 0:
+        raise TCPTraceError("Error of tcptrace with " + directory_path)
+    devnull.close()
 
     if not light:
         # Compatibility hack

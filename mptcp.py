@@ -801,7 +801,15 @@ def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_di
             connections = process_mptcptrace_cmd(cmd, directory_path + '.pcap')
 
             # Useful to count the number of reinjected bytes
-            cmd = ['mptcptrace', '-d', '.', '-s', '-a', '-r', '2', '-t', '5000', '-w', '2']
+            cmd = ['mptcptrace', '-d', '.', '-s', '-a', '-t', '5000', '-w', '2']
+            if not light:
+                cmd += ['-G', '250', '-r', '2', '-F', '3']
+            devnull = open(os.devnull, 'w')
+            if subprocess.call(cmd, stdout=devnull) != 0:
+                raise MPTCPTraceError("Error of mptcptrace with " + directory_path)
+            devnull.close()
+
+            cmd = ['mptcptrace', '-d', '.', '-r', '2', '-t', '5000', '-w', '2']
             if not light:
                 cmd += ['-G', '250', '-r', '2', '-F', '3']
             devnull = open(os.devnull, 'w')
