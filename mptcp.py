@@ -737,7 +737,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
             acksize_all = {co.S2D: {}, co.D2S: {}}
 
             # Then really process xpl files
-            for xpl_fname in glob.glob('*.xpl'):
+            for xpl_fname in glob.glob(os.path.join(csv_tmp_dir, '*.xpl')):
                 if not light and MPTCP_RTT_FNAME in xpl_fname:
                     process_rtt_xpl(xpl_fname, rtt_all, connections, relative_start, min_bytes)
                 elif MPTCP_SEQ_FNAME in xpl_fname:
@@ -750,7 +750,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                     print(str(e), file=sys.stderr)
 
             # And by default, save all csv files
-            for csv_fname in glob.glob('*.csv'):
+            for csv_fname in glob.glob(os.path.join(csv_tmp_dir, '*.csv')):
                 if not light:
                     if MPTCP_GPUT_FNAME in csv_fname:
                         process_gput_csv(csv_fname, connections)
