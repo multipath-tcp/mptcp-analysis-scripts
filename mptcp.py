@@ -232,7 +232,7 @@ def get_begin_values_from_xpl(xpl_filepath):
     return time, seq
 
 
-def process_csv(csv_fname, connections, conn_id, is_reversed, count=0):
+def process_csv(csv_fname, connections, conn_id, is_reversed):
     """ Process the csv given in argument and after delete the file """
     try:
         csv_file = open(csv_fname)
@@ -241,8 +241,6 @@ def process_csv(csv_fname, connections, conn_id, is_reversed, count=0):
     except IOError as e:
         print(str(e), file=sys.stderr)
         print('IOError for ' + csv_fname + ': no data extracted from csv', file=sys.stderr)
-        if count < 10:
-            process_csv(csv_fname, connections, conn_id, is_reversed, count=count+1)
         return
 
     reinject_offsets = {}
@@ -480,7 +478,7 @@ def check_mptcp_joins(pcap_fullpath, print_out=sys.stdout):
 ##################################################
 
 
-def process_stats_csv(csv_fname, connections, count=0):
+def process_stats_csv(csv_fname, connections):
     """ Add information in connections based on the stats csv file, and remove it """
     try:
         csv_file = open(csv_fname)
@@ -525,8 +523,6 @@ def process_stats_csv(csv_fname, connections, count=0):
     except IOError as e:
         print(str(e), file=sys.stderr)
         print('IOError for ' + csv_fname + ': skipped', file=sys.stderr)
-        if count < 10:
-            process_stats_csv(csv_fname, connections, count=count+1)
         return
     except ValueError:
         print('ValueError for ' + csv_fname + ': skipped', file=sys.stderr)

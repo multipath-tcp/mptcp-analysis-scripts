@@ -688,7 +688,7 @@ def plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all):
                                    "Congestion window [Bytes]", "Congestion window", graph_filepath, ymin=0)
 
 
-def collect_retrans_acksize_xpl(pcap_filepath, xpl_filepath, connections, acksize_dict, flow_name, is_reversed, count=0):
+def collect_retrans_acksize_xpl(pcap_filepath, xpl_filepath, connections, acksize_dict, flow_name, is_reversed):
     direction = co.D2S if is_reversed else co.S2D
     retrans_ts = []
     acksize_conn = {}
@@ -700,12 +700,9 @@ def collect_retrans_acksize_xpl(pcap_filepath, xpl_filepath, connections, acksiz
         xpl_file = open(xpl_filepath, 'r')
     except IOError as e:
         print(str(e), file=sys.stderr)
-        if count < 10:
-            collect_retrans_acksize_xpl(pcap_filepath, xpl_filepath, connections, acksize_dict, flow_name, is_reversed, count=count+1)
-        else:
-            # Sometimes, no datasets file; skip the file
-            connections[flow_name].flow.attr[direction][co.TIMESTAMP_RETRANS] = retrans_ts
-            return
+        # Sometimes, no datasets file; skip the file
+        connections[flow_name].flow.attr[direction][co.TIMESTAMP_RETRANS] = retrans_ts
+        return
     data = xpl_file.readlines()
     xpl_file.close()
     take_next = False
@@ -811,7 +808,7 @@ def collect_throughput(xpl_filepath, connections, flow_name, is_reversed):
         print("No throughput data for " + xpl_filepath, file=sys.stderr)
 
 
-def extract_rtt_from_xpl(xpl_filepath, count=0):
+def extract_rtt_from_xpl(xpl_filepath):
     """ Given the filepath of a xpl file containing RTT info, returns an array of the values of the RTT """
     try:
         xpl_file = open(xpl_filepath)
@@ -819,10 +816,7 @@ def extract_rtt_from_xpl(xpl_filepath, count=0):
         xpl_file.close()
     except IOError as e:
         print(str(e), file=sys.stderr)
-        if count < 10:
-            extract_rtt_from_xpl(xpl_filepath, count=count+1)
-        else:
-            return []
+        return []
 
     rtts = []
     for line in data:
