@@ -904,7 +904,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     cmd = ['tcptrace', '--output_dir=' + os.getcwd(),
            '--output_prefix=' +
            os.path.basename(pcap_filepath[:-5]) + '_', '-C', '-R']
-    cmd += ['-zxy', '-n', '-y'] + glob.glob(os.path.join(os.getcwd(), '*.pcap'))
+    cmd += ['-zxy', '-n', '-y', pcap_filepath]
     devnull = open(os.devnull, 'w')
     if subprocess.call(cmd, stdout=devnull) != 0:
         raise TCPTraceError("Error of tcptrace with " + pcap_filepath)
