@@ -901,6 +901,15 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
         print(str(e) + ": skip process", file=sys.stderr)
         return
 
+    cmd = ['tcptrace', '--output_dir=' + os.getcwd(),
+           '--output_prefix=' +
+           os.path.basename(pcap_filepath[:-5]) + '_', '-C', '-R']
+    cmd += ['-zxy', '-n', '-y'] + glob.glob(os.path.join(os.getcwd(), '*.pcap'))
+    devnull = open(os.devnull, 'w')
+    if subprocess.call(cmd, stdout=devnull) != 0:
+        raise TCPTraceError("Error of tcptrace with " + pcap_filepath)
+    devnull.close()
+
     if not light:
         get_total_and_retrans_frames(pcap_filepath, connections)
 
