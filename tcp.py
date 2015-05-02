@@ -921,13 +921,13 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     acksize_all = {co.D2S: {}, co.S2D: {}}
     acksize_all_mptcp = {co.D2S: {}, co.S2D: {}}
 
-    for xpl_filepath in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_filepath[:-5]) + '*.xpl')):
+    for xpl_filepath in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_filepath[:-5]) + '_*.xpl')):
         conn_id, flow_id = None, None
         flow_name, is_reversed = get_flow_name(xpl_filepath)
         collect_retrans_acksize_xpl(pcap_filepath, xpl_filepath, connections, acksize_all, flow_name, is_reversed)
 
     # The tcptrace call will generate .xpl files to cope with
-    for xpl_filepath in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_filepath[:-5]) + '*.xpl')):
+    for xpl_filepath in glob.glob(os.path.join(os.getcwd(), os.path.basename(pcap_filepath[:-5]) + '_*.xpl')):
         flow_name, is_reversed = get_flow_name(xpl_filepath)
         if mptcp_connections:
             conn_id, flow_id = copy_info_to_mptcp_connections(connections[flow_name], mptcp_connections, failed_conns, acksize_all, acksize_all_mptcp, flow_name, light=light)
