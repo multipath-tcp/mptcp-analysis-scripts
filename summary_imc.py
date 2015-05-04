@@ -308,6 +308,7 @@ def count_unused_subflows(log_file=sys.stdout):
     count_unused_additional = 0
     count_unused_best_avg_rtt = 0
     count_multiflow_additional = 0
+    bytes_when_unused = []
     for fname, conns, in multiflow_connections.iteritems():
         for conn_id, conn in conns.iteritems():
             # Still make sure it's MPTCPConnections
@@ -336,6 +337,7 @@ def count_unused_subflows(log_file=sys.stdout):
                                     min_rtt_avg = min(min_rtt_avg, fl.attr[co.D2S].get(co.RTT_AVG, float('inf')))
                             if co.RTT_AVG in flow.attr[co.D2S] and flow.attr[co.D2S][co.RTT_AVG] == min_rtt_avg:
                                 count_unused_best_avg_rtt += 1
+                                bytes_when_unused.append(conn.attr[co.D2S].get(co.BYTES_MPTCPTRACE, 0))
 
     print("Number of unused subflows:", count, file=log_file)
     print("Number of total subflows:", count_total, file=log_file)
@@ -344,6 +346,7 @@ def count_unused_subflows(log_file=sys.stdout):
     print("Number of unused subflows on multiflow connections", count_unused_multiflow, file=log_file)
     print("Number of unused additional subflows on multiflow connections", count_unused_additional, file=log_file)
     print("Number of unused additional subflows on multiflow connections with best RTT", count_unused_best_avg_rtt, file=log_file)
+    print(np.min(bytes_when_unused), np.percentile(bytes_when_unused, 50), np.mean(bytes_when_unused), np.percentile(bytes_when_unused, 75), np.percentile(bytes_when_unused, 90), np.percentile(bytes_when_unused, 95), np.percentile(bytes_when_unused, 99), np.max(bytes_when_unused), file=log_file)
 
 
 def textual_summary(log_file=sys.stdout):
