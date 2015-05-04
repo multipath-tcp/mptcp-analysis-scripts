@@ -155,8 +155,11 @@ def plot_bytes():
     bytes_smartphone = []
     for fname, data in dataset[SMART].iteritems():
         for conn_id, conn in data.iteritems():
-            if co.BYTES_MPTCPTRACE in conn.attr:
-                bytes_smartphone.append(conn.attr[co.BYTES_MPTCPTRACE])
+            tot_bytes = 0
+            for direction in co.DIRECTIONS:
+                if co.BYTES_MPTCPTRACE in conn.attr[direction]:
+                    tot_bytes += conn.attr[direction][co.BYTES_MPTCPTRACE]
+            bytes_smartphone.append(tot_bytes)
     co.plot_cdfs_natural({'all': {SMART: bytes_smartphone, NOSTR: dataset[NOSTR]["bytes"]}}, ['red', 'blue'], 'Data bytes', os.path.join(sums_dir_exp, 'merge_bytes'), label_order=[NOSTR, SMART], xlog=True)
 
 
