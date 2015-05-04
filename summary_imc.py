@@ -346,7 +346,7 @@ def count_unused_subflows(log_file=sys.stdout):
     print("Number of unused subflows on multiflow connections", count_unused_multiflow, file=log_file)
     print("Number of unused additional subflows on multiflow connections", count_unused_additional, file=log_file)
     print("Number of unused additional subflows on multiflow connections with best RTT", count_unused_best_avg_rtt, file=log_file)
-    print(np.min(bytes_when_unused), np.percentile(bytes_when_unused, 50), np.mean(bytes_when_unused), np.percentile(bytes_when_unused, 75), np.percentile(bytes_when_unused, 90), np.percentile(bytes_when_unused, 95), np.percentile(bytes_when_unused, 99), np.max(bytes_when_unused), file=log_file)
+    print(np.min(bytes_when_unused), np.percentile(bytes_when_unused, 50), np.mean(bytes_when_unused), np.percentile(bytes_when_unused, 75), np.percentile(bytes_when_unused, 90), np.percentile(bytes_when_unused, 95), np.percentile(bytes_when_unused, 96), np.percentile(bytes_when_unused, 97), np.percentile(bytes_when_unused, 98), np.percentile(bytes_when_unused, 99), np.max(bytes_when_unused), file=log_file)
 
 
 def textual_summary(log_file=sys.stdout):
@@ -1633,21 +1633,21 @@ def table_rtt_d2s(log_file=sys.stdout):
         for conn_id, conn in conns.iteritems():
             # We never know, still check
             if isinstance(conn, mptcp.MPTCPConnection):
-                if conn.attr[co.D2S].get(co.BYTES_MPTCPTRACE, 0) < 500000:
+                if conn.attr[co.D2S].get(co.BYTES_MPTCPTRACE, 0) < 1000000:
                     continue
-                data = conn.attr[co.D2S]
-                if co.RTT_MIN in data and co.RTT_AVG in data and co.RTT_MED in data and co.RTT_99P in data:
-                    rtt_min[MPTCP].append(data[co.RTT_MIN])
-                    rtt_med[MPTCP].append(data[co.RTT_MED])
-                    rtt_avg[MPTCP].append(data[co.RTT_AVG])
-                    rtt_75[MPTCP].append(data[co.RTT_75P])
-                    rtt_90[MPTCP].append(data[co.RTT_90P])
-                    rtt_95[MPTCP].append(data[co.RTT_95P])
-                    rtt_97[MPTCP].append(data[co.RTT_97P])
-                    rtt_98[MPTCP].append(data[co.RTT_98P])
-                    rtt_99[MPTCP].append(data[co.RTT_99P])
-                    rtt_max[MPTCP].append(data[co.RTT_MAX])
-                    rtt_diff[MPTCP].append(data[co.RTT_MAX] - data[co.RTT_MIN])
+                data_mptcp = conn.attr[co.D2S]
+                if co.RTT_MIN in data_mptcp and co.RTT_AVG in data_mptcp and co.RTT_MED in data_mptcp and co.RTT_99P in data_mptcpta:
+                    rtt_min[MPTCP].append(data_mptcp[co.RTT_MIN])
+                    rtt_med[MPTCP].append(data_mptcp[co.RTT_MED])
+                    rtt_avg[MPTCP].append(data_mptcp[co.RTT_AVG])
+                    rtt_75[MPTCP].append(data_mptcp[co.RTT_75P])
+                    rtt_90[MPTCP].append(data_mptcp[co.RTT_90P])
+                    rtt_95[MPTCP].append(data_mptcp[co.RTT_95P])
+                    rtt_97[MPTCP].append(data_mptcp[co.RTT_97P])
+                    rtt_98[MPTCP].append(data_mptcp[co.RTT_98P])
+                    rtt_99[MPTCP].append(data_mptcp[co.RTT_99P])
+                    rtt_max[MPTCP].append(data_mptcp[co.RTT_MAX])
+                    rtt_diff[MPTCP].append(data_mptcp[co.RTT_MAX] - data_mptcp[co.RTT_MIN])
 
                     for flow_id, flow in conn.flows.iteritems():
                         if flow.attr[co.D2S].get(co.BYTES, 0) < 250000:
@@ -1673,6 +1673,7 @@ def table_rtt_d2s(log_file=sys.stdout):
     print("\hline", file=log_file)
     for protocol in [MPTCP, TCP]:
         print(protocol, "&", np.mean(rtt_min[protocol]), "&", np.mean(rtt_med[protocol]), "&", np.mean(rtt_avg[protocol]), "&", np.mean(rtt_75[protocol]), "&", np.mean(rtt_90[protocol]), "&", np.mean(rtt_95[protocol]), "&", np.mean(rtt_97[protocol]), "&", np.mean(rtt_98[protocol]), "&", np.mean(rtt_99[protocol]), "&", np.mean(rtt_max[protocol]), "&", np.mean(rtt_diff[protocol]), "\\", file=log_file)
+        print(protocol, "&", np.median(rtt_min[protocol]), "&", np.median(rtt_med[protocol]), "&", np.median(rtt_avg[protocol]), "&", np.median(rtt_75[protocol]), "&", np.median(rtt_90[protocol]), "&", np.median(rtt_95[protocol]), "&", np.median(rtt_97[protocol]), "&", np.median(rtt_98[protocol]), "&", np.median(rtt_99[protocol]), "&", np.median(rtt_max[protocol]), "&", np.median(rtt_diff[protocol]), "\\", file=log_file)
         print("\hline", file=log_file)
 
 millis = int(round(time.time() * 1000))
