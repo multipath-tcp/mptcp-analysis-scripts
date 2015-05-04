@@ -117,4 +117,4 @@ for protocol, acks_protocol in sums_acks.iteritems():
 for direction in co.DIRECTIONS:
     graph_filepath = os.path.join(sums_dir_exp, "acks_size_" + direction + ".pdf")
     # Plot results
-    co.plot_line_graph([to_plot[MPTCP][direction], to_plot[TCP][direction]], ["MPTCP acks", "TCP acks"], ["g-", "r-"], "Acks size (Bytes)", "Bytes percentage", "", graph_filepath)
+    co.plot_line_graph([to_plot[MPTCP][direction], to_plot[TCP][direction]], ["MPTCP acks", "TCP acks"], ["g-", "r-"], "Acks size (Bytes)", "Bytes percentage", "", graph_filepath, y_log=True)
