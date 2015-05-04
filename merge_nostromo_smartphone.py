@@ -134,7 +134,7 @@ def nostromo_join(filepath):
 
 
 SMART = "smartphone"
-NOSTR = "nostromo"
+NOSTR = "server"
 dataset = {SMART: {}, NOSTR: {}}
 
 dataset[SMART] = fetch_data(stat_dir_exp)
