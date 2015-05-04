@@ -1636,7 +1636,7 @@ def table_rtt_d2s(log_file=sys.stdout):
                 if conn.attr[co.D2S].get(co.BYTES_MPTCPTRACE, 0) < 1000000:
                     continue
                 data_mptcp = conn.attr[co.D2S]
-                if co.RTT_MIN in data_mptcp and co.RTT_AVG in data_mptcp and co.RTT_MED in data_mptcp and co.RTT_99P in data_mptcpta:
+                if co.RTT_MIN in data_mptcp and co.RTT_AVG in data_mptcp and co.RTT_MED in data_mptcp and co.RTT_99P in data_mptcp:
                     rtt_min[MPTCP].append(data_mptcp[co.RTT_MIN])
                     rtt_med[MPTCP].append(data_mptcp[co.RTT_MED])
                     rtt_avg[MPTCP].append(data_mptcp[co.RTT_AVG])
