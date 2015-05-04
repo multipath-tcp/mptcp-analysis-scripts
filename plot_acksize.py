@@ -101,6 +101,7 @@ for protocol, acks_protocol in acks.iteritems():
 
 
 to_plot = {MPTCP: {co.S2D: [], co.D2S: []}, TCP: {co.S2D: [], co.D2S: []}}
+count_zero = {MPTCP: {co.S2D: 0, co.D2S: 0}, TCP: {co.S2D: 0, co.D2S: 0}}
 
 for protocol, acks_protocol in sums_acks.iteritems():
     for direction, acks_direction in acks_protocol.iteritems():
@@ -108,11 +109,15 @@ for protocol, acks_protocol in sums_acks.iteritems():
         for value_ack, nb_ack in sorted(acks_direction.iteritems()):
             if value_ack < 0:
                 continue
+            if value_ack == 0:
+                count_zero[protocol][direction] += nb_ack
             total_bytes += value_ack * nb_ack
             to_plot[protocol][direction].append([value_ack, total_bytes])
 
         for i in range(0, len(to_plot[protocol][direction])):
             to_plot[protocol][direction][i][1] = (to_plot[protocol][direction][i][1] + 0.0) / total_bytes
+
+        print("ZERO", protocol, direction, count_zero[protocol][direction])
 
 for direction in co.DIRECTIONS:
     graph_filepath = os.path.join(sums_dir_exp, "acks_size_" + direction + ".pdf")
