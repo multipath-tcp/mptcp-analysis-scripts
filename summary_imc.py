@@ -1648,19 +1648,20 @@ def table_rtt_d2s(log_file=sys.stdout):
 
                     for flow_id, flow in conn.flows.iteritems():
                         if flow.attr[co.D2S].get(co.BYTES, 0) < 250000:
-                            data = flow.attr[co.D2S]
-                            if co.RTT_MIN in data and co.RTT_AVG in data and co.RTT_MED in data and co.RTT_99P in data:
-                                rtt_min[TCP].append(data[co.RTT_MIN])
-                                rtt_med[TCP].append(data[co.RTT_MED])
-                                rtt_avg[TCP].append(data[co.RTT_AVG])
-                                rtt_75[TCP].append(data[co.RTT_75P])
-                                rtt_90[TCP].append(data[co.RTT_90P])
-                                rtt_95[TCP].append(data[co.RTT_95P])
-                                rtt_97[TCP].append(data[co.RTT_97P])
-                                rtt_98[TCP].append(data[co.RTT_98P])
-                                rtt_99[TCP].append(data[co.RTT_99P])
-                                rtt_max[TCP].append(data[co.RTT_MAX])
-                                rtt_diff[TCP].append(data[co.RTT_MAX] - data[co.RTT_MIN])
+                            continue
+                        data = flow.attr[co.D2S]
+                        if co.RTT_MIN in data and co.RTT_AVG in data and co.RTT_MED in data and co.RTT_99P in data:
+                            rtt_min[TCP].append(data[co.RTT_MIN])
+                            rtt_med[TCP].append(data[co.RTT_MED])
+                            rtt_avg[TCP].append(data[co.RTT_AVG])
+                            rtt_75[TCP].append(data[co.RTT_75P])
+                            rtt_90[TCP].append(data[co.RTT_90P])
+                            rtt_95[TCP].append(data[co.RTT_95P])
+                            rtt_97[TCP].append(data[co.RTT_97P])
+                            rtt_98[TCP].append(data[co.RTT_98P])
+                            rtt_99[TCP].append(data[co.RTT_99P])
+                            rtt_max[TCP].append(data[co.RTT_MAX])
+                            rtt_diff[TCP].append(data[co.RTT_MAX] - data[co.RTT_MIN])
 
     print("TABLE RTT", file=log_file)
     print("\hline", file=log_file)
