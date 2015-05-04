@@ -108,7 +108,7 @@ for protocol, acks_protocol in sums_acks.iteritems():
     for direction, acks_direction in acks_protocol.iteritems():
         total_bytes = 0
         for value_ack, nb_ack in sorted(acks_direction.iteritems()):
-            count[protocol][direction] += 1
+            count[protocol][direction] += nb_ack
             if value_ack < 0:
                 continue
             if value_ack == 0:
