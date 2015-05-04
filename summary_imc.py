@@ -1630,7 +1630,7 @@ def table_rtt_d2s(log_file=sys.stdout):
         for conn_id, conn in conns.iteritems():
             # We never know, still check
             if isinstance(conn, mptcp.MPTCPConnection):
-                if conn.attr[co.D2S][co.BYTES_MPTCPTRACE] < 500000:
+                if conn.attr[co.D2S].get(co.BYTES_MPTCPTRACE, 0) < 500000:
                     continue
                 data = conn.attr[co.D2S]
                 if co.RTT_MIN in data and co.RTT_AVG in data and co.RTT_MED in data and co.RTT_99P in data:
@@ -1647,7 +1647,7 @@ def table_rtt_d2s(log_file=sys.stdout):
                     rtt_diff[MPTCP].append(data[co.RTT_MAX] - data[co.RTT_MIN])
 
                     for flow_id, flow in conn.flows.iteritems():
-                        if flow.attr[co.D2S][co.BYTES] < 250000:
+                        if flow.attr[co.D2S].get(co.BYTES, 0) < 250000:
                             data = flow.attr[co.D2S]
                             if co.RTT_MIN in data and co.RTT_AVG in data and co.RTT_MED in data and co.RTT_99P in data:
                                 rtt_min[MPTCP].append(data[co.RTT_MIN])
