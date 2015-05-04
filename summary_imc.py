@@ -306,6 +306,7 @@ def count_unused_subflows(log_file=sys.stdout):
     count_multiflow = 0
     count_unused_multiflow = 0
     count_unused_additional = 0
+    count_unused_best_avg_rtt = 0
     count_multiflow_additional = 0
     for fname, conns, in multiflow_connections.iteritems():
         for conn_id, conn in conns.iteritems():
@@ -329,6 +330,11 @@ def count_unused_subflows(log_file=sys.stdout):
                         count_multiflow_additional += 1
                         if unused_subflow:
                             count_unused_additional += 1
+                            min_rtt_avg = float('inf')
+                            for fid, fl in conn.flows.iteritems():
+                                min_rtt_avg = min(min_rtt_avg, fl.attr[co.D2S][co.RTT_AVG])
+                            if co.RTT_AVG in flow.attr[co.D2S] and flow.attr[co.D2S][co.RTT_AVG] == min_rtt_avg:
+                                count_unused_best_avg_rtt += 1
                     first = False
 
     print("Number of unused subflows:", count, file=log_file)
@@ -337,6 +343,7 @@ def count_unused_subflows(log_file=sys.stdout):
     print("Number of additional subflows in multiflow connections", count_multiflow_additional, file=log_file)
     print("Number of unused subflows on multiflow connections", count_unused_multiflow, file=log_file)
     print("Number of unused additional subflows on multiflow connections", count_unused_additional, file=log_file)
+    print("Number of unused additional subflows on multiflow connections with best RTT", count_unused_best_avg_rtt, file=log_file)
 
 
 def textual_summary(log_file=sys.stdout):
@@ -1374,6 +1381,9 @@ def time_reinjection(log_file=sys.stdout):
                 start_time_int = int(start_time)
                 start_time_dec = float(str(start_time - start_time_int)[1:])
                 start_time_dec = ceil(start_time_dec * 1000000) / 1000000.0
+                warning_reinj = open(os.path.join(sums_dir_exp, 'warning_reinj.txt'), 'w')
+                look_95 = open(os.path.join(sums_dir_exp, 'look95.txt'), 'w')
+                look_100 = open(os.path.join(sums_dir_exp, 'look100.txt'), 'w')
                 for direction in [co.D2S]:
                     for flow_id, flow in conn.flows.iteritems():
                         if co.REINJ_ORIG_TIMESTAMP in flow.attr[direction] and co.START in flow.attr:
@@ -1387,18 +1397,21 @@ def time_reinjection(log_file=sys.stdout):
                                 location_time[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append(max(min(ts_fix / duration, 1.0), 0.0))
                                 location_time_nocorrect[direction]['all'][co.REINJ_ORIG_TIMESTAMP].append(ts_fix / duration)
                                 if direction == co.D2S and ts_fix / duration < 0.0 or ts_fix / duration > 1.0:
-                                    print("WARNING reinj", fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=log_file)
+                                    print(fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=warning_reinj)
                                 if direction == co.D2S and ts_fix <= 1.0:
                                     reinj_first_sec.append((conn_id, flow_id))
                                 if direction == co.D2S and ts_fix / duration >= 0.92 and ts_fix / duration <= 0.97:
-                                    print("95 LOOK", fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=log_file)
+                                    print(fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=look_95)
                                 if direction == co.D2S and ts_fix / duration >= 0.99:
-                                    print("100 LOOK", fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=log_file)
+                                    print(fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=look_100)
 
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
     co.plot_cdfs_with_direction(location_time_nocorrect, color, 'Fraction of connection duration', base_graph_path + '_nocorrect', natural=True)
     print(reinj_first_sec, file=log_file)
     print(len(reinj_first_sec), "reinjections in 1 second", file=log_file)
+    warning_reinj.close()
+    look_95.close()
+    look_100.close()
 
 
 def time_retransmission(log_file=sys.stdout):
@@ -1599,6 +1612,65 @@ def delay_mpcapable_mpjoin_quantify_handover(log_file=sys.stdout, threshold_hand
     print("TOTAL BYTES", bytes_total, file=log_file)
 
 
+def table_rtt_d2s(log_file=sys.stdout):
+    MPTCP = "MPTCP"
+    TCP = "TCP"
+    rtt_min = {MPTCP: [], TCP: []}
+    rtt_med = {MPTCP: [], TCP: []}
+    rtt_avg = {MPTCP: [], TCP: []}
+    rtt_75 = {MPTCP: [], TCP: []}
+    rtt_90 = {MPTCP: [], TCP: []}
+    rtt_95 = {MPTCP: [], TCP: []}
+    rtt_97 = {MPTCP: [], TCP: []}
+    rtt_98 = {MPTCP: [], TCP: []}
+    rtt_99 = {MPTCP: [], TCP: []}
+    rtt_max = {MPTCP: [], TCP: []}
+    rtt_diff = {MPTCP: [], TCP: []}
+    for fname, conns in connections.iteritems():
+        for conn_id, conn in conns.iteritems():
+            # We never know, still check
+            if isinstance(conn, mptcp.MPTCPConnection):
+                if conn.attr[co.D2S][co.BYTES_MPTCPTRACE] < 500000:
+                    continue
+                data = conn.attr[co.D2S]
+                if co.RTT_MIN in data and co.RTT_AVG in data and co.RTT_MED in data and co.RTT_99P in data:
+                    rtt_min[MPTCP].append(data[co.RTT_MIN])
+                    rtt_med[MPTCP].append(data[co.RTT_MED])
+                    rtt_avg[MPTCP].append(data[co.RTT_AVG])
+                    rtt_75[MPTCP].append(data[co.RTT_75P])
+                    rtt_90[MPTCP].append(data[co.RTT_90P])
+                    rtt_95[MPTCP].append(data[co.RTT_95P])
+                    rtt_97[MPTCP].append(data[co.RTT_97P])
+                    rtt_98[MPTCP].append(data[co.RTT_98P])
+                    rtt_99[MPTCP].append(data[co.RTT_99P])
+                    rtt_max[MPTCP].append(data[co.RTT_MAX])
+                    rtt_diff[MPTCP].append(data[co.RTT_MAX] - data[co.RTT_MIN])
+
+                    for flow_id, flow in conn.flows.iteritems():
+                        if flow.attr[co.D2S][co.BYTES] < 250000:
+                            data = flow.attr[co.D2S]
+                            if co.RTT_MIN in data and co.RTT_AVG in data and co.RTT_MED in data and co.RTT_99P in data:
+                                rtt_min[MPTCP].append(data[co.RTT_MIN])
+                                rtt_med[MPTCP].append(data[co.RTT_MED])
+                                rtt_avg[MPTCP].append(data[co.RTT_AVG])
+                                rtt_75[MPTCP].append(data[co.RTT_75P])
+                                rtt_90[MPTCP].append(data[co.RTT_90P])
+                                rtt_95[MPTCP].append(data[co.RTT_95P])
+                                rtt_97[MPTCP].append(data[co.RTT_97P])
+                                rtt_98[MPTCP].append(data[co.RTT_98P])
+                                rtt_99[MPTCP].append(data[co.RTT_99P])
+                                rtt_max[MPTCP].append(data[co.RTT_MAX])
+                                rtt_diff[MPTCP].append(data[co.RTT_MAX] - data[co.RTT_MIN])
+
+    print("TABLE RTT", file=log_file)
+    print("\hline", file=log_file)
+    print("Protocol & Min & Med & Avg & 75^{th} & 90^{th} & 95^{th} & 97^{th} & 98^{th} & 99^{th} & Max & Max - Min \\ ", file=log_file)
+    print("\hline", file=log_file)
+    print("\hline", file=log_file)
+    for protocol in [MPTCP, TCP]:
+        print(protocol, "&", np.mean(rtt_min[protocol]), "&", np.mean(rtt_med[protocol]), "&", np.mean(rtt_avg[protocol]), "&", np.mean(rtt_75[protocol]), "&", np.mean(rtt_90[protocol]), "&", np.mean(rtt_95[protocol]), "&", np.mean(rtt_97[protocol]), "&", np.mean(rtt_98[protocol]), "&", np.mean(rtt_99[protocol]), "&", np.mean(rtt_max[protocol]), "&", np.mean(rtt_diff[protocol]), "\\", file=log_file)
+        print("\hline", file=log_file)
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary-' + str(millis) + '.txt'), 'w')
@@ -1639,5 +1711,6 @@ difference_rtt_d2s(log_file=log_file)
 delay_mpcapable_mpjoin_quantify_handover(log_file=log_file, threshold_handover=1.0)
 count_unused_subflows(log_file=log_file)
 total_retrans_reinj(log_file=log_file)
+table_rtt_d2s(log_file=log_file)
 log_file.close()
 print("End of summary")
