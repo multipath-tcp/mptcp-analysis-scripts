@@ -558,7 +558,7 @@ def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, titl
             ax.plot(x_val, y_val, formatting[count], label=label_names[count])
             count += 1
 
-        legend = ax.legend(loc='upper left', shadow=True, fontsize='x-large')
+        legend = ax.legend(loc='best', shadow=True, fontsize='x-large')
     except ValueError as e:
         print(str(e) + ": create plots: skip " + graph_filepath, file=sys.stderr)
         return

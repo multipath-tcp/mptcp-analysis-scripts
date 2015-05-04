@@ -44,6 +44,8 @@ co.check_directory_exists(args.graph)
 
 mptcp_dir_exp = os.path.abspath(os.path.expanduser(args.mptcp_ack))
 tcp_dir_exp = os.path.abspath(os.path.expanduser(args.tcp_ack))
+sums_dir_exp = os.path.abspath(os.path.expanduser(args.graph))
+
 
 def fetch_data(dir_exp, dir_exp_two):
     co.check_directory_exists(dir_exp)
@@ -103,4 +105,10 @@ for protocol, acks_protocol in sums_acks.iteritems():
             total_bytes += value_ack * nb_ack
             to_plot[protocol][direction].append([value_ack, total_bytes])
 
-print(to_plot)
+        for i in range(0, len(to_plot[protocol][direction])):
+            to_plot[protocol][direction][i][1] = (to_plot[protocol][direction][i][1] + 0.0) / total_bytes
+
+for direction in co.DIRECTIONS:
+    graph_filepath = os.path.join(sums_dir_exp, "acks_size_" + direction + ".pdf")
+    # Plot results
+    co.plot_line_graph([to_plot[MPTCP][direction], to_plot[TCP][direction]], ["MPTCP acks", "TCP acks"], ["g-", "r-"], "Acks size (Bytes)", "Bytes percentage", "", graph_filepath)
