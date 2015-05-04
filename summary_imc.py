@@ -332,10 +332,10 @@ def count_unused_subflows(log_file=sys.stdout):
                             count_unused_additional += 1
                             min_rtt_avg = float('inf')
                             for fid, fl in conn.flows.iteritems():
-                                min_rtt_avg = min(min_rtt_avg, fl.attr[co.D2S][co.RTT_AVG])
+                                if co.RTT_AVG in flow.attr[co.D2S]:
+                                    min_rtt_avg = min(min_rtt_avg, fl.attr[co.D2S][co.RTT_AVG])
                             if co.RTT_AVG in flow.attr[co.D2S] and flow.attr[co.D2S][co.RTT_AVG] == min_rtt_avg:
                                 count_unused_best_avg_rtt += 1
-                    first = False
 
     print("Number of unused subflows:", count, file=log_file)
     print("Number of total subflows:", count_total, file=log_file)
