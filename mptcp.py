@@ -305,7 +305,6 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
     direction = co.D2S if is_reversed else co.S2D
     connections[conn_id].attr[direction][co.BURSTS] = bursts
     for i in range(0, len(connections[conn_id].flows)):
-        print("OK", conn_id, is_reversed)
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_PACKS] = reinject_nb[i]
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_BYTES] = reinject_offsets[i]
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_TIMESTAMP] = reinject_ts[i]
