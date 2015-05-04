@@ -309,6 +309,7 @@ def count_unused_subflows(log_file=sys.stdout):
     count_unused_best_avg_rtt = 0
     count_multiflow_additional = 0
     bytes_when_unused = []
+    duration_when_unused = []
     for fname, conns, in multiflow_connections.iteritems():
         for conn_id, conn in conns.iteritems():
             # Still make sure it's MPTCPConnections
@@ -338,6 +339,8 @@ def count_unused_subflows(log_file=sys.stdout):
                             if co.RTT_AVG in flow.attr[co.D2S] and flow.attr[co.D2S][co.RTT_AVG] == min_rtt_avg:
                                 count_unused_best_avg_rtt += 1
                                 bytes_when_unused.append(conn.attr[co.D2S].get(co.BYTES_MPTCPTRACE, 0))
+                                if co.DURATION in conn.attr:
+                                    duration_when_unused.append(conn.attr[co.DURATION])
 
     print("Number of unused subflows:", count, file=log_file)
     print("Number of total subflows:", count_total, file=log_file)
@@ -347,6 +350,7 @@ def count_unused_subflows(log_file=sys.stdout):
     print("Number of unused additional subflows on multiflow connections", count_unused_additional, file=log_file)
     print("Number of unused additional subflows on multiflow connections with best RTT", count_unused_best_avg_rtt, file=log_file)
     print(np.min(bytes_when_unused), np.percentile(bytes_when_unused, 50), np.mean(bytes_when_unused), np.percentile(bytes_when_unused, 75), np.percentile(bytes_when_unused, 90), np.percentile(bytes_when_unused, 95), np.percentile(bytes_when_unused, 96), np.percentile(bytes_when_unused, 97), np.percentile(bytes_when_unused, 98), np.percentile(bytes_when_unused, 99), np.max(bytes_when_unused), file=log_file)
+    print(np.min(duration_when_unused), np.percentile(duration_when_unused, 50), np.mean(duration_when_unused), np.percentile(duration_when_unused, 75), np.percentile(duration_when_unused, 90), np.percentile(duration_when_unused, 95), np.percentile(duration_when_unused, 96), np.percentile(duration_when_unused, 97), np.percentile(duration_when_unused, 98), np.percentile(duration_when_unused, 99), np.max(duration_when_unused), file=log_file)
 
 
 def textual_summary(log_file=sys.stdout):
@@ -1674,6 +1678,9 @@ def table_rtt_d2s(log_file=sys.stdout):
     for protocol in [MPTCP, TCP]:
         print(protocol, "&", np.mean(rtt_min[protocol]), "&", np.mean(rtt_med[protocol]), "&", np.mean(rtt_avg[protocol]), "&", np.mean(rtt_75[protocol]), "&", np.mean(rtt_90[protocol]), "&", np.mean(rtt_95[protocol]), "&", np.mean(rtt_97[protocol]), "&", np.mean(rtt_98[protocol]), "&", np.mean(rtt_99[protocol]), "&", np.mean(rtt_max[protocol]), "&", np.mean(rtt_diff[protocol]), "\\", file=log_file)
         print(protocol, "&", np.median(rtt_min[protocol]), "&", np.median(rtt_med[protocol]), "&", np.median(rtt_avg[protocol]), "&", np.median(rtt_75[protocol]), "&", np.median(rtt_90[protocol]), "&", np.median(rtt_95[protocol]), "&", np.median(rtt_97[protocol]), "&", np.median(rtt_98[protocol]), "&", np.median(rtt_99[protocol]), "&", np.median(rtt_max[protocol]), "&", np.median(rtt_diff[protocol]), "\\", file=log_file)
+        print(protocol, "&", np.percentile(rtt_min[protocol], 75), "&", np.percentile(rtt_med[protocol], 75), "&", np.percentile(rtt_avg[protocol], 75), "&", np.percentile(rtt_75[protocol], 75), "&", np.percentile(rtt_90[protocol], 75), "&", np.percentile(rtt_95[protocol], 75), "&", np.percentile(rtt_97[protocol], 75), "&", np.percentile(rtt_98[protocol], 75), "&", np.percentile(rtt_99[protocol], 75), "&", np.percentile(rtt_max[protocol], 75), "&", np.percentile(rtt_diff[protocol], 75), "\\", file=log_file)
+        print(protocol, "&", np.percentile(rtt_min[protocol], 90), "&", np.percentile(rtt_med[protocol], 90), "&", np.percentile(rtt_avg[protocol], 90), "&", np.percentile(rtt_75[protocol], 90), "&", np.percentile(rtt_90[protocol], 90), "&", np.percentile(rtt_95[protocol], 90), "&", np.percentile(rtt_97[protocol], 90), "&", np.percentile(rtt_98[protocol], 90), "&", np.percentile(rtt_99[protocol], 90), "&", np.percentile(rtt_max[protocol], 90), "&", np.percentile(rtt_diff[protocol], 90), "\\", file=log_file)
+        print(protocol, "&", np.percentile(rtt_min[protocol], 95), "&", np.percentile(rtt_med[protocol], 95), "&", np.percentile(rtt_avg[protocol], 95), "&", np.percentile(rtt_75[protocol], 95), "&", np.percentile(rtt_90[protocol], 95), "&", np.percentile(rtt_95[protocol], 95), "&", np.percentile(rtt_97[protocol], 95), "&", np.percentile(rtt_98[protocol], 95), "&", np.percentile(rtt_99[protocol], 95), "&", np.percentile(rtt_max[protocol], 95), "&", np.percentile(rtt_diff[protocol], 95), "\\", file=log_file)
         print("\hline", file=log_file)
 
 millis = int(round(time.time() * 1000))
