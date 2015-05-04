@@ -305,6 +305,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
     direction = co.D2S if is_reversed else co.S2D
     connections[conn_id].attr[direction][co.BURSTS] = bursts
     for i in range(0, len(connections[conn_id].flows)):
+        print("OK", conn_id, is_reversed)
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_PACKS] = reinject_nb[i]
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_BYTES] = reinject_offsets[i]
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_TIMESTAMP] = reinject_ts[i]
@@ -736,11 +737,11 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
             acksize_all = {co.S2D: {}, co.D2S: {}}
 
             # Then really process xpl files
-            for xpl_fname in glob.glob(os.path.join(os.getcwd(), '*.xpl')):
+            for xpl_fname in glob.glob(os.path.join('*.xpl')):
                 if not light and MPTCP_RTT_FNAME in xpl_fname:
                     process_rtt_xpl(xpl_fname, rtt_all, connections, relative_start, min_bytes)
-                elif MPTCP_SEQ_FNAME in xpl_fname:
-                    process_seq_xpl(xpl_fname, connections, relative_start, min_bytes)
+                # elif MPTCP_SEQ_FNAME in xpl_fname:
+                #    process_seq_xpl(xpl_fname, connections, relative_start, min_bytes)
                 try:
                     directory = co.DEF_RTT_DIR if MPTCP_RTT_FNAME in xpl_fname else co.TSG_THGPT_DIR
                     shutil.move(xpl_fname, os.path.join(
@@ -749,7 +750,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                     print(str(e), file=sys.stderr)
 
             # And by default, save all csv files
-            for csv_fname in glob.glob(os.path.join(os.getcwd(), '*.csv')):
+            for csv_fname in glob.glob(os.path.join('*.csv')):
                 if not light:
                     if MPTCP_GPUT_FNAME in os.path.basename(csv_fname):
                         process_gput_csv(csv_fname, connections)
@@ -762,6 +763,9 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                         # co.move_file(csv_fname, os.path.join(
                         #    graph_dir_exp, co.DEF_RTT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
                     elif MPTCP_SEQ_FNAME in os.path.basename(csv_fname):
+                        conn_id = get_connection_id(os.path.basename(csv_fname))
+                        is_reversed = is_reverse_connection(os.path.basename(csv_fname))
+                        process_csv(csv_fname, connections, conn_id, is_reversed)
                         co.move_file(csv_fname, os.path.join(
                             graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + os.path.basename(csv_fname)))
                     elif MPTCP_ACKSIZE_FNAME in os.path.basename(csv_fname):
