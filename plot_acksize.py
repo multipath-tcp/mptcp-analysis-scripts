@@ -88,6 +88,8 @@ for protocol, acks_protocol in acks.iteritems():
                                 sums_acks[protocol][direction][int(value_ack)] += int(nb_ack)
                 else:
                     for value_ack, nb_ack in acks_conn.iteritems():
+                        if int(value_ack) > 100000000:
+                            print(fname, conn_id, flow_id)
                         if int(value_ack) not in sums_acks[protocol][direction]:
                             sums_acks[protocol][direction][int(value_ack)] = int(nb_ack)
                         else:
