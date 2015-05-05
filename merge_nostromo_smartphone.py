@@ -142,13 +142,26 @@ dataset[NOSTR]["time"] = nostromo_time(time_file_exp)
 dataset[NOSTR]["bytes"] = nostromo_bytes(bytes_file_exp)
 dataset[NOSTR]["join"] = nostromo_join(join_file_exp)
 
+def ensures_smartphone_to_proxy():
+    for fname in dataset[SMART].keys():
+        for conn_id in dataset[SMART][fname].keys():
+            if isinstance(dataset[SMART][fname][conn_id], mptcp.MPTCPConnection):
+                for flow_id in dataset[SMART][fname][conn_id].flows.keys():
+                    if dataset[SMART][fname][conn_id].flows[flow_id].attr[co.DADDR] != co.IP_PROXY:
+                        dataset[SMART][fname].pop(conn_id, None)
+                        continue
+
+ensures_smartphone_to_proxy()
+
 def plot_time():
     time_smartphone = []
     for fname, data in dataset[SMART].iteritems():
         for conn_id, conn in data.iteritems():
             if co.DURATION in conn.attr:
                 time_smartphone.append(conn.attr[co.DURATION])
-    co.plot_cdfs_natural({'all': {SMART: time_smartphone, NOSTR: dataset[NOSTR]["time"]}}, ['red', 'blue'], 'Seconds', os.path.join(sums_dir_exp, 'merge_time'), label_order=[NOSTR, SMART], xlog=True)
+                if conn.attr[co.DURATION] < 0.001:
+                    print(fname, conn_id, conn.attr[co.DURATION])
+    co.plot_cdfs_natural({'all': {SMART: time_smartphone, NOSTR: dataset[NOSTR]["time"]}}, ['red', 'blue'], 'Seconds', os.path.join(sums_dir_exp, 'merge_time'), label_order=[NOSTR, SMART], xlog=True, xlim=1000000)
 
 
 def plot_bytes():
@@ -185,6 +198,17 @@ def plot_join():
                     join_smartphone.append(delta)
 
     co.plot_cdfs_natural({'all': {SMART: join_smartphone, NOSTR: dataset[NOSTR]["join"]}}, ['red', 'blue'], 'Seconds', os.path.join(sums_dir_exp, 'merge_join'), label_order=[NOSTR, SMART], xlog=True)
+    for data in [join_smartphone, dataset[NOSTR]["join"]]:
+        total = len(data)
+        count_after_60 = 0
+        count_after_3600 = 0
+        for ts_join in data:
+            if ts_join >= 60:
+                count_after_60 += 1
+                if ts_join >= 3600:
+                    count_after_3600 += 1
+        print("TOTAL", total, "Subflows after 60s", count_after_60, "Subflows after 3600s", count_after_3600)
+
 
 plot_time()
 plot_bytes()
