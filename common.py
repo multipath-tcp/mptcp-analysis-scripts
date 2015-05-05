@@ -801,7 +801,7 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ylim
                     yvals = np.append(yvals, 1.0)
                     if ccdf:
                         yvals = 1.0 - yvals
-                    ax.plot(sorted_array, yvals, color[aggl_res[cond].keys().index(element)], label=element)
+                    ax.plot(sorted_array, yvals, color=color[aggl_res[cond].keys().index(element)], label=element)
             except ZeroDivisionError as e:
                 print(str(e))
 
