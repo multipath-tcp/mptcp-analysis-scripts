@@ -373,8 +373,8 @@ def count_unused_subflows(log_file=sys.stdout):
 
 
 def textual_summary(log_file=sys.stdout):
-    data = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0, '<10K': 0, '1B': 0, '2B': 0, '>=100s': 0}}
-    count = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0, '<10K': 0, '1B': 0, '2B': 0, '>=100s': 0}}
+    data = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0, '<10K': 0, '1B': 0, '2B': 0, '>=100s': 0, '<10s': 0}}
+    count = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0, '<10K': 0, '1B': 0, '2B': 0, '>=100s': 0, '<10s': 0}}
     tot_count = {'all': 0.0}
 
     for fname, conns in connections.iteritems():
@@ -409,6 +409,9 @@ def textual_summary(log_file=sys.stdout):
             if duration >= 100.0:
                 count['all']['>=100s'] += 1
                 data['all']['>=100s'] += nb_bytes_s2d + nb_bytes_d2s
+            elif duration < 10.0:
+                count['all']['<10s'] += 1
+                data['all']['<10s'] += nb_bytes_s2d + nb_bytes_d2s
 
             if nb_bytes_s2d + nb_bytes_d2s == 2:
                 count['all']['2B'] += 1
@@ -416,7 +419,9 @@ def textual_summary(log_file=sys.stdout):
             elif nb_bytes_s2d + nb_bytes_d2s == 1:
                 count['all']['1B'] += 1
                 data['all']['1B'] += nb_bytes_s2d + nb_bytes_d2s
-
+            elif nb_bytes_s2d + nb_bytes_d2s < 10000:
+                count['all']['<10K'] += 1
+                data['all']['<10K'] += nb_bytes_s2d + nb_bytes_d2s
             if duration < 9:
                 data['all']["<9s"] += nb_bytes_s2d + nb_bytes_d2s
                 count['all']["<9s"] += 1
