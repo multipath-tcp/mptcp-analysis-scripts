@@ -1827,7 +1827,7 @@ def plot_rtt_d2s(log_file=sys.stdout):
                     rtt_diff.append(max_flow - min_flow)
 
 
-    co.plot_cdfs_natural({'all': {"min RTT": rtt_min, "avg RTT": rtt_avg, "max RTT": rtt_max, "max RTT - min RTT": rtt_diff}}, ['red', 'green', 'blue', 'magenta'], "RTT of subflows larger than 100KB (ms)", base_graph_path_rtt, xlog=True)
+    co.plot_cdfs_natural({'all': {"min RTT": rtt_min, "avg RTT": rtt_avg, "max RTT": rtt_max, "max RTT - min RTT": rtt_diff}}, ['red', 'green', 'blue', 'magenta'], "RTT of subflows larger than 100KB (ms)", base_graph_path_rtt, label_order=["min RTT", "avg RTT", "max RTT", "max RTT - min RTT"], xlog=True)
 
 
 millis = int(round(time.time() * 1000))
