@@ -99,7 +99,7 @@ def ensures_smartphone_to_proxy():
             if isinstance(connections[fname][conn_id], mptcp.MPTCPConnection):
                 inside = True
                 for flow_id, flow in connections[fname][conn_id].flows.iteritems():
-                    if flow.attr[co.DADDR] != co.IP_PROXY:
+                    if not flow.attr[co.DADDR].startswith('172.17.') and not flow.attr[co.DADDR] == co.IP_PROXY:
                         connections[fname].pop(conn_id, None)
                         inside = False
                         break
