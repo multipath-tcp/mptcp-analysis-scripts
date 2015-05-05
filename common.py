@@ -811,7 +811,10 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ylim
         #                  box.width, box.height * 0.9])
 
         if xlim:
-            plt.xlim(0.0, xlim)
+            if xlog:
+                plt.xlim(0.01, xlim)
+            else:
+                plt.xlim(0.0, xlim)
 
         if ylim:
             plt.ylim(ylim, 1.0)
