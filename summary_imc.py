@@ -93,6 +93,18 @@ def fetch_data(dir_exp):
 connections = fetch_data(stat_dir_exp)
 
 
+def ensures_smartphone_to_proxy():
+    for fname in connections.keys():
+        for conn_id in connections[fname].keys():
+            if isinstance(connections[fname][conn_id], mptcp.MPTCPConnection):
+                for flow_id in connections[fname][conn_id].keys():
+                    if connections[fname][conn_id][flow_id][co.DADDR] != co.IP_PROXY:
+                        connections[fname].pop(conn_id, None)
+                        continue
+
+ensures_smartphone_to_proxy()
+
+
 def get_multiflow_connections(connections):
     multiflow_connections = {}
     singleflow_connections = {}
