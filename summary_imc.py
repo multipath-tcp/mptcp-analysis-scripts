@@ -1522,7 +1522,7 @@ def merge_time_reinjection_retransmission(log_file=sys.stdout):
                             start_flow_time = flow.attr[co.START]
                             time_diff = start_flow_time - start_time
                             for ts in flow.attr[direction][co.TIMESTAMP_RETRANS]:
-                                location_time[direction]['all']["Retransmissions"].append(min((ts + time_diff) / duration, 1.0))
+                                location_time[direction]['all']["Retransmissions"].append(max(min((ts + time_diff) / duration, 1.0), 0.0))
                                 location_time_nocorrect[direction]['all']["Retransmissions"].append((ts + time_diff) / duration)
                                 if direction == co.D2S and (ts + time_diff) / duration < 0.0 or (ts + time_diff) / duration > 1.0:
                                     print(fname, conn_id, flow_id, ts / duration, file=warning_retrans)
