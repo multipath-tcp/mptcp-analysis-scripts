@@ -97,10 +97,14 @@ def ensures_smartphone_to_proxy():
     for fname in connections.keys():
         for conn_id in connections[fname].keys():
             if isinstance(connections[fname][conn_id], mptcp.MPTCPConnection):
-                for flow_id in connections[fname][conn_id].keys():
-                    if connections[fname][conn_id][flow_id][co.DADDR] != co.IP_PROXY:
+                for flow_id in connections[fname][conn_id].flows.keys():
+                    if connections[fname][conn_id].flows[flow_id].attr[co.DADDR] != co.IP_PROXY:
                         connections[fname].pop(conn_id, None)
                         continue
+                for direction in co.DIRECTIONS:
+                    # This is a fix for wrapping seq num
+                    if connections[fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE] < 0:
+                        connections[fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE] = 2**32 + connections[fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE]
 
 ensures_smartphone_to_proxy()
 
@@ -1797,6 +1801,9 @@ def plot_rtt_d2s(log_file=sys.stdout):
         for conn_id, conn in conns.iteritems():
             # We never know, still check
             if isinstance(conn, mptcp.MPTCPConnection):
+                count_flow = 0
+                max_flow = 0.0
+                min_flow = float('inf')
                 for flow_id, flow in conn.flows.iteritems():
                     if flow.attr[co.D2S].get(co.BYTES, 0) < 100000:
                         continue
@@ -1805,9 +1812,17 @@ def plot_rtt_d2s(log_file=sys.stdout):
                         rtt_min.append(data[co.RTT_MIN])
                         rtt_avg.append(data[co.RTT_AVG])
                         rtt_max.append(data[co.RTT_MAX])
-                        rtt_diff.append(data[co.RTT_MAX] - data[co.RTT_MIN])
+
+                        count_flow += 1
+                        max_flow = max(max_flow, data[co.RTT_AVG])
+                        min_flow = min(min_flow, data[co.RTT_AVG])
+
                         if data[co.RTT_MIN] < 1.0:
                             print("LOW RTT", fname, conn_id, flow_id, data[co.RTT_MIN], data[co.RTT_AVG], data[co.RTT_MAX], flow.attr[co.D2S].get(co.RTT_3WHS, 0), flow.attr[co.D2S].get(co.BYTES, 0), flow.attr[co.D2S].get(co.RTT_SAMPLES, 0), flow.attr[co.DADDR], file=log_file)
+
+                if count_flow >= 2:
+                    rtt_diff.append(max_flow - min_flow)
+
 
     co.plot_cdfs_natural({'all': {"min RTT": rtt_min, "avg RTT": rtt_avg, "max RTT": rtt_max, "max RTT - min RTT": rtt_diff}}, ['red', 'green', 'blue', 'magenta'], "RTT of subflows larger than 100KB (ms)", base_graph_path_rtt, xlog=True)
 
