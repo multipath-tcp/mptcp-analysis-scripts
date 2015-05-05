@@ -1627,13 +1627,13 @@ def detect_handover(log_file=sys.stdout):
                         continue
                     start_time = min(start_time, flow.attr[co.START])
                 for flow_id, flow in conn.flows.iteritems():
-                    if co.START in flow.attr and flow.attr[co.START] - start_time >= 1.0:
+                    if co.START in flow.attr and flow.attr[co.START] - start_time >= 2.0:
                         handover_conns[fname].append(conn_id)
 
     print(handover_conns, file=log_file)
 
 
-def delay_mpcapable_mpjoin_quantify_handover(log_file=sys.stdout, threshold_handover=1.0):
+def delay_mpcapable_mpjoin_quantify_handover(log_file=sys.stdout, threshold_handover=2.0):
     syn_additional_sfs = []
     handover_conns = {}
     # Look only at multiple subflows connections
