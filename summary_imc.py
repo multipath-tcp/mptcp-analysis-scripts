@@ -354,8 +354,8 @@ def count_unused_subflows(log_file=sys.stdout):
 
 
 def textual_summary(log_file=sys.stdout):
-    data = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0}}
-    count = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0}}
+    data = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0, '<10K': 0, '1B': 0, '2B': 0, '>=100s': 0}}
+    count = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0, '<10K': 0, '1B': 0, '2B': 0, '>=100s': 0}}
     tot_count = {'all': 0.0}
 
     for fname, conns in connections.iteritems():
@@ -369,12 +369,12 @@ def textual_summary(log_file=sys.stdout):
             nb_bytes_d2s = 0
 
             # An alternative version could be written with the bytes returned by mptcptrace, it would then be
-            # nb_bytes_s2d = conn.attr[co.S2D][co.BYTES_MPTCPTRACE]
-            # nb_bytes_d2s = conn.attr[co.D2S][co.BYTES_MPTCPTRACE]
-            if co.BYTES in conn.attr[co.S2D]:
-                nb_bytes_s2d = conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0) + conn.attr[co.S2D][co.BYTES].get(co.CELL, 0) + conn.attr[co.S2D][co.BYTES].get('?', 0)
-            if co.BYTES in conn.attr[co.D2S]:
-                nb_bytes_d2s = conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0) + conn.attr[co.D2S][co.BYTES].get(co.CELL, 0) + conn.attr[co.D2S][co.BYTES].get('?', 0)
+            nb_bytes_s2d = conn.attr[co.S2D][co.BYTES_MPTCPTRACE]
+            nb_bytes_d2s = conn.attr[co.D2S][co.BYTES_MPTCPTRACE]
+            # if co.BYTES in conn.attr[co.S2D]:
+            #     nb_bytes_s2d = conn.attr[co.S2D][co.BYTES].get(co.WIFI, 0) + conn.attr[co.S2D][co.BYTES].get(co.CELL, 0) + conn.attr[co.S2D][co.BYTES].get('?', 0)
+            # if co.BYTES in conn.attr[co.D2S]:
+            #     nb_bytes_d2s = conn.attr[co.D2S][co.BYTES].get(co.WIFI, 0) + conn.attr[co.D2S][co.BYTES].get(co.CELL, 0) + conn.attr[co.D2S][co.BYTES].get('?', 0)
 
             if duration < 1:
                 data['all']['<1s'] += nb_bytes_s2d + nb_bytes_d2s
@@ -386,6 +386,17 @@ def textual_summary(log_file=sys.stdout):
                 else:
                     data['all'][">=1s>=10K"] += nb_bytes_s2d + nb_bytes_d2s
                     count['all'][">=1s>=10K"] += 1
+
+            if duration >= 100.0:
+                count['all']['>=100s'] += 1
+                data['all']['>=100s'] += nb_bytes_s2d + nb_bytes_d2s
+
+            if nb_bytes_s2d + nb_bytes_d2s == 2:
+                count['all']['2B'] += 1
+                data['all']['2B'] += nb_bytes_s2d + nb_bytes_d2s
+            elif nb_bytes_s2d + nb_bytes_d2s == 1:
+                count['all']['1B'] += 1
+                data['all']['1B'] += nb_bytes_s2d + nb_bytes_d2s
 
             if duration < 9:
                 data['all']["<9s"] += nb_bytes_s2d + nb_bytes_d2s
@@ -495,7 +506,7 @@ def count_on_filtered(min_bytes=1000000, log_file=sys.stdout):
 
     print("NB CONN FILTERED", count_conn, file=log_file)
     print("BYTES S2D FILTERED", count_bytes[co.S2D], "BYTES D2S FILTERED", count_bytes[co.D2S], file=log_file)
-    print("BYTES S2D FILTERED", count_packs[co.S2D], "BYTES D2S FILTERED", count_packs[co.D2S], file=log_file)
+    print("PACKS S2D FILTERED", count_packs[co.S2D], "PACKS D2S FILTERED", count_packs[co.D2S], file=log_file)
     print("PORT SOURCE FILTER", file=log_file)
     print(ports[co.SPORT], file=log_file)
     print("PORT DEST FILTER", file=log_file)
@@ -1581,6 +1592,8 @@ def bursts_mptcp(log_file=sys.stdout):
                     if duration == 0.0:
                         continue
                     for direction in co.DIRECTIONS:
+                        if conn.attr[direction].get(co.BYTES_MPTCPTRACE, 0) < 1000000:
+                            continue
                         nb_packs = 0
                         for flow_id, flow in conn.flows.iteritems():
                             nb_packs += flow.attr[direction].get(co.PACKS, 0)
