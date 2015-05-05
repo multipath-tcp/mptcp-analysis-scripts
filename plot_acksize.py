@@ -100,7 +100,7 @@ for fname, acks_fname in acks[MPTCP].iteritems():
                     if int(value_ack) > 100000000:
                         print(fname, conn_id)
                         continue
-                    if int(value_ack) < -200000000:
+                    if int(value_ack) < -10000000:
                         print(fname, conn_id, int(value_ack))
                         continue
                     if int(value_ack) not in sums_acks[MPTCP][direction]:
