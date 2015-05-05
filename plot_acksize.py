@@ -75,29 +75,35 @@ acks = fetch_data(mptcp_dir_exp, tcp_dir_exp)
 
 sums_acks = {MPTCP: {co.S2D: {}, co.D2S: {}}, TCP: {co.S2D: {}, co.D2S: {}}}
 
-for protocol, acks_protocol in acks.iteritems():
-    for fname, acks_fname in acks_protocol.iteritems():
-        for direction, acks_direction in acks_fname.iteritems():
-            for conn_id, acks_conn in acks_direction.iteritems():
-                if protocol == TCP:
-                    for flow_id, acks_flow in acks_conn.iteritems():
-                        for value_ack, nb_ack in acks_flow.iteritems():
-                            if int(value_ack) > 100000000:
-                                print(fname, conn_id, flow_id)
-                                continue
-                            if int(value_ack) not in sums_acks[protocol][direction]:
-                                sums_acks[protocol][direction][int(value_ack)] = int(nb_ack)
-                            else:
-                                sums_acks[protocol][direction][int(value_ack)] += int(nb_ack)
-                else:
-                    for value_ack, nb_ack in acks_conn.iteritems():
+multiflow_conn = set()
+
+for fname, acks_fname in acks[TCP].iteritems():
+    for direction, acks_direction in acks_fname.iteritems():
+        for conn_id, acks_conn in acks_direction.iteritems():
+            if len(acks_conn) >= 2:
+                multiflow_conn.add(conn_id)
+                for flow_id, acks_flow in acks_conn.iteritems():
+                    for value_ack, nb_ack in acks_flow.iteritems():
                         if int(value_ack) > 100000000:
-                            print(fname, conn_id)
+                            print(fname, conn_id, flow_id)
                             continue
-                        if int(value_ack) not in sums_acks[protocol][direction]:
-                            sums_acks[protocol][direction][int(value_ack)] = int(nb_ack)
+                        if int(value_ack) not in sums_acks[TCP][direction]:
+                            sums_acks[TCP][direction][int(value_ack)] = int(nb_ack)
                         else:
-                            sums_acks[protocol][direction][int(value_ack)] += int(nb_ack)
+                            sums_acks[TCP][direction][int(value_ack)] += int(nb_ack)
+
+for fname, acks_fname in acks[MPTCP].iteritems():
+    for direction, acks_direction in acks_fname.iteritems():
+        for conn_id, acks_conn in acks_direction.iteritems():
+            if conn_id in multiflow_conn:
+                for value_ack, nb_ack in acks_conn.iteritems():
+                    if int(value_ack) > 100000000:
+                        print(fname, conn_id)
+                        continue
+                    if int(value_ack) not in sums_acks[MPTCP][direction]:
+                        sums_acks[MPTCP][direction][int(value_ack)] = int(nb_ack)
+                    else:
+                        sums_acks[MPTCP][direction][int(value_ack)] += int(nb_ack)
 
 
 to_plot = {MPTCP: {co.S2D: [], co.D2S: []}, TCP: {co.S2D: [], co.D2S: []}}
