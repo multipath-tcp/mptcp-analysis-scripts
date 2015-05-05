@@ -1693,6 +1693,8 @@ def delay_mpcapable_mpjoin_quantify_handover(log_file=sys.stdout, threshold_hand
                 delta = flow.attr[co.START] - initial_sf_ts
                 for direction in co.DIRECTIONS:
                     bytes_total += flow.attr[direction].get(co.BYTES, 0)
+                    if bytes_total >= 1000000000:
+                        print("WARNING!!!", fname, conn_id, flow_id, bytes_total, file=log_file)
                     if delta < threshold_handover:
                         # Initial subflows
                         bytes_init_sfs += flow.attr[direction].get(co.BYTES, 0)
