@@ -97,8 +97,8 @@ def ensures_smartphone_to_proxy():
     for fname in connections.keys():
         for conn_id in connections[fname].keys():
             if isinstance(connections[fname][conn_id], mptcp.MPTCPConnection):
-                for flow_id in connections[fname][conn_id].flows.keys():
-                    if connections[fname][conn_id].flows[flow_id].attr[co.DADDR] != co.IP_PROXY:
+                for flow_id, flow in connections[fname][conn_id].flows.iteritems():
+                    if flow.attr[co.DADDR] != co.IP_PROXY:
                         connections[fname].pop(conn_id, None)
                         continue
                 for direction in co.DIRECTIONS:

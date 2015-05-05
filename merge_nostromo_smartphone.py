@@ -146,10 +146,15 @@ def ensures_smartphone_to_proxy():
     for fname in dataset[SMART].keys():
         for conn_id in dataset[SMART][fname].keys():
             if isinstance(dataset[SMART][fname][conn_id], mptcp.MPTCPConnection):
-                for flow_id in dataset[SMART][fname][conn_id].flows.keys():
-                    if dataset[SMART][fname][conn_id].flows[flow_id].attr[co.DADDR] != co.IP_PROXY:
+                for flow_id, flow in dataset[SMART][fname][conn_id].flows.iteritems():
+                    if flow.attr[co.DADDR] != co.IP_PROXY:
                         dataset[SMART][fname].pop(conn_id, None)
                         continue
+                for direction in co.DIRECTIONS:
+                    # This is a fix for wrapping seq num
+                    if dataset[SMART][fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE] < 0:
+                        dataset[SMART][fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE] = 2**32 + dataset[SMART][fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE]
+
 
 ensures_smartphone_to_proxy()
 
