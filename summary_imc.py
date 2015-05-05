@@ -1795,7 +1795,7 @@ def plot_rtt_d2s(log_file=sys.stdout):
                         rtt_max.append(data[co.RTT_MAX])
                         rtt_diff.append(data[co.RTT_MAX] - data[co.RTT_MIN])
                         if data[co.RTT_MIN] < 1.0:
-                            print("LOW RTT", fname, conn_id, flow_id, data[co.RTT_MIN], data[co.RTT_AVG], data[co.RTT_MAX], flow.attr[co.D2S].get(co.BYTES, 0), file=log_file)
+                            print("LOW RTT", fname, conn_id, flow_id, data[co.RTT_MIN], data[co.RTT_AVG], data[co.RTT_MAX], flow.attr[co.D2S].get(co.RTT_3WHS, 0), flow.attr[co.D2S].get(co.BYTES, 0), file=log_file)
 
     co.plot_cdfs_natural({'all': {"min RTT": rtt_min, "avg RTT": rtt_avg, "max RTT": rtt_max, "max RTT - min RTT": rtt_diff}}, ['red', 'green', 'blue', 'magenta'], "RTT of subflows larger than 100KB (ms)", base_graph_path_rtt, xlog=True)
 
