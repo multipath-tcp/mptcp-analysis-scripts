@@ -155,7 +155,7 @@ def ensures_smartphone_to_proxy():
                 if inside:
                     for direction in co.DIRECTIONS:
                         # This is a fix for wrapping seq num
-                        if dataset[SMART][fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE] < 0:
+                        if dataset[SMART][fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE] < -1:
                             dataset[SMART][fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE] = 2**32 + dataset[SMART][fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE]
 
 
