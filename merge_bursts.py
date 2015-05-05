@@ -112,7 +112,7 @@ correct_mptcptrace_bytes()
 
 def bursts_mptcp(log_file=sys.stdout):
     bursts_sec = {co.S2D: {'all': {NOSTR: [], SMART: []}}, co.D2S: {'all': {NOSTR: [], SMART: []}}}
-    color = ['blue', 'red']
+    color = ['red', 'blue']
     graph_fname_sec = "merge_bursts_sec"
     base_graph_path_sec = os.path.join(sums_dir_exp, graph_fname_sec)
     for ds, data in dataset.iteritems():
@@ -130,9 +130,9 @@ def bursts_mptcp(log_file=sys.stdout):
                             if conn.attr[direction][co.BYTES_MPTCPTRACE] > 1 and co.BURSTS in conn.attr[direction] and len(conn.attr[direction][co.BURSTS]) > 0:
                                 bursts_sec[direction]['all'][ds].append((len(conn.attr[direction][co.BURSTS]) - 1.0) / duration)
 
-    co.plot_cdfs_with_direction(bursts_sec, color, '# switches / second', base_graph_path_sec, natural=True)
-    co.plot_cdfs_with_direction(bursts_sec, color, '# switches / second', base_graph_path_sec + "_cut", xlim=200, natural=True)
-    co.plot_cdfs_with_direction(bursts_sec, color, '# switches / second', base_graph_path_sec + "_ccdf", natural=True, xlog=True, ylog=True, ccdf=True)
+    co.plot_cdfs_with_direction(bursts_sec, color, '# switches / second', base_graph_path_sec, natural=True, label_order=[NOSTR, SMART])
+    co.plot_cdfs_with_direction(bursts_sec, color, '# switches / second', base_graph_path_sec + "_cut", xlim=200, natural=True, label_order=[NOSTR, SMART])
+    co.plot_cdfs_with_direction(bursts_sec, color, '# switches / second', base_graph_path_sec + "_ccdf", natural=True, xlog=True, ylog=True, ccdf=True, label_order=[NOSTR, SMART])
 
 
 bursts_mptcp()
