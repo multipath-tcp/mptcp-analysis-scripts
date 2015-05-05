@@ -563,16 +563,16 @@ def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, titl
         print(str(e) + ": create plots: skip " + graph_filepath, file=sys.stderr)
         return
 
-    try:
-        # Put a nicer background color on the legend.
-        legend.get_frame().set_facecolor('#00FFCC')
-    except AttributeError as e:
-        # if we have no frame, it means we have no object...
-        print(str(e) + ": change legend: skip " + graph_filepath, file=sys.stderr)
-        print('label_names: ' + str(label_names), file=sys.stderr)
-        print('formatting: ' + str(formatting), file=sys.stderr)
-        print('data: ' + str(data), file=sys.stderr)
-        return
+    # try:
+    #     # Put a nicer background color on the legend.
+    #     legend.get_frame().set_facecolor('#00FFCC')
+    # except AttributeError as e:
+    #     # if we have no frame, it means we have no object...
+    #     print(str(e) + ": change legend: skip " + graph_filepath, file=sys.stderr)
+    #     print('label_names: ' + str(label_names), file=sys.stderr)
+    #     print('formatting: ' + str(formatting), file=sys.stderr)
+    #     print('data: ' + str(data), file=sys.stderr)
+    #     return
 
     fig.suptitle(title, fontsize=titlesize)
     plt.xlabel(xlabel, fontsize=18)
@@ -801,7 +801,7 @@ def plot_cdfs_natural(aggl_res, color, xlabel, base_graph_fname, xlim=None, ylim
                     yvals = np.append(yvals, 1.0)
                     if ccdf:
                         yvals = 1.0 - yvals
-                    ax.plot(sorted_array, yvals, color=color[aggl_res[cond].keys().index(element)], label=element)
+                    ax.plot(sorted_array, yvals, color[aggl_res[cond].keys().index(element)], label=element)
             except ZeroDivisionError as e:
                 print(str(e))
 

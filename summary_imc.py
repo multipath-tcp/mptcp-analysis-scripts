@@ -1451,6 +1451,81 @@ def time_retransmission(log_file=sys.stdout):
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path + '_nocorrect', natural=True)
 
 
+def merge_time_reinjection_retransmission(log_file=sys.stdout):
+    location_time = {co.S2D: {'all': {"Reinjections": [], "Retransmissions": []}}, co.D2S: {'all': {"Reinjections": [], "Retransmissions": []}}}
+    location_time_nocorrect = {co.S2D: {'all': {"Reinjections": [], "Retransmissions": []}}, co.D2S: {'all': {"Reinjections": [], "Retransmissions": []}}}
+    reinj_first_sec = []
+    color = ['red', 'blue']
+    graph_fname = "merge_time_reinjection_retranmission"
+    base_graph_path = os.path.join(sums_dir_exp, graph_fname)
+    for fname, conns in connections.iteritems():
+        for conn_id, conn in conns.iteritems():
+            # We never know, still check
+            if isinstance(conn, mptcp.MPTCPConnection):
+                start_time = float('inf')
+                duration = conn.attr[co.DURATION]
+                if duration <= 0.001:
+                    continue
+
+                start_time = conn.attr.get(co.START, float('inf'))
+
+                if start_time == float('inf'):
+                    continue
+
+                start_time_int = int(start_time)
+                start_time_dec = float(str(start_time - start_time_int)[1:])
+                start_time_dec = ceil(start_time_dec * 1000000) / 1000000.0
+                warning_reinj = open(os.path.join(sums_dir_exp, 'warning_reinj.txt'), 'w')
+                look_95 = open(os.path.join(sums_dir_exp, 'look95.txt'), 'w')
+                look_100 = open(os.path.join(sums_dir_exp, 'look100.txt'), 'w')
+                warning_retrans = open(os.path.join(sums_dir_exp, 'warning_retrans.txt'), 'w')
+                for direction in [co.D2S]:
+                    for flow_id, flow in conn.flows.iteritems():
+                        if co.REINJ_ORIG_TIMESTAMP in flow.attr[direction] and co.START in flow.attr:
+                            for ts in flow.attr[direction][co.REINJ_ORIG_TIMESTAMP]:
+                                # Some tricks to avoid floating errors
+                                ts_int = int(ts)
+                                ts_dec = float(str(ts - ts_int)[1:])
+                                ts_dec = ceil(ts_dec * 1000000) / 1000000.0
+                                ts_dec_delta = ts_dec - start_time_dec
+                                ts_fix = ts_int - start_time_int + ts_dec_delta
+                                location_time[direction]['all']["Reinjections"].append(max(min(ts_fix / duration, 1.0), 0.0))
+                                location_time_nocorrect[direction]['all']["Reinjections"].append(ts_fix / duration)
+                                if direction == co.D2S and ts_fix / duration < 0.0 or ts_fix / duration > 1.0:
+                                    print(fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=warning_reinj)
+                                if direction == co.D2S and ts_fix <= 1.0:
+                                    reinj_first_sec.append((conn_id, flow_id))
+                                if direction == co.D2S and ts_fix / duration >= 0.92 and ts_fix / duration <= 0.97:
+                                    print(fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=look_95)
+                                if direction == co.D2S and ts_fix / duration >= 0.99:
+                                    print(fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=look_100)
+
+                start_time = float('inf')
+                duration = conn.attr[co.DURATION]
+                if duration <= 0.001:
+                    continue
+                start_time = conn.attr.get(co.START, float('inf'))
+                for direction in co.DIRECTIONS:
+                    for flow_id, flow in conn.flows.iteritems():
+                        if co.TIMESTAMP_RETRANS in flow.attr[direction] and co.START in flow.attr:
+                            start_flow_time = flow.attr[co.START]
+                            time_diff = start_flow_time - start_time
+                            for ts in flow.attr[direction][co.TIMESTAMP_RETRANS]:
+                                location_time[direction]['all']["Retransmissions"].append(min((ts + time_diff) / duration, 1.0))
+                                location_time_nocorrect[direction]['all']["Retransmissions"].append((ts + time_diff) / duration)
+                                if direction == co.D2S and (ts + time_diff) / duration < 0.0 or (ts + time_diff) / duration > 1.0:
+                                    print(fname, conn_id, flow_id, ts / duration, file=warning_retrans)
+
+    co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
+    co.plot_cdfs_with_direction(location_time_nocorrect, color, 'Fraction of connection duration', base_graph_path + '_nocorrect', natural=True)
+    print(reinj_first_sec, file=log_file)
+    print(len(reinj_first_sec), "reinjections in 1 second", file=log_file)
+    warning_reinj.close()
+    look_95.close()
+    look_100.close()
+    warning_retrans.close()
+
+
 def total_retrans_reinj(log_file=sys.stdout):
     reinject = {co.S2D: 0, co.D2S: 0}
     reinject_packs = {co.S2D: 0, co.D2S: 0}
@@ -1683,6 +1758,31 @@ def table_rtt_d2s(log_file=sys.stdout):
         print(protocol, "&", np.percentile(rtt_min[protocol], 95), "&", np.percentile(rtt_med[protocol], 95), "&", np.percentile(rtt_avg[protocol], 95), "&", np.percentile(rtt_75[protocol], 95), "&", np.percentile(rtt_90[protocol], 95), "&", np.percentile(rtt_95[protocol], 95), "&", np.percentile(rtt_97[protocol], 95), "&", np.percentile(rtt_98[protocol], 95), "&", np.percentile(rtt_99[protocol], 95), "&", np.percentile(rtt_max[protocol], 95), "&", np.percentile(rtt_diff[protocol], 95), "\\", file=log_file)
         print("\hline", file=log_file)
 
+
+def plot_rtt_d2s(log_file=sys.stdout):
+    rtt_min = []
+    rtt_avg = []
+    rtt_max = []
+    rtt_diff = []
+    graph_fname_rtt = "rtt_d2s"
+    base_graph_path_rtt = os.path.join(sums_dir_exp, graph_fname_rtt)
+    for fname, conns in connections.iteritems():
+        for conn_id, conn in conns.iteritems():
+            # We never know, still check
+            if isinstance(conn, mptcp.MPTCPConnection):
+                for flow_id, flow in conn.flows.iteritems():
+                    if flow.attr[co.D2S].get(co.BYTES, 0) < 100000:
+                        continue
+                    data = flow.attr[co.D2S]
+                    if co.RTT_MIN in data and co.RTT_AVG in data:
+                        rtt_min.append(data[co.RTT_MIN])
+                        rtt_avg.append(data[co.RTT_AVG])
+                        rtt_max.append(data[co.RTT_MAX])
+                        rtt_diff.append(data[co.RTT_MAX] - data[co.RTT_MIN])
+
+    co.plot_cdfs_natural({'all': {"min RTT": rtt_min, "avg RTT": rtt_avg, "max RTT": rtt_max, "max RTT - min RTT": rtt_diff}}, ['r-', 'g--', 'b.', 'm,'], "RTT of subflows larger than 100KB (ms)", base_graph_path_rtt, xlog=True)
+
+
 millis = int(round(time.time() * 1000))
 
 log_file = open(os.path.join(sums_dir_exp, 'log_summary-' + str(millis) + '.txt'), 'w')
@@ -1714,8 +1814,9 @@ count_packet(log_file=log_file)
 count_ports(log_file=log_file)
 count_ports_mptcp(log_file=log_file)
 count_on_filtered(log_file=log_file)
-time_reinjection(log_file=log_file)
-time_retransmission(log_file=log_file)
+# time_reinjection(log_file=log_file)
+# time_retransmission(log_file=log_file)
+merge_time_reinjection_retransmission(log_file=log_file)
 bursts_mptcp(log_file=log_file)
 detect_handover(log_file=log_file)
 list_bytes_all(log_file=log_file)
@@ -1723,6 +1824,7 @@ difference_rtt_d2s(log_file=log_file)
 delay_mpcapable_mpjoin_quantify_handover(log_file=log_file, threshold_handover=1.0)
 count_unused_subflows(log_file=log_file)
 total_retrans_reinj(log_file=log_file)
-table_rtt_d2s(log_file=log_file)
+# table_rtt_d2s(log_file=log_file)
+plot_rtt_d2s(log_file=log_file)
 log_file.close()
 print("End of summary")
