@@ -97,14 +97,17 @@ def ensures_smartphone_to_proxy():
     for fname in connections.keys():
         for conn_id in connections[fname].keys():
             if isinstance(connections[fname][conn_id], mptcp.MPTCPConnection):
+                inside = True
                 for flow_id, flow in connections[fname][conn_id].flows.iteritems():
                     if flow.attr[co.DADDR] != co.IP_PROXY:
                         connections[fname].pop(conn_id, None)
-                        continue
-                for direction in co.DIRECTIONS:
-                    # This is a fix for wrapping seq num
-                    if connections[fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE] < 0:
-                        connections[fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE] = 2**32 + connections[fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE]
+                        inside = False
+                        break
+                if inside:
+                    for direction in co.DIRECTIONS:
+                        # This is a fix for wrapping seq num
+                        if connections[fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE] < 0:
+                            connections[fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE] = 2**32 + connections[fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE]
 
 ensures_smartphone_to_proxy()
 
