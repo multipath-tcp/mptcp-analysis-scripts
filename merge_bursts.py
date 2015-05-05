@@ -53,7 +53,7 @@ parser.add_argument('-S',
 
 args = parser.parse_args()
 
-mp_dir_exp = os.path.abspath(os.path.expanduser(args.join))
+mp_dir_exp = os.path.abspath(os.path.expanduser(args.stat_mporg))
 stat_dir_exp = os.path.abspath(os.path.expanduser(args.stat))
 sums_dir_exp = os.path.abspath(os.path.expanduser(args.sums))
 
