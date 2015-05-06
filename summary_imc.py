@@ -1521,6 +1521,8 @@ def merge_time_reinjection_retransmission(log_file=sys.stdout):
     color = ['red', 'blue']
     graph_fname = "merge_time_reinjection_retranmission"
     base_graph_path = os.path.join(sums_dir_exp, graph_fname)
+    count_duration = {co.S2D: 0, co.D2S: 0}
+    count_low_duration = {co.S2D: 0, co.D2S: 0}
     for fname, conns in connections.iteritems():
         for conn_id, conn in conns.iteritems():
             # We never know, still check
@@ -1577,7 +1579,10 @@ def merge_time_reinjection_retransmission(log_file=sys.stdout):
                                 location_time[direction]['all']["Retransmissions"].append(max(min((ts + time_diff) / duration, 1.0), 0.0))
                                 location_time_nocorrect[direction]['all']["Retransmissions"].append((ts + time_diff) / duration)
                                 if direction == co.D2S and (ts + time_diff) / duration >= 0.99:
-                                    print("LOOK RETRANS", fname, conn_id, flow_id, duration, (ts + time_diff) / duration)
+                                    print("LOOK RETRANS", fname, conn_id, flow_id, duration, (ts + time_diff) / duration, file=log_file)
+                                    count_duration[direction] += 1
+                                    if duration < 3.0:
+                                        count_low_duration[direction] += 1
                                 # if direction == co.D2S and (ts + time_diff) / duration < 0.0 or (ts + time_diff) / duration > 1.0:
                                 #     print(fname, conn_id, flow_id, ts / duration, file=warning_retrans)
 
@@ -1589,6 +1594,8 @@ def merge_time_reinjection_retransmission(log_file=sys.stdout):
     look_95.close()
     look_100.close()
     warning_retrans.close()
+    for direction in co.DIRECTIONS:
+        print("DURATION", count_duration[direction], count_low_duration[direction], file=log_file)
 
 
 def total_retrans_reinj(log_file=sys.stdout):
