@@ -884,10 +884,10 @@ def scatter_plot(data, xlabel, ylabel, color, sums_dir_exp, base_graph_name, plo
             apps.append(app_name)
 
         if plot_identity:
-            identity = np.arange(0, 99999, 1000000)
+            identity = np.arange(0, 9999, 1000000)
             ax.plot(identity, identity, 'k--')
-            plt.xlim(0.0, 100000)
-            plt.ylim(0.0, 100000)
+            plt.xlim(0.0, 10000)
+            plt.ylim(0.0, 10000)
 
         # Shrink current axis by 20%
         box = ax.get_position()
