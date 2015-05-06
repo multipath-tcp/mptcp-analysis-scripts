@@ -1561,7 +1561,7 @@ def merge_time_reinjection_retransmission(log_file=sys.stdout):
                                 if direction == co.D2S and ts_fix / duration >= 0.92 and ts_fix / duration <= 0.97:
                                     print(fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=look_95)
                                 if direction == co.D2S and ts_fix / duration >= 0.99:
-                                    print(fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=look_100)
+                                    print("LOOK 100", fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=log_file)
 
                 start_time = float('inf')
                 duration = conn.attr[co.DURATION]
@@ -1576,8 +1576,10 @@ def merge_time_reinjection_retransmission(log_file=sys.stdout):
                             for ts in flow.attr[direction][co.TIMESTAMP_RETRANS]:
                                 location_time[direction]['all']["Retransmissions"].append(max(min((ts + time_diff) / duration, 1.0), 0.0))
                                 location_time_nocorrect[direction]['all']["Retransmissions"].append((ts + time_diff) / duration)
-                                if direction == co.D2S and (ts + time_diff) / duration < 0.0 or (ts + time_diff) / duration > 1.0:
-                                    print(fname, conn_id, flow_id, ts / duration, file=warning_retrans)
+                                if direction == co.D2S and (ts + time_diff) / duration >= 0.99:
+                                    print("LOOK RETRANS", fname, conn_id, flow_id, duration, (ts + time_diff) / duration)
+                                # if direction == co.D2S and (ts + time_diff) / duration < 0.0 or (ts + time_diff) / duration > 1.0:
+                                #     print(fname, conn_id, flow_id, ts / duration, file=warning_retrans)
 
     co.plot_cdfs_with_direction(location_time, color, 'Fraction of connection duration', base_graph_path, natural=True)
     co.plot_cdfs_with_direction(location_time_nocorrect, color, 'Fraction of connection duration', base_graph_path + '_nocorrect', natural=True)
