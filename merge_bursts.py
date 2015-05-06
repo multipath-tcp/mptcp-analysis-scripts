@@ -158,8 +158,8 @@ def plot_rtt_d2s(log_file=sys.stdout):
     base_graph_path_rtt = os.path.join(sums_dir_exp, graph_fname_rtt)
     for ds, data in dataset.iteritems():
         count_conn = 0
-        count_max_15 = 0
-        count_min_200 = 0
+        count_max_10 = 0
+        count_min_100 = 0
         count_min_1000 = 0
         max_value = 0
         for fname, conns in data.iteritems():
@@ -185,10 +185,10 @@ def plot_rtt_d2s(log_file=sys.stdout):
                     if count_flow >= 2:
                         count_conn += 1
                         rtt_diff[ds].append(max_flow - min_flow)
-                        if max_flow - min_flow <= 15.0:
-                            count_max_15 += 1
-                        if max_flow - min_flow >= 200.0:
-                            count_min_200 += 1
+                        if max_flow - min_flow <= 10.0:
+                            count_max_10 += 1
+                        if max_flow - min_flow >= 100.0:
+                            count_min_100 += 1
                             if max_flow - min_flow >= 1000.0:
                                 count_min_1000 += 1
                         max_value = max(max_value, max_flow - min_flow)
@@ -196,12 +196,12 @@ def plot_rtt_d2s(log_file=sys.stdout):
                             rtt_maxmin[ds].append([min_flow, max_flow])
 
         print(ds)
-        print("TOTAL", count_conn, "<=15ms", count_max_15, ">=200ms", count_min_200, ">=1000ms", count_min_1000, "Max", max_value)
+        print("TOTAL", count_conn, "<=10ms", count_max_10, ">=100ms", count_min_100, ">=1000ms", count_min_1000, "Max", max_value)
 
 
     co.plot_cdfs_natural({'all': rtt_diff}, ['red', 'blue'], "Difference of avg RTT between worst and best subflow (ms)", base_graph_path_rtt, label_order=[NOSTR, SMART], xlog=True, xlim=10000)
     co.scatter_plot({'all': rtt_maxmin}, "Min avg RTT subflow (ms)", "Max avg RTT subflow (ms)", {NOSTR: "blue", SMART: "red"}, sums_dir_exp, "merge_scatter_rtt_d2s_log", label_order=[NOSTR, SMART])
     co.scatter_plot({'all': rtt_maxmin}, "Min avg RTT subflow (ms)", "Max avg RTT subflow (ms)", {NOSTR: "blue", SMART: "red"}, sums_dir_exp, "merge_scatter_rtt_d2s", label_order=[NOSTR, SMART], log_scale_x=False, log_scale_y=False, plot_identity=True)
 
-bursts_mptcp()
-#plot_rtt_d2s()
+#bursts_mptcp()
+plot_rtt_d2s()
