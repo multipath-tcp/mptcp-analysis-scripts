@@ -208,14 +208,20 @@ def plot_join():
     co.plot_cdfs_natural({'all': {SMART: join_smartphone, NOSTR: dataset[NOSTR]["join"]}}, ['red', 'blue'], 'Seconds', os.path.join(sums_dir_exp, 'merge_join'), label_order=[NOSTR, SMART], xlog=True)
     for data in [join_smartphone, dataset[NOSTR]["join"]]:
         total = len(data)
+        count_after_1 = 0
+        count_after_2 = 0
         count_after_60 = 0
         count_after_3600 = 0
         for ts_join in data:
-            if ts_join >= 60:
-                count_after_60 += 1
-                if ts_join >= 3600:
-                    count_after_3600 += 1
-        print("TOTAL", total, "Subflows after 60s", count_after_60, "Subflows after 3600s", count_after_3600)
+            if ts_join >= 1:
+                count_after_1 += 1
+                if ts_join >= 2:
+                    count_after_2 += 1
+                    if ts_join >= 60:
+                        count_after_60 += 1
+                        if ts_join >= 3600:
+                            count_after_3600 += 1
+        print("TOTAL", total, "After 1 sec", count_after_1, "After 2 sec", count_after_2, "Subflows after 60s", count_after_60, "Subflows after 3600s", count_after_3600)
 
 
 plot_time()
