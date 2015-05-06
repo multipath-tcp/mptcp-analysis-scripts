@@ -167,7 +167,7 @@ def plot_rtt_d2s(log_file=sys.stdout):
                             rtt_maxmin[ds].append([min_flow, max_flow])
 
 
-    co.plot_cdfs_natural({'all': rtt_diff}, ['red', 'blue'], "RTT of subflows larger than 100KB (ms)", base_graph_path_rtt, label_order=[NOSTR, SMART], xlog=True, xlim=10000)
+    co.plot_cdfs_natural({'all': rtt_diff}, ['red', 'blue'], "Difference of avg RTT between worst and best subflow (ms)", base_graph_path_rtt, label_order=[NOSTR, SMART], xlog=True, xlim=10000)
     co.scatter_plot({'all': rtt_maxmin}, "Min avg RTT subflow (ms)", "Max avg RTT subflow (ms)", {NOSTR: "blue", SMART: "red"}, sums_dir_exp, "merge_scatter_rtt_d2s", label_order=[NOSTR, SMART])
 
 # bursts_mptcp()
