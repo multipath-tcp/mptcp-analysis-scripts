@@ -135,4 +135,39 @@ def bursts_mptcp(log_file=sys.stdout):
     co.plot_cdfs_with_direction(bursts_sec, color, '# switches / second', base_graph_path_sec + "_ccdf", natural=True, xlog=True, ylog=True, ccdf=True, label_order=[NOSTR, SMART])
 
 
-bursts_mptcp()
+def plot_rtt_d2s(log_file=sys.stdout):
+    rtt_diff = {NOSTR: [], SMART: []}
+    rtt_maxmin = {NOSTR: [], SMART: []}
+    graph_fname_rtt = "merge_rtt_d2s"
+    base_graph_path_rtt = os.path.join(sums_dir_exp, graph_fname_rtt)
+    for ds, data in dataset.iteritems():
+        for fname, conns in data.iteritems():
+            for conn_id, conn in conns.iteritems():
+                # We never know, still check
+                if isinstance(conn, mptcp.MPTCPConnection):
+                    count_flow = 0
+                    max_flow = 0.0
+                    min_flow = float('inf')
+                    for flow_id, flow in conn.flows.iteritems():
+                        if flow.attr[co.D2S].get(co.BYTES, 0) < 100000:
+                            continue
+                        data = flow.attr[co.D2S]
+                        if co.RTT_MIN in data and co.RTT_AVG in data:
+
+                            count_flow += 1
+                            max_flow = max(max_flow, data[co.RTT_AVG])
+                            min_flow = min(min_flow, data[co.RTT_AVG])
+
+                            if data[co.RTT_MIN] < 1.0:
+                                print("LOW RTT", fname, conn_id, flow_id, data[co.RTT_MIN], data[co.RTT_AVG], data[co.RTT_MAX], flow.attr[co.D2S].get(co.RTT_3WHS, 0), flow.attr[co.D2S].get(co.BYTES, 0), flow.attr[co.D2S].get(co.RTT_SAMPLES, 0), flow.attr[co.DADDR], file=log_file)
+
+                    if count_flow >= 2:
+                        rtt_diff[ds].append(max_flow - min_flow)
+                        rtt_maxmin[ds].append([min_flow, max_flow])
+
+
+    co.plot_cdfs_natural({'all': rtt_diff}, ['red', 'blue'], "RTT of subflows larger than 100KB (ms)", base_graph_path_rtt, label_order=[NOSTR, SMART], xlog=True, xlim=10000)
+    co.scatter_plot({'all': rtt_maxmin}, "Min avg RTT subflow (ms)", "Max avg RTT subflow (ms)", {NOSTR: "blue", SMART: "red"}, sums_dir_exp, "merge_scatter_rtt_d2s", label_order=[NOSTR, SMART])
+
+# bursts_mptcp()
+plot_rtt_d2s()
