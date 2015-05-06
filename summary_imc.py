@@ -373,8 +373,8 @@ def count_unused_subflows(log_file=sys.stdout):
 
 
 def textual_summary(log_file=sys.stdout):
-    data = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0, '<10K': 0, '1B': 0, '2B': 0, '>=100s': 0, '<10s': 0, '>=1M': 0}}
-    count = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0, '<10K': 0, '1B': 0, '2B': 0, '>=100s': 0, '<10s': 0, '>=1M': 0}}
+    data = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0, '<10K': 0, '<1K': 0, '1B': 0, '2B': 0, '>=100s': 0, '<10s': 0, '>=1M': 0}}
+    count = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0, '<10K': 0, '<1K': 0, '1B': 0, '2B': 0, '>=100s': 0, '<10s': 0, '>=1M': 0}}
     tot_count = {'all': 0.0}
 
     for fname, conns in connections.iteritems():
@@ -419,7 +419,10 @@ def textual_summary(log_file=sys.stdout):
             elif nb_bytes_s2d + nb_bytes_d2s == 1:
                 count['all']['1B'] += 1
                 data['all']['1B'] += nb_bytes_s2d + nb_bytes_d2s
-            elif nb_bytes_s2d + nb_bytes_d2s < 10000:
+            if nb_bytes_s2d + nb_bytes_d2s < 1000:
+                count['all']['<1K'] += 1
+                data['all']['<1K'] += nb_bytes_s2d + nb_bytes_d2s
+            if nb_bytes_s2d + nb_bytes_d2s < 10000:
                 count['all']['<10K'] += 1
                 data['all']['<10K'] += nb_bytes_s2d + nb_bytes_d2s
             elif nb_bytes_s2d + nb_bytes_d2s >= 1000000:
@@ -1167,6 +1170,10 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
     results_two = {co.S2D: {'all': []}, co.D2S: {'all': []}}
     graph_fname = "overhead_retrans_reinj_multiflow.pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+    count_conn = {co.S2D: 0, co.D2S: 0}
+    count_reinj = {co.S2D: 0, co.D2S: 0}
+    count_reinj_20 = {co.S2D: 0, co.D2S: 0}
+    count_retrans = {co.S2D: 0, co.D2S: 0}
     for fname, data in multiflow_connections.iteritems():
         for conn_id, conn in data.iteritems():
             retrans_bytes = {co.S2D: 0, co.D2S: 0}
@@ -1191,9 +1198,23 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
 
             for direction in co.DIRECTIONS:
                 if total_bytes[direction] > 0:
+                    count_conn[direction] += 1
                     results[direction]['all']['Retransmission'].append((retrans_bytes[direction] + 0.0) / total_data_bytes[direction])
+                    if (retrans_bytes[direction] + 0.0) / total_data_bytes[direction] > 0.0:
+                        count_retrans[direction] += 1
                     results[direction]['all']['Reinjection'].append((reinj_data_bytes[direction] + 0.0) / total_data_bytes[direction])
+                    if (reinj_data_bytes[direction] + 0.0) / total_data_bytes[direction] > 0.0:
+                        count_reinj[direction] += 1
+                    if (reinj_data_bytes[direction] + 0.0) / total_data_bytes[direction] >= 0.2:
+                        count_reinj_20[direction] += 1
                     results_two[direction]['all'].append([total_data_bytes[direction], reinj_data_bytes[direction]])
+
+    for direction in co.DIRECTIONS:
+        print("COUNT FOR DIRECTION", direction, file=log_file)
+        print("TOTAL", count_conn[direction], file=log_file)
+        print("REINJ", count_reinj[direction], file=log_file)
+        print("REINJ 20", count_reinj_20[direction], file=log_file)
+        print("RETRA", count_retrans[direction], file=log_file)
 
     co.plot_cdfs_with_direction(results, ['red', 'blue'], 'Fraction of total bytes', graph_full_path, natural=True, ylim=0.8)
     co.plot_cdfs_with_direction(results, ['red', 'blue'], 'Fraction of total bytes', os.path.splitext(graph_full_path)[0] + '_cut.pdf', natural=True, ylim=0.8, xlim=1)
