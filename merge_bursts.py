@@ -116,6 +116,10 @@ def bursts_mptcp(log_file=sys.stdout):
     graph_fname_sec = "merge_bursts_sec"
     base_graph_path_sec = os.path.join(sums_dir_exp, graph_fname_sec)
     for ds, data in dataset.iteritems():
+        count_total = {co.S2D: 0, co.D2S: 0}
+        count_more_100 = {co.S2D: 0, co.D2S: 0}
+        count_more_200 = {co.S2D: 0, co.D2S: 0}
+        count_less_10 = {co.S2D: 0, co.D2S: 0}
         for fname, conns in data.iteritems():
             for conn_id, conn in conns.iteritems():
                 # We never know, still check
@@ -128,7 +132,19 @@ def bursts_mptcp(log_file=sys.stdout):
                             if conn.attr[direction].get(co.BYTES_MPTCPTRACE, 0) < 1000000:
                                 continue
                             if conn.attr[direction][co.BYTES_MPTCPTRACE] > 1 and co.BURSTS in conn.attr[direction] and len(conn.attr[direction][co.BURSTS]) > 0:
+                                count_total[direction] += 1
                                 bursts_sec[direction]['all'][ds].append((len(conn.attr[direction][co.BURSTS]) - 1.0) / duration)
+                                if (len(conn.attr[direction][co.BURSTS]) - 1.0) / duration >= 100:
+                                    count_more_100[direction] += 1
+                                    if (len(conn.attr[direction][co.BURSTS]) - 1.0) / duration >= 200:
+                                        count_more_200[direction] += 1
+                                if (len(conn.attr[direction][co.BURSTS]) - 1.0) / duration <= 10:
+                                    count_less_10[direction] += 1
+        print(ds)
+        print(">100", count_more_100[co.D2S])
+        print(">200", count_more_200[co.D2S])
+        print("<10", count_less_10[co.D2S])
+        print("Total", count_total[co.D2S])
 
     co.plot_cdfs_with_direction(bursts_sec, color, '# switches / second', base_graph_path_sec, natural=True, label_order=[NOSTR, SMART])
     co.plot_cdfs_with_direction(bursts_sec, color, '# switches / second', base_graph_path_sec + "_cut", xlim=200, natural=True, label_order=[NOSTR, SMART])
