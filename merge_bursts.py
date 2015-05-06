@@ -141,6 +141,11 @@ def plot_rtt_d2s(log_file=sys.stdout):
     graph_fname_rtt = "merge_rtt_d2s"
     base_graph_path_rtt = os.path.join(sums_dir_exp, graph_fname_rtt)
     for ds, data in dataset.iteritems():
+        count_conn = 0
+        count_max_15 = 0
+        count_min_200 = 0
+        count_min_1000 = 0
+        max_value = 0
         for fname, conns in data.iteritems():
             for conn_id, conn in conns.iteritems():
                 # We never know, still check
@@ -162,9 +167,20 @@ def plot_rtt_d2s(log_file=sys.stdout):
                                 print("LOW RTT", fname, conn_id, flow_id, data[co.RTT_MIN], data[co.RTT_AVG], data[co.RTT_MAX], flow.attr[co.D2S].get(co.RTT_3WHS, 0), flow.attr[co.D2S].get(co.BYTES, 0), flow.attr[co.D2S].get(co.RTT_SAMPLES, 0), flow.attr[co.DADDR], file=log_file)
 
                     if count_flow >= 2:
+                        count_conn += 1
                         rtt_diff[ds].append(max_flow - min_flow)
+                        if max_flow - min_flow <= 15.0:
+                            count_max_15 += 1
+                        if max_flow - min_flow >= 200.0:
+                            count_min_200 += 1
+                            if max_flow - min_flow >= 1000.0:
+                                count_min_1000 += 1
+                        max_value = max(max_value, max_flow - min_flow)
                         if min_flow > 0.0:
                             rtt_maxmin[ds].append([min_flow, max_flow])
+
+        print(ds)
+        print("TOTAL", count_conn, "<=15ms", count_max_15, ">=200ms", count_min_200, ">=1000ms", count_min_1000, "Max", max_value)
 
 
     co.plot_cdfs_natural({'all': rtt_diff}, ['red', 'blue'], "Difference of avg RTT between worst and best subflow (ms)", base_graph_path_rtt, label_order=[NOSTR, SMART], xlog=True, xlim=10000)
