@@ -163,7 +163,8 @@ def plot_rtt_d2s(log_file=sys.stdout):
 
                     if count_flow >= 2:
                         rtt_diff[ds].append(max_flow - min_flow)
-                        rtt_maxmin[ds].append([min_flow, max_flow])
+                        if min_flow > 0.0:
+                            rtt_maxmin[ds].append([min_flow, max_flow])
 
 
     co.plot_cdfs_natural({'all': rtt_diff}, ['red', 'blue'], "RTT of subflows larger than 100KB (ms)", base_graph_path_rtt, label_order=[NOSTR, SMART], xlog=True, xlim=10000)
