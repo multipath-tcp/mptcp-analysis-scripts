@@ -119,6 +119,7 @@ def seq_d2s_all_connections():
                     flow_interface[flow_id] = flow.attr[co.IF]
 
                 for line in data:
+                    print("Coucou")
                     split_line = line.split(',')
 
                     if int(split_line[3]) == 1:
