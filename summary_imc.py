@@ -445,13 +445,10 @@ def textual_summary(log_file=sys.stdout):
 
     for cond, data_cond in data.iteritems():
         print(cond + " with " + str(tot_count[cond]) + "connections:", file=log_file)
-        total = 0.0
+        print("TOTAL BYTES S2D", total_bytes['all'][co.S2D], file=log_file)
+        print("TOTAL BYTES D2S", total_bytes['all'][co.D2S], file=log_file)
         for dur_type, value in data_cond.iteritems():
-            total += value
-        print("TOTAL BYTES S2D", total_bytes['all'][co.S2D])
-        print("TOTAL BYTES D2S", total_bytes['all'][co.D2S])
-        for dur_type, value in data_cond.iteritems():
-            print(dur_type + " (has " + str(count[cond][dur_type]) + " with " + str(count[cond][dur_type] * 100 / (tot_count[cond] + 0.00001)) + "%): " + str(value) + " bytes (" + str(value * 100 / (total+ 0.00001)) + "%)", file=log_file)
+            print(dur_type + " (has " + str(count[cond][dur_type]) + " with " + str(count[cond][dur_type] * 100 / (tot_count[cond] + 0.00001)) + "%): " + str(value) + " bytes (" + str(value * 100 / (total_bytes[cond][co.S2D] + total_bytes[cond][co.D2S] + 0.00001)) + "%)", file=log_file)
 
 
 def count_ip_type(log_file=sys.stdout):
