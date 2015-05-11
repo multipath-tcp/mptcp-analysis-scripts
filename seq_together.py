@@ -88,6 +88,13 @@ def fetch_data(dir_exp):
 connections = fetch_data(stat_dir_exp)
 
 
+def is_reverse_connection(csv_fname):
+    first_underscore_index = csv_fname.rindex("_")
+    second_underscore_index = csv_fname[:first_underscore_index].rindex("_")
+    third_underscore_index = csv_fname[:second_underscore_index].rindex("_")
+    return csv_fname[third_underscore_index + 1:second_underscore_index] == "s2c"
+
+
 def seq_d2s_all_connections():
     for fname, conns in connections.iteritems():
         seqs = {co.WIFI: [], co.CELL: []}
@@ -100,7 +107,7 @@ def seq_d2s_all_connections():
                     continue
                 csv_fullpath = os.path.abspath(os.path.expanduser(csv_path))
                 # Preprocessing, avoid wasting time with not interesting files
-                from_server_to_smartphone = mptcp.is_reverse_connection(csv_fname)
+                from_server_to_smartphone = is_reverse_connection(csv_fname)
                 if not from_server_to_smartphone:
                     continue
                 conn_id = mptcp.get_connection_id(csv_fname)
@@ -122,7 +129,6 @@ def seq_d2s_all_connections():
                     flow_interface[flow_id] = flow.attr[co.IF]
 
                 for line in data:
-                    print("Coucou")
                     split_line = line.split(',')
 
                     if int(split_line[3]) == 1:
