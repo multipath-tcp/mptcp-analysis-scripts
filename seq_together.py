@@ -139,7 +139,7 @@ def seq_d2s_all_connections():
                         # is_ack = False # int(split_line[3]) == 1
                         seq_end = int(split_line[4])
                         reinject_flow = int(split_line[5]) - 1 # If not negative, the flow where packet was first seen
-                        seqs[flow_interface[flow_id]].append((timestamp, seq_end, reinject_flow, conn_id))
+                        seqs[flow_interface[str(flow_id)]].append((timestamp, seq_end, reinject_flow, conn_id))
 
             print("WIFI size", len(seqs[co.WIFI]))
             print("CELL size", len(seqs[co.CELL]))
