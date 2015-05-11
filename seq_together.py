@@ -96,6 +96,8 @@ def seq_d2s_all_connections():
         if fname.startswith('mptcp'):
             for csv_path in glob.glob(os.path.join(csv_dir_exp, fname + '_*.csv')):
                 csv_fname = os.path.basename(csv_path)
+                if 'seq' not in csv_fname:
+                    continue
                 # Preprocessing, avoid wasting time with not interesting files
                 from_server_to_smartphone = mptcp.is_reverse_connection(csv_fname)
                 if not from_server_to_smartphone:
