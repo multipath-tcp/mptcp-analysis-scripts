@@ -171,7 +171,7 @@ def seq_d2s_all_connections():
 
                 # Now process the file
                 conn = connections[fname][conn_id]
-                start_connections.append(conn.attr[co.START])
+                start_connections.append(conn.flow.attr[co.START])
                 interface = conn.flow.attr[co.IF]
                 for line in data:
                     if line.startswith("uarrow") or line.startswith("diamond"):
