@@ -162,9 +162,9 @@ def seq_d2s_all_connections():
 
                 # Opening of the file
                 try:
-                    csv_file = open(csv_path)
-                    data = csv_file.readlines()
-                    csv_file.close()
+                    xpl_file = open(xpl_path)
+                    data = xpl_file.readlines()
+                    xpl_file.close()
                 except IOError as e:
                     print(str(e))
                     continue
