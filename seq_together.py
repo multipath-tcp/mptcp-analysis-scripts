@@ -151,6 +151,7 @@ def seq_d2s_all_connections():
             ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'r-')
             ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'b-')
             plt.savefig(os.path.join(sums_dir_exp, fname + '.pdf'))
+            plt.close('all')
 
         elif fname.startswith('tcp'):
             for xpl_path in glob.glob(os.path.join(csv_dir_exp, fname + '_*.xpl')):
@@ -200,6 +201,7 @@ def seq_d2s_all_connections():
             ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'r-')
             ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'b-')
             plt.savefig(os.path.join(sums_dir_exp, fname + '.pdf'))
+            plt.close('all')
 
 seq_d2s_all_connections()
 
