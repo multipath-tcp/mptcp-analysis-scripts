@@ -486,15 +486,12 @@ def process_stats_csv(csv_fname, connections):
         csv_file = open(csv_fname)
         conn_id = get_connection_id(csv_fname)  # Or reuse conn_id from the stats file
         data = csv_file.readlines()
-        first_seqs = None
-        last_acks = None
+        seq_acked = None
         con_time = None
         begin_time = None
         for line in data:
-            if 'firstSeq' in line:
-                first_seqs = line.split(';')[-2:]
-            elif 'lastAck' in line:
-                last_acks = line.split(';')[-2:]
+            if 'seqAcked in line':
+                seq_acked = line.split(';')[-2:]
             elif 'conTime' in line:
                 # Only takes one of the values, because they are the same
                 con_time = line.split(';')[-2]
@@ -502,10 +499,10 @@ def process_stats_csv(csv_fname, connections):
                 # Only takes one of the values, because they are the same
                 begin_time = line.split(';')[-2]
 
-        if first_seqs and last_acks:
+        if seq_acked:
             # Notice that these values remove the reinjected bytes
-            connections[conn_id].attr[co.S2D][co.BYTES_MPTCPTRACE] = int(last_acks[1]) - int(first_seqs[0])
-            connections[conn_id].attr[co.D2S][co.BYTES_MPTCPTRACE] = int(last_acks[0]) - int(first_seqs[1])
+            connections[conn_id].attr[co.S2D][co.BYTES_MPTCPTRACE] = int(seq_acked[0])
+            connections[conn_id].attr[co.D2S][co.BYTES_MPTCPTRACE] = int(seq_acked[1])
         else:
             connections[conn_id].attr[co.S2D][co.BYTES_MPTCPTRACE] = 0
             connections[conn_id].attr[co.D2S][co.BYTES_MPTCPTRACE] = 0
