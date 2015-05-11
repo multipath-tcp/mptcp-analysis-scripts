@@ -156,7 +156,7 @@ def seq_d2s_all_connections():
             for xpl_path in glob.glob(os.path.join(csv_dir_exp, fname + '_*.xpl')):
                 xpl_fname = os.path.basename(xpl_path)
                 # Preprocessing, avoid wasting time with not interesting files
-                conn_id, from_server_to_smartphone = tcp.get_flow_name(csv_fname)
+                conn_id, from_server_to_smartphone = tcp.get_flow_name(xpl_fname)
                 if not from_server_to_smartphone:
                     continue
 
