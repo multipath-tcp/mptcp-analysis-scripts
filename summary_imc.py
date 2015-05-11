@@ -376,6 +376,7 @@ def textual_summary(log_file=sys.stdout):
     data = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0, '<10K': 0, '<1K': 0, '1B': 0, '2B': 0, '>=100s': 0, '<10s': 0, '>=1M': 0}}
     count = {'all': {'<1s': 0, ">=1s<10K": 0, ">=1s>=10K": 0, "<9s": 0, ">=9s<10K": 0, ">=9s>=10K": 0, '<10K': 0, '<1K': 0, '1B': 0, '2B': 0, '>=100s': 0, '<10s': 0, '>=1M': 0}}
     tot_count = {'all': 0.0}
+    total_bytes = {'all': {co.S2D: 0, co.D2S: 0}}
 
     for fname, conns in connections.iteritems():
         for conn_id, conn in conns.iteritems():
@@ -439,12 +440,16 @@ def textual_summary(log_file=sys.stdout):
                     data['all'][">=9s>=10K"] += nb_bytes_s2d + nb_bytes_d2s
                     count['all'][">=9s>=10K"] += 1
             tot_count['all'] += 1
+            total_bytes['all'][co.S2D] += nb_bytes_s2d
+            total_bytes['all'][co.D2S] += nb_bytes_d2s
 
     for cond, data_cond in data.iteritems():
         print(cond + " with " + str(tot_count[cond]) + "connections:", file=log_file)
         total = 0.0
         for dur_type, value in data_cond.iteritems():
             total += value
+        print("TOTAL BYTES S2D", total_bytes['all'][co.S2D])
+        print("TOTAL BYTES D2S", total_bytes['all'][co.D2S])
         for dur_type, value in data_cond.iteritems():
             print(dur_type + " (has " + str(count[cond][dur_type]) + " with " + str(count[cond][dur_type] * 100 / (tot_count[cond] + 0.00001)) + "%): " + str(value) + " bytes (" + str(value * 100 / (total+ 0.00001)) + "%)", file=log_file)
 
@@ -1892,7 +1897,7 @@ cdf_rtt_d2s_all(log_file=log_file, min_samples=5)
 # reinject_plot_relative_to_data(log_file=log_file, min_bytes=9999.9)
 # retrans_plot(log_file=log_file)
 # fog_plot_cellular_percentage_rtt_wifi(log_file=log_file)
-textual_summary_global(log_file=log_file)
+# textual_summary_global(log_file=log_file)
 cdf_overhead_retrans_reinj(log_file=log_file)
 cdf_overhead_retrans_reinj_singleflow(log_file=log_file)
 plot_total_bytes_reinj_bytes(log_file=log_file)
