@@ -146,7 +146,7 @@ def seq_d2s_all_connections():
                         tot_offset[ith] += elem[1] - offsets[elem[3]]
                         offsets[elem[3]] = elem[1]
 
-            start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
+            # start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
             fig, ax = plt.subplots()
             ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'r-')
             ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'b-')
@@ -195,7 +195,7 @@ def seq_d2s_all_connections():
                         tot_offset[ith] += elem[1] - offsets[elem[2]]
                         offsets[elem[2]] = elem[1]
 
-            start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
+            # start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
             fig, ax = plt.subplots()
             ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'r-')
             ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'b-')
