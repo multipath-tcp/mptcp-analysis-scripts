@@ -98,6 +98,7 @@ def seq_d2s_all_connections():
                 csv_fname = os.path.basename(csv_path)
                 if 'seq' not in csv_fname:
                     continue
+                csv_fullpath = os.path.abspath(os.path.expanduser(csv_path))
                 # Preprocessing, avoid wasting time with not interesting files
                 from_server_to_smartphone = mptcp.is_reverse_connection(csv_fname)
                 if not from_server_to_smartphone:
@@ -106,7 +107,7 @@ def seq_d2s_all_connections():
 
                 # Opening of the file
                 try:
-                    csv_file = open(csv_path)
+                    csv_file = open(csv_fullpath)
                     data = csv_file.readlines()
                     csv_file.close()
                 except IOError as e:
