@@ -131,6 +131,8 @@ def seq_d2s_all_connections():
                         reinject_flow = int(split_line[5]) - 1 # If not negative, the flow where packet was first seen
                         seqs[flow_interface[flow_id]].append((timestamp, seq_end, reinject_flow, conn_id))
 
+            print("WIFI size", len(seqs[co.WIFI]))
+            print("CELL size", len(seqs[co.CELL]))
             # Now put all together on a same graph
             offsets = {}
             tot_offset = {co.WIFI: 0, co.CELL: 0}
