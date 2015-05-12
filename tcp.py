@@ -580,6 +580,7 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections, failed_conns, 
     """
     conn_id, flow_id = get_flow_name_connection(connection, mptcp_connections)
     if conn_id:
+        mptcp_connections[conn_id].flows[flow_id].subflow_id = flow_name
         mptcp_connections[conn_id].flows[flow_id].attr[co.START] = connection.flow.attr[co.START]
         mptcp_connections[conn_id].flows[flow_id].attr[co.DURATION] = connection.flow.attr[co.DURATION]
         for direction in co.DIRECTIONS:
@@ -1062,7 +1063,10 @@ def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_di
                     collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mptcp_connections)
                     #co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR))
                 # else:
-                os.remove(xpl_filepath)
+                if not light and 'tsg' in os.path.basename(xpl_filepath):
+                    co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR))
+                else:
+                    os.remove(xpl_filepath)
             else:
                 if '_rtt.xpl' in os.path.basename(xpl_filepath):
                     if not light:
