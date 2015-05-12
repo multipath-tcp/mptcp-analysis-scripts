@@ -144,25 +144,25 @@ def seq_d2s_all_connections():
             print("WIFI size", len(seqs[co.WIFI]))
             print("CELL size", len(seqs[co.CELL]))
             # Now put all together on a same graph
-            offsets = {}
+            offsets = {co.WIFI: {}, co.CELL: {}}
             tot_offset = {co.WIFI: 0, co.CELL: 0}
             seqs_plot = {co.WIFI: [], co.CELL: []}
             for ith, seqs_ith in seqs.iteritems():
                 seqs_sort = sorted(seqs_ith, key=lambda elem: elem[0])
                 for elem in seqs_sort:
                     if elem[3] not in offsets:
-                        offsets[elem[3]] = elem[1]
+                        offsets[ith][elem[3]] = elem[1]
                         seqs_plot[ith].append((elem[0], tot_offset[ith]))
                         print("START", offsets)
                         if tot_offset[ith] < 0 or elem[1] < 0:
                             print("NEGATIVE START", ith, elem[1], tot_offset[ith])
                     else:
-                        if tot_offset[ith] + (elem[1] - offsets[elem[3]]) < 0:
+                        if tot_offset[ith] + (elem[1] - offsets[ith][elem[3]]) < 0:
                             print(offsets)
-                            print("NEGATIVE", ith, elem[1], tot_offset[ith], offsets[elem[3]], tot_offset[ith] + (elem[1] - offsets[elem[3]]))
-                        seqs_plot[ith].append((elem[0], tot_offset[ith] + (elem[1] - offsets[elem[3]])))
-                        tot_offset[ith] += elem[1] - offsets[elem[3]]
-                        offsets[elem[3]] = elem[1]
+                            print("NEGATIVE", ith, elem[1], tot_offset[ith], offsets[ith][elem[3]], tot_offset[ith] + (elem[1] - offsets[ith][elem[3]]))
+                        seqs_plot[ith].append((elem[0], tot_offset[ith] + (elem[1] - offsets[ith][elem[3]])))
+                        tot_offset[ith] += elem[1] - offsets[ith][elem[3]]
+                        offsets[ith][elem[3]] = elem[1]
 
             # start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
             fig, ax = plt.subplots()
