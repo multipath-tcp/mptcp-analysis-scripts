@@ -153,7 +153,11 @@ def seq_d2s_all_connections():
                     if elem[3] not in offsets:
                         offsets[elem[3]] = elem[1]
                         seqs_plot[ith].append((elem[0], tot_offset[ith]))
+                        if tot_offset[ith] < 0:
+                            print("NEGATIVE START", ith, elem[1], tot_offset[ith])
                     else:
+                        if tot_offset[ith] + (elem[1] - offsets[elem[3]]) < 0:
+                            print("NEGATIVE", ith, elem[1], tot_offset[ith], offsets[elem[3]], tot_offset[ith] + (elem[1] - offsets[elem[3]]))
                         seqs_plot[ith].append((elem[0], tot_offset[ith] + (elem[1] - offsets[elem[3]])))
                         tot_offset[ith] += elem[1] - offsets[elem[3]]
                         offsets[elem[3]] = elem[1]
