@@ -162,6 +162,7 @@ def seq_d2s_all_connections():
             fig, ax = plt.subplots()
             ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'r-')
             ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'b-')
+            ax.plot(start_connections, [10 for x in start_connections], 'gx')
             plt.savefig(os.path.join(sums_dir_exp, fname + '.pdf'))
             plt.close('all')
 
