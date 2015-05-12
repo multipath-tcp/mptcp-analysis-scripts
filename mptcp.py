@@ -490,7 +490,7 @@ def process_stats_csv(csv_fname, connections):
         con_time = None
         begin_time = None
         for line in data:
-            if 'seqAcked in line':
+            if 'seqAcked' in line:
                 seq_acked = line.split(';')[-2:]
             elif 'conTime' in line:
                 # Only takes one of the values, because they are the same
