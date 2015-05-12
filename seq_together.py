@@ -150,7 +150,7 @@ def seq_d2s_all_connections():
             for ith, seqs_ith in seqs.iteritems():
                 seqs_sort = sorted(seqs_ith, key=lambda elem: elem[0])
                 for elem in seqs_sort:
-                    if elem[3] not in offsets:
+                    if elem[3] not in offsets[ith]:
                         offsets[ith][elem[3]] = elem[1]
                         seqs_plot[ith].append((elem[0], tot_offset[ith]))
                         print("START", offsets)
