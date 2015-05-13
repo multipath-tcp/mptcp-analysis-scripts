@@ -109,7 +109,7 @@ def seq_d2s_all_connections():
             offset_duration = {}
             for conn_id, conn in conns.iteritems():
                 offset_duration[conn_id] = {}
-                for flow_id, flow in conn.flows.iteitems():
+                for flow_id, flow in conn.flows.iteritems():
                     offset_duration[conn_id][flow_id] = flow.attr[co.START] - min_start
 
             for xpl_path in glob.glob(os.path.join(csv_dir_exp, fname + '_*.xpl')):
