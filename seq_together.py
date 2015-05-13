@@ -224,9 +224,9 @@ def seq_d2s_all_connections():
             ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'b-')
             ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'r-')
             for ith in [co.WIFI, co.CELL]:
-                ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'pD')
-                ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'oD')
-                ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'bD')
+                ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cD')
+                ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'mD')
+                ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'kD')
 
             max_wifi = seqs_plot[co.WIFI][-1][1] if len(seqs_plot[co.WIFI]) > 0 else 10
             max_cell = seqs_plot[co.CELL][-1][1] if len(seqs_plot[co.CELL]) > 0 else 10
