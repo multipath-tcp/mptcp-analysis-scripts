@@ -104,13 +104,13 @@ def seq_d2s_all_connections():
             min_start = float('inf')
             for conn_id, conn in conns.iteritems():
                 for flow_id, flow in conn.flows.iteritems():
-                    min_start = min(min_start, flow.attr[co.START])
+                    min_start = min(min_start, flow.attr.get(co.START, float('inf')))
 
             offset_duration = {}
             for conn_id, conn in conns.iteritems():
                 offset_duration[conn_id] = {}
                 for flow_id, flow in conn.flows.iteritems():
-                    offset_duration[conn_id][flow_id] = flow.attr[co.START] - min_start
+                    offset_duration[conn_id][flow_id] = flow.attr.get(co.START, float('inf')) - min_start
 
             for xpl_path in glob.glob(os.path.join(csv_dir_exp, fname + '_*.xpl')):
                 xpl_fname = os.path.basename(xpl_path)
@@ -152,6 +152,10 @@ def seq_d2s_all_connections():
                 start_connections.append(conn.attr[co.START])
                 interface = conn.flows[flow_id].attr[co.IF]
 
+                if offset_duration[conn_id][flow_id] == float('inf'):
+                    print('Skipped', fname, conn_id, flow_id, flow_name, conn.attr)
+                    continue
+
                 for line in data:
                     if line.startswith("uarrow") or line.startswith("diamond"):
                         split_line = line.split(" ")
@@ -172,7 +176,6 @@ def seq_d2s_all_connections():
                     if elem[2] not in offsets[ith]:
                         offsets[ith][elem[2]] = elem[1]
                         seqs_plot[ith].append((elem[0], tot_offset[ith]))
-                        print("START", offsets)
                         if tot_offset[ith] < 0 or elem[1] < 0:
                             print("NEGATIVE START", ith, elem[1], tot_offset[ith])
                     else:
