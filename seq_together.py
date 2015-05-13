@@ -101,6 +101,7 @@ def seq_d2s_all_connections():
         start_connections = []
 
         if fname.startswith('mptcp'):
+            start_subflows = {co.WIFI: [], co.CELL: []}
             min_start = float('inf')
             for conn_id, conn in conns.iteritems():
                 for flow_id, flow in conn.flows.iteritems():
@@ -151,6 +152,7 @@ def seq_d2s_all_connections():
                 # Now process the file
                 start_connections.append(conn.attr[co.START] - min_start)
                 interface = conn.flows[flow_id].attr[co.IF]
+                start_subflows[interface].append(conn.flows[flow_id].attr[co.START] - min_start)
 
                 if offset_duration[conn_id][flow_id] == float('inf'):
                     print('Skipped', fname, conn_id, flow_id, flow_name, conn.attr)
@@ -188,13 +190,19 @@ def seq_d2s_all_connections():
 
             # start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
             fig, ax = plt.subplots()
-            ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'r-')
-            ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'b-')
+            ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'b-')
+            ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'r-')
+            ax.plot(start_subflows[co.WIFI], [10 for x in start_connections], 'bx')
+            ax.plot(start_subflows[co.CELL], [10 for x in start_connections], 'rx')
             ax.plot(start_connections, [10 for x in start_connections], 'gx')
             plt.savefig(os.path.join(sums_dir_exp, fname + '.pdf'))
             plt.close('all')
 
         elif fname.startswith('tcp'):
+            min_start = float('inf')
+            for conn_id, conn in conns.iteritems():
+                min_start = min(min_start, conn.flow.attr.get(co.START, float('inf')))
+
             for xpl_path in glob.glob(os.path.join(csv_dir_exp, fname + '_*.xpl')):
                 xpl_fname = os.path.basename(xpl_path)
                 # Preprocessing, avoid wasting time with not interesting files
@@ -213,7 +221,7 @@ def seq_d2s_all_connections():
 
                 # Now process the file
                 conn = connections[fname][conn_id]
-                start_connections.append(conn.flow.attr[co.START])
+                start_connections.append(conn.flow.attr[co.START] - min_start)
                 interface = conn.flow.attr[co.IF]
                 for line in data:
                     if line.startswith("uarrow") or line.startswith("diamond"):
@@ -239,8 +247,9 @@ def seq_d2s_all_connections():
 
             # start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
             fig, ax = plt.subplots()
-            ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'r-')
-            ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'b-')
+            ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'b-')
+            ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'r-')
+            ax.plot(start_connections, [10 for x in start_connections], 'gx')
             plt.savefig(os.path.join(sums_dir_exp, fname + '.pdf'))
             plt.close('all')
 
