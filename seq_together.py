@@ -208,15 +208,18 @@ def seq_d2s_all_connections():
                         offsets[ith][elem[2]] = elem[1]
 
                 for retrans_ts in retrans_rto[ith]:
-                    index = bisect.bisect(seqs_plot[ith], retrans_ts)
+                    x_data = [x for x, y in seqs_plot[ith]]
+                    index = bisect.bisect(x_data, retrans_ts)
                     retrans_rto_plot[ith].append((retrans_ts, seqs_plot[ith][index][1]))
 
                 for retrans_ts in retrans_frt[ith]:
-                    index = bisect.bisect(seqs_plot[ith], retrans_ts)
+                    x_data = [x for x, y in seqs_plot[ith]]
+                    index = bisect.bisect(x_data, retrans_ts)
                     retrans_frt_plot[ith].append((retrans_ts, seqs_plot[ith][index][1]))
 
                 for retrans_ts in retrans_rec[ith]:
-                    index = bisect.bisect(seqs_plot[ith], retrans_ts)
+                    x_data = [x for x, y in seqs_plot[ith]]
+                    index = bisect.bisect(x_data, retrans_ts)
                     retrans_rec_plot[ith].append((retrans_ts, seqs_plot[ith][index][1]))
 
             # start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
