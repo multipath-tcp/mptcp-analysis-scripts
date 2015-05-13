@@ -228,19 +228,19 @@ def seq_d2s_all_connections():
             ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'r-', label="Cellular")
             for ith in [co.WIFI, co.CELL]:
                 if ith == co.WIFI:
-                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retrans RTO")
-                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retrans FRT")
-                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'kd', label="Retrans REC")
+                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO")
+                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retr FRT")
+                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', label="Retr REC")
                 else:
                     ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd')
                     ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md')
-                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'kd')
+                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd')
 
             max_wifi = seqs_plot[co.WIFI][-1][1] if len(seqs_plot[co.WIFI]) > 0 else 10
             max_cell = seqs_plot[co.CELL][-1][1] if len(seqs_plot[co.CELL]) > 0 else 10
-            ax.plot(start_subflows[co.WIFI], [max_wifi for x in start_subflows[co.WIFI]], 'bx', label="Start SF WiFi")
-            ax.plot(start_subflows[co.CELL], [max_cell for x in start_subflows[co.CELL]], 'rx', label="Start SF Cell")
-            ax.plot(start_connections, [10 for x in start_connections], 'gx', label="Start conn")
+            ax.plot(start_subflows[co.WIFI], [max_wifi for x in start_subflows[co.WIFI]], 'bx', label="Start SF W")
+            ax.plot(start_subflows[co.CELL], [max_cell for x in start_subflows[co.CELL]], 'rx', label="Start SF C")
+            ax.plot(start_connections, [10 for x in start_connections], 'gx', label="Start co")
             # Shrink current axis by 20%
             box = ax.get_position()
             ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
