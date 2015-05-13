@@ -1082,7 +1082,7 @@ def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_di
     failed_conns = {}
 
     if tcpcsm:
-        retransmissions_tcpcsm(pcap_filepath, connections)
+        retransmissions_tcpcsm(directory_path + '.pcap', connections)
 
     acksize_all = {co.D2S: {}, co.S2D: {}}
     acksize_all_mptcp = {co.D2S: {}, co.S2D: {}}
