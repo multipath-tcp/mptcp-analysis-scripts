@@ -168,9 +168,9 @@ def seq_d2s_all_connections():
                 for line in data:
                     if line.startswith("uarrow") or line.startswith("diamond"):
                         split_line = line.split(" ")
-                        if ((not split_line[0] == "diamond") or (len(split_line) == 4 and "white" in split_line[3])):
-                            time = float(split_line[1])
-                            seqs[interface].append([time + offset_duration[conn_id][flow_id], int(split_line[2]), flow_name])
+                        # if ((not split_line[0] == "diamond") or (len(split_line) == 4 and "white" in split_line[3])):
+                        time = float(split_line[1])
+                        seqs[interface].append([time + offset_duration[conn_id][flow_id], int(split_line[2]), flow_name])
 
                 for reinject_time, reinject_type in conn.flows[flow_id].attr[co.D2S][co.TCPCSM_RETRANS]:
                     ts_int = int(reinject_time.split('.')[0])
@@ -278,9 +278,8 @@ def seq_d2s_all_connections():
                 for line in data:
                     if line.startswith("uarrow") or line.startswith("diamond"):
                         split_line = line.split(" ")
-                        if ((not split_line[0] == "diamond") or (len(split_line) == 4 and "white" in split_line[3])):
-                            time = float(split_line[1])
-                            seqs[interface].append([time, int(split_line[2]), conn_id])
+                        time = float(split_line[1])
+                        seqs[interface].append([time, int(split_line[2]), conn_id])
 
                 for reinject_time, reinject_type in conn.flow.attr[co.D2S].get(co.TCPCSM_RETRANS, []):
                     ts_int = int(reinject_time.split('.')[0])
@@ -327,8 +326,8 @@ def seq_d2s_all_connections():
 
             # start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
             fig, ax = plt.subplots()
-            ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'b-')
-            ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'r-')
+            ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'b-', label="WiFi")
+            ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'r-', label="Cellular")
             for ith in [co.WIFI, co.CELL]:
                 if ith == co.WIFI:
                     ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO")
@@ -338,7 +337,7 @@ def seq_d2s_all_connections():
                     ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd')
                     ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md')
                     ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd')
-            ax.plot(start_connections, [10 for x in start_connections], 'gx')
+            ax.plot(start_connections, [10 for x in start_connections], 'gx', label="Start co")
             # Shrink current axis by 20%
             box = ax.get_position()
             ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
