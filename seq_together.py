@@ -101,6 +101,17 @@ def seq_d2s_all_connections():
         start_connections = []
 
         if fname.startswith('mptcp'):
+            min_start = float('inf')
+            for conn_id, conn in conns.iteritems():
+                for flow_id, flow in conn.flows.iteritems():
+                    min_start = min(min_start, flow.attr[co.START])
+
+            offset_duration = {}
+            for conn_id, conn in conns.iteritems():
+                offset_duration[conn_id] = {}
+                for flow_id, flow in conn.flows.iteitems():
+                    offset_duration[conn_id][flow_id] = flow.attr[co.START] - min_start
+
             for xpl_path in glob.glob(os.path.join(csv_dir_exp, fname + '_*.xpl')):
                 xpl_fname = os.path.basename(xpl_path)
                 if 'tsg' not in xpl_fname:
@@ -121,12 +132,14 @@ def seq_d2s_all_connections():
                     continue
 
                 conn = None
+                conn_id = None
                 flow_id = None
 
-                for conn_id, connection in conns.iteritems():
+                for conn_i, connection in conns.iteritems():
                     for flow_i, flow in connection.flows.iteritems():
                         if flow.subflow_id == flow_name:
                             conn = connection
+                            conn_id = conn_i
                             flow_id = flow_i
                             break
                     if conn and flow_id:
@@ -144,7 +157,7 @@ def seq_d2s_all_connections():
                         split_line = line.split(" ")
                         if ((not split_line[0] == "diamond") or (len(split_line) == 4 and "white" in split_line[3])):
                             time = float(split_line[1])
-                            seqs[interface].append([time, int(split_line[2]), flow_name])
+                            seqs[interface].append([time + offset_duration[conn_id][flow_id], int(split_line[2]), flow_name])
 
 
             print("WIFI size", len(seqs[co.WIFI]))
