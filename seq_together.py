@@ -101,45 +101,48 @@ def seq_d2s_all_connections():
         start_connections = []
 
         if fname.startswith('mptcp'):
-            for csv_path in glob.glob(os.path.join(csv_dir_exp, fname + '_*.csv')):
-                csv_fname = os.path.basename(csv_path)
-                if 'seq' not in csv_fname:
+            for xpl_path in glob.glob(os.path.join(csv_dir_exp, fname + '_*.xpl')):
+                xpl_fname = os.path.basename(xpl_path)
+                if 'tsg' not in xpl_fname:
                     continue
-                csv_fullpath = os.path.abspath(os.path.expanduser(csv_path))
+                xpl_fullpath = os.path.abspath(os.path.expanduser(xpl_path))
                 # Preprocessing, avoid wasting time with not interesting files
-                from_server_to_smartphone = is_reverse_connection(csv_fname)
+                flow_name, from_server_to_smartphone = tcp.get_flow_name(xpl_fname)
                 if not from_server_to_smartphone:
                     continue
-                conn_id = mptcp.get_connection_id(csv_fname)
 
                 # Opening of the file
                 try:
-                    csv_file = open(csv_fullpath)
-                    data = csv_file.readlines()
-                    csv_file.close()
+                    xpl_file = open(xpl_fullpath)
+                    data = xpl_file.readlines()
+                    xpl_file.close()
                 except IOError as e:
                     print(str(e))
                     continue
 
+                conn = None
+                flow_id = None
+
+                for conn_id, connection in conns.iteritems():
+                    for flow_i, flow in connection.flows.iteritems():
+                        if flow.subflow_id == flow_name:
+                            conn = connection
+                            flow_id = flow_i
+                            break
+                    if conn and flow_id:
+                        break
+
                 # Now process the file
-                conn = connections[fname][conn_id]
                 start_connections.append(conn.attr[co.START])
-                flow_interface = {}
-                for flow_id, flow in conn.flows.iteritems():
-                    flow_interface[flow_id] = flow.attr[co.IF]
+                interface = conn.flows[flow_id].attr[co.IF]
 
                 for line in data:
-                    split_line = line.split(',')
+                    if line.startswith("uarrow") or line.startswith("diamond"):
+                        split_line = line.split(" ")
+                        if ((not split_line[0] == "diamond") or (len(split_line) == 4 and "white" in split_line[3])):
+                            time = float(split_line[1])
+                            seqs[interface].append([time, int(split_line[2]), flow_name])
 
-                    if int(split_line[3]) == 1:
-                        # MAP
-                        timestamp = float(split_line[0])
-                        seq_start = int(split_line[1])
-                        flow_id = int(split_line[2]) - 1
-                        # is_ack = False # int(split_line[3]) == 1
-                        seq_end = int(split_line[4])
-                        reinject_flow = int(split_line[5]) - 1 # If not negative, the flow where packet was first seen
-                        seqs[flow_interface[str(flow_id)]].append((timestamp, seq_end, reinject_flow, conn_id))
 
             print("WIFI size", len(seqs[co.WIFI]))
             print("CELL size", len(seqs[co.CELL]))
@@ -150,19 +153,19 @@ def seq_d2s_all_connections():
             for ith, seqs_ith in seqs.iteritems():
                 seqs_sort = sorted(seqs_ith, key=lambda elem: elem[0])
                 for elem in seqs_sort:
-                    if elem[3] not in offsets[ith]:
+                    if elem[2] not in offsets[ith]:
                         offsets[ith][elem[3]] = elem[1]
                         seqs_plot[ith].append((elem[0], tot_offset[ith]))
                         print("START", offsets)
                         if tot_offset[ith] < 0 or elem[1] < 0:
                             print("NEGATIVE START", ith, elem[1], tot_offset[ith])
                     else:
-                        if tot_offset[ith] + (elem[1] - offsets[ith][elem[3]]) < 0:
+                        if tot_offset[ith] + (elem[1] - offsets[ith][elem[2]]) < 0:
                             print(offsets)
-                            print("NEGATIVE", ith, elem[1], tot_offset[ith], offsets[ith][elem[3]], tot_offset[ith] + (elem[1] - offsets[ith][elem[3]]))
-                        seqs_plot[ith].append((elem[0], tot_offset[ith] + (elem[1] - offsets[ith][elem[3]])))
-                        tot_offset[ith] += elem[1] - offsets[ith][elem[3]]
-                        offsets[ith][elem[3]] = elem[1]
+                            print("NEGATIVE", ith, elem[1], tot_offset[ith], offsets[ith][elem[2]], tot_offset[ith] + (elem[1] - offsets[ith][elem[2]]))
+                        seqs_plot[ith].append((elem[0], tot_offset[ith] + (elem[1] - offsets[ith][elem[2]])))
+                        tot_offset[ith] += elem[1] - offsets[ith][elem[2]]
+                        offsets[ith][elem[2]] = elem[1]
 
             # start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
             fig, ax = plt.subplots()
