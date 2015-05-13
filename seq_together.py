@@ -149,7 +149,7 @@ def seq_d2s_all_connections():
                     continue
 
                 # Now process the file
-                start_connections.append(conn.attr[co.START])
+                start_connections.append(conn.attr[co.START] - min_start)
                 interface = conn.flows[flow_id].attr[co.IF]
 
                 if offset_duration[conn_id][flow_id] == float('inf'):
