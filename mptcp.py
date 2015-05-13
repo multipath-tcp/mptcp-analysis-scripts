@@ -788,7 +788,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     if connections and do_tcp_processing:
         # Save a first version as backup here; should be removed when no problem anymore
         # co.save_data(pcap_filepath, stat_dir_exp, connections)
-        cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, plot_cwin, tcpcsm mptcp_connections=connections, light=light)
+        cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, plot_cwin, tcpcsm, mptcp_connections=connections, light=light)
         co.save_data(pcap_filepath, acksize_dir_exp, acksize_all)
         co.save_data(pcap_filepath, rtt_dir_exp, rtt_all)
         co.save_data(pcap_filepath, stat_dir_exp, connections)
