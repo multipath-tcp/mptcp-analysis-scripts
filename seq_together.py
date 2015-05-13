@@ -132,6 +132,9 @@ def seq_d2s_all_connections():
                     if conn and flow_id:
                         break
 
+                if not conn:
+                    continue
+
                 # Now process the file
                 start_connections.append(conn.attr[co.START])
                 interface = conn.flows[flow_id].attr[co.IF]
