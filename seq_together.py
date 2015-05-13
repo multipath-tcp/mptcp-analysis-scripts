@@ -27,6 +27,7 @@ from __future__ import print_function
 ##################################################
 
 import argparse
+import bisect
 import common as co
 import glob
 import matplotlib
@@ -99,6 +100,12 @@ def seq_d2s_all_connections():
     for fname, conns in connections.iteritems():
         seqs = {co.WIFI: [], co.CELL: []}
         start_connections = []
+        retrans_rto = {co.WIFI: [], co.CELL: []}
+        retrans_frt = {co.WIFI: [], co.CELL: []}
+        retrans_rec = {co.WIFI: [], co.CELL: []}
+        retrans_rto_plot = {co.WIFI: [], co.CELL: []}
+        retrans_frt_plot = {co.WIFI: [], co.CELL: []}
+        retrans_rec_plot = {co.WIFI: [], co.CELL: []}
 
         if fname.startswith('mptcp'):
             start_subflows = {co.WIFI: [], co.CELL: []}
@@ -165,6 +172,18 @@ def seq_d2s_all_connections():
                             time = float(split_line[1])
                             seqs[interface].append([time + offset_duration[conn_id][flow_id], int(split_line[2]), flow_name])
 
+                for reinject_time, reinject_type in conn.flows[flow_id].attr[co.D2S][co.TCPCSM_RETRANS]:
+                    ts_int = int(reinject_time)
+                    ts_dec = float('.' + reinject_time.split('.')[1])
+                    ts_offset_int = ts_int - int(min_start)
+                    ts_offset_dec = ts_dec - (min_start - int(min_start))
+                    ts_offset = ts_offset_int + ts_offset_dec
+                    if reinject_type == 'RTO':
+                        retrans_rto[interface].append(ts_offset)
+                    elif reinject_type in ['FRETX', 'MS_FRETX', 'SACK_FRETX', 'BAD_FRETX']:
+                        retrans_frt[interface].append(ts_offset)
+                    elif reinject_type in ['LOSS_REC', 'UNEXP_FREC', 'UNNEEDED']:
+                        retrans_rec[interface].append(ts_offset)
 
             print("WIFI size", len(seqs[co.WIFI]))
             print("CELL size", len(seqs[co.CELL]))
@@ -188,10 +207,27 @@ def seq_d2s_all_connections():
                         tot_offset[ith] += elem[1] - offsets[ith][elem[2]]
                         offsets[ith][elem[2]] = elem[1]
 
+                for retrans_ts in retrans_rto[ith]:
+                    index = bisect.bisect(seqs_plot, retrans_ts)
+                    retrans_rto_plot[ith].append((retrans_ts, seqs_plot[index][1]))
+
+                for retrans_ts in retrans_frt[ith]:
+                    index = bisect.bisect(seqs_plot, retrans_ts)
+                    retrans_frt_plot[ith].append((retrans_ts, seqs_plot[index][1]))
+
+                for retrans_ts in retrans_rec[ith]:
+                    index = bisect.bisect(seqs_plot, retrans_ts)
+                    retrans_rec_plot[ith].append((retrans_ts, seqs_plot[index][1]))
+
             # start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
             fig, ax = plt.subplots()
             ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'b-')
             ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'r-')
+            for ith in [co.WIFI, co.CELL]:
+                ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'pD')
+                ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'oD')
+                ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'bD')
+                
             max_wifi = seqs_plot[co.WIFI][-1][1] if len(seqs_plot[co.WIFI]) > 0 else 10
             max_cell = seqs_plot[co.CELL][-1][1] if len(seqs_plot[co.CELL]) > 0 else 10
             ax.plot(start_subflows[co.WIFI], [max_wifi for x in start_subflows[co.WIFI]], 'bx')
