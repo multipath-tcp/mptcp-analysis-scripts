@@ -173,7 +173,7 @@ def seq_d2s_all_connections():
                             seqs[interface].append([time + offset_duration[conn_id][flow_id], int(split_line[2]), flow_name])
 
                 for reinject_time, reinject_type in conn.flows[flow_id].attr[co.D2S][co.TCPCSM_RETRANS]:
-                    ts_int = int(reinject_time)
+                    ts_int = int(reinject_time.split('.')[0])
                     ts_dec = float('.' + reinject_time.split('.')[1])
                     ts_offset_int = ts_int - int(min_start)
                     ts_offset_dec = ts_dec - (min_start - int(min_start))
@@ -227,7 +227,7 @@ def seq_d2s_all_connections():
                 ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'pD')
                 ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'oD')
                 ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'bD')
-                
+
             max_wifi = seqs_plot[co.WIFI][-1][1] if len(seqs_plot[co.WIFI]) > 0 else 10
             max_cell = seqs_plot[co.CELL][-1][1] if len(seqs_plot[co.CELL]) > 0 else 10
             ax.plot(start_subflows[co.WIFI], [max_wifi for x in start_subflows[co.WIFI]], 'bx')
