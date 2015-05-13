@@ -282,7 +282,7 @@ def seq_d2s_all_connections():
                             time = float(split_line[1])
                             seqs[interface].append([time, int(split_line[2]), conn_id])
 
-                for reinject_time, reinject_type in conn.flows[flow_id].attr[co.D2S][co.TCPCSM_RETRANS]:
+                for reinject_time, reinject_type in conn.flows[flow_id].attr[co.D2S].get(co.TCPCSM_RETRANS, []):
                     ts_int = int(reinject_time.split('.')[0])
                     ts_dec = float('.' + reinject_time.split('.')[1])
                     ts_offset_int = ts_int - int(min_start)
