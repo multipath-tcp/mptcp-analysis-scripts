@@ -282,6 +282,19 @@ def seq_d2s_all_connections():
                             time = float(split_line[1])
                             seqs[interface].append([time, int(split_line[2]), conn_id])
 
+                for reinject_time, reinject_type in conn.flows[flow_id].attr[co.D2S][co.TCPCSM_RETRANS]:
+                    ts_int = int(reinject_time.split('.')[0])
+                    ts_dec = float('.' + reinject_time.split('.')[1])
+                    ts_offset_int = ts_int - int(min_start)
+                    ts_offset_dec = ts_dec - (min_start - int(min_start))
+                    ts_offset = ts_offset_int + ts_offset_dec
+                    if reinject_type == 'RTO':
+                        retrans_rto[interface].append(ts_offset)
+                    elif reinject_type in ['FRETX', 'MS_FRETX', 'SACK_FRETX', 'BAD_FRETX']:
+                        retrans_frt[interface].append(ts_offset)
+                    elif reinject_type in ['LOSS_REC', 'UNEXP_FREC', 'UNNEEDED']:
+                        retrans_rec[interface].append(ts_offset)
+
             # Now put all togetger on a same graph
             offsets = {}
             tot_offset = {co.WIFI: 0, co.CELL: 0}
@@ -297,11 +310,41 @@ def seq_d2s_all_connections():
                         tot_offset[ith] += elem[1] - offsets[elem[2]]
                         offsets[elem[2]] = elem[1]
 
+                for retrans_ts in retrans_rto[ith]:
+                    x_data = [x for x, y in seqs_plot[ith]]
+                    index = min(bisect.bisect_left(x_data, retrans_ts), len(x_data) - 1)
+                    retrans_rto_plot[ith].append((retrans_ts, seqs_plot[ith][index][1]))
+
+                for retrans_ts in retrans_frt[ith]:
+                    x_data = [x for x, y in seqs_plot[ith]]
+                    index = min(bisect.bisect_left(x_data, retrans_ts), len(x_data) - 1)
+                    retrans_frt_plot[ith].append((retrans_ts, seqs_plot[ith][index][1]))
+
+                for retrans_ts in retrans_rec[ith]:
+                    x_data = [x for x, y in seqs_plot[ith]]
+                    index = min(bisect.bisect_left(x_data, retrans_ts), len(x_data) - 1)
+                    retrans_rec_plot[ith].append((retrans_ts, seqs_plot[ith][index][1]))
+
             # start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
             fig, ax = plt.subplots()
             ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'b-')
             ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'r-')
+            for ith in [co.WIFI, co.CELL]:
+                if ith == co.WIFI:
+                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO")
+                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retr FRT")
+                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', label="Retr REC")
+                else:
+                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd')
+                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md')
+                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd')
             ax.plot(start_connections, [10 for x in start_connections], 'gx')
+            # Shrink current axis by 20%
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+            # Put a legend to the right of the current axis
+            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='large')
             plt.savefig(os.path.join(sums_dir_exp, fname + '.pdf'))
             plt.close('all')
 
