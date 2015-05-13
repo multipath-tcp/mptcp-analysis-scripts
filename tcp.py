@@ -591,6 +591,7 @@ def copy_info_to_mptcp_connections(connection, mptcp_connections, failed_conns, 
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.BYTES_DATA] = connection.flow.attr[direction][co.BYTES_DATA]
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.MISSED_DATA] = connection.flow.attr[direction][co.MISSED_DATA]
             mptcp_connections[conn_id].flows[flow_id].attr[direction][co.TIMESTAMP_RETRANS] = connection.flow.attr[direction][co.TIMESTAMP_RETRANS]
+            mptcp_connections[conn_id].flows[flow_id].attr[direction][co.TCPCSM_RETRANS] = connection.flow.attr[direction].get(co.TCPCSM_RETRANS, [])
 
             if co.RTT_SAMPLES in connection.flow.attr[direction]:
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][co.RTT_SAMPLES] = connection.flow.attr[direction][co.RTT_SAMPLES]
@@ -885,7 +886,7 @@ def retransmissions_tcpcsm(pcap_filepath, connections):
         return
 
     # Create a reversed dictionary to speed up the lookup
-    inverse_dict = create_inverse_dictionary(connections)
+    inverse_dict = create_inverse_tcp_dictionary(connections)
 
     tcpcsm_file = open(pcap_filepath[:-5] + '_tcpcsm')
     data = tcpcsm_file.readlines()
@@ -896,25 +897,25 @@ def retransmissions_tcpcsm(pcap_filepath, connections):
         if split_line[6] in ['RTO', 'FRETX', 'MS_FRETX', 'SACK_FRETX', 'BAD_FRETX', 'LOSS_REC', 'UNEXP_FREC', 'UNNEEDED']:
             key = (split_line[1], split_line[0], split_line[3], split_line[2])
             if len(inverse_dict.get(key, [])) == 1:
-                conn_id, flow_id = inverse_dict[key][0]
+                conn_id = inverse_dict[key][0]
                 direction = co.S2D if split_line[5] == '1' else co.D2S
-                if co.TCPCSM_RETRANS not in connections[conn_id].flows[flow_id].attr[direction]:
-                    connections[conn_id].flows[flow_id].attr[direction][co.TCPCSM_RETRANS] = [(split_line[7], split_line[6])]
+                if co.TCPCSM_RETRANS not in connections[conn_id].flow.attr[direction]:
+                    connections[conn_id].flow.attr[direction][co.TCPCSM_RETRANS] = [(split_line[7], split_line[6])]
                 else:
-                    connections[conn_id].flows[flow_id].attr[direction][co.TCPCSM_RETRANS] += [(split_line[7], split_line[6])]
+                    connections[conn_id].flow.attr[direction][co.TCPCSM_RETRANS] += [(split_line[7], split_line[6])]
 
     os.remove(pcap_filepath[:-5] + '_tcpcsm')
 
 
-def create_inverse_dictionary(connections):
+def create_inverse_tcp_dictionary(connections):
     inverse = {}
     for conn_id, conn in connections.iteritems():
-        for flow_id, flow in conn.iteritems():
-            key = (flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT])
-            if key not in inverse:
-                inverse[key] = [(conn_id, flow_id)]
-            else:
-                inverse[key] += [(conn_id, flow_id)]
+        flow = conn.flow
+        key = (flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT])
+        if key not in inverse:
+            inverse[key] = [conn_id]
+        else:
+            inverse[key] += [conn_id]
 
     return inverse
 
