@@ -875,7 +875,51 @@ def collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mp
             print(str(e), xpl_filepath)
 
 
-def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, plot_cwin, mptcp_connections=None, print_out=sys.stdout, min_bytes=0, light=False):
+def retransmissions_tcpcsm(pcap_filepath, connections):
+    cmd = ['tcpcsm', '-o', pcap_filepath[:-5] + '_tcpcsm', '-R', pcap_filepath]
+    try:
+        if subprocess.call(cmd) != 0:
+            return
+    except Exception as e:
+        print(str(e), file=sys.stderr)
+        return
+
+    # Create a reversed dictionary to speed up the lookup
+    inverse_dict = create_inverse_dictionary(connections)
+
+    tcpcsm_file = open(pcap_filepath[:-5] + '_tcpcsm')
+    data = tcpcsm_file.readlines()
+    tcpcsm_file.close()
+
+    for line in data:
+        split_line = line.split()
+        if split_line[6] in ['RTO', 'FRETX', 'MS_FRETX', 'SACK_FRETX', 'BAD_FRETX', 'LOSS_REC', 'UNEXP_FREC', 'UNNEEDED']:
+            key = (split_line[1], split_line[0], split_line[3], split_line[2])
+            if len(inverse_dict.get(key, [])) == 1:
+                conn_id, flow_id = inverse_dict[key][0]
+                direction = co.S2D if split_line[5] == '1' else co.D2S
+                if co.TCPCSM_RETRANS not in connections[conn_id].flows[flow_id].attr[direction]:
+                    connections[conn_id].flows[flow_id].attr[direction][co.TCPCSM_RETRANS] = [(split_line[7], split_line[6])]
+                else:
+                    connections[conn_id].flows[flow_id].attr[direction][co.TCPCSM_RETRANS] += [(split_line[7], split_line[6])]
+
+    os.remove(pcap_filepath[:-5] + '_tcpcsm')
+
+
+def create_inverse_dictionary(connections):
+    inverse = {}
+    for conn_id, conn in connections.iteritems():
+        for flow_id, flow in conn.iteritems():
+            key = (flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT])
+            if key not in inverse:
+                inverse[key] = [(conn_id, flow_id)]
+            else:
+                inverse[key] += [(conn_id, flow_id)]
+
+    return inverse
+
+
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, plot_cwin, tcpcsm, mptcp_connections=None, print_out=sys.stdout, min_bytes=0, light=False):
     """ Process a tcp pcap file and generate graphs of its connections """
     # -C for color, -S for sequence numbers, -T for throughput graph
     # -zxy to plot both axes to 0
@@ -918,6 +962,9 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     rtt_all = {co.S2D: {}, co.D2S: {}}
     # Directory containing all TCPConnections that tried to be MPTCP subflows, but failed to
     failed_conns = {}
+
+    if tcpcsm:
+        retransmissions_tcpcsm(pcap_filepath, connections)
 
     acksize_all = {co.D2S: {}, co.S2D: {}}
     acksize_all_mptcp = {co.D2S: {}, co.S2D: {}}
@@ -986,7 +1033,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
         co.save_data(pcap_filepath, stat_dir_exp, connections)
 
 
-def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, plot_cwin, mptcp_connections=None, print_out=sys.stdout, min_bytes=0, light=False):
+def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, plot_cwin, tcpcsm, mptcp_connections=None, print_out=sys.stdout, min_bytes=0, light=False):
     """ Process a tcp pcap file and generate graphs of its connections """
     cwd = os.getcwd()
     os.chdir(directory_path)
@@ -1033,6 +1080,9 @@ def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_di
     rtt_all = {co.S2D: {}, co.D2S: {}}
     # Directory containing all TCPConnections that tried to be MPTCP subflows, but failed to
     failed_conns = {}
+
+    if tcpcsm:
+        retransmissions_tcpcsm(pcap_filepath, connections)
 
     acksize_all = {co.D2S: {}, co.S2D: {}}
     acksize_all_mptcp = {co.D2S: {}, co.S2D: {}}

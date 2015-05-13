@@ -113,6 +113,8 @@ parser.add_argument("-D",
                     "--use-db", help="ask IP address of each interface to the MongoDB", action="store_true")
 parser.add_argument("-L",
                     "--light", help="don't process RTT or throughput in detail to save time", action="store_true")
+parser.add_argument("-T",
+                    "--tcpcsm", help="use tcpcsm to give more info about retransmissions", action="store_true")
 
 args = parser.parse_args()
 
@@ -243,14 +245,14 @@ def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge, cwin):
         # we need to change dir, do that in a new process
         if graph:
             p = Process(target=mptcp.process_trace, args=(
-                pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, cwin,), kwargs={'min_bytes': args.min_bytes, 'light': args.light})
+                pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, cwin, args.tcpcsm,), kwargs={'min_bytes': args.min_bytes, 'light': args.light})
             p.start()
             p.join()
     elif pcap_filename.startswith('tcp'):
         if correct:
             tcp.correct_trace(pcap_filepath, print_out=print_out)
         if graph:
-            tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, cwin,
+            tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, cwin, args.tcpcsm,
                               print_out=print_out, min_bytes=args.min_bytes, light=args.light)
     else:
         print(pcap_filepath + ": don't know the protocol used; skipped", file=sys.stderr)
@@ -318,7 +320,7 @@ else:
     #             in_dir_exp, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, cwin,), kwargs={'min_bytes': args.min_bytes, 'light': args.light})
     # p.start()
     # p.join()
-    mptcp.process_trace_directory(in_dir_exp, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, False, min_bytes=args.min_bytes, light=args.light)
+    mptcp.process_trace_directory(in_dir_exp, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, args.tcpcsm, False, min_bytes=args.min_bytes, light=args.light)
 
 
 print('End of analyze', file=print_out)

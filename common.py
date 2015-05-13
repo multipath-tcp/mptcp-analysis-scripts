@@ -157,6 +157,8 @@ PACKS_RETRANS = 'packets_retrans'
 BYTES_RETRANS = 'bytes_retrans'
 # Timestamp of retransmissions
 TIMESTAMP_RETRANS = 'timestamp_retrans'
+# tcpcsm information about retransmissions
+TCPCSM_RETRANS = 'tcpcsm_retrans'
 # Number of packets out of orders
 PACKS_OOO = 'packets_outoforder'
 # Congestion window graph data dictionary
