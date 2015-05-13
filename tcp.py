@@ -947,7 +947,10 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                     collect_rtt_subflow(xpl_filepath, rtt_all, conn_id, flow_id, is_reversed, mptcp_connections)
                     #co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.DEF_RTT_DIR))
                 # else:
-                os.remove(xpl_filepath)
+                if not light and 'tsg' in os.path.basename(xpl_filepath):
+                    co.move_file(xpl_filepath, os.path.join(graph_dir_exp, co.TSG_THGPT_DIR))
+                else:
+                    os.remove(xpl_filepath)
             else:
                 if '_rtt.xpl' in os.path.basename(xpl_filepath):
                     if not light:
