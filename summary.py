@@ -169,6 +169,26 @@ connections = fetch_data(stat_dir_exp)
 if args.app:
     aggl_graphs = fetch_data(aggl_dir_exp)
 
+
+def get_multiflow_connections(connections):
+    multiflow_connections = {}
+    singleflow_connections = {}
+    for fname, conns_fname in connections.iteritems():
+        for conn_id, conn in conns_fname.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                if len(conn.flows) > 1:
+                    if fname not in multiflow_connections:
+                        multiflow_connections[fname] = {}
+                    multiflow_connections[fname][conn_id] = conn
+                else:
+                    if fname not in singleflow_connections:
+                        singleflow_connections[fname] = {}
+                    singleflow_connections[fname][conn_id] = conn
+
+    return multiflow_connections, singleflow_connections
+
+multiflow_connections, singleflow_connections = get_multiflow_connections(connections)
+
 ##################################################
 ##               PLOTTING RESULTS               ##
 ##################################################
@@ -2369,7 +2389,7 @@ def cdf_overhead_retrans_reinj(log_file=sys.stdout):
     results_two = {co.S2D: {}, co.D2S: {}}
     graph_fname = "overhead_retrans_reinj_" + start_time + "_" + stop_time + '.pdf'
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
-    for fname, data in connections.iteritems():
+    for fname, data in multiflow_connections.iteritems():
         condition = get_experiment_condition(fname)
         if 'mptcp_fm' in condition and 'both' in condition:
             if condition not in results[co.S2D]:
@@ -2550,7 +2570,7 @@ def cdf_overhead_retrans_reinj_new(log_file=sys.stdout):
     max_overhead_bytes = {co.S2D: {}, co.D2S: {}}
     max_overhead_frac = {co.S2D: {}, co.D2S: {}}
     max_overhead_tot_bytes = {co.S2D: {}, co.D2S: {}}
-    for fname, data in connections.iteritems():
+    for fname, data in multiflow_connections.iteritems():
         condition = get_experiment_condition(fname)
         if 'mptcp_fm' in condition and 'both' in condition:
             if condition not in results[co.S2D]:
