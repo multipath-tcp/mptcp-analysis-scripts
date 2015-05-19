@@ -222,7 +222,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                             counter -= 1
                             if counter == 0:
                                 sorted_event_plot.append((event_time + 0.000100, 0))
-                seqs_sort = sorted(seqs_ith + sorted_event_plot, key=lambda elem: elem[0])
+                seqs_sort = sorted(seqs_ith, key=lambda elem: elem[0])
                 for elem in seqs_sort:
                     if elem[2] not in offsets[ith]:
                         offsets[ith][elem[2]] = elem[1]
@@ -236,6 +236,8 @@ def seq_d2s_all_connections(time_loss=1.5):
                         seqs_plot[ith].append((elem[0], tot_offset[ith] + (elem[1] - offsets[ith][elem[2]])))
                         tot_offset[ith] += elem[1] - offsets[ith][elem[2]]
                         offsets[ith][elem[2]] = elem[1]
+
+                seqs_plot[ith] = sorted(seqs_plot[ith] + sorted_event_plot, key=lambda elem: elem[0])
 
                 for retrans_ts in retrans_rto[ith]:
                     x_data = [x for x, y in seqs_plot[ith]]
@@ -358,7 +360,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                             counter -= 1
                             if counter == 0:
                                 sorted_event_plot.append((event_time + 0.000100, 0))
-                seqs_sort = sorted(seqs_ith + sorted_event_plot, key=lambda elem: elem[0])
+                seqs_sort = sorted(seqs_ith, key=lambda elem: elem[0])
                 for elem in seqs_sort:
                     if elem[2] not in offsets:
                         offsets[elem[2]] = elem[1]
@@ -367,6 +369,8 @@ def seq_d2s_all_connections(time_loss=1.5):
                         seqs_plot[ith].append((elem[0], tot_offset[ith] + (elem[1] - offsets[elem[2]])))
                         tot_offset[ith] += elem[1] - offsets[elem[2]]
                         offsets[elem[2]] = elem[1]
+
+                seqs_plot[ith] = sorted(seqs_plot[ith] + sorted_event_plot, key=lambda elem: elem[0])
 
                 for retrans_ts in retrans_rto[ith]:
                     x_data = [x for x, y in seqs_plot[ith]]
