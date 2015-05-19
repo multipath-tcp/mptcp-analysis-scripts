@@ -207,7 +207,7 @@ def seq_d2s_all_connections(time_loss=1.5):
             seqs_plot = {co.WIFI: [], co.CELL: []}
             for ith, seqs_ith in seqs.iteritems():
                 # If needed, insert 0s in curves to show loss of connectivity
-                sorted_events = sorted(conn_event[interface], key=lambda elem: elem[0])
+                sorted_events = sorted(conn_event[ith], key=lambda elem: elem[0])
                 print(sorted_events)
                 counter = 0
                 sorted_event_plot = [(0.0, 0)]
@@ -347,7 +347,7 @@ def seq_d2s_all_connections(time_loss=1.5):
             seqs_plot = {co.WIFI: [], co.CELL: []}
             for ith, seqs_ith in seqs.iteritems():
                 # If needed, insert 0s in curves to show loss of connectivity
-                sorted_events = sorted(conn_event[interface], key=lambda elem: elem[0])
+                sorted_events = sorted(conn_event[ith], key=lambda elem: elem[0])
                 counter = 0
                 sorted_event_plot = [(0.0, 0)]
                 for event_time, event in sorted_events:
