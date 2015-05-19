@@ -213,9 +213,9 @@ def seq_d2s_all_connections(time_loss=1.5):
                 sorted_event_plot = [(0.0, 0)]
                 for event_time, event in sorted_events:
                     if event == 'start':
-                        counter += 1
-                        if counter == 1:
+                        if counter == 0:
                             sorted_event_plot.append((event_time - 0.000001, 0))
+                        counter += 1
                     elif event == 'end':
                         if counter == 0:
                             print("Strange...")
@@ -352,9 +352,9 @@ def seq_d2s_all_connections(time_loss=1.5):
                 sorted_event_plot = [(0.0, 0)]
                 for event_time, event in sorted_events:
                     if event == 'start':
-                        counter += 1
-                        if counter == 1:
+                        if counter == 0:
                             sorted_event_plot.append((event_time - 0.000001, 0))
+                        counter += 1
                     elif event == 'end':
                         if counter == 0:
                             print("Strange...")
