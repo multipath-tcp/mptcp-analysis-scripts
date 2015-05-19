@@ -216,7 +216,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                 for event_time, event in sorted_events:
                     if event == 'start':
                         if counter == 0:
-                            sorted_event_plot.append((event_time - 0.000001, 0))
+                            sorted_event_plot.append((event_time - 0.001000, 0))
                         counter += 1
                     elif event == 'end':
                         if counter == 0:
@@ -224,7 +224,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                         else:
                             counter -= 1
                             if counter == 0:
-                                sorted_event_plot.append((event_time + 0.000100, 0))
+                                sorted_event_plot.append((event_time + 0.001000, 0))
                 seqs_sort = sorted(seqs_ith, key=lambda elem: elem[0])
                 for elem in seqs_sort:
                     if elem[2] not in offsets[ith]:
@@ -271,8 +271,8 @@ def seq_d2s_all_connections(time_loss=1.5):
                     ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md')
                     ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd')
 
-            max_wifi = seqs_plot[co.WIFI][-1][1] if len(seqs_plot[co.WIFI]) > 0 else 10
-            max_cell = seqs_plot[co.CELL][-1][1] if len(seqs_plot[co.CELL]) > 0 else 10
+            max_wifi = max([x[1] for x in seqs_plot[co.WIFI]]) if len(seqs_plot[co.WIFI]) > 0 else 10
+            max_cell = max([x[1] for x in seqs_plot[co.CELL]]) if len(seqs_plot[co.WIFI]) > 0 else 10
             ax.plot(start_subflows[co.WIFI], [max_wifi for x in start_subflows[co.WIFI]], 'bx', label="Start SF W")
             ax.plot(start_subflows[co.CELL], [max_cell for x in start_subflows[co.CELL]], 'rx', label="Start SF C")
             ax.plot(start_connections, [10 for x in start_connections], 'gx', label="Start co")
