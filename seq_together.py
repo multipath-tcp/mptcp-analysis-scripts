@@ -168,17 +168,23 @@ def seq_d2s_all_connections(time_loss=1.5):
                     continue
 
                 last_time = None
+                is_white = False
                 for line in data:
-                    if line.startswith("uarrow") or line.startswith("diamond"):
+                    if is_white and (line.startswith("uarrow") or line.startswith("diamond")):
                         split_line = line.split(" ")
                         # if ((not split_line[0] == "diamond") or (len(split_line) == 4 and "white" in split_line[3])):
                         time = float(split_line[1])
                         if last_time and time > last_time + time_loss:
                             # Seems the connection has been broken
-                            break
+                            pass
                         else:
                             last_time = time
                         seqs[interface].append([time + offset_duration[conn_id][flow_id], int(split_line[2]), flow_name])
+                    elif len(line.split(" ")) == 1:
+                        if line.startswith("white"):
+                            is_white = True
+                        else:
+                            is_white = False
 
                 if last_time:
                     conn_event[interface].append((last_time + offset_duration[conn_id][flow_id], 'end'))
@@ -311,16 +317,23 @@ def seq_d2s_all_connections(time_loss=1.5):
                 interface = conn.flow.attr[co.IF]
                 conn_event[interface].append((conn.flow.attr[co.START] - min_start, 'start'))
                 last_time = None
+                is_white = False
                 for line in data:
-                    if line.startswith("uarrow") or line.startswith("diamond"):
+                    if is_white and (line.startswith("uarrow") or line.startswith("diamond")):
                         split_line = line.split(" ")
+                        # if ((not split_line[0] == "diamond") or (len(split_line) == 4 and "white" in split_line[3])):
                         time = float(split_line[1])
                         if last_time and time > last_time + time_loss:
                             # Seems the connection has been broken
-                            break
+                            pass
                         else:
                             last_time = time
                         seqs[interface].append([time, int(split_line[2]) + offset, conn_id])
+                    elif len(line.split(" ")) == 1:
+                        if line.startswith("white"):
+                            is_white = True
+                        else:
+                            is_white = False
 
                 if last_time:
                     conn_event[interface].append((last_time + offset, 'end'))
