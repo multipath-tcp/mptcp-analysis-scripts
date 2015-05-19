@@ -174,11 +174,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                         split_line = line.split(" ")
                         # if ((not split_line[0] == "diamond") or (len(split_line) == 4 and "white" in split_line[3])):
                         time = float(split_line[1])
-                        if last_time and time > last_time + time_loss:
-                            # Seems the connection has been broken
-                            pass
-                        else:
-                            last_time = time
+                        last_time = time
                         seqs[interface].append([time + offset_duration[conn_id][flow_id], int(split_line[2]), flow_name])
                     elif len(line.split(" ")) == 1:
                         if line.startswith("white"):
@@ -323,11 +319,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                         split_line = line.split(" ")
                         # if ((not split_line[0] == "diamond") or (len(split_line) == 4 and "white" in split_line[3])):
                         time = float(split_line[1])
-                        if last_time and time > last_time + time_loss:
-                            # Seems the connection has been broken
-                            pass
-                        else:
-                            last_time = time
+                        last_time = time
                         seqs[interface].append([time, int(split_line[2]) + offset, conn_id])
                     elif len(line.split(" ")) == 1:
                         if line.startswith("white"):
