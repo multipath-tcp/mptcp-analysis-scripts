@@ -96,7 +96,7 @@ def is_reverse_connection(csv_fname):
     return csv_fname[third_underscore_index + 1:second_underscore_index] == "s2c"
 
 
-def seq_d2s_all_connections():
+def seq_d2s_all_connections(time_loss=1.5):
     for fname, conns in connections.iteritems():
         seqs = {co.WIFI: [], co.CELL: []}
         start_connections = []
@@ -106,6 +106,7 @@ def seq_d2s_all_connections():
         retrans_rto_plot = {co.WIFI: [], co.CELL: []}
         retrans_frt_plot = {co.WIFI: [], co.CELL: []}
         retrans_rec_plot = {co.WIFI: [], co.CELL: []}
+        conn_event = {co.WIFI: [], co.CELL: []}
 
         if fname.startswith('mptcp'):
             start_subflows = {co.WIFI: [], co.CELL: []}
@@ -159,18 +160,31 @@ def seq_d2s_all_connections():
                 # Now process the file
                 start_connections.append(conn.attr[co.START] - min_start)
                 interface = conn.flows[flow_id].attr[co.IF]
+                conn_event[interface].append((conn.attr[co.START] - min_start, 'start'))
                 start_subflows[interface].append(conn.flows[flow_id].attr[co.START] - min_start)
 
                 if offset_duration[conn_id][flow_id] == float('inf'):
                     print('Skipped', fname, conn_id, flow_id, flow_name, conn.attr)
                     continue
 
+                last_time = None
                 for line in data:
                     if line.startswith("uarrow") or line.startswith("diamond"):
                         split_line = line.split(" ")
                         # if ((not split_line[0] == "diamond") or (len(split_line) == 4 and "white" in split_line[3])):
                         time = float(split_line[1])
                         seqs[interface].append([time + offset_duration[conn_id][flow_id], int(split_line[2]), flow_name])
+                        if last_time and time > last_time + time_loss:
+                            # Seems the connection has been broken
+                            break
+                        else:
+                            last_time = time
+
+                if last_time:
+                    conn_event[interface].append((last_time, 'end'))
+                else:
+                    # Opened too shortly
+                    conn_event[interface].append((conn.attr[co.START] - min_start + 0.00001, 'start'))
 
                 for reinject_time, reinject_type in conn.flows[flow_id].attr[co.D2S][co.TCPCSM_RETRANS]:
                     ts_int = int(reinject_time.split('.')[0])
@@ -192,7 +206,23 @@ def seq_d2s_all_connections():
             tot_offset = {co.WIFI: 0, co.CELL: 0}
             seqs_plot = {co.WIFI: [], co.CELL: []}
             for ith, seqs_ith in seqs.iteritems():
-                seqs_sort = sorted(seqs_ith, key=lambda elem: elem[0])
+                # If needed, insert 0s in curves to show loss of connectivity
+                sorted_events = sorted(conn_event[interface], key=lambda elem: elem[0])
+                counter = 0
+                sorted_event_plot = [(0.0, 0)]
+                for event_time, event in sorted_events:
+                    if event == 'start':
+                        counter += 1
+                        if counter == 1:
+                            sorted_event_plot.append((event_time - 0.000001, 0))
+                    elif event == 'end':
+                        if counter == 0:
+                            print("Strange...")
+                        else:
+                            counter -= 1
+                            if counter == 0:
+                                sorted_event_plot.append((event_time + 0.000100, 0))
+                seqs_sort = sorted(seqs_ith + sorted_event_plot, key=lambda elem: elem[0])
                 for elem in seqs_sort:
                     if elem[2] not in offsets[ith]:
                         offsets[ith][elem[2]] = elem[1]
@@ -275,11 +305,17 @@ def seq_d2s_all_connections():
                 conn = connections[fname][conn_id]
                 start_connections.append(conn.flow.attr[co.START] - min_start)
                 interface = conn.flow.attr[co.IF]
+                conn_event[interface].append((conn.flow.attr[co.START] - min_start, 'start'))
                 for line in data:
                     if line.startswith("uarrow") or line.startswith("diamond"):
                         split_line = line.split(" ")
                         time = float(split_line[1])
                         seqs[interface].append([time, int(split_line[2]), conn_id])
+                        if last_time and time > last_time + time_loss:
+                            # Seems the connection has been broken
+                            break
+                        else:
+                            last_time = time
 
                 for reinject_time, reinject_type in conn.flow.attr[co.D2S].get(co.TCPCSM_RETRANS, []):
                     ts_int = int(reinject_time.split('.')[0])
@@ -299,7 +335,23 @@ def seq_d2s_all_connections():
             tot_offset = {co.WIFI: 0, co.CELL: 0}
             seqs_plot = {co.WIFI: [], co.CELL: []}
             for ith, seqs_ith in seqs.iteritems():
-                seqs_sort = sorted(seqs_ith, key=lambda elem: elem[0])
+                # If needed, insert 0s in curves to show loss of connectivity
+                sorted_events = sorted(conn_event[interface], key=lambda elem: elem[0])
+                counter = 0
+                sorted_event_plot = [(0.0, 0)]
+                for event_time, event in sorted_events:
+                    if event == 'start':
+                        counter += 1
+                        if counter == 1:
+                            sorted_event_plot.append((event_time - 0.000001, 0))
+                    elif event == 'end':
+                        if counter == 0:
+                            print("Strange...")
+                        else:
+                            counter -= 1
+                            if counter == 0:
+                                sorted_event_plot.append((event_time + 0.000100, 0))
+                seqs_sort = sorted(seqs_ith + sorted_event_plot, key=lambda elem: elem[0])
                 for elem in seqs_sort:
                     if elem[2] not in offsets:
                         offsets[elem[2]] = elem[1]
