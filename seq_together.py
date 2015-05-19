@@ -181,7 +181,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                         seqs[interface].append([time + offset_duration[conn_id][flow_id], int(split_line[2]), flow_name])
 
                 if last_time:
-                    conn_event[interface].append((last_time, 'end'))
+                    conn_event[interface].append((last_time + offset_duration[conn_id][flow_id], 'end'))
                 else:
                     # Opened too shortly
                     conn_event[interface].append((conn.attr[co.START] - min_start + 0.00001, 'start'))
@@ -307,6 +307,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                 # Now process the file
                 conn = connections[fname][conn_id]
                 start_connections.append(conn.flow.attr[co.START] - min_start)
+                offset = conn.flow.attr[co.START] - min_start
                 interface = conn.flow.attr[co.IF]
                 conn_event[interface].append((conn.flow.attr[co.START] - min_start, 'start'))
                 last_time = None
@@ -319,10 +320,10 @@ def seq_d2s_all_connections(time_loss=1.5):
                             break
                         else:
                             last_time = time
-                        seqs[interface].append([time, int(split_line[2]), conn_id])
+                        seqs[interface].append([time, int(split_line[2]) + offset, conn_id])
 
                 if last_time:
-                    conn_event[interface].append((last_time, 'end'))
+                    conn_event[interface].append((last_time + offset, 'end'))
                 else:
                     # Opened too shortly
                     conn_event[interface].append((conn.flow.attr[co.START] - min_start + 0.00001, 'start'))
