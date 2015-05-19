@@ -306,6 +306,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                 start_connections.append(conn.flow.attr[co.START] - min_start)
                 interface = conn.flow.attr[co.IF]
                 conn_event[interface].append((conn.flow.attr[co.START] - min_start, 'start'))
+                last_time = None
                 for line in data:
                     if line.startswith("uarrow") or line.startswith("diamond"):
                         split_line = line.split(" ")
@@ -316,6 +317,12 @@ def seq_d2s_all_connections(time_loss=1.5):
                             break
                         else:
                             last_time = time
+
+                if last_time:
+                    conn_event[interface].append((last_time, 'end'))
+                else:
+                    # Opened too shortly
+                    conn_event[interface].append((conn.attr[co.START] - min_start + 0.00001, 'start'))
 
                 for reinject_time, reinject_type in conn.flow.attr[co.D2S].get(co.TCPCSM_RETRANS, []):
                     ts_int = int(reinject_time.split('.')[0])
