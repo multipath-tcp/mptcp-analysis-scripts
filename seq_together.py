@@ -322,7 +322,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                     conn_event[interface].append((last_time, 'end'))
                 else:
                     # Opened too shortly
-                    conn_event[interface].append((conn.attr[co.START] - min_start + 0.00001, 'start'))
+                    conn_event[interface].append((conn.flow.attr[co.START] - min_start + 0.00001, 'start'))
 
                 for reinject_time, reinject_type in conn.flow.attr[co.D2S].get(co.TCPCSM_RETRANS, []):
                     ts_int = int(reinject_time.split('.')[0])
