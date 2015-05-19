@@ -224,7 +224,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                         else:
                             counter -= 1
                             if counter == 0:
-                                sorted_event_plot.append((event_time + 0.001000, 0))
+                                sorted_event_plot.append((event_time + 0.005000, 0))
                 seqs_sort = sorted(seqs_ith, key=lambda elem: elem[0])
                 for elem in seqs_sort:
                     if elem[2] not in offsets[ith]:
@@ -358,7 +358,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                 for event_time, event in sorted_events:
                     if event == 'start':
                         if counter == 0:
-                            sorted_event_plot.append((event_time - 0.000001, 0))
+                            sorted_event_plot.append((event_time - 0.001000, 0))
                         counter += 1
                     elif event == 'end':
                         if counter == 0:
@@ -366,7 +366,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                         else:
                             counter -= 1
                             if counter == 0:
-                                sorted_event_plot.append((event_time + 0.000100, 0))
+                                sorted_event_plot.append((event_time + 0.005000, 0))
                 seqs_sort = sorted(seqs_ith, key=lambda elem: elem[0])
                 for elem in seqs_sort:
                     if elem[2] not in offsets:
