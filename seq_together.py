@@ -393,6 +393,15 @@ def seq_d2s_all_connections(time_loss=1.5):
                         tot_offset[ith] += elem[1] - offsets[elem[2]]
                         offsets[elem[2]] = elem[1]
 
+                improved_seqs_plot = []
+                previous_elem = None
+                for elem in seqs_plot[ith]:
+                    if len(improved_seqs_plot) >= 1 and elem[1] - previous_elem[1] < 2 and elem[0] - previous_elem[0] >= 1.0:
+                        improved_seqs_plot.append((previous_elem[0] + 0.001000, 0))
+                        improved_seqs_plot.append((elem[0] - 0.001000, 0))
+                    previous_elem = elem
+                    improved_seqs_plot.append(elem)
+
                 # If needed, insert 0s in curves to show loss of connectivity
                 sorted_events = sorted(conn_event[ith], key=lambda elem: elem[0])
                 counter = 0
@@ -415,15 +424,6 @@ def seq_d2s_all_connections(time_loss=1.5):
                                 if index < len(seqs_plot[ith]) - 2:
                                     sorted_event_plot.append((event_time + 0.004999, seqs_plot[ith][index][1]))
                                     sorted_event_plot.append((event_time + 0.005000, 0))
-
-                improved_seqs_plot = []
-                previous_elem = None
-                for elem in seqs_plot[ith]:
-                    if len(improved_seqs_plot) >= 1 and elem[1] - previous_elem[1] < 2 and elem[0] - previous_elem[0] >= 1.0:
-                        improved_seqs_plot.append((previous_elem[0] + 0.001000, 0))
-                        improved_seqs_plot.append((elem[0] - 0.001000, 0))
-                    previous_elem = elem
-                    improved_seqs_plot.append(elem)
 
                 for retrans_ts in retrans_rto[ith]:
                     x_data = [x for x, y in seqs_plot[ith]]
