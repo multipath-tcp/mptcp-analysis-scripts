@@ -208,6 +208,21 @@ def seq_d2s_all_connections(time_loss=1.5):
             tot_offset = {co.WIFI: 0, co.CELL: 0}
             seqs_plot = {co.WIFI: [], co.CELL: []}
             for ith, seqs_ith in seqs.iteritems():
+                seqs_sort = sorted(seqs_ith, key=lambda elem: elem[0])
+                for elem in seqs_sort:
+                    if elem[2] not in offsets[ith]:
+                        offsets[ith][elem[2]] = elem[1]
+                        seqs_plot[ith].append((elem[0], tot_offset[ith]))
+                        if tot_offset[ith] < 0 or elem[1] < 0:
+                            print("NEGATIVE START", ith, elem[1], tot_offset[ith])
+                    else:
+                        if tot_offset[ith] + (elem[1] - offsets[ith][elem[2]]) < 0:
+                            print(offsets)
+                            print("NEGATIVE", ith, elem[1], tot_offset[ith], offsets[ith][elem[2]], tot_offset[ith] + (elem[1] - offsets[ith][elem[2]]))
+                        seqs_plot[ith].append((elem[0], tot_offset[ith] + (elem[1] - offsets[ith][elem[2]])))
+                        tot_offset[ith] += elem[1] - offsets[ith][elem[2]]
+                        offsets[ith][elem[2]] = elem[1]
+
                 # If needed, insert 0s in curves to show loss of connectivity
                 sorted_events = sorted(conn_event[ith], key=lambda elem: elem[0])
                 print(sorted_events)
@@ -224,21 +239,9 @@ def seq_d2s_all_connections(time_loss=1.5):
                         else:
                             counter -= 1
                             if counter == 0:
+                                index = bisect.bisect_left(seqs_plot[ith], event_time + 0.004999)
+                                sorted_event_plot.append((event_time + 0.004999, seqs_plot[ith][index][1]))
                                 sorted_event_plot.append((event_time + 0.005000, 0))
-                seqs_sort = sorted(seqs_ith, key=lambda elem: elem[0])
-                for elem in seqs_sort:
-                    if elem[2] not in offsets[ith]:
-                        offsets[ith][elem[2]] = elem[1]
-                        seqs_plot[ith].append((elem[0], tot_offset[ith]))
-                        if tot_offset[ith] < 0 or elem[1] < 0:
-                            print("NEGATIVE START", ith, elem[1], tot_offset[ith])
-                    else:
-                        if tot_offset[ith] + (elem[1] - offsets[ith][elem[2]]) < 0:
-                            print(offsets)
-                            print("NEGATIVE", ith, elem[1], tot_offset[ith], offsets[ith][elem[2]], tot_offset[ith] + (elem[1] - offsets[ith][elem[2]]))
-                        seqs_plot[ith].append((elem[0], tot_offset[ith] + (elem[1] - offsets[ith][elem[2]])))
-                        tot_offset[ith] += elem[1] - offsets[ith][elem[2]]
-                        offsets[ith][elem[2]] = elem[1]
 
                 seqs_plot[ith] = sorted(seqs_plot[ith] + sorted_event_plot, key=lambda elem: elem[0])
 
@@ -351,6 +354,16 @@ def seq_d2s_all_connections(time_loss=1.5):
             tot_offset = {co.WIFI: 0, co.CELL: 0}
             seqs_plot = {co.WIFI: [], co.CELL: []}
             for ith, seqs_ith in seqs.iteritems():
+                seqs_sort = sorted(seqs_ith, key=lambda elem: elem[0])
+                for elem in seqs_sort:
+                    if elem[2] not in offsets:
+                        offsets[elem[2]] = elem[1]
+                        seqs_plot[ith].append((elem[0], tot_offset[ith]))
+                    else:
+                        seqs_plot[ith].append((elem[0], tot_offset[ith] + (elem[1] - offsets[elem[2]])))
+                        tot_offset[ith] += elem[1] - offsets[elem[2]]
+                        offsets[elem[2]] = elem[1]
+
                 # If needed, insert 0s in curves to show loss of connectivity
                 sorted_events = sorted(conn_event[ith], key=lambda elem: elem[0])
                 counter = 0
@@ -366,16 +379,9 @@ def seq_d2s_all_connections(time_loss=1.5):
                         else:
                             counter -= 1
                             if counter == 0:
+                                index = bisect.bisect_left(seqs_plot[ith], event_time + 0.004999)
+                                sorted_event_plot.append((event_time + 0.004999, seqs_plot[ith][index][1]))
                                 sorted_event_plot.append((event_time + 0.005000, 0))
-                seqs_sort = sorted(seqs_ith, key=lambda elem: elem[0])
-                for elem in seqs_sort:
-                    if elem[2] not in offsets:
-                        offsets[elem[2]] = elem[1]
-                        seqs_plot[ith].append((elem[0], tot_offset[ith]))
-                    else:
-                        seqs_plot[ith].append((elem[0], tot_offset[ith] + (elem[1] - offsets[elem[2]])))
-                        tot_offset[ith] += elem[1] - offsets[elem[2]]
-                        offsets[elem[2]] = elem[1]
 
                 seqs_plot[ith] = sorted(seqs_plot[ith] + sorted_event_plot, key=lambda elem: elem[0])
 
