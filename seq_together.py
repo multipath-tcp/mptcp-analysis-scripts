@@ -231,7 +231,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                         offsets[ith][elem[2]] = elem[1]
 
                 x_data = [x for x, y in seqs_plot[ith]]
-                for reinj_ts in is_reinj_plot[ith]:
+                for reinj_ts in is_reinjection[ith]:
                     index = bisect.bisect(x_data, reinj_ts)
                     is_reinj_plot[ith].append((reinj_ts, seqs_plot[ith][index][1]))
 
