@@ -243,7 +243,16 @@ def seq_d2s_all_connections(time_loss=1.5):
                                 sorted_event_plot.append((event_time + 0.004999, seqs_plot[ith][index][1]))
                                 sorted_event_plot.append((event_time + 0.005000, 0))
 
-                seqs_plot[ith] = sorted(seqs_plot[ith] + sorted_event_plot, key=lambda elem: elem[0])
+                improved_seqs_plot = []
+                previous_elem = None
+                for elem in seqs_plot[ith]:
+                    if len(improved_seqs_plot) >= 1 and elem[1] - previous_elem[1] < 2 and elem[0] - previous_elem[0] >= 1.0:
+                        improved_seqs_plot.append((previous_elem[0] + 0.001000, 0))
+                        improved_seqs_plot.append((elem[0] - 0.001000, 0))
+                    previous_elem = elem
+                    improved_seqs_plot.append(elem)
+
+                seqs_plot[ith] = sorted(improved_seqs_plot + sorted_event_plot, key=lambda elem: elem[0])
 
                 for retrans_ts in retrans_rto[ith]:
                     x_data = [x for x, y in seqs_plot[ith]]
