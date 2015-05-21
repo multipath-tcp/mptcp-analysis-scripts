@@ -232,7 +232,7 @@ def seq_d2s_all_connections(time_loss=1.5):
 
                 x_data = [x for x, y in seqs_plot[ith]]
                 for reinj_ts in is_reinjection[ith]:
-                    index = bisect.bisect(x_data, reinj_ts)
+                    index = min(bisect.bisect(x_data, reinj_ts), len(seqs_plot[ith]) - 1)
                     is_reinj_plot[ith].append((reinj_ts, seqs_plot[ith][index][1]))
 
                 # If needed, insert 0s in curves to show loss of connectivity
