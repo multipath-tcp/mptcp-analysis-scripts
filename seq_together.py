@@ -372,8 +372,8 @@ def seq_d2s_all_connections(time_loss=1.5):
                     if event == 'start':
                         if counter == 0:
                             sorted_event_plot.append((event_time - 0.005000, 0))
-                            index = bisect.bisect_left(seqs_plot[ith], event_time - 0.004999)
-                            sorted_event_plot.append((event_time - 0.004999, seqs_plot[ith][index][1]))
+                            index = bisect.bisect_left(seqs_plot[ith], event_time - 0.003000)
+                            sorted_event_plot.append((event_time - 0.003000, seqs_plot[ith][index][1]))
                         counter += 1
                     elif event == 'end':
                         if counter == 0:
