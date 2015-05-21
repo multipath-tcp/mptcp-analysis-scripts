@@ -171,8 +171,8 @@ REINJ_ORIG_PACKS = 'reinjected_orig_packets'
 REINJ_ORIG_BYTES = 'reinjected_orig_bytes'
 # Reinjected origin
 REINJ_ORIG = 'reinjected_orig'
-# Is reinjection (timestamp in char)
-IS_REINJ_TIME = 'is_reinjection_timestamp'
+# Is reinjection (timestamp in char + bytes reinjected)
+IS_REINJ = 'is_reinjection'
 # Number of bytes returned by mptcptrace
 BYTES_MPTCPTRACE = 'bytes_mptcptrace'
 # Total number of bytes of frames

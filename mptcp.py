@@ -312,7 +312,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_BYTES] = reinject_offsets[i]
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_TIMESTAMP] = reinject_ts[i]
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG] = reinject[i]
-        connections[conn_id].flows[str(i)].attr[direction][co.IS_REINJ_TIME] = is_reinjection_ts[i]
+        connections[conn_id].flows[str(i)].attr[direction][co.IS_REINJ] = is_reinjection[i]
 
 
 def process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed):
