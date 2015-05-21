@@ -617,8 +617,10 @@ def rtt_application_smartphone_pdf():
     color = {tcp_3g: "purple", tcp_4g: "orange", tcp_wifi: "red", mptcp_3g: "blue", mptcp_4g: "green"}
     rtts = {tcp_3g: [], tcp_4g: [], tcp_wifi: [], mptcp_3g: [], mptcp_4g: []}
 
-    graph_fname = "rtt_density_smartphone_all_" + start_time + "_" + stop_time + '.pdf'
-    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+    graph_fname_tcp = "rtt_density_smartphone_all_" + start_time + "_" + stop_time + '_tcp.pdf'
+    graph_fname_mptcp = "rtt_density_smartphone_all_" + start_time + "_" + stop_time + '_mptcp.pdf'
+    graph_full_path_tcp = os.path.join(sums_dir_exp, graph_fname_tcp)
+    graph_full_path_mptcp = os.path.join(sums_dir_exp, graph_fname_mptcp)
 
     for dataset_name, connections in datasets.iteritems():
         for fname, data in connections.iteritems():
@@ -637,7 +639,8 @@ def rtt_application_smartphone_pdf():
                 for conn_id in data[co.S2D]:
                     rtts[cond] += data[co.S2D][conn_id]
 
-    co.density_plot(rtts, "RTT seen by smartphone [ms]", color, graph_full_path, xlim=500.0)
+    co.density_plot({k: v for k, v in rtts.iteritems() if k.startswith('TCP')}, "RTT seen by smartphone [ms]", color, graph_full_path_tcp, xlim=500.0)
+    co.density_plot({k: v for k, v in rtts.iteritems() if k.startswith('MPTCP')}, "RTT seen by smartphone [ms]", color, graph_full_path_mptcp, xlim=500.0)
 
 
 # cellular_percentage_boxplot()
