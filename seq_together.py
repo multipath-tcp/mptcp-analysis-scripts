@@ -296,6 +296,7 @@ def seq_d2s_all_connections(time_loss=1.5):
 
             # Put a legend to the right of the current axis
             ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='large')
+            plt.xlim(xmin=0.0)
             plt.savefig(os.path.join(sums_dir_exp, fname + '.pdf'))
             plt.close('all')
 
@@ -444,6 +445,7 @@ def seq_d2s_all_connections(time_loss=1.5):
 
             # Put a legend to the right of the current axis
             ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='large')
+            plt.xlim(xmin=0.0)
             plt.savefig(os.path.join(sums_dir_exp, fname + '.pdf'))
             plt.close('all')
 
