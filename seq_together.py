@@ -252,8 +252,6 @@ def seq_d2s_all_connections(time_loss=1.5):
                     previous_elem = elem
                     improved_seqs_plot.append(elem)
 
-                seqs_plot[ith] = sorted(improved_seqs_plot + sorted_event_plot, key=lambda elem: elem[0])
-
                 for retrans_ts in retrans_rto[ith]:
                     x_data = [x for x, y in seqs_plot[ith]]
                     index = min(bisect.bisect_left(x_data, retrans_ts), len(x_data) - 1)
@@ -269,19 +267,21 @@ def seq_d2s_all_connections(time_loss=1.5):
                     index = min(bisect.bisect_left(x_data, retrans_ts), len(x_data) - 1)
                     retrans_rec_plot[ith].append((retrans_ts, seqs_plot[ith][index][1]))
 
+                seqs_plot[ith] = sorted(improved_seqs_plot + sorted_event_plot, key=lambda elem: elem[0])
+
             # start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
             fig, ax = plt.subplots()
             ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'b-', label="WiFi")
             ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'r-', label="Cellular")
             for ith in [co.WIFI, co.CELL]:
                 if ith == co.WIFI:
-                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO")
-                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retr FRT")
-                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', label="Retr REC")
+                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO", alpha=0.25)
+                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retr FRT", alpha=0.25)
+                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', label="Retr REC", alpha=0.25)
                 else:
-                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd')
-                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md')
-                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd')
+                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', alpha=0.25)
+                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', alpha=0.25)
+                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', alpha=0.25)
 
             max_wifi = max([x[1] for x in seqs_plot[co.WIFI]]) if len(seqs_plot[co.WIFI]) > 0 else 10
             max_cell = max([x[1] for x in seqs_plot[co.CELL]]) if len(seqs_plot[co.WIFI]) > 0 else 10
@@ -394,7 +394,14 @@ def seq_d2s_all_connections(time_loss=1.5):
                                 sorted_event_plot.append((event_time + 0.004999, seqs_plot[ith][index][1]))
                                 sorted_event_plot.append((event_time + 0.005000, 0))
 
-                seqs_plot[ith] = sorted(seqs_plot[ith] + sorted_event_plot, key=lambda elem: elem[0])
+                improved_seqs_plot = []
+                previous_elem = None
+                for elem in seqs_plot[ith]:
+                    if len(improved_seqs_plot) >= 1 and elem[1] - previous_elem[1] < 2 and elem[0] - previous_elem[0] >= 1.0:
+                        improved_seqs_plot.append((previous_elem[0] + 0.001000, 0))
+                        improved_seqs_plot.append((elem[0] - 0.001000, 0))
+                    previous_elem = elem
+                    improved_seqs_plot.append(elem)
 
                 for retrans_ts in retrans_rto[ith]:
                     x_data = [x for x, y in seqs_plot[ith]]
@@ -411,19 +418,21 @@ def seq_d2s_all_connections(time_loss=1.5):
                     index = min(bisect.bisect_left(x_data, retrans_ts), len(x_data) - 1)
                     retrans_rec_plot[ith].append((retrans_ts, seqs_plot[ith][index][1]))
 
+                seqs_plot[ith] = sorted(improved_seqs_plot + sorted_event_plot, key=lambda elem: elem[0])
+
             # start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
             fig, ax = plt.subplots()
             ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'b-', label="WiFi")
             ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'r-', label="Cellular")
             for ith in [co.WIFI, co.CELL]:
                 if ith == co.WIFI:
-                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO")
-                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retr FRT")
-                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', label="Retr REC")
+                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO", alpha=0.25)
+                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retr FRT", alpha=0.25)
+                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', label="Retr REC", alpha=0.25)
                 else:
-                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd')
-                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md')
-                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd')
+                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', alpha=0.25)
+                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', alpha=0.25)
+                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', alpha=0.25)
             ax.plot(start_connections, [10 for x in start_connections], 'gx', label="Start co")
             # Shrink current axis by 20%
             box = ax.get_position()
