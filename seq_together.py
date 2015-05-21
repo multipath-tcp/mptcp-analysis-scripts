@@ -399,8 +399,8 @@ def seq_d2s_all_connections(time_loss=1.5):
                     if len(improved_seqs_plot) >= 1 and elem[1] - previous_elem[1] < 2 and elem[0] - previous_elem[0] >= 1.0:
                         improved_seqs_plot.append((previous_elem[0] + 0.001000, 0))
                         improved_seqs_plot.append((elem[0] - 0.001000, 0))
-                    previous_elem = elem
                     improved_seqs_plot.append(elem)
+                    previous_elem = elem
 
                 # If needed, insert 0s in curves to show loss of connectivity
                 sorted_events = sorted(conn_event[ith], key=lambda elem: elem[0])
