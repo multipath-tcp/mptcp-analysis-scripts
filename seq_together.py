@@ -109,6 +109,8 @@ def seq_d2s_all_connections(time_loss=1.5):
         conn_event = {co.WIFI: [], co.CELL: []}
 
         if fname.startswith('mptcp'):
+            is_reinjection = {co.WIFI: [], co.CELL: []}
+            tot_reinjection_on = {co.WIFI: 0, co.CELL: 0}
             start_subflows = {co.WIFI: [], co.CELL: []}
             min_start = float('inf')
             for conn_id, conn in conns.iteritems():
@@ -201,12 +203,17 @@ def seq_d2s_all_connections(time_loss=1.5):
                     elif reinject_type in ['LOSS_REC', 'UNEXP_FREC', 'UNNEEDED']:
                         retrans_rec[interface].append(ts_offset)
 
+                for reinj_ts, reinj_bytes in conn.flows[flow_id].attr[co.D2S][co.IS_REINJ].iteritems():
+                    is_reinjection[interface].append(reinj_ts)
+                    tot_reinjection_on[interface] += reinj_bytes
+
             print("WIFI size", len(seqs[co.WIFI]))
             print("CELL size", len(seqs[co.CELL]))
             # Now put all together on a same graph
             offsets = {co.WIFI: {}, co.CELL: {}}
             tot_offset = {co.WIFI: 0, co.CELL: 0}
             seqs_plot = {co.WIFI: [], co.CELL: []}
+            is_reinj_plot = {co.WIFI: [], co.CELL: []}
             for ith, seqs_ith in seqs.iteritems():
                 seqs_sort = sorted(seqs_ith, key=lambda elem: elem[0])
                 for elem in seqs_sort:
@@ -222,6 +229,11 @@ def seq_d2s_all_connections(time_loss=1.5):
                         seqs_plot[ith].append((elem[0], tot_offset[ith] + (elem[1] - offsets[ith][elem[2]])))
                         tot_offset[ith] += elem[1] - offsets[ith][elem[2]]
                         offsets[ith][elem[2]] = elem[1]
+
+                x_data = [x for x, y in seqs_plot[ith]]
+                for reinj_ts in is_reinj_plot[ith]:
+                    index = bisect.bisect(x_data, float(reinj_ts))
+                    is_reinj_plot[ith].append((float(reinj_ts), seqs_plot[ith][index][1]))
 
                 # If needed, insert 0s in curves to show loss of connectivity
                 sorted_events = sorted(conn_event[ith], key=lambda elem: elem[0])
@@ -280,10 +292,12 @@ def seq_d2s_all_connections(time_loss=1.5):
                     ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO", alpha=0.33)
                     ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retr FRT", alpha=0.33)
                     ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', label="Retr REC", alpha=0.33)
+                    ax.plot([x[0] for x in is_reinj_plot[ith]], [x[1] for x in is_reinj_plot[ith]], 'go', label="Is Reinj", alpha=0.33)
                 else:
                     ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', alpha=0.33)
                     ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', alpha=0.33)
                     ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', alpha=0.33)
+                    ax.plot([x[0] for x in is_reinj_plot[ith]], [x[1] for x in is_reinj_plot[ith]], 'go', alpha=0.33)
 
             max_wifi = max([x[1] for x in seqs_plot[co.WIFI]]) if len(seqs_plot[co.WIFI]) > 0 else 10
             max_cell = max([x[1] for x in seqs_plot[co.CELL]]) if len(seqs_plot[co.WIFI]) > 0 else 10
