@@ -247,6 +247,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
     reinject_nb = {}
     reinject_ts = {}
     reinject = {}
+    is_reinjection_ts = {}
     bursts = []
     current_flow = -1
     first_seq_burst_on_flow = 0
@@ -255,6 +256,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
     last_time_burst_on_flow = 0.0
     for i in range(0, len(connections[conn_id].flows)):
         reinject[i] = {}
+        is_reinjection_ts[i] = {}
         reinject_offsets[i] = 0
         reinject_nb[i] = 0
         reinject_ts[i] = []
@@ -287,6 +289,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
             if int(split_line[5]) - 1 not in reinject_offsets:
                 continue
             reinject_offsets[int(split_line[5]) - 1] += int(split_line[4]) - int(split_line[1])
+            is_reinjection_ts[int(split_line[2]) - 1].append(split_line[0])
             reinject_nb[int(split_line[5]) - 1] += 1
             reinject_ts[int(split_line[5]) - 1].append(float(split_line[0]))
             packet_seqs = (int(split_line[4]), int(split_line[1]))
@@ -309,6 +312,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_BYTES] = reinject_offsets[i]
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_TIMESTAMP] = reinject_ts[i]
         connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG] = reinject[i]
+        connections[conn_id].flows[str(i)].attr[direction][co.IS_REINJ_TIME] = is_reinjection_ts[i]
 
 
 def process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed):
