@@ -235,16 +235,31 @@ def seq_d2s_all_connections(time_loss=1.5):
                     index = min(bisect.bisect(x_data, reinj_ts), len(seqs_plot[ith]) - 1)
                     is_reinj_plot[ith].append((reinj_ts, seqs_plot[ith][index][1]))
 
+                improved_seqs_plot = []
+                previous_elem = None
+                for elem in seqs_plot[ith]:
+                    if len(improved_seqs_plot) >= 1 and elem[1] - previous_elem[1] < 2 and elem[0] - previous_elem[0] >= 1.0:
+                        improved_seqs_plot.append((previous_elem[0] + 0.001000, 0))
+                        improved_seqs_plot.append((elem[0] - 0.001000, 0))
+                    improved_seqs_plot.append(elem)
+                    previous_elem = elem
+
                 # If needed, insert 0s in curves to show loss of connectivity
                 sorted_events = sorted(conn_event[ith], key=lambda elem: elem[0])
                 print(sorted_events)
                 counter = 0
                 sorted_event_plot = [(0.0, 0)]
                 x_data = [x for x, y in seqs_plot[ith]]
+                x_data_two = [x for x, y in improved_seqs_plot]
                 for event_time, event in sorted_events:
                     if event == 'start':
                         if counter == 0:
                             sorted_event_plot.append((event_time - 0.005000, 0))
+                            index = bisect.bisect_left(x_data, event_time - 0.003000)
+                            index_two = bisect.bisect_left(x_data_two, event_time - 0.003000)
+                            if improved_seqs_plot[index][1] == 0:
+                                sorted_event_plot.append((event_time - 0.003500, 0))
+                            sorted_event_plot.append((event_time - 0.003000, seqs_plot[ith][index][1]))
                         counter += 1
                     elif event == 'end':
                         if counter == 0:
@@ -256,15 +271,6 @@ def seq_d2s_all_connections(time_loss=1.5):
                                 if index < len(seqs_plot[ith]) - 1:
                                     sorted_event_plot.append((event_time + 0.004999, seqs_plot[ith][index][1]))
                                     sorted_event_plot.append((event_time + 0.005000, 0))
-
-                improved_seqs_plot = []
-                previous_elem = None
-                for elem in seqs_plot[ith]:
-                    if len(improved_seqs_plot) >= 1 and elem[1] - previous_elem[1] < 2 and elem[0] - previous_elem[0] >= 1.0:
-                        improved_seqs_plot.append((previous_elem[0] + 0.001000, 0))
-                        improved_seqs_plot.append((elem[0] - 0.001000, 0))
-                    previous_elem = elem
-                    improved_seqs_plot.append(elem)
 
                 for retrans_ts in retrans_rto[ith]:
                     x_data = [x for x, y in seqs_plot[ith]]
@@ -407,11 +413,15 @@ def seq_d2s_all_connections(time_loss=1.5):
                 counter = 0
                 sorted_event_plot = [(0.0, 0)]
                 x_data = [x for x, y in seqs_plot[ith]]
+                x_data_two = [x for x, y in improved_seqs_plot]
                 for event_time, event in sorted_events:
                     if event == 'start':
                         if counter == 0:
                             sorted_event_plot.append((event_time - 0.005000, 0))
                             index = bisect.bisect_left(x_data, event_time - 0.003000)
+                            index_two = bisect.bisect_left(x_data_two, event_time - 0.003000)
+                            if improved_seqs_plot[index][1] == 0:
+                                sorted_event_plot.append((event_time - 0.003500, 0))
                             sorted_event_plot.append((event_time - 0.003000, seqs_plot[ith][index][1]))
                         counter += 1
                     elif event == 'end':
