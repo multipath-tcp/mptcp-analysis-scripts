@@ -240,8 +240,9 @@ def seq_d2s_all_connections(time_loss=1.5):
                             counter -= 1
                             if counter == 0:
                                 index = bisect.bisect_left(seqs_plot[ith], event_time + 0.004999)
-                                sorted_event_plot.append((event_time + 0.004999, seqs_plot[ith][index][1]))
-                                sorted_event_plot.append((event_time + 0.005000, 0))
+                                if index < len(seqs_plot[ith]) - 1:
+                                    sorted_event_plot.append((event_time + 0.004999, seqs_plot[ith][index][1]))
+                                    sorted_event_plot.append((event_time + 0.005000, 0))
 
                 improved_seqs_plot = []
                 previous_elem = None
@@ -391,8 +392,9 @@ def seq_d2s_all_connections(time_loss=1.5):
                             counter -= 1
                             if counter == 0:
                                 index = bisect.bisect_left(seqs_plot[ith], event_time + 0.004999)
-                                sorted_event_plot.append((event_time + 0.004999, seqs_plot[ith][index][1]))
-                                sorted_event_plot.append((event_time + 0.005000, 0))
+                                if index < len(seqs_plot[ith]) - 1:
+                                    sorted_event_plot.append((event_time + 0.004999, seqs_plot[ith][index][1]))
+                                    sorted_event_plot.append((event_time + 0.005000, 0))
 
                 improved_seqs_plot = []
                 previous_elem = None
