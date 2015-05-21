@@ -204,7 +204,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                         retrans_rec[interface].append(ts_offset)
 
                 for reinj_ts, reinj_bytes in conn.flows[flow_id].attr[co.D2S][co.IS_REINJ].iteritems():
-                    is_reinjection[interface].append(reinj_ts)
+                    is_reinjection[interface].append(float(reinj_ts) - min_start)
                     tot_reinjection_on[interface] += reinj_bytes
 
             print("WIFI size", len(seqs[co.WIFI]))
@@ -232,8 +232,8 @@ def seq_d2s_all_connections(time_loss=1.5):
 
                 x_data = [x for x, y in seqs_plot[ith]]
                 for reinj_ts in is_reinj_plot[ith]:
-                    index = bisect.bisect(x_data, float(reinj_ts))
-                    is_reinj_plot[ith].append((float(reinj_ts), seqs_plot[ith][index][1]))
+                    index = bisect.bisect(x_data, reinj_ts)
+                    is_reinj_plot[ith].append((reinj_ts, seqs_plot[ith][index][1]))
 
                 # If needed, insert 0s in curves to show loss of connectivity
                 sorted_events = sorted(conn_event[ith], key=lambda elem: elem[0])
