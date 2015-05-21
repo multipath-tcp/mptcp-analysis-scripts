@@ -277,13 +277,13 @@ def seq_d2s_all_connections(time_loss=1.5):
             ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'r-', label="Cellular")
             for ith in [co.WIFI, co.CELL]:
                 if ith == co.WIFI:
-                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO", alpha=0.25)
-                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retr FRT", alpha=0.25)
-                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', label="Retr REC", alpha=0.25)
+                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO", alpha=0.33)
+                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retr FRT", alpha=0.33)
+                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', label="Retr REC", alpha=0.33)
                 else:
-                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', alpha=0.25)
-                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', alpha=0.25)
-                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', alpha=0.25)
+                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', alpha=0.33)
+                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', alpha=0.33)
+                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', alpha=0.33)
 
             max_wifi = max([x[1] for x in seqs_plot[co.WIFI]]) if len(seqs_plot[co.WIFI]) > 0 else 10
             max_cell = max([x[1] for x in seqs_plot[co.CELL]]) if len(seqs_plot[co.WIFI]) > 0 else 10
@@ -297,6 +297,8 @@ def seq_d2s_all_connections(time_loss=1.5):
             # Put a legend to the right of the current axis
             ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='large')
             plt.xlim(xmin=0.0)
+            plt.xlabel("Time", fontsize=18)
+            plt.ylabel("Bytes", fontsize=18)
             plt.savefig(os.path.join(sums_dir_exp, fname + '.pdf'))
             plt.close('all')
 
@@ -431,13 +433,13 @@ def seq_d2s_all_connections(time_loss=1.5):
             ax.plot([x[0] for x in seqs_plot[co.CELL]], [x[1] for x in seqs_plot[co.CELL]], 'r-', label="Cellular")
             for ith in [co.WIFI, co.CELL]:
                 if ith == co.WIFI:
-                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO", alpha=0.25)
-                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retr FRT", alpha=0.25)
-                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', label="Retr REC", alpha=0.25)
+                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO", alpha=0.33)
+                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retr FRT", alpha=0.33)
+                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', label="Retr REC", alpha=0.33)
                 else:
-                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', alpha=0.25)
-                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', alpha=0.25)
-                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', alpha=0.25)
+                    ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', alpha=0.33)
+                    ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', alpha=0.33)
+                    ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', alpha=0.33)
             ax.plot(start_connections, [10 for x in start_connections], 'gx', label="Start co")
             # Shrink current axis by 20%
             box = ax.get_position()
@@ -446,6 +448,8 @@ def seq_d2s_all_connections(time_loss=1.5):
             # Put a legend to the right of the current axis
             ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='large')
             plt.xlim(xmin=0.0)
+            plt.xlabel("Time", fontsize=18)
+            plt.ylabel("Bytes", fontsize=18)
             plt.savefig(os.path.join(sums_dir_exp, fname + '.pdf'))
             plt.close('all')
 
