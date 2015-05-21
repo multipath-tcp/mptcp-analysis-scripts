@@ -228,6 +228,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                 print(sorted_events)
                 counter = 0
                 sorted_event_plot = [(0.0, 0)]
+                x_data = [x for x, y in seqs_plot[ith]]
                 for event_time, event in sorted_events:
                     if event == 'start':
                         if counter == 0:
@@ -239,8 +240,8 @@ def seq_d2s_all_connections(time_loss=1.5):
                         else:
                             counter -= 1
                             if counter == 0:
-                                index = bisect.bisect_left(seqs_plot[ith], event_time + 0.004999)
-                                if index < len(seqs_plot[ith]) - 2:
+                                index = bisect.bisect_left(x_data, event_time + 0.004999)
+                                if index < len(seqs_plot[ith]) - 1:
                                     sorted_event_plot.append((event_time + 0.004999, seqs_plot[ith][index][1]))
                                     sorted_event_plot.append((event_time + 0.005000, 0))
 
@@ -378,11 +379,12 @@ def seq_d2s_all_connections(time_loss=1.5):
                 sorted_events = sorted(conn_event[ith], key=lambda elem: elem[0])
                 counter = 0
                 sorted_event_plot = [(0.0, 0)]
+                x_data = [x for x, y in seqs_plot[ith]]
                 for event_time, event in sorted_events:
                     if event == 'start':
                         if counter == 0:
                             sorted_event_plot.append((event_time - 0.005000, 0))
-                            index = bisect.bisect_left(seqs_plot[ith], event_time - 0.003000)
+                            index = bisect.bisect_left(x_data, event_time - 0.003000)
                             sorted_event_plot.append((event_time - 0.003000, seqs_plot[ith][index][1]))
                         counter += 1
                     elif event == 'end':
@@ -391,7 +393,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                         else:
                             counter -= 1
                             if counter == 0:
-                                index = bisect.bisect_left(seqs_plot[ith], event_time + 0.004999)
+                                index = bisect.bisect_left(x_data, event_time + 0.004999)
                                 if index < len(seqs_plot[ith]) - 2:
                                     sorted_event_plot.append((event_time + 0.004999, seqs_plot[ith][index][1]))
                                     sorted_event_plot.append((event_time + 0.005000, 0))
