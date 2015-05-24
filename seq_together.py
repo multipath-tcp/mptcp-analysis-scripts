@@ -315,6 +315,7 @@ def seq_d2s_all_connections(time_loss=1.5):
             plt.xlabel("Time", fontsize=18)
             plt.ylabel("Bytes", fontsize=18)
             plt.title('Reinjection on WIFI: ' + str(tot_reinjection_on[co.WIFI]) + ' and CELL: ' + str(tot_reinjection_on[co.CELL]))
+            plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
             plt.savefig(os.path.join(sums_dir_exp, fname + '.pdf'))
             plt.close('all')
 
@@ -472,6 +473,7 @@ def seq_d2s_all_connections(time_loss=1.5):
             plt.xlim(xmin=0.0)
             plt.xlabel("Time", fontsize=18)
             plt.ylabel("Bytes", fontsize=18)
+            plt.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
             plt.savefig(os.path.join(sums_dir_exp, fname + '.pdf'))
             plt.close('all')
 
