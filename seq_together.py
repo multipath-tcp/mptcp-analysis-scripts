@@ -306,11 +306,11 @@ def seq_d2s_all_connections(time_loss=1.5):
             ax.plot(start_subflows[co.CELL], [max_cell for x in start_subflows[co.CELL]], 'rx', label="Start SF C")
             ax.plot(start_connections, [10 for x in start_connections], 'gx', label="Start co")
             # Shrink current axis by 20%
-            box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            #box = ax.get_position()
+            #ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
             # Put a legend to the right of the current axis
-            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='large')
+            ax.legend(loc='upper left', fontsize='large')
             plt.xlim(xmin=0.0)
             plt.xlabel("Time", fontsize=18)
             plt.ylabel("Bytes", fontsize=18)
@@ -442,6 +442,13 @@ def seq_d2s_all_connections(time_loss=1.5):
 
                 seqs_plot[ith] = sorted(improved_seqs_plot + sorted_event_plot, key=lambda elem: elem[0])
 
+                previous_node = None
+                # Post processing, remove all glitches
+                for i in range(0, len(seqs_plot[ith])):
+                    if previous_node and (seqs_plot[ith][i][0] - previous_node[0] > 2.0) and (previous_node[1] == 0 and not seqs_plot[ith][i][1] == 0):
+                        seqs_plot[ith][i][1] = 0
+                    previous_node = seqs_plot[ith][i]
+
             # start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
             fig, ax = plt.subplots()
             ax.plot([x[0] for x in seqs_plot[co.WIFI]], [x[1] for x in seqs_plot[co.WIFI]], 'b-', label="WiFi")
@@ -457,11 +464,11 @@ def seq_d2s_all_connections(time_loss=1.5):
                     ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', alpha=0.33)
             ax.plot(start_connections, [10 for x in start_connections], 'gx', label="Start co")
             # Shrink current axis by 20%
-            box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            #box = ax.get_position()
+            #ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
             # Put a legend to the right of the current axis
-            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='large')
+            ax.legend(loc='upper left', fontsize='large')
             plt.xlim(xmin=0.0)
             plt.xlabel("Time", fontsize=18)
             plt.ylabel("Bytes", fontsize=18)
