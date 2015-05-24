@@ -306,15 +306,15 @@ def seq_d2s_all_connections(time_loss=1.5):
             ax.plot(start_subflows[co.CELL], [max_cell for x in start_subflows[co.CELL]], 'rx', label="Start SF C")
             ax.plot(start_connections, [10 for x in start_connections], 'gx', label="Start co")
             # Shrink current axis by 20%
-            #box = ax.get_position()
-            #ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
             # Put a legend to the right of the current axis
-            ax.legend(loc='upper left', fontsize='large')
+            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='large')
             plt.xlim(xmin=0.0)
             plt.xlabel("Time", fontsize=18)
             plt.ylabel("Bytes", fontsize=18)
-            plt.title('WIFI: ' + str(tot_reinjection_on[co.WIFI]) + ' CELL: ' + str(tot_reinjection_on[co.CELL]))
+            plt.title('Reinjection on WIFI: ' + str(tot_reinjection_on[co.WIFI]) + ' and CELL: ' + str(tot_reinjection_on[co.CELL]))
             plt.savefig(os.path.join(sums_dir_exp, fname + '.pdf'))
             plt.close('all')
 
@@ -464,11 +464,11 @@ def seq_d2s_all_connections(time_loss=1.5):
                     ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', alpha=0.33)
             ax.plot(start_connections, [10 for x in start_connections], 'gx', label="Start co")
             # Shrink current axis by 20%
-            #box = ax.get_position()
-            #ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
             # Put a legend to the right of the current axis
-            ax.legend(loc='upper left', fontsize='large')
+            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='large')
             plt.xlim(xmin=0.0)
             plt.xlabel("Time", fontsize=18)
             plt.ylabel("Bytes", fontsize=18)
