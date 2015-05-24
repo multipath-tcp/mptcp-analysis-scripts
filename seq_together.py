@@ -446,7 +446,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                 # Post processing, remove all glitches
                 for i in range(0, len(seqs_plot[ith])):
                     if previous_node and (seqs_plot[ith][i][0] - previous_node[0] > 2.0) and (previous_node[1] == 0 and not seqs_plot[ith][i][1] == 0):
-                        seqs_plot[ith][i][1] = 0
+                        seqs_plot[ith][i] = (seqs_plot[ith][i][0], 0)
                     previous_node = seqs_plot[ith][i]
 
             # start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
