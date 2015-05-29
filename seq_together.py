@@ -302,9 +302,15 @@ def seq_d2s_all_connections(time_loss=1.5):
 
             max_wifi = max([x[1] for x in seqs_plot[co.WIFI]]) if len(seqs_plot[co.WIFI]) > 0 else 10
             max_cell = max([x[1] for x in seqs_plot[co.CELL]]) if len(seqs_plot[co.WIFI]) > 0 else 10
+            first = True
+            for x in start_connections:
+                if first:
+                    ax.plot([x, x], [0, max(max_wifi, max_cell)], 'g-', label="Start co")
+                    first = False
+                else:
+                    ax.plot([x, x], [0, max(max_wifi, max_cell)], 'g-')
             ax.plot(start_subflows[co.WIFI], [max_wifi for x in start_subflows[co.WIFI]], 'bx', label="Start SF W")
             ax.plot(start_subflows[co.CELL], [max_cell for x in start_subflows[co.CELL]], 'rx', label="Start SF C")
-            ax.plot(start_connections, [10 for x in start_connections], 'gx', label="Start co")
             # Shrink current axis by 20%
             box = ax.get_position()
             ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
@@ -463,7 +469,15 @@ def seq_d2s_all_connections(time_loss=1.5):
                     ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', alpha=0.33)
                     ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', alpha=0.33)
                     ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', alpha=0.33)
-            ax.plot(start_connections, [10 for x in start_connections], 'gx', label="Start co")
+            max_wifi = max([x[1] for x in seqs_plot[co.WIFI]]) if len(seqs_plot[co.WIFI]) > 0 else 10
+            max_cell = max([x[1] for x in seqs_plot[co.CELL]]) if len(seqs_plot[co.WIFI]) > 0 else 10
+            first = True
+            for x in start_connections:
+                if first:
+                    ax.plot([x, x], [0, max(max_wifi, max_cell)], 'g-', label="Start co")
+                    first = False
+                else:
+                    ax.plot([x, x], [0, max(max_wifi, max_cell)], 'g-')
             # Shrink current axis by 20%
             box = ax.get_position()
             ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
