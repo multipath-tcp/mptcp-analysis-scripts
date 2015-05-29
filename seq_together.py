@@ -305,10 +305,10 @@ def seq_d2s_all_connections(time_loss=1.5):
             first = True
             for x in start_connections:
                 if first:
-                    ax.plot([x, x], [0, max(max_wifi, max_cell)], 'g-', label="Start co")
+                    ax.plot([x, x], [0, max(max_wifi, max_cell)], 'g-', label="Start co", alpha=0.33))
                     first = False
                 else:
-                    ax.plot([x, x], [0, max(max_wifi, max_cell)], 'g-')
+                    ax.plot([x, x], [0, max(max_wifi, max_cell)], 'g-', alpha=0.33))
             ax.plot(start_subflows[co.WIFI], [max_wifi for x in start_subflows[co.WIFI]], 'bx', label="Start SF W")
             ax.plot(start_subflows[co.CELL], [max_cell for x in start_subflows[co.CELL]], 'rx', label="Start SF C")
             # Shrink current axis by 20%
@@ -474,10 +474,10 @@ def seq_d2s_all_connections(time_loss=1.5):
             first = True
             for x in start_connections:
                 if first:
-                    ax.plot([x, x], [0, max(max_wifi, max_cell)], 'g-', label="Start co")
+                    ax.plot([x, x], [0, max(max_wifi, max_cell)], 'g-', label="Start co", alpha=0.33)
                     first = False
                 else:
-                    ax.plot([x, x], [0, max(max_wifi, max_cell)], 'g-')
+                    ax.plot([x, x], [0, max(max_wifi, max_cell)], 'g-', alpha=0.33))
             # Shrink current axis by 20%
             box = ax.get_position()
             ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
