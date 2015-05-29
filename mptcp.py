@@ -18,7 +18,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #
-#  Contains code related to the processing of MPTCP traces
+#  Contains code related to the processing of the outputs of mptcptrace
 
 from __future__ import print_function
 
