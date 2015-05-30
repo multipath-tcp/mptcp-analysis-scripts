@@ -200,7 +200,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                         retrans_rto[interface].append(ts_offset)
                     elif reinject_type in ['FRETX', 'MS_FRETX', 'SACK_FRETX', 'BAD_FRETX']:
                         retrans_frt[interface].append(ts_offset)
-                    elif reinject_type in ['LOSS_REC', 'UNEXP_FREC', 'UNNEEDED']:
+                    elif reinject_type in ['LOSS_REC', 'FREC', 'UNEXP_FREC', 'UNNEEDED']:
                         retrans_rec[interface].append(ts_offset)
 
                 for reinj_ts, reinj_bytes in conn.flows[flow_id].attr[co.D2S][co.IS_REINJ].iteritems():
