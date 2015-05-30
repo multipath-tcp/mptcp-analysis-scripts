@@ -103,9 +103,11 @@ def seq_d2s_all_connections(time_loss=1.5):
         retrans_rto = {co.WIFI: [], co.CELL: []}
         retrans_frt = {co.WIFI: [], co.CELL: []}
         retrans_rec = {co.WIFI: [], co.CELL: []}
+        retrans_und = {co.WIFI: [], co.CELL: []}
         retrans_rto_plot = {co.WIFI: [], co.CELL: []}
         retrans_frt_plot = {co.WIFI: [], co.CELL: []}
         retrans_rec_plot = {co.WIFI: [], co.CELL: []}
+        retrans_und_plot = {co.WIFI: [], co.CELL: []}
         conn_event = {co.WIFI: [], co.CELL: []}
 
         if fname.startswith('mptcp'):
@@ -200,8 +202,10 @@ def seq_d2s_all_connections(time_loss=1.5):
                         retrans_rto[interface].append(ts_offset)
                     elif reinject_type in ['FRETX', 'MS_FRETX', 'SACK_FRETX', 'BAD_FRETX']:
                         retrans_frt[interface].append(ts_offset)
-                    elif reinject_type in ['LOSS_REC', 'FREC', 'UNEXP_FREC', 'UNNEEDED']:
+                    elif reinject_type in ['LOSS_REC', 'FREC']:
                         retrans_rec[interface].append(ts_offset)
+                    elif reinject_type in ['UNEXP_FREC', 'UNNEEDED']:
+                        retrans_und[interface].append(ts_offset)
 
                 for reinj_ts, reinj_bytes in conn.flows[flow_id].attr[co.D2S][co.IS_REINJ].iteritems():
                     is_reinjection[interface].append(float(reinj_ts) - min_start)
@@ -282,6 +286,11 @@ def seq_d2s_all_connections(time_loss=1.5):
                     index = min(bisect.bisect_left(x_data, retrans_ts), len(x_data) - 1)
                     retrans_rec_plot[ith].append((retrans_ts, seqs_plot[ith][index][1]))
 
+                for retrans_ts in retrans_und[ith]:
+                    x_data = [x for x, y in seqs_plot[ith]]
+                    index = min(bisect.bisect_left(x_data, retrans_ts), len(x_data) - 1)
+                    retrans_und_plot[ith].append((retrans_ts, seqs_plot[ith][index][1]))
+
                 seqs_plot[ith] = sorted(improved_seqs_plot + sorted_event_plot, key=lambda elem: elem[0])
 
             # start_ts = min(seqs_plot[co.WIFI][0][0], seqs_plot[co.CELL][0][0])
@@ -293,11 +302,13 @@ def seq_d2s_all_connections(time_loss=1.5):
                     ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO", alpha=0.33)
                     ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retr FRT", alpha=0.33)
                     ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', label="Retr REC", alpha=0.33)
+                    ax.plot([x[0] for x in retrans_und_plot[ith]], [x[1] for x in retrans_und_plot[ith]], color='purple', marker='d', label="Retr UND", alpha=0.33)
                     ax.plot([x[0] for x in is_reinj_plot[ith]], [x[1] for x in is_reinj_plot[ith]], 'go', label="Is Reinj", alpha=0.33)
                 else:
                     ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', alpha=0.33)
                     ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', alpha=0.33)
                     ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', alpha=0.33)
+                    ax.plot([x[0] for x in retrans_und_plot[ith]], [x[1] for x in retrans_und_plot[ith]], color='purple', marker='d', alpha=0.33)
                     ax.plot([x[0] for x in is_reinj_plot[ith]], [x[1] for x in is_reinj_plot[ith]], 'go', alpha=0.33)
 
             max_wifi = max([x[1] for x in seqs_plot[co.WIFI]]) if len(seqs_plot[co.WIFI]) > 0 else 10
@@ -383,8 +394,10 @@ def seq_d2s_all_connections(time_loss=1.5):
                         retrans_rto[interface].append(ts_offset)
                     elif reinject_type in ['FRETX', 'MS_FRETX', 'SACK_FRETX', 'BAD_FRETX']:
                         retrans_frt[interface].append(ts_offset)
-                    elif reinject_type in ['LOSS_REC', 'UNEXP_FREC', 'UNNEEDED']:
+                    elif reinject_type in ['LOSS_REC', 'FREC']:
                         retrans_rec[interface].append(ts_offset)
+                    elif reinject_type in ['UNEXP_FREC', 'UNNEEDED']:
+                        retrans_und[interface].append(ts_offset)
 
             # Now put all togetger on a same graph
             offsets = {}
@@ -447,6 +460,11 @@ def seq_d2s_all_connections(time_loss=1.5):
                     index = min(bisect.bisect_left(x_data, retrans_ts), len(x_data) - 1)
                     retrans_rec_plot[ith].append((retrans_ts, seqs_plot[ith][index][1]))
 
+                for retrans_ts in retrans_und[ith]:
+                    x_data = [x for x, y in seqs_plot[ith]]
+                    index = min(bisect.bisect_left(x_data, retrans_ts), len(x_data) - 1)
+                    retrans_und_plot[ith].append((retrans_ts, seqs_plot[ith][index][1]))
+
                 seqs_plot[ith] = sorted(improved_seqs_plot + sorted_event_plot, key=lambda elem: elem[0])
 
                 previous_node = None
@@ -465,10 +483,14 @@ def seq_d2s_all_connections(time_loss=1.5):
                     ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO", alpha=0.33)
                     ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retr FRT", alpha=0.33)
                     ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', label="Retr REC", alpha=0.33)
+                    ax.plot([x[0] for x in retrans_und_plot[ith]], [x[1] for x in retrans_und_plot[ith]], color='purple', marker='d', label="Retr UND", alpha=0.33)
+
                 else:
                     ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', alpha=0.33)
                     ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', alpha=0.33)
                     ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', alpha=0.33)
+                    ax.plot([x[0] for x in retrans_und_plot[ith]], [x[1] for x in retrans_und_plot[ith]], color='purple', marker='d', alpha=0.33)
+
             max_wifi = max([x[1] for x in seqs_plot[co.WIFI]]) if len(seqs_plot[co.WIFI]) > 0 else 10
             max_cell = max([x[1] for x in seqs_plot[co.CELL]]) if len(seqs_plot[co.WIFI]) > 0 else 10
             first = True
