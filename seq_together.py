@@ -302,13 +302,13 @@ def seq_d2s_all_connections(time_loss=1.5):
                     ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO", alpha=0.33)
                     ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retr FRT", alpha=0.33)
                     ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', label="Retr REC", alpha=0.33)
-                    ax.plot([x[0] for x in retrans_und_plot[ith]], [x[1] for x in retrans_und_plot[ith]], color='orange', marker='d', linestyle=None, label="Retr UND", alpha=0.33)
+                    ax.plot([x[0] for x in retrans_und_plot[ith]], [x[1] for x in retrans_und_plot[ith]], color='orange', marker='d', linestyle='None', label="Retr UND", alpha=0.33)
                     ax.plot([x[0] for x in is_reinj_plot[ith]], [x[1] for x in is_reinj_plot[ith]], 'go', label="Is Reinj", alpha=0.33)
                 else:
                     ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', alpha=0.33)
                     ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', alpha=0.33)
                     ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', alpha=0.33)
-                    ax.plot([x[0] for x in retrans_und_plot[ith]], [x[1] for x in retrans_und_plot[ith]], color='orange', linestyle=None, marker='d', alpha=0.33)
+                    ax.plot([x[0] for x in retrans_und_plot[ith]], [x[1] for x in retrans_und_plot[ith]], color='orange', linestyle='None', marker='d', alpha=0.33)
                     ax.plot([x[0] for x in is_reinj_plot[ith]], [x[1] for x in is_reinj_plot[ith]], 'go', alpha=0.33)
 
             max_wifi = max([x[1] for x in seqs_plot[co.WIFI]]) if len(seqs_plot[co.WIFI]) > 0 else 10
@@ -483,13 +483,13 @@ def seq_d2s_all_connections(time_loss=1.5):
                     ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', label="Retr RTO", alpha=0.33)
                     ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', label="Retr FRT", alpha=0.33)
                     ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', label="Retr REC", alpha=0.33)
-                    ax.plot([x[0] for x in retrans_und_plot[ith]], [x[1] for x in retrans_und_plot[ith]], color='orange', linestyle=None, marker='d', label="Retr UND", alpha=0.33)
+                    ax.plot([x[0] for x in retrans_und_plot[ith]], [x[1] for x in retrans_und_plot[ith]], color='orange', linestyle='None', marker='d', label="Retr UND", alpha=0.33)
 
                 else:
                     ax.plot([x[0] for x in retrans_rto_plot[ith]], [x[1] for x in retrans_rto_plot[ith]], 'cd', alpha=0.33)
                     ax.plot([x[0] for x in retrans_frt_plot[ith]], [x[1] for x in retrans_frt_plot[ith]], 'md', alpha=0.33)
                     ax.plot([x[0] for x in retrans_rec_plot[ith]], [x[1] for x in retrans_rec_plot[ith]], 'yd', alpha=0.33)
-                    ax.plot([x[0] for x in retrans_und_plot[ith]], [x[1] for x in retrans_und_plot[ith]], color='orange', linestyle=None, marker='d', alpha=0.33)
+                    ax.plot([x[0] for x in retrans_und_plot[ith]], [x[1] for x in retrans_und_plot[ith]], color='orange', linestyle='None', marker='d', alpha=0.33)
 
             max_wifi = max([x[1] for x in seqs_plot[co.WIFI]]) if len(seqs_plot[co.WIFI]) > 0 else 10
             max_cell = max([x[1] for x in seqs_plot[co.CELL]]) if len(seqs_plot[co.WIFI]) > 0 else 10
