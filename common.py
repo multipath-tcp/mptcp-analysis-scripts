@@ -27,6 +27,8 @@ import os
 import matplotlib
 # Do not use any X11 backend
 matplotlib.use('Agg')
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
