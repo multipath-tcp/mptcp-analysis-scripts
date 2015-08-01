@@ -401,7 +401,7 @@ def cdf_rtt_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
             if condition.startswith('tcp') and 'both' not in condition and 'TC' not in condition:
                 for conn_id, conn in data.iteritems():
                     if isinstance(conn, tcp.TCPConnection):
-                        if dataset_name == 'dirs':
+                        if dataset_name == DS_1:
                             if co.RTT_SAMPLES not in conn.flow.attr[co.S2D]:
                                 break
                             if conn.flow.attr[co.S2D][co.RTT_SAMPLES] >= min_samples and conn.flow.attr[co.S2D][co.BYTES] >= min_bytes:
@@ -412,7 +412,7 @@ def cdf_rtt_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
                                         aggl_res[rmnet_3_up] += [(conn.flow.attr[co.S2D][co.RTT_AVG])]
                                     elif 'rmnet4' in fname:
                                         aggl_res[rmnet_4_up] += [(conn.flow.attr[co.S2D][co.RTT_AVG])]
-                        elif dataset_name == 'dirs_two':
+                        elif dataset_name == DS_2:
                             if co.RTT_SAMPLES not in conn.flow.attr[co.D2S]:
                                 break
                             if conn.flow.attr[co.D2S][co.RTT_SAMPLES] >= min_samples and conn.flow.attr[co.D2S][co.BYTES] >= min_bytes:
@@ -450,7 +450,7 @@ def cdf_rtt_mptcp_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
                         for flow_id, flow in conn.flows.iteritems():
                             if co.S2D not in flow.attr:
                                 continue
-                            if dataset_name == 'dataset_1':
+                            if dataset_name == DS_1:
                                 if co.RTT_SAMPLES not in flow.attr[co.S2D]:
                                     break
                                 if flow.attr[co.S2D][co.RTT_SAMPLES] >= min_samples and flow.attr[co.S2D][co.BYTES] >= min_bytes:
@@ -461,7 +461,7 @@ def cdf_rtt_mptcp_single_graph_all(min_samples=5, min_bytes=100, xlim=None):
                                             aggl_res[rmnet_3_up] += [(flow.attr[co.S2D][co.RTT_AVG], fname)]
                                         elif 'rmnet4' in fname:
                                             aggl_res[rmnet_4_up] += [(flow.attr[co.S2D][co.RTT_AVG], fname)]
-                            elif dataset_name == 'dataset_2':
+                            elif dataset_name == DS_2:
                                 if co.RTT_SAMPLES not in flow.attr[co.D2S]:
                                     break
                                 if flow.attr[co.D2S][co.RTT_SAMPLES] >= min_samples and flow.attr[co.D2S][co.BYTES] >= min_bytes:
