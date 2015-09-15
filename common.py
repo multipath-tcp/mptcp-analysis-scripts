@@ -214,6 +214,33 @@ RTT_25P = 'rtt_25p'
 S2D = 'source2destination'
 D2S = 'destination2source'
 
+NB_SYN = 'nb_syn'
+NB_FIN = 'nb_fin'
+NB_RST = 'nb_rst'
+NB_ACK = 'nb_ack'
+
+TIME_FIRST_PAYLD = 'time_first_payload'
+TIME_LAST_PAYLD = 'time_last_payload'
+TIME_FIRST_ACK = 'time_first_ack'
+
+TTL_MIN = 'time_to_live_min'
+TTL_MAX = 'time_to_live_max'
+
+SS_MIN = 'segment_size_min'
+SS_MAX = 'segment_size_max'
+
+CWIN_MIN = 'minimum_in_flight_size'
+CWIN_MAX = 'maximum_in_flight_size'
+
+NB_RTX_RTO = 'nb_rtx_rto'
+NB_RTX_FR = 'nb_rtx_fr'
+NB_REORDERING = 'nb_reordering'
+NB_NET_DUP = 'nb_network_duplicate'
+NB_UNKNOWN = 'nb_unknown'
+NB_FLOW_CONTROL = 'nb_flow_control'
+NB_UNNECE_RTX_RTO = 'nb_unnecessary_rtx_rto'
+NB_UNNECE_RTX_FR = 'nb_unnecessary_rtx_fr'
+
 DIRECTIONS = [S2D, D2S]
 
 IPv4 = 'IPv4'

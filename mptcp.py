@@ -99,7 +99,7 @@ def extract_flow_data(out_file):
         if line.startswith("MPTCP connection"):
             # A typical line: MPTCP connection 0 with id 2
             words = line.split()
-            current_connection = words[-1]
+            current_connection = int(words[-1])
             connections[current_connection] = MPTCPConnection(current_connection)
 
         # Case 2: line for a subflow
@@ -108,7 +108,7 @@ def extract_flow_data(out_file):
             #   Subflow 0 with wscale : 6 0 IPv4 sport 59570 dport 443 saddr
             # 37.185.171.74 daddr 194.78.99.114
             words = line.split()
-            sub_flow_id = words[1]
+            sub_flow_id = int(words[1])
             subflow = MPTCPSubFlow(sub_flow_id)
             index_wscale = words.index("wscale")
             subflow.attr[
@@ -145,11 +145,11 @@ def extract_flow_data(out_file):
 
 def get_connection_id(csv_fname):
     """ Given the filename of the csv file, return the id of the MPTCP connection
-        The id (returned as str) is assumed to be between last _ and last . in csv_fname
+        The id (returned as int) is assumed to be between last _ and last . in csv_fname
     """
     last_underscore_index = csv_fname.rindex("_")
     last_dot_index = csv_fname.rindex(".")
-    return csv_fname[last_underscore_index + 1:last_dot_index]
+    return int(csv_fname[last_underscore_index + 1:last_dot_index])
 
 
 def is_reverse_connection(csv_fname):
@@ -308,11 +308,11 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
     direction = co.D2S if is_reversed else co.S2D
     connections[conn_id].attr[direction][co.BURSTS] = bursts
     for i in range(0, len(connections[conn_id].flows)):
-        connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_PACKS] = reinject_nb[i]
-        connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_BYTES] = reinject_offsets[i]
-        connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG_TIMESTAMP] = reinject_ts[i]
-        connections[conn_id].flows[str(i)].attr[direction][co.REINJ_ORIG] = reinject[i]
-        connections[conn_id].flows[str(i)].attr[direction][co.IS_REINJ] = is_reinjection[i]
+        connections[conn_id].flows[i].attr[direction][co.REINJ_ORIG_PACKS] = reinject_nb[i]
+        connections[conn_id].flows[i].attr[direction][co.REINJ_ORIG_BYTES] = reinject_offsets[i]
+        connections[conn_id].flows[i].attr[direction][co.REINJ_ORIG_TIMESTAMP] = reinject_ts[i]
+        connections[conn_id].flows[i].attr[direction][co.REINJ_ORIG] = reinject[i]
+        connections[conn_id].flows[i].attr[direction][co.IS_REINJ] = is_reinjection[i]
 
 
 def process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed):
@@ -400,7 +400,7 @@ def rewrite_xpl(xpl_fname, xpl_data, begin_time, begin_seq, connections, conn_id
 
         if co.is_number(split_line[0]):
             if rewrite_interface:
-                interface = connections[conn_id].flows[str(int(split_line[0]) - 1)].attr[co.IF]
+                interface = connections[conn_id].flows[int(split_line[0]) - 1].attr[co.IF]
                 number = 1 if interface == co.WIFI else 2 if interface == co.CELL else 3
                 xpl_file.write(str(number) + "\n")
             else:
@@ -792,105 +792,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
     if connections and do_tcp_processing:
         # Save a first version as backup here; should be removed when no problem anymore
         # co.save_data(pcap_filepath, stat_dir_exp, connections)
-        cwin_data_all = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, plot_cwin, tcpcsm, mptcp_connections=connections, light=light)
+        tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, tcpcsm, mptcp_connections=connections)
         co.save_data(pcap_filepath, acksize_dir_exp, acksize_all)
         co.save_data(pcap_filepath, rtt_dir_exp, rtt_all)
         co.save_data(pcap_filepath, stat_dir_exp, connections)
-        if plot_cwin:
-            plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all)
-
-
-def process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, plot_cwin, tcpcsm, min_bytes=0, light=False):
-    """ Process a mptcp pcap file and generate graphs of its subflows """
-    # if not check_mptcp_joins(pcap_filepath):
-    #     print("WARNING: no mptcp joins on " + pcap_filepath, file=sys.stderr)
-    connections = None
-    do_tcp_processing = False
-    try:
-        with co.cd(directory_path):
-            # If segmentation faults, remove the -S option
-            cmd = ['mptcptrace', '-d', '.', '-s', '-S', '-t', '5000', '-w', '0']
-            if not light:
-                cmd += ['-G', '250', '-r', '2', '-F', '3', '-a']
-            # Compatibility hack
-            connections = process_mptcptrace_cmd(cmd, directory_path + '.pcap')
-
-            # Useful to count the number of reinjected bytes
-            cmd = ['mptcptrace', '-d', '.', '-s', '-a', '-t', '5000', '-w', '2']
-            if not light:
-                cmd += ['-G', '250', '-r', '2', '-F', '3']
-            devnull = open(os.devnull, 'w')
-            if subprocess.call(cmd, stdout=devnull) != 0:
-                raise MPTCPTraceError("Error of mptcptrace with " + directory_path)
-            devnull.close()
-
-            cmd = ['mptcptrace', '-d', '.', '-r', '2', '-t', '5000', '-w', '2']
-            if not light:
-                cmd += ['-G', '250', '-r', '2', '-F', '3']
-            devnull = open(os.devnull, 'w')
-            if subprocess.call(cmd, stdout=devnull) != 0:
-                raise MPTCPTraceError("Error of mptcptrace with " + directory_path)
-            devnull.close()
-
-            # The mptcptrace call will generate .xpl files to cope with
-            # First see all xpl files, to detect the relative 0 of all connections
-            # Also, compute the duration and number of bytes of the MPTCP connection
-            relative_start = first_pass_on_files(connections)
-            rtt_all = {co.S2D: {}, co.D2S: {}}
-            acksize_all = {co.S2D: {}, co.D2S: {}}
-
-            # Then really process xpl files
-            for xpl_fname in glob.glob('*.xpl'):
-                if not light and MPTCP_RTT_FNAME in xpl_fname:
-                    process_rtt_xpl(xpl_fname, rtt_all, connections, relative_start, min_bytes)
-                elif MPTCP_SEQ_FNAME in xpl_fname:
-                    process_seq_xpl(xpl_fname, connections, relative_start, min_bytes)
-                try:
-                    directory = co.DEF_RTT_DIR if MPTCP_RTT_FNAME in xpl_fname else co.TSG_THGPT_DIR
-                    shutil.move(xpl_fname, os.path.join(
-                        graph_dir_exp, directory, os.path.basename(directory_path) + "_" + xpl_fname))
-                except IOError as e:
-                    print(str(e), file=sys.stderr)
-
-            # And by default, save all csv files
-            for csv_fname in glob.glob('*.csv'):
-                if not light:
-                    if MPTCP_GPUT_FNAME in csv_fname:
-                        process_gput_csv(csv_fname, connections)
-                try:
-                    if MPTCP_RTT_FNAME in csv_fname:
-                        conn_id = get_connection_id(os.path.basename(csv_fname))
-                        is_reversed = is_reverse_connection(os.path.basename(csv_fname))
-                        process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed)
-                        os.remove(csv_fname)
-                    elif MPTCP_SEQ_FNAME in csv_fname:
-                        co.move_file(csv_fname, os.path.join(
-                            graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(directory_path) + "_" + os.path.basename(csv_fname)))
-                    elif MPTCP_ACKSIZE_FNAME in csv_fname:
-                        collect_acksize_csv(csv_fname, acksize_all)
-                        os.remove(csv_fname)
-                    else:
-                        if not light:
-                            co.move_file(csv_fname, os.path.join(
-                                graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(directory_path) + "_" + os.path.basename(csv_fname)))
-                        else:
-                            os.remove(csv_fname)
-                except IOError as e:
-                    print(str(e), file=sys.stderr)
-
-            do_tcp_processing = True
-
-    except MPTCPTraceError as e:
-        print(str(e) + "; skip mptcp process", file=sys.stderr)
-
-    # Create aggregated graphes and add per interface information on MPTCPConnection
-    # This will save the mptcp connections
-    if connections and do_tcp_processing:
-        # Save a first version as backup here; should be removed when no problem anymore
-        # co.save_data(pcap_filepath, stat_dir_exp, connections)
-        cwin_data_all = tcp.process_trace_directory(directory_path, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, plot_cwin, tcpcsm, mptcp_connections=connections, light=light)
-        co.save_data(directory_path + '.pcap', acksize_dir_exp, acksize_all)
-        co.save_data(directory_path + '.pcap', rtt_dir_exp, rtt_all)
-        co.save_data(directory_path + '.pcap', stat_dir_exp, connections)
-        if plot_cwin:
-            plot_congestion_graphs(directory_path + '.pcap', graph_dir_exp, cwin_data_all)

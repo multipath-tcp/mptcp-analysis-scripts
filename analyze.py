@@ -34,7 +34,7 @@ import common as co
 import mptcp
 import os
 import os.path
-from pymongo import Connection
+from pymongo import MongoClient
 import subprocess
 import sys
 import tcp
@@ -122,11 +122,11 @@ in_dir_exp = os.path.abspath(os.path.expanduser(args.input))
 # ~/graphs -> /home/mptcp/graphs_lo ; ../graphs/ -> /home/mptcp/graphs_lo
 trace_dir_exp = co.get_dir_from_arg(args.trace, args.pcap[0])
 graph_dir_exp = co.get_dir_from_arg(args.graph, args.pcap[0])
-stat_dir_exp = co.get_dir_from_arg(args.stat,  args.pcap[0])
-aggl_dir_exp = co.get_dir_from_arg(args.aggl,  args.pcap[0])
-rtt_dir_exp = co.get_dir_from_arg(args.rtt,  args.pcap[0])
-rtt_subflow_dir_exp = co.get_dir_from_arg(args.rtt_subflow,  args.pcap[0])
-failed_conns_dir_exp = co.get_dir_from_arg(args.failed_conns,  args.pcap[0])
+stat_dir_exp = co.get_dir_from_arg(args.stat, args.pcap[0])
+aggl_dir_exp = co.get_dir_from_arg(args.aggl, args.pcap[0])
+rtt_dir_exp = co.get_dir_from_arg(args.rtt, args.pcap[0])
+rtt_subflow_dir_exp = co.get_dir_from_arg(args.rtt_subflow, args.pcap[0])
+failed_conns_dir_exp = co.get_dir_from_arg(args.failed_conns, args.pcap[0])
 acksize_dir_exp = co.get_dir_from_arg(args.acksize, args.pcap[0])
 acksize_tcp_dir_exp = acksize_dir_exp + '_tcp'
 
@@ -136,9 +136,9 @@ if os.path.isdir(in_dir_exp):
     parent_dir = os.path.basename(os.path.dirname(in_dir_exp))  # TCPDump or TCPDump_bad_simulation
     trace_dir_exp = os.path.join(trace_dir_exp, parent_dir, base_dir)
     graph_dir_exp = os.path.join(graph_dir_exp, parent_dir, base_dir)
-    stat_dir_exp = os.path.join(stat_dir_exp,  parent_dir, base_dir)
-    aggl_dir_exp = os.path.join(aggl_dir_exp,  parent_dir, base_dir)
-    rtt_dir_exp = os.path.join(rtt_dir_exp,  parent_dir, base_dir)
+    stat_dir_exp = os.path.join(stat_dir_exp, parent_dir, base_dir)
+    aggl_dir_exp = os.path.join(aggl_dir_exp, parent_dir, base_dir)
+    rtt_dir_exp = os.path.join(rtt_dir_exp, parent_dir, base_dir)
     rtt_subflow_dir_exp = os.path.join(rtt_subflow_dir_exp, parent_dir, base_dir)
     failed_conns_dir_exp = os.path.join(failed_conns_dir_exp, parent_dir, base_dir)
     acksize_dir_exp = os.path.join(acksize_dir_exp, parent_dir, base_dir)
@@ -219,7 +219,7 @@ pcap_list_len = len(pcap_list)
 ##################################################
 
 if args.use_db:
-    connection = Connection('localhost', 27017)
+    connection = MongoClient('localhost', 27017)
     db = connection.mpctrl
     collection = db.handover
     co.IP_WIFI = collection.distinct('ipWifi4') + collection.distinct('ipWifi6')
@@ -240,8 +240,8 @@ def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge, cwin):
         co.clean_loopback_pcap(pcap_filepath, print_out=print_out)
     # Prefix of the name determine the protocol used
     if args.is_mptcp or pcap_filename.startswith('mptcp'):
-        if correct:
-            tcp.correct_trace(pcap_filepath, print_out=print_out)
+        # if correct:
+        #    tcp.correct_trace(pcap_filepath, print_out=print_out)
         # we need to change dir, do that in a new process
         if graph:
             p = Process(target=mptcp.process_trace, args=(
@@ -252,8 +252,8 @@ def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge, cwin):
         if correct:
             tcp.correct_trace(pcap_filepath, print_out=print_out)
         if graph:
-            tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, cwin, args.tcpcsm,
-                              print_out=print_out, min_bytes=args.min_bytes, light=args.light)
+            tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, args.tcpcsm,
+                              print_out=print_out)
     else:
         print(pcap_filepath + ": don't know the protocol used; skipped", file=sys.stderr)
 
