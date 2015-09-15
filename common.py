@@ -264,6 +264,8 @@ PREFIX_IP_WIFI = False
 IP_WIFI = False
 IP_CELL = False
 
+TIMESTAMP = 'timestamp'
+
 if os.path.isfile('config.py'):
     import config as conf
     IP_PROXY = conf.IP_PROXY

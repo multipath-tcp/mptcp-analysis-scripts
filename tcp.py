@@ -27,6 +27,7 @@ from __future__ import print_function
 ##################################################
 
 import common as co
+import dpkt
 import glob
 import os
 import shutil
@@ -553,6 +554,73 @@ def create_inverse_tcp_dictionary(connections):
     return inverse
 
 
+def increment_value_dict(dico, key):
+    if key in dico:
+        dico[key] += 1
+    else:
+        dico[key] = 1
+
+
+def compute_tcp_acks(pcap_filepath, ts_timeout=3600.0):
+    """ Process a tcp pcap file and returns a dictionary of the number of cases an acknowledgement of x bytes is received """
+    nb_acks = {co.S2D: {}, co.D2S: {}}
+    acks = {co.S2D: {}, co.D2S: {}}
+    pcap_file = open(pcap_filepath)
+    pcap = dpkt.pcap.Reader(pcap_file)
+    for ts, buf in pcap:
+        eth = dpkt.ethernet.Ethernet(buf)
+        if type(eth.data) == dpkt.ip.IP or type(eth.data) == dpkt.ip6.IP6:
+            ip = eth.data
+            if type(ip.data) == dpkt.tcp.TCP:
+                tcp = ip.data
+                fin_flag = (tcp.flags & dpkt.tcp.TH_FIN) != 0
+                syn_flag = (tcp.flags & dpkt.tcp.TH_SYN) != 0
+                rst_flag = (tcp.flags & dpkt.tcp.TH_RST) != 0
+                ack_flag = (tcp.flags & dpkt.tcp.TH_ACK) != 0
+
+                daddr = ip.dst
+                saddr = ip.src
+                dport = tcp.dport
+                sport = tcp.sport
+
+                if syn_flag and not ack_flag and not fin_flag and not rst_flag:
+                    # The sender of the first SYN is the client
+                    if (saddr, sport, daddr, dport) in acks:
+                        # Already taken, but maybe old, such that we can overwrite it (show on screen the TS difference)
+                        print(saddr, sport, daddr, dport, "already used; it was (in seconds)", ts - acks[saddr, sport, daddr, dport][co.TIMESTAMP])
+                    acks[saddr, sport, daddr, dport] = {co.S2D: -1, co.D2S: -1, co.TIMESTAMP: ts}
+
+                elif syn_flag and ack_flag and not fin_flag and not rst_flag:
+                    # The sender of the SYN/ACK is the server
+                    if (daddr, dport, saddr, sport) in acks and ts - acks[daddr, dport, saddr, sport][co.TIMESTAMP] < ts_timeout:
+                        # Better to check, if not seen, maybe uncomplete TCP connection
+                        acks[daddr, dport, saddr, sport][co.S2D] = tcp.ack
+
+                elif not syn_flag and not rst_flag and ack_flag:
+                    if (saddr, sport, daddr, dport) in acks:
+                        if acks[saddr, sport, daddr, dport][co.D2S] >= 0:
+                            bytes_acked = (tcp.ack - acks[saddr, sport, daddr, dport][co.D2S]) % 4294967296
+                            if bytes_acked >= 2000000000:
+                                # Ack of 2GB or more is just not possible here
+                                continue
+                            increment_value_dict(nb_acks[co.D2S], bytes_acked)
+                        acks[saddr, sport, daddr, dport][co.D2S] = tcp.ack
+                    elif (daddr, dport, saddr, sport) in acks:
+                        if acks[daddr, dport, saddr, sport][co.S2D] >= 0:
+                            bytes_acked = (tcp.ack - acks[daddr, dport, saddr, sport][co.S2D]) % 4294967296
+                            if bytes_acked >= 2000000000:
+                                # Ack of 2GB or more is just not possible here
+                                continue
+                            increment_value_dict(nb_acks[co.S2D], bytes_acked)
+                        acks[daddr, dport, saddr, sport][co.S2D] = tcp.ack
+                    else:
+                        # Silently ignore those packets
+                        # print(saddr, sport, daddr, dport, "haven't seen beginning...")
+                        continue
+
+    return nb_acks
+
+
 def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, tcpcsm, mptcp_connections=None, print_out=sys.stdout):
     """ Process a tcp pcap file and generate stats of its connections """
     cmd = ['tstat', '-s', os.path.basename(pcap_filepath[:-5]), pcap_filepath]
@@ -569,13 +637,12 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_e
     if tcpcsm:
         retransmissions_tcpcsm(pcap_filepath, connections)
 
-    acksize_all = {co.D2S: {}, co.S2D: {}}
-    acksize_all_mptcp = {co.D2S: {}, co.S2D: {}}
-
     if mptcp_connections:
         for flow_id in connections:
             # Copy info to mptcp connections
             copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns, acksize_all, acksize_all_mptcp, flow_id)
+
+    acksize_all = compute_tcp_acks(pcap_filepath)
 
     # Save connections info
     if mptcp_connections:
