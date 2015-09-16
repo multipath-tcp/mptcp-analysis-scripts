@@ -265,6 +265,7 @@ IP_WIFI = False
 IP_CELL = False
 
 TIMESTAMP = 'timestamp'
+CONN_ID = 'conn_id'
 
 if os.path.isfile('config.py'):
     import config as conf

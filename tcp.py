@@ -31,6 +31,7 @@ import dpkt
 import glob
 import os
 import shutil
+import socket
 import subprocess
 import sys
 
@@ -545,7 +546,7 @@ def create_inverse_tcp_dictionary(connections):
     inverse = {}
     for conn_id, conn in connections.iteritems():
         flow = conn.flow
-        key = (flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT])
+        key = (flow.attr[co.SADDR], flow.attr[co.SPORT], flow.attr[co.DADDR], flow.attr[co.DPORT])
         if key not in inverse:
             inverse[key] = [conn_id]
         else:
@@ -561,10 +562,13 @@ def increment_value_dict(dico, key):
         dico[key] = 1
 
 
-def compute_tcp_acks(pcap_filepath, ts_timeout=3600.0):
+def compute_tcp_acks(pcap_filepath, connections, inverse_conns, ts_syn_timeout=30.0, ts_timeout=3600.0):
     """ Process a tcp pcap file and returns a dictionary of the number of cases an acknowledgement of x bytes is received """
+    print("Computing TCP ack sizes for", pcap_filepath)
     nb_acks = {co.S2D: {}, co.D2S: {}}
     acks = {co.S2D: {}, co.D2S: {}}
+    # Avoid processing packets that do not belong to any analyzed TCP connection
+    black_list = set()
     pcap_file = open(pcap_filepath)
     pcap = dpkt.pcap.Reader(pcap_file)
     for ts, buf in pcap:
@@ -578,17 +582,44 @@ def compute_tcp_acks(pcap_filepath, ts_timeout=3600.0):
                 rst_flag = (tcp.flags & dpkt.tcp.TH_RST) != 0
                 ack_flag = (tcp.flags & dpkt.tcp.TH_ACK) != 0
 
-                daddr = ip.dst
-                saddr = ip.src
-                dport = tcp.dport
-                sport = tcp.sport
+                # For IP addresses, need to convert the packet IP address to the standard one
+                if type(eth.data) == dpkt.ip.IP:
+                    daddr = socket.inet_ntop(socket.AF_INET, ip.dst)
+                    saddr = socket.inet_ntop(socket.AF_INET, ip.src)
+                else:  # dpkt.ip6.IP6
+                    daddr = socket.inet_ntop(socket.AF_INET6, ip.dst)
+                    saddr = socket.inet_ntop(socket.AF_INET6, ip.src)
+                # Ports encoded as strings in connections, so let convert those integers
+                dport = str(tcp.dport)
+                sport = str(tcp.sport)
 
                 if syn_flag and not ack_flag and not fin_flag and not rst_flag:
                     # The sender of the first SYN is the client
+                    # Check if the connection is black listed or not
+                    conn_id = False
+                    conn_candidates = inverse_conns.get((saddr, sport, daddr, dport), [])
+                    for cid in conn_candidates:
+                        if abs(ts - connections[cid].flow.attr[co.START]) < ts_syn_timeout:
+                            conn_id = cid
+                            break
+
+                    if not conn_id:
+                        black_list.add((saddr, sport, daddr, dport))
+                        continue
+                    elif conn_id and (saddr, sport, daddr, dport) in black_list:
+                        black_list.remove((saddr, sport, daddr, dport))
+
+                    if conn_id not in nb_acks[co.S2D]:
+                        for direction in co.DIRECTIONS:
+                            nb_acks[direction][conn_id] = {}
+
                     if (saddr, sport, daddr, dport) in acks:
                         # Already taken, but maybe old, such that we can overwrite it (show on screen the TS difference)
                         print(saddr, sport, daddr, dport, "already used; it was (in seconds)", ts - acks[saddr, sport, daddr, dport][co.TIMESTAMP])
-                    acks[saddr, sport, daddr, dport] = {co.S2D: -1, co.D2S: -1, co.TIMESTAMP: ts}
+                    acks[saddr, sport, daddr, dport] = {co.S2D: -1, co.D2S: -1, co.TIMESTAMP: ts, co.CONN_ID: conn_id}
+
+                elif (saddr, sport, daddr, dport) in black_list:
+                    continue
 
                 elif syn_flag and ack_flag and not fin_flag and not rst_flag:
                     # The sender of the SYN/ACK is the server
@@ -603,7 +634,8 @@ def compute_tcp_acks(pcap_filepath, ts_timeout=3600.0):
                             if bytes_acked >= 2000000000:
                                 # Ack of 2GB or more is just not possible here
                                 continue
-                            increment_value_dict(nb_acks[co.D2S], bytes_acked)
+                            conn_id = acks[saddr, sport, daddr, dport][co.CONN_ID]
+                            increment_value_dict(nb_acks[co.D2S][conn_id], bytes_acked)
                         acks[saddr, sport, daddr, dport][co.D2S] = tcp.ack
                     elif (daddr, dport, saddr, sport) in acks:
                         if acks[daddr, dport, saddr, sport][co.S2D] >= 0:
@@ -611,7 +643,8 @@ def compute_tcp_acks(pcap_filepath, ts_timeout=3600.0):
                             if bytes_acked >= 2000000000:
                                 # Ack of 2GB or more is just not possible here
                                 continue
-                            increment_value_dict(nb_acks[co.S2D], bytes_acked)
+                            conn_id = acks[daddr, dport, saddr, sport][co.CONN_ID]
+                            increment_value_dict(nb_acks[co.S2D][conn_id], bytes_acked)
                         acks[daddr, dport, saddr, sport][co.S2D] = tcp.ack
                     else:
                         # Silently ignore those packets
@@ -637,12 +670,15 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_e
     if tcpcsm:
         retransmissions_tcpcsm(pcap_filepath, connections)
 
+    inverse_conns = create_inverse_tcp_dictionary(connections)
+
+    acksize_all = compute_tcp_acks(pcap_filepath, connections, inverse_conns)
+    acksize_all_mptcp = {co.S2D: {}, co.D2S: {}}
+
     if mptcp_connections:
         for flow_id in connections:
             # Copy info to mptcp connections
             copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns, acksize_all, acksize_all_mptcp, flow_id)
-
-    acksize_all = compute_tcp_acks(pcap_filepath)
 
     # Save connections info
     if mptcp_connections:
