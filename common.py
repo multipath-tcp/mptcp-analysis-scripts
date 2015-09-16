@@ -241,6 +241,9 @@ NB_FLOW_CONTROL = 'nb_flow_control'
 NB_UNNECE_RTX_RTO = 'nb_unnecessary_rtx_rto'
 NB_UNNECE_RTX_FR = 'nb_unnecessary_rtx_fr'
 
+REINJ_BYTES = 'reinj_bytes'
+REINJ_PC = 'reinj_pc'
+
 DIRECTIONS = [S2D, D2S]
 
 IPv4 = 'IPv4'

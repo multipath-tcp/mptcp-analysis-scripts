@@ -493,6 +493,8 @@ def process_stats_csv(csv_fname, connections):
         seq_acked = None
         con_time = None
         begin_time = None
+        bytes_reinjected = None
+        pc_reinjected = None
         for line in data:
             if 'seqAcked' in line:
                 seq_acked = line.split(';')[-2:]
@@ -502,6 +504,12 @@ def process_stats_csv(csv_fname, connections):
             elif 'beginTime' in line:
                 # Only takes one of the values, because they are the same
                 begin_time = line.split(';')[-2]
+            elif 'bytesReinjected' in line:
+                # Only takes one of the values, because they are the same
+                bytes_reinjected = line.split(';')[-2]
+            elif 'precentReinjected' in line:
+                # Only takes one of the values, because they are the same
+                pc_reinjected = line.split(';')[-2]
 
         if seq_acked:
             # Notice that these values remove the reinjected bytes
@@ -518,7 +526,14 @@ def process_stats_csv(csv_fname, connections):
             connections[conn_id].attr[co.START] = float(begin_time)
         else:
             connections[conn_id].attr[co.START] = 0.0
-
+        if bytes_reinjected:
+            connections[conn_id].attr[co.REINJ_BYTES] = int(bytes_reinjected)
+        else:
+            connections[conn_id].attr[co.REINJ_BYTES] = 0
+        if pc_reinjected:
+            connections[conn_id].attr[co.REINJ_PC] = float(pc_reinjected)
+        else:
+            connections[conn_id].attr[co.REINJ_PC] = 0.0
         csv_file.close()
 
         # Remove now stats files
