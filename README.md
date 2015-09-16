@@ -11,7 +11,7 @@ If you want to use the main scripts, make sure you have installed Python >=2.6 (
   * [NumPy](https://pypi.python.org/pypi/numpy/)
   * [PyMongo](http://api.mongodb.org/python/current/)
   * [Tcpreplay](http://tcpreplay.appneta.com/wiki/installation.html#downloads)
-  * [tcptrace](http://www.tcptrace.org/)
+  * [tstat](http://tstat.tlc.polito.it)
   * [tshark](https://www.wireshark.org/docs/man-pages/tshark.html)
 
 The analysis scripts requires the creation of a new file, `config.py`. The content of this file must be the following:
@@ -46,7 +46,7 @@ The default behavior is not suitable for very large traces (for time and/or memo
 To analyze such traces, if those are known to contain only Multipath TCP traces, one can run
 
 ```bash
-./analyze.py -i input_file_or_folder -j number_of_threads -M -L
+./analyze.py -i input_file_or_folder -p '' -M 
 ```
 
 This produces less outputs than the previous command, though you still obtain the most important ones.
