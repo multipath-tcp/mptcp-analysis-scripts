@@ -683,11 +683,12 @@ def collect_acksize_csv(csv_fname, acksize_dict):
 
         for line in data:
             split_line = line.split(',')
-            # Ack info is the second number (don't convert in int, not needed now)
-            if split_line[1] not in acksize_dict:
-                acksize_conn[split_line[1]] = 1
+            # Ack info is the second number (convert in int for simpler processing)
+            acked_bytes = int(split_line[1])
+            if acked_bytes not in acksize_conn:
+                acksize_conn[acked_bytes] = 1
             else:
-                acksize_conn[split_line[1]] += 1
+                acksize_conn[acked_bytes] += 1
 
         acksize_dict[direction][conn_id] = acksize_conn
 
