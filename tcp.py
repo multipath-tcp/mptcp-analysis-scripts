@@ -613,9 +613,10 @@ def compute_tcp_acks(pcap_filepath, connections, inverse_conns, ts_syn_timeout=3
                         for direction in co.DIRECTIONS:
                             nb_acks[direction][conn_id] = {}
 
-                    if (saddr, sport, daddr, dport) in acks:
+                    # Don't take to much time to print...
+                    # if (saddr, sport, daddr, dport) in acks:
                         # Already taken, but maybe old, such that we can overwrite it (show on screen the TS difference)
-                        print(saddr, sport, daddr, dport, "already used; it was (in seconds)", ts - acks[saddr, sport, daddr, dport][co.TIMESTAMP])
+                        # print(saddr, sport, daddr, dport, "already used; it was (in seconds)", ts - acks[saddr, sport, daddr, dport][co.TIMESTAMP])
                     acks[saddr, sport, daddr, dport] = {co.S2D: -1, co.D2S: -1, co.TIMESTAMP: ts, co.CONN_ID: conn_id}
 
                 elif (saddr, sport, daddr, dport) in black_list:
