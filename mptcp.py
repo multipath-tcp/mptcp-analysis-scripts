@@ -745,7 +745,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
             #     raise MPTCPTraceError("Error of mptcptrace with " + pcap_filepath)
             # devnull.close()
 
-            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-S', '-a', '-r', '2', '-t', '5000', '-w', '0']
+            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-S', '-a', '-r', '2', '-t', '5000', '-w', '2']
             # if not light:
             #     cmd += ['-G', '250', '-r', '2', '-F', '3', '-a']
             connections = process_mptcptrace_cmd(cmd, pcap_filepath)
