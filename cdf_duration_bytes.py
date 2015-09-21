@@ -25,6 +25,11 @@ from __future__ import print_function
 import argparse
 import common as co
 import common_graph as cog
+import matplotlib
+# Do not use any X11 backend
+matplotlib.use('Agg')
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 import matplotlib.pyplot as plt
 import mptcp
 import numpy as np
@@ -61,20 +66,28 @@ connections = cog.fetch_valid_data(stat_dir_exp, args)
 ##################################################
 
 data_duration = []
+data_bytes = []
 color = 'red'
 base_graph_name_duration = "summary_cdf_duration"
 base_graph_path_duration = os.path.join(sums_dir_exp, base_graph_name_duration)
-base_graph_name_duration_hist = "summary_hist_duration"
-base_graph_path_duration_hist = os.path.join(sums_dir_exp, base_graph_name_duration_hist)
+base_graph_name_bytes = "summary_cdf_bytes"
+base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
 
 for fname, conns in connections.iteritems():
     for conn_id, conn in conns.iteritems():
         if isinstance(conn, tcp.TCPConnection):
             duration = conn.flow.attr[co.DURATION]
+            bytes = 0
+            for direction in co.DIRECTIONS:
+                bytes += conn.flow.attr[direction][co.BYTES_DATA]
         elif isinstance(conn, mptcp.MPTCPConnection):
             duration = conn.attr[co.DURATION]
+            bytes = 0
+            for direction in co.DIRECTIONS:
+                bytes += conn.attr[direction][co.BYTES_MPTCPTRACE]
 
         data_duration.append(duration)
+        data_bytes.append(bytes)
 
 # co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration)
 # co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration + '_log', xlog=True)
@@ -105,6 +118,36 @@ if len(sorted_array) > 0:
     ax.legend(loc='lower right')
 
     plt.xlabel('Seconds [s]', fontsize=18)
+    plt.ylabel("CDF", fontsize=18)
+    plt.savefig(graph_fname)
+    plt.close('all')
+    
+plt.figure()
+plt.clf()
+fig, ax = plt.subplots()
+
+graph_fname = os.path.splitext(base_graph_name_bytes)[0] + "_cdf_log.pdf"
+sample = np.array(sorted(data_bytes))
+sorted_array = np.sort(sample)
+yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+if len(sorted_array) > 0:
+    # Add a last point
+    sorted_array = np.append(sorted_array, sorted_array[-1])
+    yvals = np.append(yvals, 1.0)
+    ax.plot(sorted_array, yvals, color=color, linewidth=2, label="Data bytes")
+
+    # Shrink current axis's height by 10% on the top
+    # box = ax.get_position()
+    # ax.set_position([box.x0, box.y0,
+    #                  box.width, box.height * 0.9])
+
+    ax.set_xscale('log')
+
+    # Put a legend above current axis
+    # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
+    ax.legend(loc='lower right')
+
+    plt.xlabel('Bytes', fontsize=18)
     plt.ylabel("CDF", fontsize=18)
     plt.savefig(graph_fname)
     plt.close('all')
