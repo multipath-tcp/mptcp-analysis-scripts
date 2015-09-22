@@ -59,7 +59,7 @@ co.check_directory_exists(sums_dir_exp)
 ##################################################
 
 connections = cog.fetch_valid_data(stat_dir_exp, args)
-# multiflow_connections, singleflow_connections = get_multiflow_connections(connections)
+# multiflow_connections, singleflow_connections = cog.get_multiflow_connections(connections)
 
 ##################################################
 ##               PLOTTING RESULTS               ##
@@ -75,19 +75,14 @@ base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
 
 for fname, conns in connections.iteritems():
     for conn_id, conn in conns.iteritems():
-        if isinstance(conn, tcp.TCPConnection):
-            duration = conn.flow.attr[co.DURATION]
-            bytes = 0
-            for direction in co.DIRECTIONS:
-                bytes += conn.flow.attr[direction][co.BYTES_DATA]
-        elif isinstance(conn, mptcp.MPTCPConnection):
+        if isinstance(conn, mptcp.MPTCPConnection) and co.DURATION in conn.attr and conn.flows[0].attr[co.DADDR] == co.IP_PROXY:
             duration = conn.attr[co.DURATION]
             bytes = 0
             for direction in co.DIRECTIONS:
                 bytes += conn.attr[direction][co.BYTES_MPTCPTRACE]
 
-        data_duration.append(duration)
-        data_bytes.append(bytes)
+            data_duration.append(duration)
+            data_bytes.append(bytes)
 
 # co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration)
 # co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration + '_log', xlog=True)
@@ -96,7 +91,7 @@ plt.figure()
 plt.clf()
 fig, ax = plt.subplots()
 
-graph_fname = os.path.splitext(base_graph_name_duration)[0] + "_cdf_log.pdf"
+graph_fname = os.path.splitext(base_graph_path_duration)[0] + "_cdf_log.pdf"
 sample = np.array(sorted(data_duration))
 sorted_array = np.sort(sample)
 yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
@@ -117,7 +112,7 @@ if len(sorted_array) > 0:
     # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
     ax.legend(loc='lower right')
 
-    plt.xlabel('Seconds [s]', fontsize=18)
+    plt.xlabel('Time [s]', fontsize=18)
     plt.ylabel("CDF", fontsize=18)
     plt.savefig(graph_fname)
     plt.close('all')
@@ -126,7 +121,7 @@ plt.figure()
 plt.clf()
 fig, ax = plt.subplots()
 
-graph_fname = os.path.splitext(base_graph_name_bytes)[0] + "_cdf_log.pdf"
+graph_fname = os.path.splitext(base_graph_path_bytes)[0] + "_cdf_log.pdf"
 sample = np.array(sorted(data_bytes))
 sorted_array = np.sort(sample)
 yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
