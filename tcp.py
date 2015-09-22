@@ -136,7 +136,7 @@ def extract_tstat_data(pcap_filepath):
                     connection.flow.attr[co.D2S][co.BYTES_DATA] = int(info[22])
 
                     connection.flow.attr[co.S2D][co.PACKS_RETRANS] = int(info[9])
-                    connection.flow.attr[co.D2S][co.PACKS_RETRANS] = int(info[21])
+                    connection.flow.attr[co.D2S][co.PACKS_RETRANS] = int(info[23])
                     connection.flow.attr[co.S2D][co.BYTES_RETRANS] = int(info[10])
                     connection.flow.attr[co.D2S][co.BYTES_RETRANS] = int(info[24])
 
@@ -157,8 +157,8 @@ def extract_tstat_data(pcap_filepath):
                     connection.flow.attr[co.D2S][co.TIME_FIRST_PAYLD] = float(info[32]) / 1000.0
                     connection.flow.attr[co.S2D][co.TIME_LAST_PAYLD] = float(info[33]) / 1000.0
                     connection.flow.attr[co.D2S][co.TIME_LAST_PAYLD] = float(info[34]) / 1000.0
-                    connection.flow.attr[co.S2D][co.TIME_FIRST_ACK] = float(info[36]) / 1000.0
-                    connection.flow.attr[co.D2S][co.TIME_FIRST_ACK] = float(info[37]) / 1000.0
+                    connection.flow.attr[co.S2D][co.TIME_FIRST_ACK] = float(info[35]) / 1000.0
+                    connection.flow.attr[co.D2S][co.TIME_FIRST_ACK] = float(info[36]) / 1000.0
 
                     connection.flow.attr[co.S2D][co.RTT_SAMPLES] = int(info[48])
                     connection.flow.attr[co.D2S][co.RTT_SAMPLES] = int(info[55])
