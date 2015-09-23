@@ -66,64 +66,67 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-# Compute here traffic from server to smartphone; the reverse may be done
-log_file = sys.stdout
-min_bytes = 1000000
-min_samples = 3
-# Computed only on MPTCP connections with at least 2 subflows and at least 3 samples on each considered SF
-diff_rtt = []
-color = 'red'
-graph_fname = "rtt_avg_diff_2sf.pdf"
-graph_full_path = os.path.join(sums_dir_exp, graph_fname)
-for fname, data in multiflow_connections.iteritems():
-    for conn_id, conn in data.iteritems():
-        if isinstance(conn, mptcp.MPTCPConnection):
-            if conn.flows[0].attr[co.DADDR] == co.IP_PROXY:
-                count_usable = 0
-                for flow_id, flow in conn.flows.iteritems():
-                    if flow.attr[co.D2S].get(co.RTT_SAMPLES, 0) >= min_samples:
-                        count_usable += 1
 
-                if count_usable < 2:
-                    continue
-                
-                rtt_best_sf = float('inf')
-                rtt_worst_sf = -1.0
-                for flow_id, flow in conn.flows.iteritems():
-                    if flow.attr[co.D2S].get(co.RTT_SAMPLES, 0) >= min_samples:
-                        rtt_best_sf = min(rtt_best_sf, flow.attr[co.D2S][co.RTT_AVG])
-                        rtt_worst_sf = max(rtt_worst_sf, flow.attr[co.D2S][co.RTT_AVG])
-                if rtt_worst_sf - rtt_best_sf <= 1.0:
-                    print(conn_id, rtt_worst_sf - rtt_best_sf)
-                diff_rtt.append(rtt_worst_sf - rtt_best_sf)
+def plot(connections, multiflow_connections, sums_dir_exp):
+    # Compute here traffic from server to smartphone; the reverse may be done
+    log_file = sys.stdout
+    min_bytes = 1000000
+    min_samples = 3
+    # Computed only on MPTCP connections with at least 2 subflows and at least 3 samples on each considered SF
+    diff_rtt = []
+    color = 'red'
+    graph_fname = "rtt_avg_diff_2sf.pdf"
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+    for fname, data in multiflow_connections.iteritems():
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                if conn.flows[0].attr[co.DADDR].startswith(co.PREFIX_IP_PROXY):
+                    count_usable = 0
+                    for flow_id, flow in conn.flows.iteritems():
+                        if flow.attr[co.D2S].get(co.RTT_SAMPLES, 0) >= min_samples:
+                            count_usable += 1
 
-sample = np.array(sorted(diff_rtt))
-sorted_array = np.sort(sample)
-yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
-if len(sorted_array) > 0:
-    # Add a last point
-    sorted_array = np.append(sorted_array, sorted_array[-1])
-    yvals = np.append(yvals, 1.0)
-    
-    # Log plot
-    plt.figure()
-    plt.clf()
-    fig, ax = plt.subplots()
-    ax.plot(sorted_array, yvals, color=color, linewidth=2, label="Worst - Best")
+                    if count_usable < 2:
+                        continue
 
-    # Shrink current axis's height by 10% on the top
-    # box = ax.get_position()
-    # ax.set_position([box.x0, box.y0,
-    #                  box.width, box.height * 0.9])
-    ax.set_xscale('log')
+                    rtt_best_sf = float('inf')
+                    rtt_worst_sf = -1.0
+                    for flow_id, flow in conn.flows.iteritems():
+                        if flow.attr[co.D2S].get(co.RTT_SAMPLES, 0) >= min_samples:
+                            rtt_best_sf = min(rtt_best_sf, flow.attr[co.D2S][co.RTT_AVG])
+                            rtt_worst_sf = max(rtt_worst_sf, flow.attr[co.D2S][co.RTT_AVG])
+                    if rtt_worst_sf - rtt_best_sf <= 1.0:
+                        print(conn_id, rtt_worst_sf - rtt_best_sf)
+                    diff_rtt.append(rtt_worst_sf - rtt_best_sf)
 
-    # Put a legend above current axis
-    # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
-    ax.legend(loc='lower right')
+    sample = np.array(sorted(diff_rtt))
+    sorted_array = np.sort(sample)
+    yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+    if len(sorted_array) > 0:
+        # Add a last point
+        sorted_array = np.append(sorted_array, sorted_array[-1])
+        yvals = np.append(yvals, 1.0)
 
-    plt.xlabel('RTT [ms]', fontsize=18)
-    plt.ylabel("CDF", fontsize=18)
-    plt.savefig(graph_full_path)
-    plt.close('all')
+        # Log plot
+        plt.figure()
+        plt.clf()
+        fig, ax = plt.subplots()
+        ax.plot(sorted_array, yvals, color=color, linewidth=2, label="Worst - Best")
+
+        # Shrink current axis's height by 10% on the top
+        # box = ax.get_position()
+        # ax.set_position([box.x0, box.y0,
+        #                  box.width, box.height * 0.9])
+        ax.set_xscale('log')
+
+        # Put a legend above current axis
+        # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
+        ax.legend(loc='lower right')
+
+        plt.xlabel('RTT [ms]', fontsize=18)
+        plt.ylabel("CDF", fontsize=18)
+        plt.savefig(graph_full_path)
+        plt.close('all')
 
 # co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black'], 'Initial SF AVG RTT - Second SF AVG RTT', os.path.splitext(graph_full_path)[0] + '.pdf')
+plot(connections, multiflow_connections, sums_dir_exp)

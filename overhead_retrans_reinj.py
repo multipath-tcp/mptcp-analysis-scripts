@@ -65,76 +65,75 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-RETRANS = 'Retransmission'
-REINJ = 'Reinjection'
 
-results = {co.S2D: {REINJ: [], RETRANS: []}, co.D2S: {REINJ: [], RETRANS: []}}
-graph_fname = "overhead_retrans_reinj_multiflow.pdf"
-graph_full_path = os.path.join(sums_dir_exp, graph_fname)
-for fname, data in multiflow_connections.iteritems():
-    for conn_id, conn in data.iteritems():
-        retrans_bytes = {co.S2D: 0, co.D2S: 0}
-        reinj_bytes = {co.S2D: 0, co.D2S: 0}
-        total_bytes = {co.S2D: 0, co.D2S: 0}
-        total_data_bytes = {co.S2D: 0, co.D2S: 0}
-        reinj_data_bytes = {co.S2D: 0, co.D2S: 0}
+def plot(connections, multiflow_connections, sums_dir_exp):
+    RETRANS = 'Retransmission'
+    REINJ = 'Reinjection'
 
-        for flow_id, flow in conn.flows.iteritems():
+    results = {co.S2D: {REINJ: [], RETRANS: []}, co.D2S: {REINJ: [], RETRANS: []}}
+    graph_fname = "overhead_retrans_reinj_multiflow.pdf"
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+    for fname, data in multiflow_connections.iteritems():
+        for conn_id, conn in data.iteritems():
+            retrans_bytes = {co.S2D: 0, co.D2S: 0}
+            reinj_bytes = {co.S2D: 0, co.D2S: 0}
+            total_bytes = {co.S2D: 0, co.D2S: 0}
+            total_data_bytes = {co.S2D: 0, co.D2S: 0}
+            reinj_data_bytes = {co.S2D: 0, co.D2S: 0}
+
+            for flow_id, flow in conn.flows.iteritems():
+                for direction in co.DIRECTIONS:
+                    if direction not in flow.attr:
+                        continue
+                    if co.BYTES in flow.attr[direction]:
+                        # total_bytes[direction] += flow.attr[direction][co.BYTES_FRAMES_TOTAL]
+                        total_bytes[direction] = total_bytes[direction] + flow.attr[direction][co.BYTES]
+                        # retrans_bytes[direction] += flow.attr[direction].get(co.BYTES_FRAMES_RETRANS, 0)
+                        retrans_bytes[direction] = retrans_bytes[direction] + flow.attr[direction].get(co.BYTES_RETRANS, 0)
+                        # reinj_bytes[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0) + (flow.attr[direction].get(co.REINJ_ORIG_PACKS, 0) * co.FRAME_MPTCP_OVERHEAD)
+                        reinj_bytes[direction] = reinj_bytes[direction] + flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
+                        total_data_bytes[direction] = total_data_bytes[direction] + flow.attr[direction].get(co.BYTES, 0)
+                        reinj_data_bytes[direction] = reinj_data_bytes[direction] + flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
+
             for direction in co.DIRECTIONS:
-                if direction not in flow.attr:
-                    continue
-                if co.BYTES in flow.attr[direction]:
-                    # total_bytes[direction] += flow.attr[direction][co.BYTES_FRAMES_TOTAL]
-                    total_bytes[direction] = total_bytes[direction] + flow.attr[direction][co.BYTES]
-                    # retrans_bytes[direction] += flow.attr[direction].get(co.BYTES_FRAMES_RETRANS, 0)
-                    retrans_bytes[direction] = retrans_bytes[direction] + flow.attr[direction].get(co.BYTES_RETRANS, 0)
-                    # reinj_bytes[direction] += flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0) + (flow.attr[direction].get(co.REINJ_ORIG_PACKS, 0) * co.FRAME_MPTCP_OVERHEAD)
-                    reinj_bytes[direction] = reinj_bytes[direction] + flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
-                    total_data_bytes[direction] = total_data_bytes[direction] + flow.attr[direction].get(co.BYTES, 0)
-                    reinj_data_bytes[direction] = reinj_data_bytes[direction] + flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
+                if total_bytes[direction] > 0:
+                    results[direction][RETRANS].append((retrans_bytes[direction] + 0.0) / total_data_bytes[direction])
+                    results[direction][REINJ].append((reinj_data_bytes[direction] + 0.0) / total_data_bytes[direction])
 
-        for direction in co.DIRECTIONS:
-            if total_bytes[direction] > 0:
-                results[direction][RETRANS].append((retrans_bytes[direction] + 0.0) / total_data_bytes[direction])
-                results[direction][REINJ].append((reinj_data_bytes[direction] + 0.0) / total_data_bytes[direction])
+    ls = {RETRANS: '--', REINJ: '-'}
+    color = {RETRANS: 'blue', REINJ: 'red'}
+    for direction in co.DIRECTIONS:
+        plt.figure()
+        plt.clf()
+        fig, ax = plt.subplots()
+        min_y = 1.0
 
+        for dataset in [RETRANS, REINJ]:
+            sample = np.array(sorted(results[direction][dataset]))
+            sorted_array = np.sort(sample)
+            yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+            if len(sorted_array) > 0:
+                # Add a last point
+                sorted_array = np.append(sorted_array, sorted_array[-1])
+                yvals = np.append(yvals, 1.0)
+                index = 0
+                for x_value in sorted_array:
+                    if x_value > 0.0:
+                        break
+                    else:
+                        index += 1
+                min_y = min(min_y, yvals[index])
+                # Log plot
 
-ls = {RETRANS: '--', REINJ: '-'}
-color = {RETRANS: 'blue', REINJ: 'red'}
-for direction in co.DIRECTIONS:
-    plt.figure()
-    plt.clf()
-    fig, ax = plt.subplots()
-    min_y = 1.0
-    
-    for dataset in [RETRANS, REINJ]:
-        sample = np.array(sorted(results[direction][dataset]))
-        sorted_array = np.sort(sample)
-        yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
-        if len(sorted_array) > 0:
-            # Add a last point
-            sorted_array = np.append(sorted_array, sorted_array[-1])
-            yvals = np.append(yvals, 1.0)
-            index = 0
-            for x_value in sorted_array:
-                if x_value > 0.0:
-                    break
-                else:
-                    index += 1
-            min_y = min(min_y, yvals[index])
-            # Log plot
-            
-            ax.plot(sorted_array, yvals, color=color[dataset], linewidth=2, linestyle=ls[dataset], label=dataset)
-    
+                ax.plot(sorted_array, yvals, color=color[dataset], linewidth=2, linestyle=ls[dataset], label=dataset)
 
-    ax.set_xscale('log')
-    ax.legend(loc='lower right')
-    
-    plt.xlabel('Fraction of unique bytes', fontsize=18)
-    plt.ylabel("CDF", fontsize=18)
-    plt.ylim(ymin=min_y-0.01)
-    plt.savefig(os.path.splitext(graph_full_path)[0] + '_' + direction + '.pdf')
-    plt.close('all')
+        ax.set_xscale('log')
+        ax.legend(loc='lower right')
 
-# co.plot_cdfs_with_direction(results, ['red', 'blue'], 'Fraction of total bytes', graph_full_path, natural=True, ylim=0.8)
-# co.plot_cdfs_with_direction(results, ['red', 'blue'], 'Fraction of total bytes', os.path.splitext(graph_full_path)[0] + '_cut.pdf', natural=True, ylim=0.8, xlim=1)
+        plt.xlabel('Fraction of unique bytes', fontsize=18)
+        plt.ylabel("CDF", fontsize=18)
+        plt.ylim(ymin=min_y - 0.01)
+        plt.savefig(os.path.splitext(graph_full_path)[0] + '_' + direction + '.pdf')
+        plt.close('all')
+
+plot(connections, multiflow_connections, sums_dir_exp)

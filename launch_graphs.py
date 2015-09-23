@@ -34,7 +34,6 @@ import matplotlib.pyplot as plt
 import mptcp
 import numpy as np
 import os
-import sys
 import tcp
 
 ##################################################
@@ -66,61 +65,13 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-
-def plot(connections, multiflow_connections, sums_dir_exp):
-    log_file = sys.stdout
-    bursts_sec = {co.S2D: [], co.D2S: []}
-    color = 'red'
-    graph_fname_sec = "merge_bursts_sec_log"
-    base_graph_path_sec = os.path.join(sums_dir_exp, graph_fname_sec)
-    min_bytes = 1000000
-
-    for fname, conns in multiflow_connections.iteritems():
-        for conn_id, conn in conns.iteritems():
-            # We never know, still check
-            if isinstance(conn, mptcp.MPTCPConnection):
-                count_established = 0
-                for flow_id, flow in conn.flows.iteritems():
-                    if flow.attr.get(co.DURATION, 0.0) > 0.0:
-                        count_established += 1
-                if count_established < 2:
-                    continue
-
-                for direction in co.DIRECTIONS:
-                    if conn.attr[direction].get(co.BYTES_MPTCPTRACE, 0) < min_bytes:
-                        continue
-                    if co.BURSTS in conn.attr[direction] and len(conn.attr[direction][co.BURSTS]) > 0:
-                        bursts_sec[direction].append((len(conn.attr[direction][co.BURSTS]) - 1.0) / conn.attr[co.DURATION])
-
-    # Plot
-    for direction in co.DIRECTIONS:
-        sample = np.array(sorted(bursts_sec[direction]))
-        sorted_array = np.sort(sample)
-        yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
-        if len(sorted_array) > 0:
-            # Add a last point
-            sorted_array = np.append(sorted_array, sorted_array[-1])
-            yvals = np.append(yvals, 1.0)
-
-            # Log plot
-            plt.figure()
-            plt.clf()
-            fig, ax = plt.subplots()
-            ax.plot(sorted_array, yvals, color=color, linewidth=2, label="Burstiness")
-
-            # Shrink current axis's height by 10% on the top
-            # box = ax.get_position()
-            # ax.set_position([box.x0, box.y0,
-            #                  box.width, box.height * 0.9])
-            ax.set_xscale('log')
-
-            # Put a legend above current axis
-            # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
-            ax.legend(loc='lower right')
-
-            plt.xlabel('# switches / second', fontsize=18)
-            plt.ylabel("CDF", fontsize=18)
-            plt.savefig(base_graph_path_sec + "_" + direction + "_log.pdf")
-            plt.close('all')
-
-plot(connections, multiflow_connections, sums_dir_exp)
+import cdf_duration_bytes
+cdf_duration_bytes.plot(connections, multiflow_connections, sums_dir_exp)
+import difference_rtt_sfs
+difference_rtt_sfs.plot(connections, multiflow_connections, sums_dir_exp)
+import delay_mpcapable_mpjoin
+delay_mpcapable_mpjoin.plot(connections, multiflow_connections, sums_dir_exp)
+import overhead_retrans_reinj
+overhead_retrans_reinj.plot(connections, multiflow_connections, sums_dir_exp)
+import subflow_switching_freq
+subflow_switching_freq.plot(connections, multiflow_connections, sums_dir_exp)

@@ -59,105 +59,93 @@ co.check_directory_exists(sums_dir_exp)
 ##################################################
 
 connections = cog.fetch_valid_data(stat_dir_exp, args)
-# multiflow_connections, singleflow_connections = cog.get_multiflow_connections(connections)
+multiflow_connections, singleflow_connections = cog.get_multiflow_connections(connections)
 
 ##################################################
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-data_duration = []
-data_bytes = []
-color = 'red'
-base_graph_name_duration = "summary_cdf_duration"
-base_graph_path_duration = os.path.join(sums_dir_exp, base_graph_name_duration)
-base_graph_name_bytes = "summary_cdf_bytes"
-base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
 
-for fname, conns in connections.iteritems():
-    for conn_id, conn in conns.iteritems():
-        if isinstance(conn, mptcp.MPTCPConnection) and co.DURATION in conn.attr and conn.flows[0].attr[co.DADDR] == co.IP_PROXY:
-            duration = conn.attr[co.DURATION]
-            bytes = 0
-            for direction in co.DIRECTIONS:
-                bytes += conn.attr[direction][co.BYTES_MPTCPTRACE]
+def plot(connections, multiflow_connections, sums_dir_exp):
+    data_duration = []
+    data_bytes = []
+    color = 'red'
+    base_graph_name_duration = "summary_cdf_duration"
+    base_graph_path_duration = os.path.join(sums_dir_exp, base_graph_name_duration)
+    base_graph_name_bytes = "summary_cdf_bytes"
+    base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
 
-            data_duration.append(duration)
-            data_bytes.append(bytes)
+    for fname, conns in connections.iteritems():
+        for conn_id, conn in conns.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection) and co.DURATION in conn.attr and conn.flows[0].attr[co.DADDR].startswith(co.PREFIX_IP_PROXY):
+                duration = conn.attr[co.DURATION]
+                bytes = 0
+                for direction in co.DIRECTIONS:
+                    bytes += conn.attr[direction][co.BYTES_MPTCPTRACE]
 
-# co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration)
-# co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration + '_log', xlog=True)
+                data_duration.append(duration)
+                data_bytes.append(bytes)
 
-plt.figure()
-plt.clf()
-fig, ax = plt.subplots()
+    # co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration)
+    # co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration + '_log', xlog=True)
+    plt.figure()
+    plt.clf()
+    fig, ax = plt.subplots()
 
-graph_fname = os.path.splitext(base_graph_path_duration)[0] + "_cdf_log.pdf"
-sample = np.array(sorted(data_duration))
-sorted_array = np.sort(sample)
-yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
-if len(sorted_array) > 0:
-    # Add a last point
-    sorted_array = np.append(sorted_array, sorted_array[-1])
-    yvals = np.append(yvals, 1.0)
-    ax.plot(sorted_array, yvals, color=color, linewidth=2, label="Duration")
+    graph_fname = os.path.splitext(base_graph_path_duration)[0] + "_cdf_log.pdf"
+    sample = np.array(sorted(data_duration))
+    sorted_array = np.sort(sample)
+    yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+    if len(sorted_array) > 0:
+        # Add a last point
+        sorted_array = np.append(sorted_array, sorted_array[-1])
+        yvals = np.append(yvals, 1.0)
+        ax.plot(sorted_array, yvals, color=color, linewidth=2, label="Duration")
 
-    # Shrink current axis's height by 10% on the top
-    # box = ax.get_position()
-    # ax.set_position([box.x0, box.y0,
-    #                  box.width, box.height * 0.9])
+        # Shrink current axis's height by 10% on the top
+        # box = ax.get_position()
+        # ax.set_position([box.x0, box.y0,
+        #                  box.width, box.height * 0.9])
 
-    ax.set_xscale('log')
+        ax.set_xscale('log')
 
-    # Put a legend above current axis
-    # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
-    ax.legend(loc='lower right')
+        # Put a legend above current axis
+        # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
+        ax.legend(loc='lower right')
 
-    plt.xlabel('Time [s]', fontsize=18)
-    plt.ylabel("CDF", fontsize=18)
-    plt.savefig(graph_fname)
-    plt.close('all')
-    
-plt.figure()
-plt.clf()
-fig, ax = plt.subplots()
+        plt.xlabel('Time [s]', fontsize=18)
+        plt.ylabel("CDF", fontsize=18)
+        plt.savefig(graph_fname)
+        plt.close('all')
 
-graph_fname = os.path.splitext(base_graph_path_bytes)[0] + "_cdf_log.pdf"
-sample = np.array(sorted(data_bytes))
-sorted_array = np.sort(sample)
-yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
-if len(sorted_array) > 0:
-    # Add a last point
-    sorted_array = np.append(sorted_array, sorted_array[-1])
-    yvals = np.append(yvals, 1.0)
-    ax.plot(sorted_array, yvals, color=color, linewidth=2, label="Data bytes")
+    plt.figure()
+    plt.clf()
+    fig, ax = plt.subplots()
 
-    # Shrink current axis's height by 10% on the top
-    # box = ax.get_position()
-    # ax.set_position([box.x0, box.y0,
-    #                  box.width, box.height * 0.9])
+    graph_fname = os.path.splitext(base_graph_path_bytes)[0] + "_cdf_log.pdf"
+    sample = np.array(sorted(data_bytes))
+    sorted_array = np.sort(sample)
+    yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+    if len(sorted_array) > 0:
+        # Add a last point
+        sorted_array = np.append(sorted_array, sorted_array[-1])
+        yvals = np.append(yvals, 1.0)
+        ax.plot(sorted_array, yvals, color=color, linewidth=2, label="Data bytes")
 
-    ax.set_xscale('log')
+        # Shrink current axis's height by 10% on the top
+        # box = ax.get_position()
+        # ax.set_position([box.x0, box.y0,
+        #                  box.width, box.height * 0.9])
 
-    # Put a legend above current axis
-    # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
-    ax.legend(loc='lower right')
+        ax.set_xscale('log')
 
-    plt.xlabel('Bytes', fontsize=18)
-    plt.ylabel("CDF", fontsize=18)
-    plt.savefig(graph_fname)
-    plt.close('all')
+        # Put a legend above current axis
+        # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
+        ax.legend(loc='lower right')
 
-# plt.figure()
-# plt.hist(data_duration['all'][co.DURATION], bins=np.logspace(-3, 5, 81), log=True)
-# plt.xlabel("Duration of connections [s]", fontsize=18)
-# plt.ylabel("Connections", fontsize=18)
-# plt.gca().set_xscale("log")
-# plt.savefig(base_graph_path_duration_hist + "_log.pdf")
-# plt.close()
-# plt.figure()
-# plt.hist(data_duration['all'][co.DURATION], bins=np.logspace(-3, 5, 81))
-# plt.xlabel("Duration of connections [s]", fontsize=18)
-# plt.ylabel("Connections", fontsize=18)
-# plt.gca().set_xscale("log")
-# plt.savefig(base_graph_path_duration_hist + ".pdf")
-# plt.close()
+        plt.xlabel('Bytes', fontsize=18)
+        plt.ylabel("CDF", fontsize=18)
+        plt.savefig(graph_fname)
+        plt.close('all')
+
+plot(connections, multiflow_connections, sums_dir_exp)

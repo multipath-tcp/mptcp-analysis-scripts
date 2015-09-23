@@ -59,7 +59,7 @@ co.check_directory_exists(sums_dir_exp)
 ##################################################
 
 connections = cog.fetch_valid_data(stat_dir_exp, args)
-# multiflow_connections, singleflow_connections = cog.get_multiflow_connections(connections)
+multiflow_connections, singleflow_connections = cog.get_multiflow_connections(connections)
 
 ##################################################
 ##               PLOTTING RESULTS               ##

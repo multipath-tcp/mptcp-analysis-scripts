@@ -263,6 +263,7 @@ IP_PROXY = False
 FRAME_MPTCP_OVERHEAD = 88
 
 PREFIX_IP_WIFI = False
+PREFIX_IP_PROXY = False
 
 IP_WIFI = False
 IP_CELL = False
@@ -273,6 +274,7 @@ CONN_ID = 'conn_id'
 if os.path.isfile('config.py'):
     import config as conf
     IP_PROXY = conf.IP_PROXY
+    PREFIX_IP_PROXY = conf.PREFIX_IP_PROXY
     PREFIX_IP_WIFI = conf.PREFIX_IP_WIFI
 
 
