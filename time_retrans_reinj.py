@@ -82,7 +82,7 @@ for fname, conns in connections.iteritems():
     for conn_id, conn in conns.iteritems():
         # We never know, still check
         if isinstance(conn, mptcp.MPTCPConnection):
-            duration = conn.attr[co.DURATION]
+            duration = conn.attr.get(co.DURATION, 0.0)
             if duration <= min_duration:
                 continue
 
@@ -115,11 +115,9 @@ for fname, conns in connections.iteritems():
             end_time_int = long(max_end_time)
             end_time_dec = float('0.' + str(max_end_time - end_time_int).split('.')[1])
             end_time_dec = ceil(end_time_dec * 1000000) / 1000000.0
-            print("Start", start_time_dec + start_time_int, "End", end_time_int + end_time_dec)
             duration_dec = (end_time_dec - start_time_dec)
             duration_int = (end_time_int - start_time_int)
             duration = duration_dec + duration_int
-            print("Duration", duration)
             warning_reinj = open(os.path.join(sums_dir_exp, 'warning_reinj.txt'), 'w')
             look_95 = open(os.path.join(sums_dir_exp, 'look95.txt'), 'w')
             look_100 = open(os.path.join(sums_dir_exp, 'look100.txt'), 'w')
