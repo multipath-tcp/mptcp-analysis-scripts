@@ -110,12 +110,8 @@ for fname, acks_fname in acks[MPTCP].iteritems():
 
 
 to_plot = {MPTCP: {co.S2D: [], co.D2S: []}, TCP: {co.S2D: [], co.D2S: []}}
-count_zero = {MPTCP: {co.S2D: 0, co.D2S: 0}, TCP: {co.S2D: 0, co.D2S: 0}}
 count = {MPTCP: {co.S2D: 0, co.D2S: 0}, TCP: {co.S2D: 0, co.D2S: 0}}
-count_10K = {MPTCP: {co.S2D: 0, co.D2S: 0}, TCP: {co.S2D: 0, co.D2S: 0}}
-count_100K = {MPTCP: {co.S2D: 0, co.D2S: 0}, TCP: {co.S2D: 0, co.D2S: 0}}
-count_data_10K = {MPTCP: {co.S2D: 0, co.D2S: 0}, TCP: {co.S2D: 0, co.D2S: 0}}
-count_data_100K = {MPTCP: {co.S2D: 0, co.D2S: 0}, TCP: {co.S2D: 0, co.D2S: 0}}
+totot = {MPTCP: {co.S2D: 0, co.D2S: 0}, TCP: {co.S2D: 0, co.D2S: 0}}
 
 for protocol, acks_protocol in sums_acks.iteritems():
     for direction, acks_direction in acks_protocol.iteritems():
@@ -123,30 +119,21 @@ for protocol, acks_protocol in sums_acks.iteritems():
         for value_ack, nb_ack in sorted(acks_direction.iteritems()):
             count[protocol][direction] += nb_ack
             if value_ack < 0:
+                print(protocol, value_ack)
                 continue
-            if value_ack == 0:
-                count_zero[protocol][direction] += nb_ack
-            if value_ack <= 10000:
-                count_10K[protocol][direction] += nb_ack
-                count_data_10K[protocol][direction] += nb_ack * value_ack
-            if value_ack >= 100000:
-                count_100K[protocol][direction] += nb_ack
-                count_data_100K[protocol][direction] += nb_ack * value_ack
             total_bytes += value_ack * nb_ack
             to_plot[protocol][direction].append([value_ack, total_bytes])
+            totot[protocol][direction] += value_ack * nb_ack
 
         for i in range(0, len(to_plot[protocol][direction])):
             to_plot[protocol][direction][i][1] = (to_plot[protocol][direction][i][1] + 0.0) / total_bytes
 
-        print("ZERO", protocol, direction, count_zero[protocol][direction])
-        print("Count", protocol, direction, count[protocol][direction])
-        print("Count 10K", count_10K[protocol][direction])
-        print("Count data 10K", count_data_10K[protocol][direction])
-        print("Count 100K", count_100K[protocol][direction])
-        print("Count data 100K", count_data_100K[protocol][direction])
-        print("Total bytes", total_bytes)
+for protocol, tot_prot in totot.iteritems():
+    for direction, tot_dir  in tot_prot.iteritems():
+        print(protocol, direction, tot_dir)
 
 for direction in co.DIRECTIONS:
     graph_filepath = os.path.join(sums_dir_exp, "acks_size_" + direction + ".pdf")
     # Plot results
-    co.plot_line_graph([to_plot[MPTCP][direction], to_plot[TCP][direction]], ["MPTCP acks", "TCP acks"], ["g-", "r-"], "Acks size (Bytes)", "Bytes percentage", "", graph_filepath, y_log=True)
+    co.plot_line_graph([to_plot[MPTCP][direction], to_plot[TCP][direction]], ["MPTCP acks", "TCP acks"], ["g-o", "r-^"], "Acks size (Bytes)", "Bytes percentage", "", graph_filepath, y_log=True)
+    #co.plot_line_graph([to_plot[MPTCP][direction]], ["MPTCP acks"], ["g-"], "Acks size (Bytes)", "Bytes percentage", "", graph_filepath, y_log=True)
