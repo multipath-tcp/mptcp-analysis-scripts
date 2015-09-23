@@ -82,15 +82,15 @@ def fetch_valid_data(dir_exp, args):
                 if isinstance(connections[fname][conn_id], mptcp.MPTCPConnection):
                     inside = True
                     for flow_id, flow in connections[fname][conn_id].flows.iteritems():
-                        if not flow.attr[co.DADDR].startswith('172.17.') and not flow.attr[co.DADDR] == co.IP_PROXY:
+                        if not flow.attr[co.DADDR].startswith(co.PREFIX_IP_PROXY) and not flow.attr[co.DADDR] == co.IP_PROXY:
                             connections[fname].pop(conn_id, None)
                             inside = False
                             break
                     if inside:
                         for direction in co.DIRECTIONS:
                             # This is a fix for wrapping seq num
-                            if connections[fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE] < -1:
-                                connections[fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE] = 2 ** 32 + connections[fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE]
+                            if connections[fname][conn_id].attr[direction].get(co.BYTES_MPTCPTRACE, -2 ** 32) < -1:
+                                connections[fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE] = 2 ** 32 + connections[fname][conn_id].attr[direction].get(co.BYTES_MPTCPTRACE, -2 ** 32)
 
     ensures_smartphone_to_proxy()
     return connections
