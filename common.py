@@ -596,7 +596,7 @@ def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, titl
         for dataset in data:
             x_val = [x[0] for x in dataset]
             y_val = [x[1] for x in dataset]
-            ax.plot(x_val, y_val, formatting[count], label=label_names[count])
+            ax.plot(x_val, y_val, formatting[count], linewidth=2, label=label_names[count])
             count += 1
 
         legend = ax.legend(loc='best', shadow=True, fontsize='x-large')
