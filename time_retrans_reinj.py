@@ -101,7 +101,7 @@ for fname, conns in connections.iteritems():
                 flow_start_time_dec = float('0.' + str(flow_start_time - flow_start_time_int).split('.')[1])
                 flow_start_time_dec = ceil(flow_start_time_dec * 1000000) / 1000000.0
                 flow_duration_int = long(flow.attr.get(co.DURATION, 0.0))
-                flow_duration_dec = float('0.' + str(flow.attr.get(co.DURATION, 0.0) - flow_duration_int).split('.')[1])
+                flow_duration_dec = float('0.' + '{0:.6f}'.format(flow.attr.get(co.DURATION, 0.0) - flow_duration_int).split('.')[1])
                 flow_duration_dec = ceil(flow_duration_dec * 1000000) / 1000000.0
                 flow_end_time_int =  flow_start_time_int + flow_duration_int
                 flow_end_time_dec = flow_start_time_dec + flow_duration_dec
