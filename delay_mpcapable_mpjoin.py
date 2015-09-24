@@ -70,6 +70,7 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 
 def plot(connections, multiflow_connections, sums_dir_exp):
     threshold_handover = 1.0
+    syn_first_additional_sf = []
     syn_additional_sfs = []
     handover_conns = {}
     log_file = sys.stdout
@@ -90,17 +91,27 @@ def plot(connections, multiflow_connections, sums_dir_exp):
 
             # Now store the delta and record connections with handover
             handover_detected = False
+            count_flows = 0
+            min_delta = float('inf')
+            flow_id_min_delta = None
             for flow_id, flow in conn.flows.iteritems():
                 if co.START not in flow.attr:
                     continue
                 delta = flow.attr[co.START] - initial_sf_ts
                 if delta > 0.0:
+                    min_delta = min(min_delta, delta)
+                    if min_delta == delta:
+                        flow_id_min_delta = flow_id
                     syn_additional_sfs.append(delta)
-                    if delta >= threshold_handover and not handover_detected:
+                    count_flows += 1
+                    if count_flows > 1 and not handover_detected:
                         handover_detected = True
                         handover_conns[fname][conn_id] = conn
                     if delta >= 50000:
                         print("HUGE DELTA", fname, conn_id, flow_id, delta, file=log_file)
+
+            if flow_id_min_delta:
+                syn_first_additional_sf.append(min_delta)
 
     # Do a first CDF plot of the delta between initial SYN and additional ones
     base_graph_path = os.path.join(sums_dir_exp, 'cdf_delta_addtitional_syns')
@@ -110,16 +121,23 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     sample = np.array(sorted(syn_additional_sfs))
     sorted_array = np.sort(sample)
     yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+    sample_2 = np.array(sorted(syn_first_additional_sf))
+    sorted_array_2 = np.sort(sample_2)
+    yvals_2 = np.arange(len(sorted_array_2)) / float(len(sorted_array_2))
     if len(sorted_array) > 0:
         # Add a last point
         sorted_array = np.append(sorted_array, sorted_array[-1])
         yvals = np.append(yvals, 1.0)
 
+        sorted_array_2 = np.append(sorted_array_2, sorted_array_2[-1])
+        yvals_2 = np.append(yvals_2, 1.0)
+
         # Log plot
         plt.figure()
         plt.clf()
         fig, ax = plt.subplots()
-        ax.plot(sorted_array, yvals, color=color, linewidth=2, label="MP_JOIN - MP_CAP")
+        ax.plot(sorted_array, yvals, color=color, linewidth=2, label="Additional subflows")
+        ax.plot(sorted_array_2, yvals_2, color='blue', linestyle='--', linewidth=2, label="Second subflows")
 
         # Shrink current axis's height by 10% on the top
         # box = ax.get_position()
@@ -131,7 +149,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
         ax.legend(loc='lower right')
 
-        plt.xlabel('Time [s]', fontsize=18)
+        plt.xlabel('Time between MP_JOIN and MP_CAP [s]', fontsize=18)
         plt.ylabel("CDF", fontsize=18)
         plt.savefig(graph_fname_log)
         plt.close('all')
@@ -171,6 +189,14 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                 if flow.attr[co.START] < initial_sf_ts:
                     initial_sf_ts = flow.attr[co.START]
 
+            min_delta = float('inf')
+            for flow_id, flow in conn.flows.iteritems():
+                if co.START not in flow.attr:
+                    continue
+                delta = flow.attr[co.START] - initial_sf_ts
+                if delta > 0.0:
+                    min_delta = min(min_delta, delta)
+
             # Now collect the amount of data on all subflows
             for flow_id, flow in conn.flows.iteritems():
                 if co.START not in flow.attr:
@@ -180,7 +206,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                     bytes_total += flow.attr[direction].get(co.BYTES, 0)
                     if flow.attr[direction].get(co.BYTES, 0) >= 1000000000:
                         print("WARNING!!!", fname, conn_id, flow_id, bytes_total, file=log_file)
-                    if delta < threshold_handover:
+                    if delta <= min_delta:
                         # Initial subflows
                         bytes_init_sfs += flow.attr[direction].get(co.BYTES, 0)
                         if delta == 0.0:
