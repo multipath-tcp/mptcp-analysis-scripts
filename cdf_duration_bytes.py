@@ -67,6 +67,8 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 
 
 def plot(connections, multiflow_connections, sums_dir_exp):
+    ALERT_DURATION = 3600
+    ALERT_BYTES = 50000000
     data_duration = []
     data_bytes = []
     color = 'red'
@@ -82,6 +84,11 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                 bytes = 0
                 for direction in co.DIRECTIONS:
                     bytes += conn.attr[direction][co.BYTES_MPTCPTRACE]
+
+                if duration >= ALERT_DURATION:
+                    print("DURATION", fname, conn_id, duration)
+                if bytes >= ALERT_BYTES:
+                    print("BYTES", fname, conn_id, bytes)
 
                 data_duration.append(duration)
                 data_bytes.append(bytes)
