@@ -95,7 +95,8 @@ for fname, conns in multiflow_connections.iteritems():
                     relative_time_dec = burst_start_time_dec - conn_start_time_dec
                     relative_time = relative_time_int + relative_time_dec
                     frac_duration = relative_time / conn_duration
-                    results_duration_bytes[direction].append((frac_duration, frac_bytes))
+                    if frac_duration >= 0.:
+                        results_duration_bytes[direction].append((frac_duration, frac_bytes))
 
 base_graph_name = 'bursts_duration_bytes'
 for direction in co.DIRECTIONS:
