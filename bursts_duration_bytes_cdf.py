@@ -65,7 +65,7 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-results_duration_bytes = {co.S2D: [], co.D2S: []}
+results_duration_bytes = {co.S2D: {'0B-10KB': [], '10KB-100KB': [], '100KB-1MB': [], '>=1MB': []}, co.D2S: {'0B-10KB': [], '10KB-100KB': [], '100KB-1MB': [], '>=1MB': []}}
 min_duration = 0.001
 for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():
@@ -97,71 +97,82 @@ for fname, conns in multiflow_connections.iteritems():
                     relative_time = relative_time_int + relative_time_dec
                     frac_duration = relative_time / conn_duration
                     if frac_duration >= 0.0:
-                        results_duration_bytes[direction].append((frac_duration, frac_bytes))
+                        if conn_bytes < 10000:
+                            label = '0B-10KB'
+                        elif conn_bytes < 100000:
+                            label = '10KB-100KB'
+                        elif conn_bytes < 1000000:
+                            label = '100KB-1MB'
+                        else:
+                            label = '>=1MB'
+                        results_duration_bytes[direction][label].append((frac_duration, frac_bytes))
 
 base_graph_name = 'bursts_'
+color = {'0B-10KB': 'red', '10KB-100KB': 'blue', '100KB-1MB': 'green', '>=1MB': 'orange'}
+ls = {'0B-10KB': ':', '10KB-100KB': '-.', '100KB-1MB': '--', '>=1MB': '-'}
 for direction in co.DIRECTIONS:
-    x_val = [x[0] for x in results_duration_bytes[direction]]
-    y_val = [x[1] for x in results_duration_bytes[direction]]
-
-
     plt.figure()
     plt.clf()
     fig, ax = plt.subplots()
-    color = 'red'
     graph_fname = os.path.splitext(base_graph_name)[0] + "duration_cdf_" + direction + ".pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
-    sample = np.array(sorted(x_val))
-    sorted_array = np.sort(sample)
-    yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
-    if len(sorted_array) > 0:
-        # Add a last point
-        sorted_array = np.append(sorted_array, sorted_array[-1])
-        yvals = np.append(yvals, 1.0)
-        ax.plot(sorted_array, yvals, color=color, linewidth=2, label="Bursts")
 
-        # Shrink current axis's height by 10% on the top
-        # box = ax.get_position()
-        # ax.set_position([box.x0, box.y0,
-        #                  box.width, box.height * 0.9])
+    for label in results_duration_bytes[direction]:
+        x_val = [x[0] for x in results_duration_bytes[direction][label]]
 
-        # ax.set_xscale('log')
+        sample = np.array(sorted(x_val))
+        sorted_array = np.sort(sample)
+        yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+        if len(sorted_array) > 0:
+            # Add a last point
+            sorted_array = np.append(sorted_array, sorted_array[-1])
+            yvals = np.append(yvals, 1.0)
+            ax.plot(sorted_array, yvals, color=color[label], linestyle=ls[label], linewidth=2, label=label)
 
-        # Put a legend above current axis
-        # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
-        ax.legend(loc='lower right')
+            # Shrink current axis's height by 10% on the top
+            # box = ax.get_position()
+            # ax.set_position([box.x0, box.y0,
+            #                  box.width, box.height * 0.9])
 
-        plt.xlabel('Fraction of connection duration', fontsize=18)
-        plt.ylabel("CDF", fontsize=18)
-        plt.savefig(graph_fname)
-        plt.close('all')
+            # ax.set_xscale('log')
+
+            # Put a legend above current axis
+            # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
+    ax.legend(loc='lower right')
+    plt.xlabel('Fraction of connection duration', fontsize=18)
+    plt.ylabel("CDF", fontsize=18)
+    plt.savefig(graph_full_path)
+    plt.close('all')
 
     plt.figure()
     plt.clf()
     fig, ax = plt.subplots()
     graph_fname = os.path.splitext(base_graph_name)[0] + "bytes_cdf_" + direction + ".pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
-    sample = np.array(sorted(y_val))
-    sorted_array = np.sort(sample)
-    yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
-    if len(sorted_array) > 0:
-        # Add a last point
-        sorted_array = np.append(sorted_array, sorted_array[-1])
-        yvals = np.append(yvals, 1.0)
-        ax.plot(sorted_array, yvals, color=color, linewidth=2, label="Bursts")
 
-        # Shrink current axis's height by 10% on the top
-        # box = ax.get_position()
-        # ax.set_position([box.x0, box.y0,
-        #                  box.width, box.height * 0.9])
+    for label in results_duration_bytes[direction]:
+        y_val = [x[1] for x in results_duration_bytes[direction][label]]
 
-        # ax.set_xscale('log')
+        sample = np.array(sorted(y_val))
+        sorted_array = np.sort(sample)
+        yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+        if len(sorted_array) > 0:
+            # Add a last point
+            sorted_array = np.append(sorted_array, sorted_array[-1])
+            yvals = np.append(yvals, 1.0)
+            ax.plot(sorted_array, yvals, color=color[label], linestyle=ls[label], linewidth=2, label=label)
 
-        # Put a legend above current axis
-        # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
-        ax.legend(loc='lower right')
+            # Shrink current axis's height by 10% on the top
+            # box = ax.get_position()
+            # ax.set_position([box.x0, box.y0,
+            #                  box.width, box.height * 0.9])
 
-        plt.xlabel('Fraction of connection bytes', fontsize=18)
-        plt.ylabel("CDF", fontsize=18)
-        plt.savefig(graph_fname)
-        plt.close('all')
+            # ax.set_xscale('log')
+
+            # Put a legend above current axis
+            # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
+    ax.legend(loc='lower right')
+    plt.xlabel('Fraction of connection bytes', fontsize=18)
+    plt.ylabel("CDF", fontsize=18)
+    plt.savefig(graph_full_path)
+    plt.close('all')
