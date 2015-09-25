@@ -70,7 +70,9 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     ALERT_DURATION = 3600
     ALERT_BYTES = 50000000
     data_duration = []
+    subflows_duration = []
     data_bytes = []
+    subflows_bytes = []
     color = 'red'
     base_graph_name_duration = "summary_cdf_duration"
     base_graph_path_duration = os.path.join(sums_dir_exp, base_graph_name_duration)
@@ -93,6 +95,15 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                 data_duration.append(duration)
                 data_bytes.append(bytes)
 
+                for flow_id, flow in conn.flows.iteritems():
+                    if co.DURATION in flow.attr:
+                        subflows_duration.append(flow.attr[co.DURATION])
+                        subflow_bytes = 0
+                        for direction in co.DIRECTIONS:
+                            subflow_bytes += flow.attr[direction][co.BYTES_DATA]
+                        subflows_bytes.append(subflow_bytes)
+
+
     # co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration)
     # co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration + '_log', xlog=True)
     plt.figure()
@@ -107,23 +118,37 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         # Add a last point
         sorted_array = np.append(sorted_array, sorted_array[-1])
         yvals = np.append(yvals, 1.0)
-        ax.plot(sorted_array, yvals, color=color, linewidth=2, label="Duration")
+        ax.plot(sorted_array, yvals, color=color, linewidth=2, label="MPTCP Connections")
 
         # Shrink current axis's height by 10% on the top
         # box = ax.get_position()
         # ax.set_position([box.x0, box.y0,
         #                  box.width, box.height * 0.9])
 
-        ax.set_xscale('log')
+    sample = np.array(sorted(subflows_duration))
+    sorted_array = np.sort(sample)
+    yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+    if len(sorted_array) > 0:
+        # Add a last point
+        sorted_array = np.append(sorted_array, sorted_array[-1])
+        yvals = np.append(yvals, 1.0)
+        ax.plot(sorted_array, yvals, color='blue', linestyle='--', linewidth=2, label="Subflows")
 
-        # Put a legend above current axis
-        # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
-        ax.legend(loc='lower right')
+        # Shrink current axis's height by 10% on the top
+        # box = ax.get_position()
+        # ax.set_position([box.x0, box.y0,
+        #                  box.width, box.height * 0.9])
 
-        plt.xlabel('Time [s]', fontsize=18)
-        plt.ylabel("CDF", fontsize=18)
-        plt.savefig(graph_fname)
-        plt.close('all')
+    ax.set_xscale('log')
+
+    # Put a legend above current axis
+    # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
+    ax.legend(loc='lower right')
+
+    plt.xlabel('Time [s]', fontsize=18)
+    plt.ylabel("CDF", fontsize=18)
+    plt.savefig(graph_fname)
+    plt.close('all')
 
     plt.figure()
     plt.clf()
@@ -137,22 +162,36 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         # Add a last point
         sorted_array = np.append(sorted_array, sorted_array[-1])
         yvals = np.append(yvals, 1.0)
-        ax.plot(sorted_array, yvals, color=color, linewidth=2, label="Data bytes")
+        ax.plot(sorted_array, yvals, color=color, linewidth=2, label="MPTCP Connections")
 
         # Shrink current axis's height by 10% on the top
         # box = ax.get_position()
         # ax.set_position([box.x0, box.y0,
         #                  box.width, box.height * 0.9])
 
-        ax.set_xscale('log')
+    sample = np.array(sorted(subflows_bytes))
+    sorted_array = np.sort(sample)
+    yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+    if len(sorted_array) > 0:
+        # Add a last point
+        sorted_array = np.append(sorted_array, sorted_array[-1])
+        yvals = np.append(yvals, 1.0)
+        ax.plot(sorted_array, yvals, color='blue', linestyle='--', linewidth=2, label="Subflows")
 
-        # Put a legend above current axis
-        # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
-        ax.legend(loc='lower right')
+        # Shrink current axis's height by 10% on the top
+        # box = ax.get_position()
+        # ax.set_position([box.x0, box.y0,
+        #                  box.width, box.height * 0.9])
 
-        plt.xlabel('Bytes', fontsize=18)
-        plt.ylabel("CDF", fontsize=18)
-        plt.savefig(graph_fname)
-        plt.close('all')
+    ax.set_xscale('log')
+
+    # Put a legend above current axis
+    # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
+    ax.legend(loc='lower right')
+
+    plt.xlabel('Bytes', fontsize=18)
+    plt.ylabel("CDF", fontsize=18)
+    plt.savefig(graph_fname)
+    plt.close('all')
 
 plot(connections, multiflow_connections, sums_dir_exp)

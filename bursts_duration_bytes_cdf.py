@@ -65,7 +65,12 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-results_duration_bytes = {co.S2D: {'0B-10KB': [], '10KB-100KB': [], '100KB-1MB': [], '>=1MB': []}, co.D2S: {'0B-10KB': [], '10KB-100KB': [], '100KB-1MB': [], '>=1MB': []}}
+TINY = '0B-10KB'
+SMALL = '10KB-100KB'
+MEDIUM = '100KB-1MB'
+LARGE = '>=1MB'
+
+results_duration_bytes = {co.S2D: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}, co.D2S: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}}
 min_duration = 0.001
 for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():
@@ -103,18 +108,18 @@ for fname, conns in multiflow_connections.iteritems():
                     frac_duration = relative_time / conn_duration
                     if frac_duration >= 0.0 and frac_duration <= 2.0:
                         if conn_bytes < 10000:
-                            label = '0B-10KB'
+                            label = TINY
                         elif conn_bytes < 100000:
-                            label = '10KB-100KB'
+                            label = SMALL
                         elif conn_bytes < 1000000:
-                            label = '100KB-1MB'
+                            label = MEDIUM
                         else:
-                            label = '>=1MB'
+                            label = LARGE
                         results_duration_bytes[direction][label].append((frac_duration, frac_bytes))
 
 base_graph_name = 'bursts_'
-color = {'0B-10KB': 'red', '10KB-100KB': 'blue', '100KB-1MB': 'green', '>=1MB': 'orange'}
-ls = {'0B-10KB': ':', '10KB-100KB': '-.', '100KB-1MB': '--', '>=1MB': '-'}
+color = {TINY: 'red', SMALL: 'blue', MEDIUM: 'green', LARGE: 'orange'}
+ls = {TINY: ':', SMALL: '-.', MEDIUM: '--', LARGE: '-'}
 for direction in co.DIRECTIONS:
     plt.figure()
     plt.clf()
@@ -122,7 +127,7 @@ for direction in co.DIRECTIONS:
     graph_fname = os.path.splitext(base_graph_name)[0] + "duration_cdf_" + direction + ".pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
-    for label in results_duration_bytes[direction]:
+    for label in [TINY, SMALL, MEDIUM, LARGE]:
         x_val = [x[0] for x in results_duration_bytes[direction][label]]
 
         sample = np.array(sorted(x_val))
@@ -155,7 +160,7 @@ for direction in co.DIRECTIONS:
     graph_fname = os.path.splitext(base_graph_name)[0] + "bytes_cdf_" + direction + ".pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
-    for label in results_duration_bytes[direction]:
+    for label in [TINY, SMALL, MEDIUM, LARGE]:
         y_val = [x[1] for x in results_duration_bytes[direction][label]]
 
         sample = np.array(sorted(y_val))
