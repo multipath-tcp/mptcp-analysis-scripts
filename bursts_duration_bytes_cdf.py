@@ -70,7 +70,7 @@ min_duration = 0.001
 for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():
         # Restrict to only 2SFs, but we can also see with more than 2
-        if co.START in conn.attr and len(conn.flows) == 2:
+        if co.START in conn.attr and len(conn.flows) >= 2:
             # Rely here on MPTCP duration, maybe should be duration at TCP level?
             # Also rely on the start time of MPTCP; again, should it be the TCP one?
             conn_start_time = conn.attr[co.START]
@@ -81,10 +81,15 @@ for fname, conns in multiflow_connections.iteritems():
                 continue
 
             for direction in co.DIRECTIONS:
-                conn_bytes = conn.attr[direction][co.BYTES_MPTCPTRACE]
+                # First count all bytes sent (including retransmissions)
+                tcp_conn_bytes = 0
+                for flow_id, flow in conn.flows.iteritems():
+                    tcp_conn_bytes += flow.attr[direction].get(co.BYTES_DATA, 0)
+                # To cope with unseen TCP connections
+                conn_bytes = max(conn.attr[direction][co.BYTES_MPTCPTRACE], tcp_conn_bytes)
                 for flow_id, bytes, burst_duration, burst_start_time in conn.attr[direction][co.BURSTS]:
                     frac_bytes = (bytes + 0.0) / conn_bytes
-                    if frac_bytes > 1:
+                    if frac_bytes > 1.1:
                         print(frac_bytes, bytes, conn_bytes, direction, conn_id, flow_id)
                         continue
                     if frac_bytes < 0:
@@ -96,7 +101,7 @@ for fname, conns in multiflow_connections.iteritems():
                     relative_time_dec = burst_start_time_dec - conn_start_time_dec
                     relative_time = relative_time_int + relative_time_dec
                     frac_duration = relative_time / conn_duration
-                    if frac_duration >= 0.0:
+                    if frac_duration >= 0.0 and frac_duration <= 2.0:
                         if conn_bytes < 10000:
                             label = '0B-10KB'
                         elif conn_bytes < 100000:
@@ -171,7 +176,9 @@ for direction in co.DIRECTIONS:
 
             # Put a legend above current axis
             # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
+
     ax.legend(loc='lower right')
+    plt.xlim(0.0, 1.0)
     plt.xlabel('Fraction of connection bytes', fontsize=18)
     plt.ylabel("CDF", fontsize=18)
     plt.savefig(graph_full_path)
