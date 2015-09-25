@@ -66,6 +66,7 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 ##################################################
 
 results_duration_bytes = {co.S2D: [], co.D2S: []}
+min_duration = 0.001
 for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():
         # Restrict to only 2SFs, but we can also see with more than 2
@@ -76,6 +77,8 @@ for fname, conns in multiflow_connections.iteritems():
             conn_start_time_int = long(conn_start_time)
             conn_start_time_dec = float('0.' + str(conn_start_time - conn_start_time_int).split('.')[1])
             conn_duration = conn.attr[co.DURATION]
+            if conn_duration < min_duration:
+                continue
             for direction in co.DIRECTIONS:
                 conn_bytes = conn.attr[direction][co.BYTES_MPTCPTRACE]
                 for flow_id, bytes, burst_duration, burst_start_time in conn.attr[direction][co.BURSTS]:
