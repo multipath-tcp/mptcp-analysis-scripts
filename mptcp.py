@@ -298,7 +298,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
                 reinject[int(split_line[5]) - 1][packet_seqs] = 1
             else:
                 reinject[int(split_line[5]) - 1][packet_seqs] += 1
-                print("WARNING: reinjection " + str(reinject[int(split_line[5]) - 1][packet_seqs]) + " for " + csv_fname)
+                # print("WARNING: reinjection " + str(reinject[int(split_line[5]) - 1][packet_seqs]) + " for " + csv_fname)
 
     # Don't forget to consider the last burst
     if current_flow >= 0:
