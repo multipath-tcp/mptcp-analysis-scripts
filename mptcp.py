@@ -286,7 +286,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
 
         if int(split_line[3]) == 1 and (not int(split_line[5]) == -1):
             # Map and reinjected
-            # Secucrity
+            # Security
             if int(split_line[5]) - 1 not in reinject_offsets:
                 continue
             reinject_offsets[int(split_line[5]) - 1] += int(split_line[4]) - int(split_line[1])
