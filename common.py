@@ -271,6 +271,8 @@ IP_CELL = False
 TIMESTAMP = 'timestamp'
 CONN_ID = 'conn_id'
 
+SOCKS_PORT = 'socks_port'
+
 if os.path.isfile('config.py'):
     import config as conf
     IP_PROXY = conf.IP_PROXY

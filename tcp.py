@@ -33,6 +33,7 @@ import glob
 import os
 import shutil
 import socket
+import socks_parser
 import subprocess
 import sys
 
@@ -544,9 +545,9 @@ def get_flow_name_connection(connection, connections):
     """
     for conn_id, conn in connections.iteritems():
         # Let a little margin, but don't think it's needed
-        if conn.attr.get(co.START, None) and (connection.flow.attr[co.START] >= conn.attr[co.START] - 120.0 and
-                                              connection.flow.attr[co.START] + connection.flow.attr[co.DURATION] <=
-                                              conn.attr[co.START] + conn.attr[co.DURATION] + 120.0):
+        if conn.attr.get(co.START, None) and (connection.flow.attr[co.START] >= conn.attr[co.START] - 8.0 and
+                                              connection.flow.attr[co.START] <=
+                                              conn.attr[co.START] + conn.attr[co.DURATION]):
             for flow_id, flow in conn.flows.iteritems():
                 if (connection.flow.attr[co.SADDR] == flow.attr[co.SADDR] and
                         connection.flow.attr[co.DADDR] == flow.attr[co.DADDR] and
@@ -568,6 +569,13 @@ def copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns,
         mptcp_connections[conn_id].flows[flow_id].subflow_id = flow_name
         mptcp_connections[conn_id].flows[flow_id].attr[co.START] = connection.flow.attr[co.START]
         mptcp_connections[conn_id].flows[flow_id].attr[co.DURATION] = connection.flow.attr[co.DURATION]
+        if co.SOCKS_PORT in connection.attr:
+            mptcp_connections[conn_id].flows[flow_id].attr[co.SOCKS_PORT] = connection.attr[co.SOCKS_PORT]
+            if co.SOCKS_PORT not in mptcp_connections[conn_id].attr:
+                mptcp_connections[conn_id].attr[co.SOCKS_PORT] = connection.attr[co.SOCKS_PORT]
+                mptcp_connections[conn_id].flows[flow_id].attr[co.SOCKS_PORT] = connection.attr[co.SOCKS_PORT]
+            elif not mptcp_connections[conn_id].attr[co.SOCKS_PORT] == connection.attr[co.SOCKS_PORT]:
+                print("DIFFERENT SOCKS PORT...", mptcp_connections[conn_id].attr[co.SOCKS_PORT], connection.attr[co.SOCKS_PORT], conn_id, flow_id)
         for direction in co.DIRECTIONS:
             for attr in connection.flow.attr[direction]:
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][attr] = connection.flow.attr[direction][attr]
@@ -645,7 +653,7 @@ def increment_value_dict(dico, key):
         dico[key] = 1
 
 
-def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_timeout=30.0, ts_timeout=3600.0):
+def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_timeout=6.0, ts_timeout=3600.0):
     """ Process a tcp pcap file and returns a dictionary of the number of cases an acknowledgement of x bytes is received
         It also compute the timestamps of retransmissions and put them
     """
@@ -689,10 +697,11 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                     # Check if the connection is black listed or not
                     conn_id = False
                     conn_candidates = inverse_conns.get((saddr, sport, daddr, dport), [])
+                    min_delta = ts_syn_timeout
                     for cid in conn_candidates:
-                        if abs(ts - connections[cid].flow.attr[co.START]) < ts_syn_timeout:
+                        if abs(ts - connections[cid].flow.attr[co.START]) < min_delta:
                             conn_id = cid
-                            break
+                            min_delta = abs(ts - connections[cid].flow.attr[co.START])
 
                     if not conn_id:
                         black_list.add((saddr, sport, daddr, dport))
@@ -708,7 +717,7 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                     # if (saddr, sport, daddr, dport) in acks:
                         # Already taken, but maybe old, such that we can overwrite it (show on screen the TS difference)
                         # print(saddr, sport, daddr, dport, "already used; it was (in seconds)", ts - acks[saddr, sport, daddr, dport][co.TIMESTAMP])
-                    if (saddr, sport, daddr, dport) in acks and ts - acks[saddr, sport, daddr, dport][co.TIMESTAMP] <= 30.0 and acks[saddr, sport, daddr, dport][co.D2S] == -1 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_S2D]:
+                    if (saddr, sport, daddr, dport) in acks and ts - acks[saddr, sport, daddr, dport][co.TIMESTAMP] <= ts_syn_timeout and acks[saddr, sport, daddr, dport][co.D2S] == -1 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_S2D]:
                         # SYN retransmission!
                         connections[conn_id].flow.attr[co.S2D][co.TIMESTAMP_RETRANS].append(ts)
                     else:
@@ -736,6 +745,12 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                                 continue
                             conn_id = acks[saddr, sport, daddr, dport][co.CONN_ID]
                             increment_value_dict(nb_acks[co.D2S][conn_id], bytes_acked)
+                            # If SOCKS command
+                            if len(tcp.data) == 7 and connections[conn_id].attr.get(co.SOCKS_PORT, None) is None:
+                                crypted_socks_cmd = tcp.data
+                                decrypted_socks_cmd = socks_parser.decode(crypted_socks_cmd)
+                                if decrypted_socks_cmd[0] == b'\x01': # Connect
+                                    connections[conn_id].attr[co.SOCKS_PORT] = socks_parser.get_port_number(decrypted_socks_cmd)
                             if len(tcp.data) > 0 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_S2D]:
                                 # This is a retransmission! (take into account the seq overflow)
                                 connections[conn_id].flow.attr[co.S2D][co.TIMESTAMP_RETRANS].append(ts)
