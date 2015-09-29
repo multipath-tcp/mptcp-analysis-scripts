@@ -508,8 +508,14 @@ def process_stats_csv(csv_fname, connections):
 
         if seq_acked:
             # Notice that these values remove the reinjected bytes
-            connections[conn_id].attr[co.S2D][co.BYTES_MPTCPTRACE] = int(seq_acked[0])
-            connections[conn_id].attr[co.D2S][co.BYTES_MPTCPTRACE] = int(seq_acked[1])
+            if int(seq_acked[0]) == 4294967295:
+                connections[conn_id].attr[co.S2D][co.BYTES_MPTCPTRACE] = 1
+            else:
+                connections[conn_id].attr[co.S2D][co.BYTES_MPTCPTRACE] = int(seq_acked[0])
+            if int(seq_acked[1]) == 4294967295:
+                connections[conn_id].attr[co.D2S][co.BYTES_MPTCPTRACE] = 1
+            else:
+                connections[conn_id].attr[co.D2S][co.BYTES_MPTCPTRACE] = int(seq_acked[1])
         else:
             connections[conn_id].attr[co.S2D][co.BYTES_MPTCPTRACE] = 0
             connections[conn_id].attr[co.D2S][co.BYTES_MPTCPTRACE] = 0
