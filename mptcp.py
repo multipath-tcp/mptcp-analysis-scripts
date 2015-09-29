@@ -251,6 +251,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
     bursts = []
     current_flow = -1
     count_seq_burst = 0
+    count_pkt_burst = 0
     begin_time_burst_on_flow = 0.0
     last_time_burst_on_flow = 0.0
     for i in range(0, len(connections[conn_id].flows)):
@@ -270,15 +271,17 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
             if not int(split_line[2]) - 1 == current_flow and current_flow >= 0:
                 # Save current burst (no way if start of connection)
                 duration = last_time_burst_on_flow - begin_time_burst_on_flow
-                bursts.append((current_flow, count_seq_burst, duration, begin_time_burst_on_flow))
+                bursts.append((current_flow, count_seq_burst, count_pkt_burst, duration, begin_time_burst_on_flow))
 
             if not int(split_line[2]) - 1 == current_flow:
                 # Prepare for the next burst
                 current_flow = int(split_line[2]) - 1
                 count_seq_burst = 0
+                count_pkt_burst = 0
                 begin_time_burst_on_flow = float(split_line[0])
 
             count_seq_burst += int(split_line[4]) - int(split_line[1])
+            count_pkt_burst += 1
             last_time_burst_on_flow = float(split_line[0])
 
         if int(split_line[3]) == 1 and (not int(split_line[5]) == -1):
@@ -300,7 +303,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
     # Don't forget to consider the last burst
     if current_flow >= 0:
         duration = last_time_burst_on_flow - begin_time_burst_on_flow
-        bursts.append((current_flow, count_seq_burst, duration, begin_time_burst_on_flow))
+        bursts.append((current_flow, count_seq_burst, count_pkt_burst, duration, begin_time_burst_on_flow))
 
     direction = co.D2S if is_reversed else co.S2D
     connections[conn_id].attr[direction][co.BURSTS] = bursts
