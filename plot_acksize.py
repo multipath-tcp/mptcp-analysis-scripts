@@ -61,7 +61,6 @@ for fname, conns in connections.iteritems():
     for conn_id in conns.keys():
         valid[fname].add(conn_id)
 
-print(valid)
 # Try to save space
 del connections
 
