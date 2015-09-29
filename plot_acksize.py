@@ -24,6 +24,7 @@ from __future__ import print_function
 
 import argparse
 import common as co
+import common_graph as cog
 import os
 import pickle
 import sys
@@ -46,32 +47,7 @@ mptcp_dir_exp = os.path.abspath(os.path.expanduser(args.mptcp_ack))
 tcp_dir_exp = os.path.abspath(os.path.expanduser(args.tcp_ack))
 sums_dir_exp = os.path.abspath(os.path.expanduser(args.graph))
 
-
-def fetch_data(dir_exp, dir_exp_two):
-    co.check_directory_exists(dir_exp)
-    co.check_directory_exists(dir_exp_two)
-    dico = {MPTCP: {}, TCP: {}}
-    for dirpath, dirnames, filenames in os.walk(dir_exp):
-        for fname in filenames:
-            try:
-                ack_file = open(os.path.join(dirpath, fname), 'r')
-                dico[MPTCP][fname] = pickle.load(ack_file)
-                ack_file.close()
-            except IOError as e:
-                print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
-
-    for dirpath, dirnames, filenames in os.walk(dir_exp_two):
-        for fname in filenames:
-            try:
-                ack_file = open(os.path.join(dirpath, fname), 'r')
-                dico[TCP][fname] = pickle.load(ack_file)
-                ack_file.close()
-            except IOError as e:
-                print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
-
-    return dico
-
-acks = fetch_data(mptcp_dir_exp, tcp_dir_exp)
+acks = cog.fetch_valid_data(mptcp_dir_exp, tcp_dir_exp)
 
 sums_acks = {MPTCP: {co.S2D: {}, co.D2S: {}}, TCP: {co.S2D: {}, co.D2S: {}}}
 
