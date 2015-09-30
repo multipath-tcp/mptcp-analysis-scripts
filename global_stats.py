@@ -68,17 +68,22 @@ connections = cog.fetch_valid_data(stat_dir_exp, args)
 nb_conns = 0
 nb_packets = 0
 nb_bytes = 0
+nb_bytes_tcp = 0
 
 for fname, conns in connections.iteritems():
     for conn_id, conn in conns.iteritems():
         nb_conns += 1
         for direction in co.DIRECTIONS:
             if conn.attr[direction][co.BYTES_MPTCPTRACE] > 1000000000:
-                print(conn_id, conn.attr[direction][co.BYTES_MPTCPTRACE])
+                print("MPTCP", fname, conn_id, direction, conn.attr[direction][co.BYTES_MPTCPTRACE])
             nb_bytes += conn.attr[direction][co.BYTES_MPTCPTRACE]
             for flow_id, flow in conn.flows.iteritems():
                 nb_packets += flow.attr[direction].get(co.PACKS, 0)
+                if flow.attr[direction].get(co.BYTES_DATA, 0) > 1000000000:
+                    print("TCP", fname, conn_id, flow_id, direction, flow.attr[direction].get(co.BYTES_DATA, 0))
+                nb_bytes_tcp += flow.attr[direction].get(co.BYTES_DATA, 0)
 
 print("NB CONNS", nb_conns)
 print("NB PACKETS", nb_packets)
 print("NB BYTES", nb_bytes)
+print("NB BYTES", nb_bytes_tcp)
