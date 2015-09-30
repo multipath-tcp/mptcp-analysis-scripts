@@ -784,7 +784,7 @@ def plot_cdfs(aggl_res, color, xlabel, base_graph_fname, ylim=None, xlim=None):
                     # Add a last point
                     sorted_array = np.append(sorted_array, sorted_array[-1])
                     yvals = np.append(yvals, 1.0)
-                    plt.plot(sorted_array, yvals, color=color[aggl_res[cond].keys().index(element)], label=element)
+                    plt.plot(sorted_array, yvals, linewidth=2, color=color[aggl_res[cond].keys().index(element)], label=element)
             except ZeroDivisionError as e:
                 print(str(e))
 

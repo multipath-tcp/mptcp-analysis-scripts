@@ -150,6 +150,25 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     plt.savefig(graph_fname)
     plt.close('all')
 
+
+    base_graph_path_duration_hist = os.path.splitext(base_graph_path_duration)[0] + '_hist'
+    plt.figure()
+    plt.hist(subflows_duration, bins=np.logspace(-3, 5, 81), log=True)
+    plt.xlabel("Duration of connections [s]", fontsize=18)
+    plt.ylabel("Connections", fontsize=18)
+    plt.gca().set_xscale("log")
+    plt.savefig(base_graph_path_duration_hist + "_log.pdf")
+    plt.close()
+    plt.figure()
+    plt.hist(subflows_duration, bins=np.logspace(-3, 5, 81))
+    plt.xlabel("Duration of connections [s]", fontsize=18)
+    plt.ylabel("Connections", fontsize=18)
+    # plt.gca().set_xscale("log")
+    plt.savefig(base_graph_path_duration_hist + ".pdf")
+    plt.close()
+
+
+
     plt.figure()
     plt.clf()
     fig, ax = plt.subplots()
