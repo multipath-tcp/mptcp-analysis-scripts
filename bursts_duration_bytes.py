@@ -111,8 +111,8 @@ for direction in co.DIRECTIONS:
 
     # Put a legend to the right of the current axis
     ax.legend(loc='best', fontsize='large', scatterpoints=1)
-    plt.xlabel('Fraction of connection duration', fontsize=18)
-    plt.ylabel('Fraction of connection bytes', fontsize=16)
+    plt.xlabel('Fraction of connection duration', fontsize=24)
+    plt.ylabel('Fraction of connection bytes', fontsize=24)
     plt.grid()
 
     # plt.annotate('1', xy=(0.57, 0.96),  xycoords="axes fraction",

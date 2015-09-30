@@ -119,8 +119,8 @@ def plot(connections, multiflow_connections, sums_dir_exp):
             # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
             ax.legend(loc='lower right')
 
-            plt.xlabel('# switches / second', fontsize=18)
-            plt.ylabel("CDF", fontsize=18)
+            plt.xlabel('# switches / second', fontsize=24)
+            plt.ylabel("CDF", fontsize=24)
             plt.savefig(base_graph_path_sec + "_" + direction + "_log.pdf")
             plt.close('all')
 

@@ -130,8 +130,8 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         ax.set_xscale('log')
         ax.legend(loc='lower right')
 
-        plt.xlabel('Fraction of unique bytes', fontsize=18)
-        plt.ylabel("CDF", fontsize=18)
+        plt.xlabel('Fraction of unique bytes', fontsize=24)
+        plt.ylabel("CDF", fontsize=24)
         plt.ylim(ymin=min_y - 0.01)
         plt.savefig(os.path.splitext(graph_full_path)[0] + '_' + direction + '.pdf')
         plt.close('all')

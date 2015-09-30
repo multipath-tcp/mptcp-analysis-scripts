@@ -184,7 +184,7 @@ for direction in co.DIRECTIONS:
 
     ax.legend(loc='lower right')
     plt.xlim(0.0, 1.0)
-    plt.xlabel('Fraction of connection bytes', fontsize=18)
-    plt.ylabel("CDF", fontsize=18)
+    plt.xlabel('Fraction of connection bytes', fontsize=24)
+    plt.ylabel("CDF", fontsize=24)
     plt.savefig(graph_full_path)
     plt.close('all')

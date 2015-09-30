@@ -145,8 +145,8 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
     ax.legend(loc='lower right')
 
-    plt.xlabel('Time [s]', fontsize=18)
-    plt.ylabel("CDF", fontsize=18)
+    plt.xlabel('Time [s]', fontsize=24)
+    plt.ylabel("CDF", fontsize=24)
     plt.savefig(graph_fname)
     plt.close('all')
 
@@ -154,15 +154,15 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     base_graph_path_duration_hist = os.path.splitext(base_graph_path_duration)[0] + '_hist'
     plt.figure()
     plt.hist(subflows_duration, bins=np.logspace(-3, 5, 81), log=True)
-    plt.xlabel("Duration of connections [s]", fontsize=18)
-    plt.ylabel("Connections", fontsize=18)
+    plt.xlabel("Duration of connections [s]", fontsize=24)
+    plt.ylabel("Connections", fontsize=24)
     plt.gca().set_xscale("log")
     plt.savefig(base_graph_path_duration_hist + "_log.pdf")
     plt.close()
     plt.figure()
     plt.hist(subflows_duration, bins=np.logspace(-3, 5, 81))
-    plt.xlabel("Duration of connections [s]", fontsize=18)
-    plt.ylabel("Connections", fontsize=18)
+    plt.xlabel("Duration of connections [s]", fontsize=24)
+    plt.ylabel("Connections", fontsize=24)
     # plt.gca().set_xscale("log")
     plt.savefig(base_graph_path_duration_hist + ".pdf")
     plt.close()
@@ -208,8 +208,8 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
     ax.legend(loc='lower right')
 
-    plt.xlabel('Bytes', fontsize=18)
-    plt.ylabel("CDF", fontsize=18)
+    plt.xlabel('Bytes', fontsize=24)
+    plt.ylabel("CDF", fontsize=24)
     plt.savefig(graph_fname)
     plt.close('all')
 

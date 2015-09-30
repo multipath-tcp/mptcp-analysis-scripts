@@ -139,7 +139,7 @@ for direction in co.DIRECTIONS:
             # Put a legend above current axis
             # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
     ax.legend(loc='best')
-    plt.xlabel('Fraction of total data bytes', fontsize=18)
-    plt.ylabel("CDF", fontsize=18)
+    plt.xlabel('Fraction of total data bytes', fontsize=24)
+    plt.ylabel("CDF", fontsize=24)
     plt.savefig(graph_full_path)
     plt.close('all')

@@ -96,8 +96,8 @@ for direction in co.DIRECTIONS:
 
     # Put a legend to the right of the current axis
     ax.legend(loc='best', fontsize='large', scatterpoints=1)
-    plt.xlabel('Duration [s]', fontsize=18)
-    plt.ylabel('# of bursts', fontsize=16)
+    plt.xlabel('Duration [s]', fontsize=24)
+    plt.ylabel('# of bursts', fontsize=24)
     plt.grid()
 
     # plt.annotate('1', xy=(0.57, 0.96),  xycoords="axes fraction",

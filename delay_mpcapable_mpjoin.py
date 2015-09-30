@@ -149,8 +149,8 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
         ax.legend(loc='lower right')
 
-        plt.xlabel('Time between MP_JOIN and MP_CAP [s]', fontsize=18)
-        plt.ylabel("CDF", fontsize=18)
+        plt.xlabel('Time between MP_JOIN and MP_CAP [s]', fontsize=24)
+        plt.ylabel("CDF", fontsize=24)
         plt.savefig(graph_fname_log)
         plt.close('all')
 

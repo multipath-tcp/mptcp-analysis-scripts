@@ -618,8 +618,8 @@ def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, titl
     #     return
 
     fig.suptitle(title, fontsize=titlesize)
-    plt.xlabel(xlabel, fontsize=18)
-    plt.ylabel(ylabel, fontsize=16)
+    plt.xlabel(xlabel, fontsize=24)
+    plt.ylabel(ylabel, fontsize=24)
 
     if y_log:
         ax.set_xscale('symlog', linthreshx=1)
