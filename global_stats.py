@@ -90,7 +90,8 @@ for fname, conns in connections.iteritems():
                 if flow.attr[direction].get(co.BYTES_DATA, 0) > 1000000000:
                     print("TCP", fname, conn_id, flow_id, direction, flow.attr[direction].get(co.BYTES_DATA, 0))
                 nb_bytes_tcp += flow.attr[direction].get(co.BYTES_DATA, 0)
-                nb_bytes_port[port] += flow.attr[direction].get(co.BYTES_DATA, 0)
+                if port is not None:
+                    nb_bytes_port[port] += flow.attr[direction].get(co.BYTES_DATA, 0)
 
 print("NB CONNS", nb_conns)
 print("NB PACKETS", nb_packets)
