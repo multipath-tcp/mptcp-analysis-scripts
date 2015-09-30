@@ -69,10 +69,18 @@ nb_conns = 0
 nb_packets = 0
 nb_bytes = 0
 nb_bytes_tcp = 0
+nb_conns_port = {}
+nb_bytes_port = {}
 
 for fname, conns in connections.iteritems():
     for conn_id, conn in conns.iteritems():
         nb_conns += 1
+        port = conn.flows[0].attr.get(co.SOCKS_PORT, conn.attr.get(co.SOCKS_PORT, None))
+        if port and port not in nb_conns_port:
+            nb_conns_port[port] = 1
+            nb_bytes_port[port] = 0
+        elif port:
+            nb_conns_port[port] += 1
         for direction in co.DIRECTIONS:
             if conn.attr[direction][co.BYTES_MPTCPTRACE] > 1000000000:
                 print("MPTCP", fname, conn_id, direction, conn.attr[direction][co.BYTES_MPTCPTRACE])
@@ -82,8 +90,11 @@ for fname, conns in connections.iteritems():
                 if flow.attr[direction].get(co.BYTES_DATA, 0) > 1000000000:
                     print("TCP", fname, conn_id, flow_id, direction, flow.attr[direction].get(co.BYTES_DATA, 0))
                 nb_bytes_tcp += flow.attr[direction].get(co.BYTES_DATA, 0)
+                nb_bytes_port[port] += flow.attr[direction].get(co.BYTES_DATA, 0)
 
 print("NB CONNS", nb_conns)
 print("NB PACKETS", nb_packets)
 print("NB BYTES", nb_bytes)
 print("NB BYTES", nb_bytes_tcp)
+print("PORT CONN", nb_conns_port)
+print("PORT BYTES", nb_bytes_port)
