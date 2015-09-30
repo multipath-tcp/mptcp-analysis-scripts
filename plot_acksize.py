@@ -102,11 +102,13 @@ def fetch_data(dir_exp, dir_exp_two):
 acks = fetch_data(mptcp_dir_exp, tcp_dir_exp)
 
 sums_acks = {MPTCP: {co.S2D: {}, co.D2S: {}}, TCP: {co.S2D: {}, co.D2S: {}}}
+totot_fname = {MPTCP: {co.S2D: {}, co.D2S: {}}, TCP: {co.S2D: {}, co.D2S: {}}}
 
 multiflow_conn = set()
 
 for fname, acks_fname in acks[TCP].iteritems():
     for direction, acks_direction in acks_fname.iteritems():
+        totot_fname[TCP][direction][fname] = 0
         for conn_id, acks_conn in acks_direction.iteritems():
             if len(acks_conn) >= 2:
                 multiflow_conn.add(conn_id)
@@ -119,9 +121,11 @@ for fname, acks_fname in acks[TCP].iteritems():
                             sums_acks[TCP][direction][int(value_ack)] = int(nb_ack)
                         else:
                             sums_acks[TCP][direction][int(value_ack)] += int(nb_ack)
+                        totot_fname[TCP][direction][fname] += int(value_ack) * int(nb_ack)
 
 for fname, acks_fname in acks[MPTCP].iteritems():
     for direction, acks_direction in acks_fname.iteritems():
+        totot_fname[MPTCP][direction][fname] = 0
         for conn_id, acks_conn in acks_direction.iteritems():
             if conn_id in multiflow_conn:
                 for value_ack, nb_ack in acks_conn.iteritems():
@@ -135,6 +139,7 @@ for fname, acks_fname in acks[MPTCP].iteritems():
                         sums_acks[MPTCP][direction][int(value_ack)] = int(nb_ack)
                     else:
                         sums_acks[MPTCP][direction][int(value_ack)] += int(nb_ack)
+                    totot_fname[MPTCP][direction][fname] += int(value_ack) * int(nb_ack)
 
 
 to_plot = {MPTCP: {co.S2D: [], co.D2S: []}, TCP: {co.S2D: [], co.D2S: []}}
@@ -159,6 +164,7 @@ for protocol, acks_protocol in sums_acks.iteritems():
 for protocol, tot_prot in totot.iteritems():
     for direction, tot_dir  in tot_prot.iteritems():
         print(protocol, direction, tot_dir)
+        print(totot_fname[protocol][direction])
 
 for direction in co.DIRECTIONS:
     graph_filepath = os.path.join(sums_dir_exp, "acks_size_" + direction + ".pdf")
