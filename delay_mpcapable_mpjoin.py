@@ -74,6 +74,14 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     syn_additional_sfs = []
     handover_conns = {}
     log_file = sys.stdout
+    less_200ms = 0
+    less_1s = 0
+    more_60s = 0
+    more_3600s = 0
+    less_200ms_second = 0
+    less_1s_second = 0
+    more_60s_second = 0
+    more_3600s_second = 0
     # Look only at multiple subflows connections
     for fname, conns in multiflow_connections.iteritems():
         handover_conns[fname] = {}
@@ -110,8 +118,25 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                     if delta >= 50000:
                         print("HUGE DELTA", fname, conn_id, flow_id, delta, file=log_file)
 
+                    if delta <= 0.2:
+                        less_200ms += 1
+                    if delta <= 1:
+                        less_1s += 1
+                    if delta >= 60:
+                        more_60s += 1
+                    if delta >= 3600:
+                        more_3600s += 1
+
             if flow_id_min_delta:
                 syn_first_additional_sf.append(min_delta)
+                if delta <= 0.2:
+                    less_200ms_second += 1
+                if delta <= 1:
+                    less_1s_second += 1
+                if delta >= 60:
+                    more_60s_second += 1
+                if delta >= 3600:
+                    more_3600s_second += 1
 
     # Do a first CDF plot of the delta between initial SYN and additional ones
     base_graph_path = os.path.join(sums_dir_exp, 'cdf_delta_addtitional_syns')
@@ -218,5 +243,16 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     print(bytes_init_sf, "BYTES ON INIT SF", bytes_init_sf * 100 / bytes_total, "%", file=log_file)
     print(bytes_init_sfs, "BYTES ON INIT SFS", bytes_init_sfs * 100 / bytes_total, "%", file=log_file)
     print("TOTAL BYTES", bytes_total, file=log_file)
+
+    print("<= 200ms", less_200ms, less_200ms * 100.0 / len(syn_additional_sfs), "%")
+    print("<= 1s", less_1s, less_1s * 100.0 / len(syn_additional_sfs), "%")
+    print(">= 60s", more_60s, more_60s * 100.0 / len(syn_additional_sfs), "%")
+    print(">= 3600s", more_3600s, more_3600s * 100.0 / len(syn_additional_sfs), "%")
+
+    print("<= 200ms second", less_200ms_second, less_200ms_second * 100.0 / len(syn_first_additional_sf), "%")
+    print("<= 1s second", less_1s_second, less_1s_second * 100.0 / len(syn_first_additional_sf), "%")
+    print(">= 60s second", more_60s_second, more_60s_second * 100.0 / len(syn_first_additional_sf), "%")
+    print(">= 3600s second", more_3600s_second, more_3600s_second * 100.0 / len(syn_first_additional_sf), "%")
+
 
 plot(connections, multiflow_connections, sums_dir_exp)
