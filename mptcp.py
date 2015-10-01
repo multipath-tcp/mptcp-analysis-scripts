@@ -234,6 +234,10 @@ def get_begin_values_from_xpl(xpl_filepath):
 
 def process_csv(csv_fname, connections, conn_id, is_reversed):
     """ Process the csv given in argument and after delete the file """
+    if conn_id not in connections:
+        # Not a real connection; skip it
+        return
+
     try:
         csv_file = open(csv_fname)
         data = csv_file.readlines()
@@ -487,8 +491,12 @@ def check_mptcp_joins(pcap_fullpath, print_out=sys.stdout):
 def process_stats_csv(csv_fname, connections):
     """ Add information in connections based on the stats csv file, and remove it """
     try:
-        csv_file = open(csv_fname)
         conn_id = get_connection_id(csv_fname)  # Or reuse conn_id from the stats file
+        if conn_id not in connections:
+            # Not a real connection; skip it
+            return
+
+        csv_file = open(csv_fname)
         data = csv_file.readlines()
         seq_acked = None
         con_time = None
@@ -600,6 +608,10 @@ def process_seq_xpl(xpl_fname, connections, relative_start, min_bytes):
     """
     try:
         conn_id = get_connection_id(xpl_fname)
+        if conn_id not in connections:
+            # Not a real connection: skip it
+            return
+
         is_reversed = is_reverse_connection(xpl_fname)
         # xpl_file = open(xpl_fname)
         # data = xpl_file.readlines()
@@ -629,6 +641,10 @@ def process_rtt_xpl(xpl_fname, rtt_all, connections, relative_start, min_bytes):
     """ If there is data, store it in connections and rewrite file """
     try:
         conn_id = get_connection_id(xpl_fname)
+        if conn_id not in connections:
+            # Not a real connection: skip it
+            return
+
         is_reversed = is_reverse_connection(xpl_fname)
         # xpl_file = open(xpl_fname)
         # data = xpl_file.readlines()
@@ -672,6 +688,10 @@ def plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all):
 def process_gput_csv(csv_fname, connections):
     """ Collect the goodput of a connection """
     conn_id = get_connection_id(csv_fname)
+    if conn_id not in connections:
+        # Not a real connection: skip it
+        return
+
     is_reversed = is_reverse_connection(csv_fname)
     try:
         gput_file = open(csv_fname)
@@ -693,9 +713,13 @@ def process_gput_csv(csv_fname, connections):
         print("No throughput info for " + csv_fname, file=sys.stderr)
 
 
-def collect_acksize_csv(csv_fname, acksize_dict):
+def collect_acksize_csv(csv_fname, connections, acksize_dict):
     """ Collect the ack size at the MPTCP level """
     conn_id = get_connection_id(csv_fname)
+    if conn_id not in connections:
+        # Not a real connection: skip it
+        return
+
     direction = co.D2S if is_reverse_connection(csv_fname) else co.S2D
     try:
         acksize_file = open(csv_fname)
@@ -786,6 +810,10 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                 try:
                     if MPTCP_RTT_FNAME in os.path.basename(csv_fname):
                         conn_id = get_connection_id(os.path.basename(csv_fname))
+                        if conn_id not in connections:
+                            # Not a real connection; skip it
+                            continue
+
                         is_reversed = is_reverse_connection(os.path.basename(csv_fname))
                         process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed)
                         os.remove(csv_fname)
@@ -793,12 +821,16 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                         #    graph_dir_exp, co.DEF_RTT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + csv_fname))
                     elif MPTCP_SEQ_FNAME in os.path.basename(csv_fname):
                         conn_id = get_connection_id(os.path.basename(csv_fname))
+                        if conn_id not in connections:
+                            # Not a real connection; skip it
+                            continue
+
                         is_reversed = is_reverse_connection(os.path.basename(csv_fname))
                         process_csv(csv_fname, connections, conn_id, is_reversed)
                         co.move_file(csv_fname, os.path.join(
                             graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + os.path.basename(csv_fname)))
                     elif MPTCP_ACKSIZE_FNAME in os.path.basename(csv_fname):
-                        collect_acksize_csv(csv_fname, acksize_all)
+                        collect_acksize_csv(csv_fname, connections, acksize_all)
                         os.remove(csv_fname)
                     else:
                         if not light:
