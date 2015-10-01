@@ -79,4 +79,4 @@ for fname, conns in connections.iteritems():
 
 print("NB CONNS", nb_conns)
 for nb, nb_sfs_conn in sfs.iteritems():
-    print(nb, nb_sfs_conn, (nb_sfs_conn * 100) / nb_conns, "%")
+    print(nb, nb_sfs_conn, (nb_sfs_conn * 100.0) / nb_conns, "%")
