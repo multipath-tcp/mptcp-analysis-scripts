@@ -78,6 +78,12 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     base_graph_path_duration = os.path.join(sums_dir_exp, base_graph_name_duration)
     base_graph_name_bytes = "summary_cdf_bytes"
     base_graph_path_bytes = os.path.join(sums_dir_exp, base_graph_name_bytes)
+    max_duration = 0.0
+    fname_max_duration = None
+    conn_id_max_duration = None
+    max_bytes = 0
+    fname_max_bytes = None
+    conn_id_max_bytes = None
 
     for fname, conns in connections.iteritems():
         for conn_id, conn in conns.iteritems():
@@ -91,6 +97,16 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                     print("DURATION", fname, conn_id, duration)
                 if bytes >= ALERT_BYTES:
                     print("BYTES", fname, conn_id, bytes)
+
+                if duration > max_duration:
+                    max_duration = duration
+                    fname_max_duration = fname
+                    conn_id_max_duration = conn_id
+
+                if bytes > max_bytes:
+                    max_bytes = bytes
+                    fname_max_bytes = fname
+                    conn_id_max_bytes = conn_id
 
                 data_duration.append(duration)
                 data_bytes.append(bytes)
@@ -106,6 +122,9 @@ def plot(connections, multiflow_connections, sums_dir_exp):
 
     # co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration)
     # co.plot_cdfs_natural(data_duration, color, 'Seconds [s]', base_graph_path_duration + '_log', xlog=True)
+    print("MAX DURATION", max_duration, fname_max_duration, conn_id_max_duration)
+    print("MAX BYTES", max_bytes, fname_max_bytes, conn_id_max_bytes)
+
     plt.figure()
     plt.clf()
     fig, ax = plt.subplots()
