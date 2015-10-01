@@ -72,6 +72,8 @@ for fname, conns in connections.iteritems():
     for conn_id, conn in conns.iteritems():
         nb_conns += 1
         nb_sfs = len(conn.flows)
+        if nb_sfs > 40:
+            print(nb_sfs, fname, conn_id)
         if nb_sfs not in sfs:
             sfs[nb_sfs] = 1
         else:
