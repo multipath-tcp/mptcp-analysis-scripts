@@ -73,7 +73,7 @@ for fname, conns in connections.iteritems():
         nb_conns += 1
         nb_sfs = len(conn.flows)
         if nb_sfs not in sfs:
-            sfs[nb_sfs] += 1
+            sfs[nb_sfs] = 1
         else:
             sfs[nb_sfs] += 1
 
