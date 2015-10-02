@@ -622,7 +622,7 @@ def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, titl
     plt.ylabel(ylabel, fontsize=24)
 
     if y_log:
-        ax.set_xscale('symlog', linthreshx=1)
+        ax.set_xscale('log', linthreshx=1)
 
     if ymin is not None:
         plt.ylim(ymin=ymin)
