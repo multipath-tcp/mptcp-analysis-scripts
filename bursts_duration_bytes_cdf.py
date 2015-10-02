@@ -199,7 +199,7 @@ for direction in co.DIRECTIONS:
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     for label in [TINY, SMALL, MEDIUM, LARGE]:
-        sample = np.array(sorted(results_pkts))
+        sample = np.array(sorted(results_pkts[direction][label]))
         sorted_array = np.sort(sample)
         yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
         if len(sorted_array) > 0:
