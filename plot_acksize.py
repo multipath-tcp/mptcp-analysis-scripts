@@ -111,7 +111,7 @@ for fname, acks_fname in acks[TCP].iteritems():
         totot_fname[TCP][direction][fname] = 0
         for conn_id, acks_conn in acks_direction.iteritems():
             if len(acks_conn) >= 2:
-                multiflow_conn.add(conn_id)
+                multiflow_conn.add((fname, conn_id))
                 for flow_id, acks_flow in acks_conn.iteritems():
                     for value_ack, nb_ack in acks_flow.iteritems():
                         if int(value_ack) > 100000000:
@@ -127,7 +127,7 @@ for fname, acks_fname in acks[MPTCP].iteritems():
     for direction, acks_direction in acks_fname.iteritems():
         totot_fname[MPTCP][direction][fname] = 0
         for conn_id, acks_conn in acks_direction.iteritems():
-            if conn_id in multiflow_conn:
+            if (fname, conn_id) in multiflow_conn:
                 for value_ack, nb_ack in acks_conn.iteritems():
                     if int(value_ack) > 100000000:
                         print(fname, conn_id)
