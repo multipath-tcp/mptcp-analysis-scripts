@@ -67,13 +67,15 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 
 # results_duration_bytes = {co.S2D: {'0B-10KB': [], '10KB-100KB': [], '100KB-1MB': [], '>=1MB': []}, co.D2S: {'0B-10KB': [], '10KB-100KB': [], '100KB-1MB': [], '>=1MB': []}}
 bursts_size = {co.S2D: [], co.D2S: []}
+bursts_pkt_size = {co.S2D: [], co.D2S: []}
 min_duration = 0.001
 for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():
         for direction in co.DIRECTIONS:
             if co.BURSTS in conn.attr[direction]:
-                for flow_id, count_seq_burst, duration, begin_time_burst_on_flow in conn.attr[direction][co.BURSTS]:
+                for flow_id, count_seq_burst, count_pkt_burst, duration, begin_time_burst_on_flow in conn.attr[direction][co.BURSTS]:
                     bursts_size[direction].append(count_seq_burst)
+                    bursts_pkt_size[direction].append(count_pkt_burst)
 
 base_graph_name = 'bursts_size'
 color = {'0B-10KB': 'red', '10KB-100KB': 'blue', '100KB-1MB': 'green', '>=1MB': 'orange'}
@@ -105,7 +107,38 @@ for direction in co.DIRECTIONS:
         # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
     ax.legend(loc='lower right')
     ax.set_xscale('log')
-    plt.xlabel('Burst size [Byte]', fontsize=18)
-    plt.ylabel("CDF", fontsize=18)
+    plt.xlabel('Burst size [Byte]', fontsize=24)
+    plt.ylabel("CDF", fontsize=24)
+    plt.savefig(graph_full_path)
+    plt.close('all')
+
+    plt.figure()
+    plt.clf()
+    fig, ax = plt.subplots()
+    graph_fname = os.path.splitext(base_graph_name)[0] + "_cdf_pkt_" + direction + ".pdf"
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+    sample = np.array(sorted(bursts_pkt_size[direction]))
+    sorted_array = np.sort(sample)
+    yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+    if len(sorted_array) > 0:
+        # Add a last point
+        sorted_array = np.append(sorted_array, sorted_array[-1])
+        yvals = np.append(yvals, 1.0)
+        ax.plot(sorted_array, yvals, color='red', linestyle='-', linewidth=2, label='Bursts')
+
+        # Shrink current axis's height by 10% on the top
+        # box = ax.get_position()
+        # ax.set_position([box.x0, box.y0,
+        #                  box.width, box.height * 0.9])
+
+        # ax.set_xscale('log')
+
+        # Put a legend above current axis
+        # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
+    ax.legend(loc='lower right')
+    ax.set_xscale('log')
+    plt.xlabel('Burst size [# Packets]', fontsize=24)
+    plt.ylabel("CDF", fontsize=24)
     plt.savefig(graph_full_path)
     plt.close('all')
