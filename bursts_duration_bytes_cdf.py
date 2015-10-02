@@ -71,6 +71,7 @@ MEDIUM = '100KB-1MB'
 LARGE = '>=1MB'
 
 results_duration_bytes = {co.S2D: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}, co.D2S: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}}
+results_pkts = {co.S2D: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}, co.D2S: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}}
 min_duration = 0.001
 for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():
@@ -92,13 +93,13 @@ for fname, conns in multiflow_connections.iteritems():
                     tcp_conn_bytes += flow.attr[direction].get(co.BYTES_DATA, 0)
                 # To cope with unseen TCP connections
                 conn_bytes = max(conn.attr[direction][co.BYTES_MPTCPTRACE], tcp_conn_bytes)
-                for flow_id, bytes, burst_duration, burst_start_time in conn.attr[direction][co.BURSTS]:
+                for flow_id, bytes, pkts, burst_duration, burst_start_time in conn.attr[direction][co.BURSTS]:
                     frac_bytes = (bytes + 0.0) / conn_bytes
                     if frac_bytes > 1.1:
-                        print(frac_bytes, bytes, conn_bytes, direction, conn_id, flow_id)
+                        print(frac_bytes, bytes, pkts, conn_bytes, direction, conn_id, flow_id)
                         continue
                     if frac_bytes < 0:
-                        print(frac_bytes, bytes, conn_bytes, direction, conn_id, flow_id)
+                        print(frac_bytes, bytes, pkts, conn_bytes, direction, conn_id, flow_id)
                         continue
                     burst_start_time_int = long(burst_start_time)
                     burst_start_time_dec = float('0.' + str(burst_start_time - burst_start_time_int).split('.')[1])
@@ -116,6 +117,7 @@ for fname, conns in multiflow_connections.iteritems():
                         else:
                             label = LARGE
                         results_duration_bytes[direction][label].append((frac_duration, frac_bytes))
+                        results_pkts[direction][label].append(pkts)
 
 base_graph_name = 'bursts_'
 color = {TINY: 'red', SMALL: 'blue', MEDIUM: 'green', LARGE: 'orange'}
@@ -149,8 +151,8 @@ for direction in co.DIRECTIONS:
             # Put a legend above current axis
             # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
     ax.legend(loc='lower right')
-    plt.xlabel('Fraction of connection duration', fontsize=18)
-    plt.ylabel("CDF", fontsize=18)
+    plt.xlabel('Fraction of connection duration', fontsize=24)
+    plt.ylabel("CDF", fontsize=24)
     plt.savefig(graph_full_path)
     plt.close('all')
 
@@ -185,6 +187,40 @@ for direction in co.DIRECTIONS:
     ax.legend(loc='lower right')
     plt.xlim(0.0, 1.0)
     plt.xlabel('Fraction of connection bytes', fontsize=24)
+    plt.ylabel("CDF", fontsize=24)
+    plt.savefig(graph_full_path)
+    plt.close('all')
+
+
+    plt.figure()
+    plt.clf()
+    fig, ax = plt.subplots()
+    graph_fname = os.path.splitext(base_graph_name)[0] + "pkts_cdf_" + direction + ".pdf"
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+    for label in [TINY, SMALL, MEDIUM, LARGE]:
+        sample = np.array(sorted(results_pkts))
+        sorted_array = np.sort(sample)
+        yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+        if len(sorted_array) > 0:
+            # Add a last point
+            sorted_array = np.append(sorted_array, sorted_array[-1])
+            yvals = np.append(yvals, 1.0)
+            ax.plot(sorted_array, yvals, color=color[label], linestyle=ls[label], linewidth=2, label=label)
+
+            # Shrink current axis's height by 10% on the top
+            # box = ax.get_position()
+            # ax.set_position([box.x0, box.y0,
+            #                  box.width, box.height * 0.9])
+
+            # ax.set_xscale('log')
+
+            # Put a legend above current axis
+            # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
+
+    ax.legend(loc='lower right')
+    plt.xlim(0.0, 1.0)
+    plt.xlabel('Fraction of connection packets', fontsize=24)
     plt.ylabel("CDF", fontsize=24)
     plt.savefig(graph_full_path)
     plt.close('all')
