@@ -156,6 +156,8 @@ for protocol, acks_protocol in sums_acks.iteritems():
                 continue
             total_bytes += value_ack * nb_ack
             to_plot[protocol][direction].append([value_ack, total_bytes])
+            if value_ack >= 1000 and value_ack <= 2000:
+                print(value_ack, total_bytes)
             totot[protocol][direction] += value_ack * nb_ack
 
         for i in range(0, len(to_plot[protocol][direction])):
