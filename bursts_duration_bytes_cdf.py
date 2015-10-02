@@ -87,6 +87,8 @@ for fname, conns in multiflow_connections.iteritems():
                 continue
 
             for direction in co.DIRECTIONS:
+                tot_packs = 0
+                to_add_pkts = []
                 # First count all bytes sent (including retransmissions)
                 tcp_conn_bytes = 0
                 for flow_id, flow in conn.flows.iteritems():
@@ -117,7 +119,21 @@ for fname, conns in multiflow_connections.iteritems():
                         else:
                             label = LARGE
                         results_duration_bytes[direction][label].append((frac_duration, frac_bytes))
-                        results_pkts[direction][label].append(pkts)
+                        to_add_pkts.append(pkts)
+                        tot_packs += pkts
+
+                if conn_bytes < 10000:
+                    label = TINY
+                elif conn_bytes < 100000:
+                    label = SMALL
+                elif conn_bytes < 1000000:
+                    label = MEDIUM
+                else:
+                    label = LARGE
+
+                for p in to_add_pkts:
+                    results_pkts[direction][label].append(p * 1.0 / tot_packs)
+
 
 base_graph_name = 'bursts_'
 color = {TINY: 'red', SMALL: 'blue', MEDIUM: 'green', LARGE: 'orange'}
