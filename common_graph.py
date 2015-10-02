@@ -93,6 +93,16 @@ def fetch_valid_data(dir_exp, args):
                                 connections[fname][conn_id].attr[direction][co.BYTES_MPTCPTRACE] = 2 ** 32 + connections[fname][conn_id].attr[direction].get(co.BYTES_MPTCPTRACE, -2 ** 32)
 
     ensures_smartphone_to_proxy()
+
+    # Very strange cases, mptcptrace has difficult to analyze this now
+    if 'dump_20150408_14121313' in connections:
+        connections['dump_20150408_14121313'].pop(25581, None)
+    if 'dump_20150308_21403706' in connections:
+        connections['dump_20150308_21403706'].pop(5154, None)
+        connections['dump_20150308_21403706'].pop(19983, None)
+    if 'dump_20150408_14121302' in connections:
+        connections['dump_20150408_14121302'].pop(7004, None)
+        
     return connections
 
 
