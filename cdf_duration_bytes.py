@@ -125,6 +125,13 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     print("MAX DURATION", max_duration, fname_max_duration, conn_id_max_duration)
     print("MAX BYTES", max_bytes, fname_max_bytes, conn_id_max_bytes)
 
+    print("PERCENTAGE 0 s", len([x for x in data_duration if x <= 0.00001]) * 100.0 / len(data_duration))
+    print("PERCENTAGE <=10 s", len([x for x in data_duration if x <= 10.0]) * 100.0 / len(data_duration))
+    print("PERCENTAGE >=100 s", len([x for x in data_duration if x >= 100.0]) * 100.0 / len(data_duration))
+
+    print("PERCENTAGE <= 10KB", len([x for x in data_bytes if x <= 10000]) * 100.0 / len(data_duration))
+    print("PERCENTAGE [9;11] B", len([x for x in data_bytes if x <= 11 and x >= 9]) * 100.0 / len(data_duration))
+
     plt.figure()
     plt.clf()
     fig, ax = plt.subplots()
@@ -169,7 +176,6 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     plt.savefig(graph_fname)
     plt.close('all')
 
-
     base_graph_path_duration_hist = os.path.splitext(base_graph_path_duration)[0] + '_hist'
     plt.figure()
     plt.hist(subflows_duration, bins=np.logspace(-3, 5, 81), log=True)
@@ -185,8 +191,6 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     # plt.gca().set_xscale("log")
     plt.savefig(base_graph_path_duration_hist + ".pdf")
     plt.close()
-
-
 
     plt.figure()
     plt.clf()
