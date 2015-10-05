@@ -79,8 +79,8 @@ for fname, conns in multiflow_connections.iteritems():
             if not flow_id == 0:
                 nb_addi_sf += 1
 
-            if flow.attr[co.S2D].get(co.BYTES, 0) == 0 and flow.attr[co.D2S].get(co.BYTES, 0):
-                nb_unused
+            if flow.attr[co.S2D].get(co.BYTES, 0) == 0 and flow.attr[co.D2S].get(co.BYTES, 0) == 0:
+                nb_unused += 1
                 if not flow_id == 0:
                     nb_unused_addi_sf += 1
 
