@@ -86,7 +86,7 @@ for fname, conns in multiflow_connections.iteritems():
                 if not flow_id == 0:
                     nb_unused_addi_sf += 1
 
-                if not flow.attr[co.S2D].get(co.NB_NB_RST, 0) == 0 or not flow.attr[co.D2S].get(co.NB_NB_RST, 0) == 0:
+                if not flow.attr[co.S2D].get(co.NB_RST, 0) == 0 or not flow.attr[co.D2S].get(co.NB_RST, 0) == 0:
                     nb_unused_rst += 1
 
                 if co.START in flow.attr and flow.attr[co.START] >= conn.attr[co.START] + conn.attr[co.DURATION]:
