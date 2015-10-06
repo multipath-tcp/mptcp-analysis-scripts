@@ -73,6 +73,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     subflows_duration = []
     data_bytes = []
     subflows_bytes = []
+    data_packets = []
     color = 'red'
     base_graph_name_duration = "summary_cdf_duration"
     base_graph_path_duration = os.path.join(sums_dir_exp, base_graph_name_duration)
@@ -90,8 +91,12 @@ def plot(connections, multiflow_connections, sums_dir_exp):
             if isinstance(conn, mptcp.MPTCPConnection) and co.DURATION in conn.attr:
                 duration = conn.attr[co.DURATION]
                 bytes = 0
+                data_pkts = 0
                 for direction in co.DIRECTIONS:
                     bytes += conn.attr[direction][co.BYTES_MPTCPTRACE]
+                    if co.BURSTS in conn.attr[direction]:
+                        for flow_id, seq_burst, pkt_burst, duration, time in conn.attr[direction][co.BURSTS]:
+                            data_pkts += pkt_burst
 
                 if duration >= ALERT_DURATION:
                     print("DURATION", fname, conn_id, duration)
@@ -110,6 +115,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
 
                 data_duration.append(duration)
                 data_bytes.append(bytes)
+                data_packets.append(data_pkts)
 
                 for flow_id, flow in conn.flows.iteritems():
                     if co.DURATION in flow.attr:
@@ -129,8 +135,14 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     print("PERCENTAGE <=10 s", len([x for x in data_duration if x <= 10.0]) * 100.0 / len(data_duration))
     print("PERCENTAGE >=100 s", len([x for x in data_duration if x >= 100.0]) * 100.0 / len(data_duration))
 
-    print("PERCENTAGE <= 10KB", len([x for x in data_bytes if x <= 10000]) * 100.0 / len(data_duration))
-    print("PERCENTAGE [9;11] B", len([x for x in data_bytes if x <= 11 and x >= 9]) * 100.0 / len(data_duration))
+    print("PERCENTAGE <= 1KB", len([x for x in data_bytes if x <= 1000]) * 100.0 / len(data_bytes))
+    print("PERCENTAGE <= 10KB", len([x for x in data_bytes if x <= 10000]) * 100.0 / len(data_bytes))
+    print("PERCENTAGE [9;11] B", len([x for x in data_bytes if x <= 11 and x >= 9]) * 100.0 / len(data_bytes))
+
+    print("PERCENTAGE <= 2 packs", len([x for x in data_packets if x <= 2]) * 100.0 / len(data_packets))
+    print("PERCENTAGE <= 3 packs", len([x for x in data_packets if x <= 3]) * 100.0 / len(data_packets))
+    print("PERCENTAGE <= 5 packs", len([x for x in data_packets if x <= 5]) * 100.0 / len(data_packets))
+    print("PERCENTAGE <= 10 packs", len([x for x in data_packets if x <= 10]) * 100.0 / len(data_packets))
 
     plt.figure()
     plt.clf()
@@ -151,14 +163,14 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         # ax.set_position([box.x0, box.y0,
         #                  box.width, box.height * 0.9])
 
-    sample = np.array(sorted(subflows_duration))
-    sorted_array = np.sort(sample)
-    yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
-    if len(sorted_array) > 0:
-        # Add a last point
-        sorted_array = np.append(sorted_array, sorted_array[-1])
-        yvals = np.append(yvals, 1.0)
-        ax.plot(sorted_array, yvals, color='blue', linestyle='--', linewidth=2, label="Subflows")
+    # sample = np.array(sorted(subflows_duration))
+    # sorted_array = np.sort(sample)
+    # yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+    # if len(sorted_array) > 0:
+    #     # Add a last point
+    #     sorted_array = np.append(sorted_array, sorted_array[-1])
+    #     yvals = np.append(yvals, 1.0)
+    #     ax.plot(sorted_array, yvals, color='blue', linestyle='--', linewidth=2, label="Subflows")
 
         # Shrink current axis's height by 10% on the top
         # box = ax.get_position()
@@ -211,14 +223,14 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         # ax.set_position([box.x0, box.y0,
         #                  box.width, box.height * 0.9])
 
-    sample = np.array(sorted(subflows_bytes))
-    sorted_array = np.sort(sample)
-    yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
-    if len(sorted_array) > 0:
-        # Add a last point
-        sorted_array = np.append(sorted_array, sorted_array[-1])
-        yvals = np.append(yvals, 1.0)
-        ax.plot(sorted_array, yvals, color='blue', linestyle='--', linewidth=2, label="Subflows")
+    # sample = np.array(sorted(subflows_bytes))
+    # sorted_array = np.sort(sample)
+    # yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+    # if len(sorted_array) > 0:
+    #     # Add a last point
+    #     sorted_array = np.append(sorted_array, sorted_array[-1])
+    #     yvals = np.append(yvals, 1.0)
+    #     ax.plot(sorted_array, yvals, color='blue', linestyle='--', linewidth=2, label="Subflows")
 
         # Shrink current axis's height by 10% on the top
         # box = ax.get_position()
