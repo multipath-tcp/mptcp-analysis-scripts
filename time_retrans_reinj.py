@@ -189,10 +189,11 @@ for direction in co.DIRECTIONS:
             ax.plot(sorted_array, yvals, color=color[dataset], linewidth=2, linestyle=ls[dataset], label=dataset)
 
     ax.set_xscale('log')
+    plt.xlim(xmin=0.00001)
     ax.legend(loc='lower right')
 
-    plt.xlabel('Fraction of connection duration', fontsize=18)
-    plt.ylabel("CDF", fontsize=18)
+    plt.xlabel('Fraction of connection duration', fontsize=24)
+    plt.ylabel("CDF", fontsize=24)
     plt.savefig(os.path.splitext(base_graph_path)[0] + '_log_' + direction + '.pdf')
     plt.close('all')
 
@@ -214,8 +215,8 @@ for direction in co.DIRECTIONS:
 
     ax.legend(loc='lower right')
 
-    plt.xlabel('Fraction of connection duration', fontsize=18)
-    plt.ylabel("CDF", fontsize=18)
+    plt.xlabel('Fraction of connection duration', fontsize=24)
+    plt.ylabel("CDF", fontsize=24)
     plt.savefig(os.path.splitext(base_graph_path)[0] + '_' + direction + '.pdf')
     plt.close('all')
 
