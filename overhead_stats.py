@@ -120,7 +120,7 @@ for fname, conns in multiflow_connections.iteritems():
                     other_flows = []
                     best = True
                     for other_flow_id, other_flow_cand in conn.flows.iteritems():
-                        if not other_flow_id == flow_id and co.TIME_FIRST_ACK in flow.attr[co.S2D] and flow.attr[co.S2D][co.TIME_FIRST_ACK] >= other_flow_cand.attr.get(co.START, float('inf')) and flow.attr[co.S2D][co.TIME_FIRST_ACK] <= other_flow_cand.attr.get(co.START, 0) + other_flow_cand.attr.get(co.DURATION, 0)
+                        if not other_flow_id == flow_id and co.TIME_FIRST_ACK in flow.attr[co.S2D] and flow.attr[co.S2D][co.TIME_FIRST_ACK] >= other_flow_cand.attr.get(co.START, float('inf')) and flow.attr[co.S2D][co.TIME_FIRST_ACK] <= other_flow_cand.attr.get(co.START, 0) + other_flow_cand.attr.get(co.DURATION, 0):
                             other_flows.append(other_flow_cand)
                             if co.RTT_AVG in other_flow.attr[co.D2S] and other_flow.attr[co.D2S][co.RTT_AVG] < flow.attr[co.D2S][co.RTT_AVG]:
                                 best = False
