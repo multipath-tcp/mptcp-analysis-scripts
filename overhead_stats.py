@@ -74,6 +74,10 @@ nb_unused_rst = 0
 nb_unused_addi_rst = 0
 nb_after_duration = 0
 nb_after_duration_bursts = 0
+better_rtt = 0
+better_rtt_conn_less_1k = 0
+better_rtt_conn_less_5k = 0
+better_rtt_conn_less_10k = 0
 
 for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():
@@ -96,8 +100,44 @@ for fname, conns in multiflow_connections.iteritems():
                 if co.TIME_FIRST_ACK in flow.attr[co.S2D] and flow.attr[co.S2D][co.TIME_FIRST_ACK] >= conn.attr[co.START] + conn.attr[co.DURATION]:
                     nb_after_duration += 1
 
-                if co.TIME_FIRST_ACK in flow.attr[co.S2D] and co.BURSTS in conn.attr[co.D2S] and flow.attr[co.S2D][co.TIME_FIRST_ACK] >= conn.attr[co.D2S][co.BURSTS][-1][4] + conn.attr[co.D2S][co.BURSTS][-1][3]:
+                after_duration_burst = False
+                if co.TIME_FIRST_ACK in flow.attr[co.S2D] and co.BURSTS in conn.attr[co.D2S] and co.BURSTS in conn.attr[co.S2D]:
+                    if len(conn.attr[co.D2S][co.BURSTS]) > 0:
+                        if flow.attr[co.S2D][co.TIME_FIRST_ACK] >= conn.attr[co.D2S][co.BURSTS][-1][4] + conn.attr[co.D2S][co.BURSTS][-1][3]:
+                            after_duration_burst = True
+                    if len(conn.attr[co.S2D][co.BURSTS]) > 0:
+                        if flow.attr[co.S2D][co.TIME_FIRST_ACK] >= conn.attr[co.S2D][co.BURSTS][-1][4] + conn.attr[co.S2D][co.BURSTS][-1][3]:
+                            after_duration_burst = True
+
+                    if len(conn.attr[co.D2S][co.BURSTS]) == 0 and len(conn.attr[co.S2D][co.BURSTS]) == 0:
+                        after_duration_burst = True
+
+                if after_duration_burst:
                     nb_after_duration_bursts += 1
+
+                # Find the other active subflows (if there are) and compare its RTT
+                if co.RTT_AVG in flow.attr[co.D2S] and not flow_id == 0:
+                    other_flows = []
+                    best = True
+                    for other_flow_id, other_flow_cand in conn.flows.iteritems():
+                        if not other_flow_id == flow_id and co.TIME_FIRST_ACK in flow.attr[co.S2D] and flow.attr[co.S2D][co.TIME_FIRST_ACK] >= other_flow_cand.attr.get(co.START, float('inf')) and flow.attr[co.S2D][co.TIME_FIRST_ACK] <= other_flow_cand.attr.get(co.START, 0) + other_flow_cand.attr.get(co.DURATION, 0)
+                            other_flows.append(other_flow_cand)
+                            if co.RTT_AVG in other_flow.attr[co.D2S] and other_flow.attr[co.D2S][co.RTT_AVG] < flow.attr[co.D2S][co.RTT_AVG]:
+                                best = False
+                                break
+
+                    if best and len(other_flows) > 0:
+                        better_rtt += 1
+                        conn_bytes = 0
+                        for direction in co.DIRECTIONS:
+                            conn_bytes += conn.attr[direction][co.BYTES_MPTCPTRACE]
+
+                        if conn_bytes <= 10000:
+                            better_rtt_conn_less_10k += 1
+                            if conn_bytes <= 5000:
+                                better_rtt_conn_less_5k += 1
+                                if conn_bytes <= 1000:
+                                    better_rtt_conn_less_5k += 1
 
 print("NB CONNS", nb_conns)
 print("NB SUBFLOWS", nb_subflows)
@@ -107,3 +147,7 @@ print("NB UNUSED ADDI SF", nb_unused_addi_sf)
 print("NB UNUSED RST", nb_unused_rst)
 print("NB AFTER DURATION", nb_after_duration)
 print("NB AFTER DURATION BURSTS", nb_after_duration_bursts)
+print("BETTER RTT", better_rtt)
+print("BETTER RTT CONN LESS 1K", better_rtt_conn_less_1k)
+print("BETTER RTT CONN LESS 5K", better_rtt_conn_less_5k)
+print("BETTER RTT CONN LESS 10K", better_rtt_conn_less_10k)
