@@ -75,6 +75,10 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
     log_filename = "overhead_logging"
     log_file = open(log_filename, 'w')
+
+    total_unique = {co.S2D: 0, co.D2S: 0}
+    total_retrans = {co.S2D: 0, co.D2S: 0}
+    total_reinj = {co.S2D: 0, co.D2S: 0}
     for fname, data in multiflow_connections.iteritems():
         for conn_id, conn in data.iteritems():
             retrans_bytes = {co.S2D: 0, co.D2S: 0}
@@ -93,6 +97,8 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                 if nb_flows < 2:
                     continue
 
+                total_unique[direction] += conn.attr[direction].get(co.BYTES_MPTCPTRACE, 0)
+
                 for flow_id, flow in conn.flows.iteritems():
                     if direction not in flow.attr:
                         continue
@@ -105,6 +111,9 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                         reinj_bytes[direction] = reinj_bytes[direction] + flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
                         total_data_bytes[direction] = total_data_bytes[direction] + flow.attr[direction].get(co.BYTES, 0)
                         reinj_data_bytes[direction] = reinj_data_bytes[direction] + flow.attr[direction].get(co.REINJ_ORIG_BYTES, 0)
+
+                total_retrans[direction] += retrans_bytes[direction]
+                total_reinj[direction] += reinj_bytes[direction]
 
             for direction in co.DIRECTIONS:
                 if total_bytes[direction] > 0:
@@ -156,5 +165,9 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         plt.xlim(xmin=0.00001, xmax=30.)
         plt.savefig(os.path.splitext(graph_full_path)[0] + '_' + direction + '.pdf')
         plt.close('all')
+
+        print("TOTAL UNIQUE", total_unique)
+        print("TOTAL RETRANS", total_retrans)
+        print("TOTAL REINJ", total_reinj)
 
 plot(connections, multiflow_connections, sums_dir_exp)
