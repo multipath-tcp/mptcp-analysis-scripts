@@ -68,7 +68,7 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 INITIAL_SF = 'Initial SF'
 INITIAL_SFS = '2 Initial SFs'
 
-results = {co.S2D: {INITIAL_SF: [], INITIAL_SFS: []}, co.D2S: {INITIAL_SF: [], INITIAL_SFS: []}}
+results = {co.C2S: {INITIAL_SF: [], INITIAL_SFS: []}, co.S2C: {INITIAL_SF: [], INITIAL_SFS: []}}
 for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():
         # Restrict to connections with more than 2 SFs (at least 3); if needed, can take 2SFs too

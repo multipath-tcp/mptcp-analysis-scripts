@@ -82,7 +82,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
             if isinstance(conn, mptcp.MPTCPConnection):
                 count_usable = 0
                 for flow_id, flow in conn.flows.iteritems():
-                    if flow.attr[co.D2S].get(co.RTT_SAMPLES, 0) >= min_samples:
+                    if flow.attr[co.S2C].get(co.RTT_SAMPLES, 0) >= min_samples:
                         count_usable += 1
 
                 if count_usable < 2:
@@ -91,9 +91,9 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                 rtt_best_sf = float('inf')
                 rtt_worst_sf = -1.0
                 for flow_id, flow in conn.flows.iteritems():
-                    if flow.attr[co.D2S].get(co.RTT_SAMPLES, 0) >= min_samples:
-                        rtt_best_sf = min(rtt_best_sf, flow.attr[co.D2S][co.RTT_AVG])
-                        rtt_worst_sf = max(rtt_worst_sf, flow.attr[co.D2S][co.RTT_AVG])
+                    if flow.attr[co.S2C].get(co.RTT_SAMPLES, 0) >= min_samples:
+                        rtt_best_sf = min(rtt_best_sf, flow.attr[co.S2C][co.RTT_AVG])
+                        rtt_worst_sf = max(rtt_worst_sf, flow.attr[co.S2C][co.RTT_AVG])
                 if rtt_worst_sf - rtt_best_sf <= 1.0:
                     print(conn_id, rtt_worst_sf - rtt_best_sf)
                 diff_rtt.append(rtt_worst_sf - rtt_best_sf)

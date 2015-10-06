@@ -125,87 +125,87 @@ def extract_tstat_data_tcp_complete(filename, connections, conn_id):
             # Except RTT, all time (in ms in tstat) shoud be converted into seconds
             connection.flow.attr[co.START] = float(info[28]) / 1000.0
             connection.flow.attr[co.DURATION] = float(info[30]) / 1000.0
-            connection.flow.attr[co.S2D][co.PACKS] = int(info[2])
-            connection.flow.attr[co.D2S][co.PACKS] = int(info[16])
+            connection.flow.attr[co.C2S][co.PACKS] = int(info[2])
+            connection.flow.attr[co.S2C][co.PACKS] = int(info[16])
             # Note that this count is about unique data bytes (sent in the payload)
-            connection.flow.attr[co.S2D][co.BYTES] = int(info[6])
-            connection.flow.attr[co.D2S][co.BYTES] = int(info[20])
+            connection.flow.attr[co.C2S][co.BYTES] = int(info[6])
+            connection.flow.attr[co.S2C][co.BYTES] = int(info[20])
             # This is about actual data bytes (sent in the payload, including retransmissions)
-            connection.flow.attr[co.S2D][co.BYTES_DATA] = int(info[8])
-            connection.flow.attr[co.D2S][co.BYTES_DATA] = int(info[22])
+            connection.flow.attr[co.C2S][co.BYTES_DATA] = int(info[8])
+            connection.flow.attr[co.S2C][co.BYTES_DATA] = int(info[22])
 
-            connection.flow.attr[co.S2D][co.PACKS_RETRANS] = int(info[9])
-            connection.flow.attr[co.D2S][co.PACKS_RETRANS] = int(info[23])
-            connection.flow.attr[co.S2D][co.BYTES_RETRANS] = int(info[10])
-            connection.flow.attr[co.D2S][co.BYTES_RETRANS] = int(info[24])
+            connection.flow.attr[co.C2S][co.PACKS_RETRANS] = int(info[9])
+            connection.flow.attr[co.S2C][co.PACKS_RETRANS] = int(info[23])
+            connection.flow.attr[co.C2S][co.BYTES_RETRANS] = int(info[10])
+            connection.flow.attr[co.S2C][co.BYTES_RETRANS] = int(info[24])
 
-            connection.flow.attr[co.S2D][co.PACKS_OOO] = int(info[11])
-            connection.flow.attr[co.D2S][co.PACKS_OOO] = int(info[25])
+            connection.flow.attr[co.C2S][co.PACKS_OOO] = int(info[11])
+            connection.flow.attr[co.S2C][co.PACKS_OOO] = int(info[25])
 
-            connection.flow.attr[co.S2D][co.NB_SYN] = int(info[12])
-            connection.flow.attr[co.D2S][co.NB_SYN] = int(info[26])
-            connection.flow.attr[co.S2D][co.NB_FIN] = int(info[13])
-            connection.flow.attr[co.D2S][co.NB_FIN] = int(info[27])
-            connection.flow.attr[co.S2D][co.NB_RST] = int(info[3])
-            connection.flow.attr[co.D2S][co.NB_RST] = int(info[17])
-            connection.flow.attr[co.S2D][co.NB_ACK] = int(info[4])
-            connection.flow.attr[co.D2S][co.NB_ACK] = int(info[18])
+            connection.flow.attr[co.C2S][co.NB_SYN] = int(info[12])
+            connection.flow.attr[co.S2C][co.NB_SYN] = int(info[26])
+            connection.flow.attr[co.C2S][co.NB_FIN] = int(info[13])
+            connection.flow.attr[co.S2C][co.NB_FIN] = int(info[27])
+            connection.flow.attr[co.C2S][co.NB_RST] = int(info[3])
+            connection.flow.attr[co.S2C][co.NB_RST] = int(info[17])
+            connection.flow.attr[co.C2S][co.NB_ACK] = int(info[4])
+            connection.flow.attr[co.S2C][co.NB_ACK] = int(info[18])
 
             # Except RTT, all time (in ms in tstat) shoud be converted into seconds
-            connection.flow.attr[co.S2D][co.TIME_FIRST_PAYLD] = float(info[31]) / 1000.0
-            connection.flow.attr[co.D2S][co.TIME_FIRST_PAYLD] = float(info[32]) / 1000.0
-            connection.flow.attr[co.S2D][co.TIME_LAST_PAYLD] = float(info[33]) / 1000.0
-            connection.flow.attr[co.D2S][co.TIME_LAST_PAYLD] = float(info[34]) / 1000.0
-            connection.flow.attr[co.S2D][co.TIME_FIRST_ACK] = float(info[35]) / 1000.0
-            connection.flow.attr[co.D2S][co.TIME_FIRST_ACK] = float(info[36]) / 1000.0
+            connection.flow.attr[co.C2S][co.TIME_FIRST_PAYLD] = float(info[31]) / 1000.0
+            connection.flow.attr[co.S2C][co.TIME_FIRST_PAYLD] = float(info[32]) / 1000.0
+            connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD] = float(info[33]) / 1000.0
+            connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD] = float(info[34]) / 1000.0
+            connection.flow.attr[co.C2S][co.TIME_FIRST_ACK] = float(info[35]) / 1000.0
+            connection.flow.attr[co.S2C][co.TIME_FIRST_ACK] = float(info[36]) / 1000.0
 
-            connection.flow.attr[co.S2D][co.RTT_SAMPLES] = int(info[48])
-            connection.flow.attr[co.D2S][co.RTT_SAMPLES] = int(info[55])
-            connection.flow.attr[co.S2D][co.RTT_MIN] = float(info[45])
-            connection.flow.attr[co.D2S][co.RTT_MIN] = float(info[52])
-            connection.flow.attr[co.S2D][co.RTT_MAX] = float(info[46])
-            connection.flow.attr[co.D2S][co.RTT_MAX] = float(info[53])
-            connection.flow.attr[co.S2D][co.RTT_AVG] = float(info[44])
-            connection.flow.attr[co.D2S][co.RTT_AVG] = float(info[51])
-            connection.flow.attr[co.S2D][co.RTT_STDEV] = float(info[47])
-            connection.flow.attr[co.D2S][co.RTT_STDEV] = float(info[54])
-            connection.flow.attr[co.S2D][co.TTL_MIN] = float(info[49])
-            connection.flow.attr[co.D2S][co.TTL_MIN] = float(info[56])
-            connection.flow.attr[co.S2D][co.TTL_MAX] = float(info[50])
-            connection.flow.attr[co.D2S][co.TTL_MAX] = float(info[57])
+            connection.flow.attr[co.C2S][co.RTT_SAMPLES] = int(info[48])
+            connection.flow.attr[co.S2C][co.RTT_SAMPLES] = int(info[55])
+            connection.flow.attr[co.C2S][co.RTT_MIN] = float(info[45])
+            connection.flow.attr[co.S2C][co.RTT_MIN] = float(info[52])
+            connection.flow.attr[co.C2S][co.RTT_MAX] = float(info[46])
+            connection.flow.attr[co.S2C][co.RTT_MAX] = float(info[53])
+            connection.flow.attr[co.C2S][co.RTT_AVG] = float(info[44])
+            connection.flow.attr[co.S2C][co.RTT_AVG] = float(info[51])
+            connection.flow.attr[co.C2S][co.RTT_STDEV] = float(info[47])
+            connection.flow.attr[co.S2C][co.RTT_STDEV] = float(info[54])
+            connection.flow.attr[co.C2S][co.TTL_MIN] = float(info[49])
+            connection.flow.attr[co.S2C][co.TTL_MIN] = float(info[56])
+            connection.flow.attr[co.C2S][co.TTL_MAX] = float(info[50])
+            connection.flow.attr[co.S2C][co.TTL_MAX] = float(info[57])
 
-            connection.flow.attr[co.S2D][co.SS_MIN] = int(info[71])
-            connection.flow.attr[co.D2S][co.SS_MIN] = int(info[94])
-            connection.flow.attr[co.S2D][co.SS_MAX] = int(info[70])
-            connection.flow.attr[co.D2S][co.SS_MAX] = int(info[93])
+            connection.flow.attr[co.C2S][co.SS_MIN] = int(info[71])
+            connection.flow.attr[co.S2C][co.SS_MIN] = int(info[94])
+            connection.flow.attr[co.C2S][co.SS_MAX] = int(info[70])
+            connection.flow.attr[co.S2C][co.SS_MAX] = int(info[93])
 
-            connection.flow.attr[co.S2D][co.CWIN_MIN] = int(info[76])
-            connection.flow.attr[co.D2S][co.CWIN_MIN] = int(info[99])
-            connection.flow.attr[co.S2D][co.CWIN_MAX] = int(info[75])
-            connection.flow.attr[co.D2S][co.CWIN_MAX] = int(info[98])
+            connection.flow.attr[co.C2S][co.CWIN_MIN] = int(info[76])
+            connection.flow.attr[co.S2C][co.CWIN_MIN] = int(info[99])
+            connection.flow.attr[co.C2S][co.CWIN_MAX] = int(info[75])
+            connection.flow.attr[co.S2C][co.CWIN_MAX] = int(info[98])
 
-            connection.flow.attr[co.S2D][co.NB_RTX_RTO] = int(info[78])
-            connection.flow.attr[co.D2S][co.NB_RTX_RTO] = int(info[101])
-            connection.flow.attr[co.S2D][co.NB_RTX_FR] = int(info[79])
-            connection.flow.attr[co.D2S][co.NB_RTX_FR] = int(info[102])
-            connection.flow.attr[co.S2D][co.NB_REORDERING] = int(info[80])
-            connection.flow.attr[co.D2S][co.NB_REORDERING] = int(info[103])
-            connection.flow.attr[co.S2D][co.NB_NET_DUP] = int(info[81])
-            connection.flow.attr[co.D2S][co.NB_NET_DUP] = int(info[104])
-            connection.flow.attr[co.S2D][co.NB_UNKNOWN] = int(info[82])
-            connection.flow.attr[co.D2S][co.NB_UNKNOWN] = int(info[105])
-            connection.flow.attr[co.S2D][co.NB_FLOW_CONTROL] = int(info[83])
-            connection.flow.attr[co.D2S][co.NB_FLOW_CONTROL] = int(info[106])
-            connection.flow.attr[co.S2D][co.NB_UNNECE_RTX_RTO] = int(info[84])
-            connection.flow.attr[co.D2S][co.NB_UNNECE_RTX_RTO] = int(info[107])
-            connection.flow.attr[co.S2D][co.NB_UNNECE_RTX_FR] = int(info[85])
-            connection.flow.attr[co.D2S][co.NB_UNNECE_RTX_FR] = int(info[108])
+            connection.flow.attr[co.C2S][co.NB_RTX_RTO] = int(info[78])
+            connection.flow.attr[co.S2C][co.NB_RTX_RTO] = int(info[101])
+            connection.flow.attr[co.C2S][co.NB_RTX_FR] = int(info[79])
+            connection.flow.attr[co.S2C][co.NB_RTX_FR] = int(info[102])
+            connection.flow.attr[co.C2S][co.NB_REORDERING] = int(info[80])
+            connection.flow.attr[co.S2C][co.NB_REORDERING] = int(info[103])
+            connection.flow.attr[co.C2S][co.NB_NET_DUP] = int(info[81])
+            connection.flow.attr[co.S2C][co.NB_NET_DUP] = int(info[104])
+            connection.flow.attr[co.C2S][co.NB_UNKNOWN] = int(info[82])
+            connection.flow.attr[co.S2C][co.NB_UNKNOWN] = int(info[105])
+            connection.flow.attr[co.C2S][co.NB_FLOW_CONTROL] = int(info[83])
+            connection.flow.attr[co.S2C][co.NB_FLOW_CONTROL] = int(info[106])
+            connection.flow.attr[co.C2S][co.NB_UNNECE_RTX_RTO] = int(info[84])
+            connection.flow.attr[co.S2C][co.NB_UNNECE_RTX_RTO] = int(info[107])
+            connection.flow.attr[co.C2S][co.NB_UNNECE_RTX_FR] = int(info[85])
+            connection.flow.attr[co.S2C][co.NB_UNNECE_RTX_FR] = int(info[108])
 
-            connection.attr[co.S2D][co.BYTES] = {}
-            connection.attr[co.D2S][co.BYTES] = {}
+            connection.attr[co.C2S][co.BYTES] = {}
+            connection.attr[co.S2C][co.BYTES] = {}
 
-            connection.flow.attr[co.S2D][co.TIMESTAMP_RETRANS] = []
-            connection.flow.attr[co.D2S][co.TIMESTAMP_RETRANS] = []
+            connection.flow.attr[co.C2S][co.TIMESTAMP_RETRANS] = []
+            connection.flow.attr[co.S2C][co.TIMESTAMP_RETRANS] = []
 
             connections[conn_id] = connection
 
@@ -234,45 +234,45 @@ def extract_tstat_data_tcp_nocomplete(filename, connections, conn_id):
             # Except RTT, all time (in ms in tstat) shoud be converted into seconds
             connection.flow.attr[co.START] = float(info[28]) / 1000.0
             connection.flow.attr[co.DURATION] = float(info[30]) / 1000.0
-            connection.flow.attr[co.S2D][co.PACKS] = int(info[2])
-            connection.flow.attr[co.D2S][co.PACKS] = int(info[16])
+            connection.flow.attr[co.C2S][co.PACKS] = int(info[2])
+            connection.flow.attr[co.S2C][co.PACKS] = int(info[16])
             # Note that this count is about unique data bytes (sent in the payload)
-            connection.flow.attr[co.S2D][co.BYTES] = int(info[6])
-            connection.flow.attr[co.D2S][co.BYTES] = int(info[20])
+            connection.flow.attr[co.C2S][co.BYTES] = int(info[6])
+            connection.flow.attr[co.S2C][co.BYTES] = int(info[20])
             # This is about actual data bytes (sent in the payload, including retransmissions)
-            connection.flow.attr[co.S2D][co.BYTES_DATA] = int(info[8])
-            connection.flow.attr[co.D2S][co.BYTES_DATA] = int(info[22])
+            connection.flow.attr[co.C2S][co.BYTES_DATA] = int(info[8])
+            connection.flow.attr[co.S2C][co.BYTES_DATA] = int(info[22])
 
-            connection.flow.attr[co.S2D][co.PACKS_RETRANS] = int(info[9])
-            connection.flow.attr[co.D2S][co.PACKS_RETRANS] = int(info[23])
-            connection.flow.attr[co.S2D][co.BYTES_RETRANS] = int(info[10])
-            connection.flow.attr[co.D2S][co.BYTES_RETRANS] = int(info[24])
+            connection.flow.attr[co.C2S][co.PACKS_RETRANS] = int(info[9])
+            connection.flow.attr[co.S2C][co.PACKS_RETRANS] = int(info[23])
+            connection.flow.attr[co.C2S][co.BYTES_RETRANS] = int(info[10])
+            connection.flow.attr[co.S2C][co.BYTES_RETRANS] = int(info[24])
 
-            connection.flow.attr[co.S2D][co.PACKS_OOO] = int(info[11])
-            connection.flow.attr[co.D2S][co.PACKS_OOO] = int(info[25])
+            connection.flow.attr[co.C2S][co.PACKS_OOO] = int(info[11])
+            connection.flow.attr[co.S2C][co.PACKS_OOO] = int(info[25])
 
-            connection.flow.attr[co.S2D][co.NB_SYN] = int(info[12])
-            connection.flow.attr[co.D2S][co.NB_SYN] = int(info[26])
-            connection.flow.attr[co.S2D][co.NB_FIN] = int(info[13])
-            connection.flow.attr[co.D2S][co.NB_FIN] = int(info[27])
-            connection.flow.attr[co.S2D][co.NB_RST] = int(info[3])
-            connection.flow.attr[co.D2S][co.NB_RST] = int(info[17])
-            connection.flow.attr[co.S2D][co.NB_ACK] = int(info[4])
-            connection.flow.attr[co.D2S][co.NB_ACK] = int(info[18])
+            connection.flow.attr[co.C2S][co.NB_SYN] = int(info[12])
+            connection.flow.attr[co.S2C][co.NB_SYN] = int(info[26])
+            connection.flow.attr[co.C2S][co.NB_FIN] = int(info[13])
+            connection.flow.attr[co.S2C][co.NB_FIN] = int(info[27])
+            connection.flow.attr[co.C2S][co.NB_RST] = int(info[3])
+            connection.flow.attr[co.S2C][co.NB_RST] = int(info[17])
+            connection.flow.attr[co.C2S][co.NB_ACK] = int(info[4])
+            connection.flow.attr[co.S2C][co.NB_ACK] = int(info[18])
 
             # Except RTT, all time (in ms in tstat) shoud be converted into seconds
-            connection.flow.attr[co.S2D][co.TIME_FIRST_PAYLD] = float(info[31]) / 1000.0
-            connection.flow.attr[co.D2S][co.TIME_FIRST_PAYLD] = float(info[32]) / 1000.0
-            connection.flow.attr[co.S2D][co.TIME_LAST_PAYLD] = float(info[33]) / 1000.0
-            connection.flow.attr[co.D2S][co.TIME_LAST_PAYLD] = float(info[34]) / 1000.0
-            connection.flow.attr[co.S2D][co.TIME_FIRST_ACK] = float(info[35]) / 1000.0
-            connection.flow.attr[co.D2S][co.TIME_FIRST_ACK] = float(info[36]) / 1000.0
+            connection.flow.attr[co.C2S][co.TIME_FIRST_PAYLD] = float(info[31]) / 1000.0
+            connection.flow.attr[co.S2C][co.TIME_FIRST_PAYLD] = float(info[32]) / 1000.0
+            connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD] = float(info[33]) / 1000.0
+            connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD] = float(info[34]) / 1000.0
+            connection.flow.attr[co.C2S][co.TIME_FIRST_ACK] = float(info[35]) / 1000.0
+            connection.flow.attr[co.S2C][co.TIME_FIRST_ACK] = float(info[36]) / 1000.0
 
-            connection.attr[co.S2D][co.BYTES] = {}
-            connection.attr[co.D2S][co.BYTES] = {}
+            connection.attr[co.C2S][co.BYTES] = {}
+            connection.attr[co.S2C][co.BYTES] = {}
 
-            connection.flow.attr[co.S2D][co.TIMESTAMP_RETRANS] = []
-            connection.flow.attr[co.D2S][co.TIMESTAMP_RETRANS] = []
+            connection.flow.attr[co.C2S][co.TIMESTAMP_RETRANS] = []
+            connection.flow.attr[co.S2C][co.TIMESTAMP_RETRANS] = []
 
             connections[conn_id] = connection
 
@@ -423,10 +423,10 @@ def get_total_and_retrans_frames(pcap_filepath, connections):
             for conn_id, conn in connections.iteritems():
                 if conn.flow.attr[co.SADDR] == ip_src and conn.flow.attr[co.SPORT] == port_src and \
                         conn.flow.attr[co.DADDR] == ip_dst and conn.flow.attr[co.DPORT]:
-                    connections[conn_id].flow.attr[co.D2S][co.FRAMES_TOTAL] = int(split_line[3])
-                    connections[conn_id].flow.attr[co.D2S][co.BYTES_FRAMES_TOTAL] = int(split_line[4])
-                    connections[conn_id].flow.attr[co.S2D][co.FRAMES_TOTAL] = int(split_line[5])
-                    connections[conn_id].flow.attr[co.S2D][co.BYTES_FRAMES_TOTAL] = int(split_line[6])
+                    connections[conn_id].flow.attr[co.S2C][co.FRAMES_TOTAL] = int(split_line[3])
+                    connections[conn_id].flow.attr[co.S2C][co.BYTES_FRAMES_TOTAL] = int(split_line[4])
+                    connections[conn_id].flow.attr[co.C2S][co.FRAMES_TOTAL] = int(split_line[5])
+                    connections[conn_id].flow.attr[co.C2S][co.BYTES_FRAMES_TOTAL] = int(split_line[6])
                     break
     stats_file.close()
     os.remove(stats_filename)
@@ -447,10 +447,10 @@ def get_total_and_retrans_frames(pcap_filepath, connections):
             for conn_id, conn in connections.iteritems():
                 if conn.flow.attr[co.SADDR] == ip_src and conn.flow.attr[co.SPORT] == port_src and \
                    conn.flow.attr[co.DADDR] == ip_dst and conn.flow.attr[co.DPORT]:
-                    connections[conn_id].flow.attr[co.D2S][co.FRAMES_RETRANS] = int(split_line[3])
-                    connections[conn_id].flow.attr[co.D2S][co.BYTES_FRAMES_RETRANS] = int(split_line[4])
-                    connections[conn_id].flow.attr[co.S2D][co.FRAMES_RETRANS] = int(split_line[5])
-                    connections[conn_id].flow.attr[co.S2D][co.BYTES_FRAMES_RETRANS] = int(split_line[6])
+                    connections[conn_id].flow.attr[co.S2C][co.FRAMES_RETRANS] = int(split_line[3])
+                    connections[conn_id].flow.attr[co.S2C][co.BYTES_FRAMES_RETRANS] = int(split_line[4])
+                    connections[conn_id].flow.attr[co.C2S][co.FRAMES_RETRANS] = int(split_line[5])
+                    connections[conn_id].flow.attr[co.C2S][co.BYTES_FRAMES_RETRANS] = int(split_line[6])
                     break
     stats_file.close()
     os.remove(stats_filename)
@@ -532,7 +532,7 @@ def interesting_graph(flow_name, is_reversed, connections):
         is not 127.0.0.1 -> 127.0.0.1 and if there are data packets sent
     """
     if (not connections[flow_name].flow.attr[co.TYPE] == co.IPv4 or connections[flow_name].flow.attr[co.IF]):
-        direction = co.D2S if is_reversed else co.S2D
+        direction = co.S2C if is_reversed else co.C2S
         return (connections[flow_name].flow.attr[direction][co.PACKS] > 0)
 
     return False
@@ -626,7 +626,7 @@ def retransmissions_tcpcsm(pcap_filepath, connections):
             key = (split_line[1], split_line[0], split_line[3], split_line[2])
             if len(inverse_dict.get(key, [])) == 1:
                 conn_id = inverse_dict[key][0]
-                direction = co.S2D if split_line[5] == '1' else co.D2S
+                direction = co.C2S if split_line[5] == '1' else co.S2C
                 if co.TCPCSM_RETRANS not in connections[conn_id].flow.attr[direction]:
                     connections[conn_id].flow.attr[direction][co.TCPCSM_RETRANS] = [(split_line[7], split_line[6])]
                 else:
@@ -662,8 +662,8 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
     print("Computing TCP ack sizes for", pcap_filepath)
     SEQ_S2D= 'seq_s2d'
     SEQ_D2S= 'seq_d2s'
-    nb_acks = {co.S2D: {}, co.D2S: {}}
-    acks = {co.S2D: {}, co.D2S: {}}
+    nb_acks = {co.C2S: {}, co.S2C: {}}
+    acks = {co.C2S: {}, co.S2C: {}}
     # Avoid processing packets that do not belong to any analyzed TCP connection
     black_list = set()
     pcap_file = open(pcap_filepath)
@@ -711,7 +711,7 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                     elif conn_id and (saddr, sport, daddr, dport) in black_list:
                         black_list.remove((saddr, sport, daddr, dport))
 
-                    if conn_id not in nb_acks[co.S2D]:
+                    if conn_id not in nb_acks[co.C2S]:
                         for direction in co.DIRECTIONS:
                             nb_acks[direction][conn_id] = {}
 
@@ -719,34 +719,34 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                     # if (saddr, sport, daddr, dport) in acks:
                         # Already taken, but maybe old, such that we can overwrite it (show on screen the TS difference)
                         # print(saddr, sport, daddr, dport, "already used; it was (in seconds)", ts - acks[saddr, sport, daddr, dport][co.TIMESTAMP])
-                    if (saddr, sport, daddr, dport) in acks and ts - acks[saddr, sport, daddr, dport][co.TIMESTAMP] <= ts_syn_timeout and acks[saddr, sport, daddr, dport][co.D2S] == -1 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_S2D]:
+                    if (saddr, sport, daddr, dport) in acks and ts - acks[saddr, sport, daddr, dport][co.TIMESTAMP] <= ts_syn_timeout and acks[saddr, sport, daddr, dport][co.S2C] == -1 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_S2D]:
                         # SYN retransmission!
-                        connections[conn_id].flow.attr[co.S2D][co.TIMESTAMP_RETRANS].append(ts)
+                        connections[conn_id].flow.attr[co.C2S][co.TIMESTAMP_RETRANS].append(ts)
                     else:
-                        acks[saddr, sport, daddr, dport] = {co.S2D: -1, co.D2S: -1, co.TIMESTAMP: ts, co.CONN_ID: conn_id, SEQ_S2D: set([tcp.seq]), SEQ_D2S: set([])}
+                        acks[saddr, sport, daddr, dport] = {co.C2S: -1, co.S2C: -1, co.TIMESTAMP: ts, co.CONN_ID: conn_id, SEQ_S2D: set([tcp.seq]), SEQ_D2S: set([])}
 
                 elif (saddr, sport, daddr, dport) in black_list:
                     continue
 
                 elif syn_flag and ack_flag and not fin_flag and not rst_flag:
                     # The sender of the SYN/ACK is the server
-                    if (daddr, dport, saddr, sport) in acks and ts - acks[daddr, dport, saddr, sport][co.TIMESTAMP] < ts_timeout and acks[daddr, dport, saddr, sport][co.S2D] == -1:
+                    if (daddr, dport, saddr, sport) in acks and ts - acks[daddr, dport, saddr, sport][co.TIMESTAMP] < ts_timeout and acks[daddr, dport, saddr, sport][co.C2S] == -1:
                         # Better to check, if not seen, maybe uncomplete TCP connection
-                        acks[daddr, dport, saddr, sport][co.S2D] = tcp.ack
+                        acks[daddr, dport, saddr, sport][co.C2S] = tcp.ack
                         acks[daddr, dport, saddr, sport][SEQ_D2S].add(tcp.seq)
                     elif (daddr, dport, saddr, sport) in acks and ts - acks[daddr, dport, saddr, sport][co.TIMESTAMP] < ts_timeout and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_D2S]:
                         # SYN/ACK retransmission!
-                        connections[acks[daddr, dport, saddr, sport][co.CONN_ID]].flow.attr[co.D2S][co.TIMESTAMP_RETRANS].append(ts)
+                        connections[acks[daddr, dport, saddr, sport][co.CONN_ID]].flow.attr[co.S2C][co.TIMESTAMP_RETRANS].append(ts)
 
                 elif not syn_flag and not rst_flag and ack_flag:
                     if (saddr, sport, daddr, dport) in acks:
-                        if acks[saddr, sport, daddr, dport][co.D2S] >= 0:
-                            bytes_acked = (tcp.ack - acks[saddr, sport, daddr, dport][co.D2S]) % 4294967296
+                        if acks[saddr, sport, daddr, dport][co.S2C] >= 0:
+                            bytes_acked = (tcp.ack - acks[saddr, sport, daddr, dport][co.S2C]) % 4294967296
                             if bytes_acked >= 2000000000:
                                 # Ack of 2GB or more is just not possible here
                                 continue
                             conn_id = acks[saddr, sport, daddr, dport][co.CONN_ID]
-                            increment_value_dict(nb_acks[co.D2S][conn_id], bytes_acked)
+                            increment_value_dict(nb_acks[co.S2C][conn_id], bytes_acked)
                             # If SOCKS command
                             if len(tcp.data) == 7 and connections[conn_id].attr.get(co.SOCKS_PORT, None) is None:
                                 crypted_socks_cmd = tcp.data
@@ -756,32 +756,32 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                                     connections[conn_id].attr[co.SOCKS_PORT] = socks_parser.get_port_number(decrypted_socks_cmd)
                             if len(tcp.data) > 0 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_S2D]:
                                 # This is a retransmission! (take into account the seq overflow)
-                                connections[conn_id].flow.attr[co.S2D][co.TIMESTAMP_RETRANS].append(ts)
+                                connections[conn_id].flow.attr[co.C2S][co.TIMESTAMP_RETRANS].append(ts)
                             elif len(tcp.data) > 0:
                                 acks[saddr, sport, daddr, dport][SEQ_S2D].add(tcp.seq)
                                 # Don't think will face this issue
-#                                 if len(acks[saddr, sport, daddr, dport][SEQ][co.S2D]) >= 3000000:
+#                                 if len(acks[saddr, sport, daddr, dport][SEQ][co.C2S]) >= 3000000:
 #                                     for x in range(50000):
-#                                         acks[saddr, sport, daddr, dport][SEQ][co.S2D].popleft()
-                        acks[saddr, sport, daddr, dport][co.D2S] = tcp.ack
+#                                         acks[saddr, sport, daddr, dport][SEQ][co.C2S].popleft()
+                        acks[saddr, sport, daddr, dport][co.S2C] = tcp.ack
                     elif (daddr, dport, saddr, sport) in acks:
-                        if acks[daddr, dport, saddr, sport][co.S2D] >= 0:
-                            bytes_acked = (tcp.ack - acks[daddr, dport, saddr, sport][co.S2D]) % 4294967296
+                        if acks[daddr, dport, saddr, sport][co.C2S] >= 0:
+                            bytes_acked = (tcp.ack - acks[daddr, dport, saddr, sport][co.C2S]) % 4294967296
                             if bytes_acked >= 2000000000:
                                 # Ack of 2GB or more is just not possible here
                                 continue
                             conn_id = acks[daddr, dport, saddr, sport][co.CONN_ID]
-                            increment_value_dict(nb_acks[co.S2D][conn_id], bytes_acked)
+                            increment_value_dict(nb_acks[co.C2S][conn_id], bytes_acked)
                             if len(tcp.data) > 0 and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_D2S]:
                                 # This is a retransmission!
-                                connections[conn_id].flow.attr[co.D2S][co.TIMESTAMP_RETRANS].append(ts)
+                                connections[conn_id].flow.attr[co.S2C][co.TIMESTAMP_RETRANS].append(ts)
                             elif len(tcp.data) > 0:
                                 acks[daddr, dport, saddr, sport][SEQ_D2S].add(tcp.seq)
                                 # Don't think will face this issue
-#                                 if len(acks[daddr, dport, saddr, sport][SEQ][co.D2S]) >= 3000000:
+#                                 if len(acks[daddr, dport, saddr, sport][SEQ][co.S2C]) >= 3000000:
 #                                     for x in range(50000):
-#                                         acks[daddr, dport, saddr, sport][SEQ][co.D2S].popleft()
-                        acks[daddr, dport, saddr, sport][co.S2D] = tcp.ack
+#                                         acks[daddr, dport, saddr, sport][SEQ][co.S2C].popleft()
+                        acks[daddr, dport, saddr, sport][co.C2S] = tcp.ack
                     else:
                         # Silently ignore those packets
                         # print(saddr, sport, daddr, dport, "haven't seen beginning...")
@@ -809,7 +809,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_e
     inverse_conns = create_inverse_tcp_dictionary(connections)
 
     acksize_all = compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns)
-    acksize_all_mptcp = {co.S2D: {}, co.D2S: {}}
+    acksize_all_mptcp = {co.C2S: {}, co.S2C: {}}
 
     if mptcp_connections:
         for flow_id in connections:

@@ -70,8 +70,8 @@ SMALL = '10KB-100KB'
 MEDIUM = '100KB-1MB'
 LARGE = '>=1MB'
 
-results_duration_bytes = {co.S2D: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}, co.D2S: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}}
-results_pkts = {co.S2D: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}, co.D2S: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}}
+results_duration_bytes = {co.C2S: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}, co.S2C: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}}
+results_pkts = {co.C2S: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}, co.S2C: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}}
 min_duration = 0.001
 for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():

@@ -130,8 +130,8 @@ def extract_flow_data(out_file):
             subflow.indicates_wifi_or_cell()
             connections[current_connection].flows[sub_flow_id] = subflow
 
-            connections[current_connection].attr[co.S2D][co.BYTES] = {}
-            connections[current_connection].attr[co.D2S][co.BYTES] = {}
+            connections[current_connection].attr[co.C2S][co.BYTES] = {}
+            connections[current_connection].attr[co.S2C][co.BYTES] = {}
 
         # Case 3: skip the line (no more current connection)
         else:
@@ -309,7 +309,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
         duration = last_time_burst_on_flow - begin_time_burst_on_flow
         bursts.append((current_flow, count_seq_burst, count_pkt_burst, duration, begin_time_burst_on_flow))
 
-    direction = co.D2S if is_reversed else co.S2D
+    direction = co.S2C if is_reversed else co.C2S
     connections[conn_id].attr[direction][co.BURSTS] = bursts
     for i in range(0, len(connections[conn_id].flows)):
         connections[conn_id].flows[i].attr[direction][co.REINJ_ORIG_PACKS] = reinject_nb[i]
@@ -339,7 +339,7 @@ def process_rtt_csv(csv_fname, rtt_all, connections, conn_id, is_reversed):
         # All data is good
         rtt_data.append(float(split_line[1]))
 
-    direction = co.D2S if is_reversed else co.S2D
+    direction = co.S2C if is_reversed else co.C2S
     connections[conn_id].attr[direction][co.RTT_SAMPLES] = len(rtt_data)
     if not rtt_data:
         return
@@ -520,16 +520,16 @@ def process_stats_csv(csv_fname, connections):
         if seq_acked:
             # Notice that these values remove the reinjected bytes
             if int(seq_acked[0]) == 4294967295:
-                connections[conn_id].attr[co.S2D][co.BYTES_MPTCPTRACE] = 1
+                connections[conn_id].attr[co.C2S][co.BYTES_MPTCPTRACE] = 1
             else:
-                connections[conn_id].attr[co.S2D][co.BYTES_MPTCPTRACE] = int(seq_acked[0])
+                connections[conn_id].attr[co.C2S][co.BYTES_MPTCPTRACE] = int(seq_acked[0])
             if int(seq_acked[1]) == 4294967295:
-                connections[conn_id].attr[co.D2S][co.BYTES_MPTCPTRACE] = 1
+                connections[conn_id].attr[co.S2C][co.BYTES_MPTCPTRACE] = 1
             else:
-                connections[conn_id].attr[co.D2S][co.BYTES_MPTCPTRACE] = int(seq_acked[1])
+                connections[conn_id].attr[co.S2C][co.BYTES_MPTCPTRACE] = int(seq_acked[1])
         else:
-            connections[conn_id].attr[co.S2D][co.BYTES_MPTCPTRACE] = 0
-            connections[conn_id].attr[co.D2S][co.BYTES_MPTCPTRACE] = 0
+            connections[conn_id].attr[co.C2S][co.BYTES_MPTCPTRACE] = 0
+            connections[conn_id].attr[co.S2C][co.BYTES_MPTCPTRACE] = 0
         if con_time:
             connections[conn_id].attr[co.DURATION] = float(con_time)
         else:
@@ -539,17 +539,17 @@ def process_stats_csv(csv_fname, connections):
         else:
             connections[conn_id].attr[co.START] = 0.0
         if bytes_reinjected:
-            connections[conn_id].attr[co.S2D][co.REINJ_BYTES] = int(bytes_reinjected[0])
-            connections[conn_id].attr[co.D2S][co.REINJ_BYTES] = int(bytes_reinjected[1])
+            connections[conn_id].attr[co.C2S][co.REINJ_BYTES] = int(bytes_reinjected[0])
+            connections[conn_id].attr[co.S2C][co.REINJ_BYTES] = int(bytes_reinjected[1])
         else:
-            connections[conn_id].attr[co.S2D][co.REINJ_BYTES] = 0
-            connections[conn_id].attr[co.D2S][co.REINJ_BYTES] = 0
+            connections[conn_id].attr[co.C2S][co.REINJ_BYTES] = 0
+            connections[conn_id].attr[co.S2C][co.REINJ_BYTES] = 0
         if pc_reinjected:
-            connections[conn_id].attr[co.S2D][co.REINJ_PC] = float(pc_reinjected[0])
-            connections[conn_id].attr[co.D2S][co.REINJ_PC] = float(pc_reinjected[1])
+            connections[conn_id].attr[co.C2S][co.REINJ_PC] = float(pc_reinjected[0])
+            connections[conn_id].attr[co.S2C][co.REINJ_PC] = float(pc_reinjected[1])
         else:
-            connections[conn_id].attr[co.S2D][co.REINJ_PC] = 0.0
-            connections[conn_id].attr[co.D2S][co.REINJ_PC] = 0.0
+            connections[conn_id].attr[co.C2S][co.REINJ_PC] = 0.0
+            connections[conn_id].attr[co.S2C][co.REINJ_PC] = 0.0
         csv_file.close()
 
         # Remove now stats files
@@ -618,7 +618,7 @@ def process_seq_xpl(xpl_fname, connections, relative_start, min_bytes):
         # xpl_file.close()
         # Check if there is data in file (and not only one line of 0s)
         # if not data == [] and len(data) > 1:
-        direction = co.D2S if is_reversed else co.S2D
+        direction = co.S2C if is_reversed else co.C2S
         if connections[conn_id].attr[direction][co.BYTES_MPTCPTRACE] >= min_bytes:
             # Collect begin time and seq num to plot graph starting at 0
             try:
@@ -651,7 +651,7 @@ def process_rtt_xpl(xpl_fname, rtt_all, connections, relative_start, min_bytes):
         # xpl_file.close()
         # Check if there is data in file (and not only one line of 0s)
         # if not data == [] and len(data) > 1:
-        direction = co.D2S if is_reversed else co.S2D
+        direction = co.S2C if is_reversed else co.C2S
         if connections[conn_id].attr[direction][co.BYTES_MPTCPTRACE] >= min_bytes:
             # Collect begin time and seq num to plot graph starting at 0
             try:
@@ -674,7 +674,7 @@ def plot_congestion_graphs(pcap_filepath, graph_dir_exp, cwin_data_all):
         base_graph_fname = cwin_name + '_cwin'
 
         for direction, data_if in cwin_data.iteritems():
-            dir_abr = 'd2s' if direction == co.D2S else 's2d' if direction == co.S2D else '?'
+            dir_abr = 'd2s' if direction == co.S2C else 's2d' if direction == co.C2S else '?'
             graph_fname = base_graph_fname + '_' + dir_abr
             graph_fname += '.pdf'
             graph_filepath = os.path.join(cwin_graph_dir, graph_fname)
@@ -706,7 +706,7 @@ def process_gput_csv(csv_fname, connections):
                 gput_data.append(float(split_line[1]) * 1000000)
 
         if len(gput_data) > 0:
-            direction = co.D2S if is_reversed else co.S2D
+            direction = co.S2C if is_reversed else co.C2S
             connections[conn_id].attr[direction][co.THGPT_MPTCPTRACE] = np.mean(gput_data)
     except IOError as e:
         print(e, file=sys.stderr)
@@ -720,7 +720,7 @@ def collect_acksize_csv(csv_fname, connections, acksize_dict):
         # Not a real connection: skip it
         return
 
-    direction = co.D2S if is_reverse_connection(csv_fname) else co.S2D
+    direction = co.S2C if is_reverse_connection(csv_fname) else co.C2S
     try:
         acksize_file = open(csv_fname)
         data = acksize_file.readlines()
@@ -786,8 +786,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
             # First see all xpl files, to detect the relative 0 of all connections
             # Also, compute the duration and number of bytes of the MPTCP connection
             relative_start = first_pass_on_files(connections)
-            rtt_all = {co.S2D: {}, co.D2S: {}}
-            acksize_all = {co.S2D: {}, co.D2S: {}}
+            rtt_all = {co.C2S: {}, co.S2C: {}}
+            acksize_all = {co.C2S: {}, co.S2C: {}}
 
             # Then really process xpl files
             for xpl_fname in glob.glob(os.path.join('*.xpl')):

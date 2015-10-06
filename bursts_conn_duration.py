@@ -65,7 +65,7 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-results_duration = {co.S2D: [], co.D2S: []}
+results_duration = {co.C2S: [], co.S2C: []}
 min_duration = 0.001
 for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():

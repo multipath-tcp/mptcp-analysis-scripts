@@ -69,7 +69,7 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 
 def plot(connections, multiflow_connections, sums_dir_exp):
     log_file = sys.stdout
-    bursts_sec = {co.S2D: [], co.D2S: []}
+    bursts_sec = {co.C2S: [], co.S2C: []}
     color = 'red'
     graph_fname_sec = "merge_bursts_sec_log"
     base_graph_path_sec = os.path.join(sums_dir_exp, graph_fname_sec)

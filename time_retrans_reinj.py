@@ -72,12 +72,12 @@ REINJ = 'Reinjection'
 min_duration = 0.001
 log_file = sys.stdout
 
-location_time = {co.S2D: {REINJ: [], RETRANS: []}, co.D2S: {REINJ: [], RETRANS: []}}
+location_time = {co.C2S: {REINJ: [], RETRANS: []}, co.S2C: {REINJ: [], RETRANS: []}}
 reinj_first_sec = []
 graph_fname = "merge_time_reinjection_retranmission"
 base_graph_path = os.path.join(sums_dir_exp, graph_fname)
-count_duration = {co.S2D: 0, co.D2S: 0}
-count_low_duration = {co.S2D: 0, co.D2S: 0}
+count_duration = {co.C2S: 0, co.S2C: 0}
+count_low_duration = {co.C2S: 0, co.S2C: 0}
 for fname, conns in connections.iteritems():
     for conn_id, conn in conns.iteritems():
         # We never know, still check
@@ -122,7 +122,7 @@ for fname, conns in connections.iteritems():
             look_95 = open(os.path.join(sums_dir_exp, 'look95.txt'), 'w')
             look_100 = open(os.path.join(sums_dir_exp, 'look100.txt'), 'w')
             warning_retrans = open(os.path.join(sums_dir_exp, 'warning_retrans.txt'), 'w')
-            for direction in [co.D2S]:
+            for direction in [co.S2C]:
                 for flow_id, flow in conn.flows.iteritems():
                     if co.REINJ_ORIG_TIMESTAMP in flow.attr[direction] and co.START in flow.attr:
                         for ts in flow.attr[direction][co.REINJ_ORIG_TIMESTAMP]:
@@ -135,13 +135,13 @@ for fname, conns in connections.iteritems():
                             ts_fix = ts_fix_int + ts_dec_delta
                             # location_time[direction]['all']["Reinjections"].append(max(min(ts_fix / duration, 1.0), 0.0))
                             location_time[direction][REINJ].append(ts_fix / duration)
-                            if direction == co.D2S and ts_fix / duration < 0.0 or ts_fix / duration > 1.0:
+                            if direction == co.S2C and ts_fix / duration < 0.0 or ts_fix / duration > 1.0:
                                 print(fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=warning_reinj)
-                            if direction == co.D2S and ts_fix <= 1.0:
+                            if direction == co.S2C and ts_fix <= 1.0:
                                 reinj_first_sec.append((conn_id, flow_id))
-                            if direction == co.D2S and ts_fix / duration >= 0.92 and ts_fix / duration <= 0.97:
+                            if direction == co.S2C and ts_fix / duration >= 0.92 and ts_fix / duration <= 0.97:
                                 print(fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=look_95)
-                            if direction == co.D2S and ts_fix / duration >= 0.99:
+                            if direction == co.S2C and ts_fix / duration >= 0.99:
                                 print("LOOK 100", fname, conn_id, flow_id, ts_fix / duration, ts, start_time, ts_fix, duration, file=log_file)
 
             for direction in co.DIRECTIONS:
@@ -161,12 +161,12 @@ for fname, conns in connections.iteritems():
                             location_time[direction][RETRANS].append(ts_fix / duration)
                             if ts_fix / duration < 0 or ts_fix / duration > 1:
                                 print("NOOOOO", fname, conn_id, flow_id, duration, start_time, ts, ts_fix, ts_fix / duration, file=log_file)
-                            if direction == co.D2S and ts_fix / duration >= 0.99:
+                            if direction == co.S2C and ts_fix / duration >= 0.99:
                                 print("LOOK RETRANS", fname, conn_id, flow_id, duration, ts_fix / duration, file=log_file)
                                 count_duration[direction] += 1
                                 if duration < 3.0:
                                     count_low_duration[direction] += 1
-                            # if direction == co.D2S and (ts + time_diff) / duration < 0.0 or (ts + time_diff) / duration > 1.0:
+                            # if direction == co.S2C and (ts + time_diff) / duration < 0.0 or (ts + time_diff) / duration > 1.0:
                             #     print(fname, conn_id, flow_id, ts / duration, file=warning_retrans)
 
 
@@ -214,8 +214,8 @@ for direction in co.DIRECTIONS:
 
     ax.legend(loc='lower right')
 
-    plt.xlabel('Fraction of connection duration', fontsize=18)
-    plt.ylabel("CDF", fontsize=18)
+    plt.xlabel('Fraction of connection duration', fontsize=24)
+    plt.ylabel("CDF", fontsize=24)
     plt.savefig(os.path.splitext(base_graph_path)[0] + '_' + direction + '.pdf')
     plt.close('all')
 
