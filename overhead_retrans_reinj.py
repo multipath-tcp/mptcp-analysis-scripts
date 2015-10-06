@@ -73,6 +73,8 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     results = {co.S2D: {REINJ: [], RETRANS: []}, co.D2S: {REINJ: [], RETRANS: []}}
     graph_fname = "overhead_retrans_reinj_multiflow.pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+    log_filename = "overhead_logging"
+    log_file = open(log_filename, 'w')
     for fname, data in multiflow_connections.iteritems():
         for conn_id, conn in data.iteritems():
             retrans_bytes = {co.S2D: 0, co.D2S: 0}
@@ -99,8 +101,14 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                 if total_bytes[direction] > 0:
                     results[direction][RETRANS].append((retrans_bytes[direction] + 0.0) / total_data_bytes[direction])
                     results[direction][REINJ].append((reinj_data_bytes[direction] + 0.0) / total_data_bytes[direction])
+                    if (retrans_bytes[direction] + 0.0) / total_data_bytes[direction] >= 1.0:
+                        print("RETRANS", direction, (retrans_bytes[direction] + 0.0) / total_data_bytes[direction], total_bytes[direction], file=log_file)
+                    if (reinj_bytes[direction] + 0.0) / total_data_bytes[direction] >= 1.0:
+                        print("REINJ", direction, (reinj_bytes[direction] + 0.0) / total_data_bytes[direction], total_bytes[direction], file=log_file)
+
 
     ls = {RETRANS: '--', REINJ: '-'}
+    log_file.close()
     color = {RETRANS: 'blue', REINJ: 'red'}
     for direction in co.DIRECTIONS:
         plt.figure()
@@ -133,6 +141,8 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         plt.xlabel('Fraction of unique bytes', fontsize=24)
         plt.ylabel("CDF", fontsize=24)
         plt.ylim(ymin=min_y - 0.01)
+        # Show most interesting part
+        plt.xlim(xmin=0.00001)
         plt.savefig(os.path.splitext(graph_full_path)[0] + '_' + direction + '.pdf')
         plt.close('all')
 
