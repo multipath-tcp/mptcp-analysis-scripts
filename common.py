@@ -272,6 +272,7 @@ TIMESTAMP = 'timestamp'
 CONN_ID = 'conn_id'
 
 SOCKS_PORT = 'socks_port'
+SOCKS_DADDR = 'socks_daddr'
 
 if os.path.isfile('config.py'):
     import config as conf

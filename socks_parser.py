@@ -208,6 +208,10 @@ def get_port_number(cmd):
     return ord(cmd[5]) * 256 + ord(cmd[6])
 
 
+def get_ip_address(cmd):
+    return str(ord(cmd[1])) + '.' + str(ord(cmd[2])) + '.' + str(ord(cmd[3])) + '.' + str(ord(cmd[4]))
+
+
 def process_pcap(pcap_filepath, ports):
     # condition = "tcp.len==7"
     # tshark_filter(condition, pcap_filepath, pcap_filtered_filepath)

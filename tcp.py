@@ -571,11 +571,13 @@ def copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns,
         mptcp_connections[conn_id].flows[flow_id].attr[co.DURATION] = connection.flow.attr[co.DURATION]
         if co.SOCKS_PORT in connection.attr:
             mptcp_connections[conn_id].flows[flow_id].attr[co.SOCKS_PORT] = connection.attr[co.SOCKS_PORT]
+            mptcp_connections[conn_id].flows[flow_id].attr[co.SOCKS_DADDR] = connection.attr[co.SOCKS_DADDR]
             if co.SOCKS_PORT not in mptcp_connections[conn_id].attr:
                 mptcp_connections[conn_id].attr[co.SOCKS_PORT] = connection.attr[co.SOCKS_PORT]
-                mptcp_connections[conn_id].flows[flow_id].attr[co.SOCKS_PORT] = connection.attr[co.SOCKS_PORT]
-            elif not mptcp_connections[conn_id].attr[co.SOCKS_PORT] == connection.attr[co.SOCKS_PORT]:
-                print("DIFFERENT SOCKS PORT...", mptcp_connections[conn_id].attr[co.SOCKS_PORT], connection.attr[co.SOCKS_PORT], conn_id, flow_id)
+                mptcp_connections[conn_id].attr[co.SOCKS_DADDR] = connection.attr[co.SOCKS_DADDR]
+            elif not mptcp_connections[conn_id].attr[co.SOCKS_PORT] == connection.attr[co.SOCKS_PORT] or not mptcp_connections[conn_id].attr[co.SOCKS_DADDR] == connection.attr[co.SOCKS_DADDR]:
+                print("DIFFERENT SOCKS PORT...", mptcp_connections[conn_id].attr[co.SOCKS_PORT], connection.attr[co.SOCKS_PORT], mptcp_connections[conn_id].attr[co.SOCKS_DADDR], connection.attr[co.SOCKS_DADDR], conn_id, flow_id)
+
         for direction in co.DIRECTIONS:
             for attr in connection.flow.attr[direction]:
                 mptcp_connections[conn_id].flows[flow_id].attr[direction][attr] = connection.flow.attr[direction][attr]
@@ -750,6 +752,7 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                                 crypted_socks_cmd = tcp.data
                                 decrypted_socks_cmd = socks_parser.decode(crypted_socks_cmd)
                                 if decrypted_socks_cmd[0] == b'\x01': # Connect
+                                    connections[conn_id].attr[co.SOCKS_DADDR] = socks_parser.get_ip_address(decrypted_socks_cmd)
                                     connections[conn_id].attr[co.SOCKS_PORT] = socks_parser.get_port_number(decrypted_socks_cmd)
                             if len(tcp.data) > 0 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_S2D]:
                                 # This is a retransmission! (take into account the seq overflow)
