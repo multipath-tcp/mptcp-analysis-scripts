@@ -83,8 +83,17 @@ def plot(connections, multiflow_connections, sums_dir_exp):
             total_data_bytes = {co.S2D: 0, co.D2S: 0}
             reinj_data_bytes = {co.S2D: 0, co.D2S: 0}
 
-            for flow_id, flow in conn.flows.iteritems():
-                for direction in co.DIRECTIONS:
+            for direction in co.DIRECTIONS:
+                # Avoid taking into account connections that do not use at least two subflows
+                nb_flows = 0
+                for flow_id, flow in conn.flows.iteritems():
+                    if flow.attr[direction].get(co.BYTES, 0) > 0:
+                        nb_flows += 1
+
+                if nb_flows < 2:
+                    continue
+
+                for flow_id, flow in conn.flows.iteritems():
                     if direction not in flow.attr:
                         continue
                     if co.BYTES in flow.attr[direction]:
