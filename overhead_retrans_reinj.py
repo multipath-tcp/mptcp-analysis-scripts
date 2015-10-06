@@ -79,6 +79,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     total_unique = {co.S2D: 0, co.D2S: 0}
     total_retrans = {co.S2D: 0, co.D2S: 0}
     total_reinj = {co.S2D: 0, co.D2S: 0}
+    total_reinj_mptcp = {co.S2D: 0, co.D2S: 0}
     for fname, data in multiflow_connections.iteritems():
         for conn_id, conn in data.iteritems():
             retrans_bytes = {co.S2D: 0, co.D2S: 0}
@@ -114,6 +115,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
 
                 total_retrans[direction] += retrans_bytes[direction]
                 total_reinj[direction] += reinj_bytes[direction]
+                total_reinj_mptcp[direction] += conn.attr[direction].get(co.REINJ_BYTES, 0)
 
             for direction in co.DIRECTIONS:
                 if total_bytes[direction] > 0:
@@ -169,5 +171,6 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         print("TOTAL UNIQUE", total_unique)
         print("TOTAL RETRANS", total_retrans)
         print("TOTAL REINJ", total_reinj)
+        print("TOTAL REINJ MPTCP", total_reinj_mptcp)
 
 plot(connections, multiflow_connections, sums_dir_exp)
