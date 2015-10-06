@@ -97,16 +97,16 @@ for fname, conns in multiflow_connections.iteritems():
                     if not flow_id == 0:
                         nb_unused_addi_rst += 1
 
-                if co.TIME_FIRST_ACK in flow.attr[co.S2D] and flow.attr[co.S2D][co.TIME_FIRST_ACK] >= conn.attr[co.START] + conn.attr[co.DURATION]:
+                if co.TIME_FIRST_ACK in flow.attr[co.S2D] and flow.attr[co.S2D][co.TIME_FIRST_ACK] + flow.attr[co.START] >= conn.attr[co.START] + conn.attr[co.DURATION]:
                     nb_after_duration += 1
 
                 after_duration_burst = False
                 if co.TIME_FIRST_ACK in flow.attr[co.S2D] and co.BURSTS in conn.attr[co.D2S] and co.BURSTS in conn.attr[co.S2D]:
                     if len(conn.attr[co.D2S][co.BURSTS]) > 0:
-                        if flow.attr[co.S2D][co.TIME_FIRST_ACK] >= conn.attr[co.D2S][co.BURSTS][-1][4] + conn.attr[co.D2S][co.BURSTS][-1][3]:
+                        if flow.attr[co.S2D][co.TIME_FIRST_ACK] + flow.attr[co.START] >= conn.attr[co.D2S][co.BURSTS][-1][4] + conn.attr[co.D2S][co.BURSTS][-1][3]:
                             after_duration_burst = True
                     if len(conn.attr[co.S2D][co.BURSTS]) > 0:
-                        if flow.attr[co.S2D][co.TIME_FIRST_ACK] >= conn.attr[co.S2D][co.BURSTS][-1][4] + conn.attr[co.S2D][co.BURSTS][-1][3]:
+                        if flow.attr[co.S2D][co.TIME_FIRST_ACK] + flow.attr[co.START] >= conn.attr[co.S2D][co.BURSTS][-1][4] + conn.attr[co.S2D][co.BURSTS][-1][3]:
                             after_duration_burst = True
 
                     if len(conn.attr[co.D2S][co.BURSTS]) == 0 and len(conn.attr[co.S2D][co.BURSTS]) == 0:
@@ -120,11 +120,16 @@ for fname, conns in multiflow_connections.iteritems():
                     other_flows = []
                     best = True
                     for other_flow_id, other_flow_cand in conn.flows.iteritems():
-                        if not other_flow_id == flow_id and co.TIME_FIRST_ACK in flow.attr[co.S2D] and flow.attr[co.S2D][co.TIME_FIRST_ACK] >= other_flow_cand.attr.get(co.START, float('inf')) and flow.attr[co.S2D][co.TIME_FIRST_ACK] <= other_flow_cand.attr.get(co.START, 0) + other_flow_cand.attr.get(co.DURATION, 0):
-                            other_flows.append(other_flow_cand)
-                            if co.RTT_AVG in other_flow.attr[co.D2S] and other_flow.attr[co.D2S][co.RTT_AVG] < flow.attr[co.D2S][co.RTT_AVG]:
-                                best = False
-                                break
+                        if not other_flow_id == flow_id and co.TIME_FIRST_ACK in flow.attr[co.S2D]:
+                            if flow.attr[co.S2D][co.TIME_FIRST_ACK] + flow.attr[co.START] >= other_flow_cand.attr.get(co.START, float('inf')):
+                                print("Jusque la...")
+                                if flow.attr[co.S2D][co.TIME_FIRST_ACK] + flow.attr[co.START] <= other_flow_cand.attr.get(co.START, 0) + other_flow_cand.attr.get(co.DURATION, 0):
+                                    print("Youpidou")
+                                    other_flows.append(other_flow_cand)
+                                    if co.RTT_AVG in other_flow_cand.attr[co.D2S] and other_flow_cand.attr[co.D2S][co.RTT_AVG] < flow.attr[co.D2S][co.RTT_AVG]:
+                                        print("Yop")
+                                        best = False
+                                        break
 
                     if best and len(other_flows) > 0:
                         better_rtt += 1
@@ -137,7 +142,7 @@ for fname, conns in multiflow_connections.iteritems():
                             if conn_bytes <= 5000:
                                 better_rtt_conn_less_5k += 1
                                 if conn_bytes <= 1000:
-                                    better_rtt_conn_less_5k += 1
+                                    better_rtt_conn_less_1k += 1
 
 print("NB CONNS", nb_conns)
 print("NB SUBFLOWS", nb_subflows)
