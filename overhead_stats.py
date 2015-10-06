@@ -101,7 +101,7 @@ for fname, conns in multiflow_connections.iteritems():
                     nb_after_duration += 1
 
                 after_duration_burst = False
-                if co.TIME_FIRST_ACK in flow.attr[co.S2D] and co.BURSTS in conn.attr[co.D2S] and co.BURSTS in conn.attr[co.S2D]:
+                if not flow_id == 0 and co.TIME_FIRST_ACK in flow.attr[co.S2D] and co.BURSTS in conn.attr[co.D2S] and co.BURSTS in conn.attr[co.S2D]:
                     if len(conn.attr[co.D2S][co.BURSTS]) > 0:
                         if flow.attr[co.S2D][co.TIME_FIRST_ACK] + flow.attr[co.START] >= conn.attr[co.D2S][co.BURSTS][-1][4] + conn.attr[co.D2S][co.BURSTS][-1][3]:
                             after_duration_burst = True
@@ -147,6 +147,7 @@ print("NB UNUSED", nb_unused)
 print("NB ADDI SF", nb_addi_sf)
 print("NB UNUSED ADDI SF", nb_unused_addi_sf)
 print("NB UNUSED RST", nb_unused_rst)
+print("NB UNUSED ADDI RST", nb_unused_addi_rst)
 print("NB AFTER DURATION", nb_after_duration)
 print("NB AFTER DURATION BURSTS", nb_after_duration_bursts)
 print("BETTER RTT", better_rtt)
