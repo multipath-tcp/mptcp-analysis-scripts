@@ -122,12 +122,9 @@ for fname, conns in multiflow_connections.iteritems():
                     for other_flow_id, other_flow_cand in conn.flows.iteritems():
                         if not other_flow_id == flow_id and co.TIME_FIRST_ACK in flow.attr[co.S2D]:
                             if flow.attr[co.S2D][co.TIME_FIRST_ACK] + flow.attr[co.START] >= other_flow_cand.attr.get(co.START, float('inf')):
-                                print("Jusque la...")
                                 if flow.attr[co.S2D][co.TIME_FIRST_ACK] + flow.attr[co.START] <= other_flow_cand.attr.get(co.START, 0) + other_flow_cand.attr.get(co.DURATION, 0):
-                                    print("Youpidou")
                                     other_flows.append(other_flow_cand)
                                     if co.RTT_AVG in other_flow_cand.attr[co.D2S] and other_flow_cand.attr[co.D2S][co.RTT_AVG] < flow.attr[co.D2S][co.RTT_AVG]:
-                                        print("Yop")
                                         best = False
                                         break
 
