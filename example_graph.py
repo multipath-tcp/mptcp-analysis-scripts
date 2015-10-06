@@ -65,7 +65,7 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-data = {co.S2D: {'all': {'Connections': [1, 2, 3]}}, co.D2S: {'all': {'Connections': [4, 5, 6]}}}
+data = {co.C2S: {'all': {'Connections': [1, 2, 3]}}, co.S2C: {'all': {'Connections': [4, 5, 6]}}}
 color = {'Connections': 'orange'}
 base_graph_name = "fog_bytes"
 

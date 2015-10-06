@@ -75,11 +75,11 @@ def fetch_data(dir_exp, dir_exp_two):
                 ack_file = open(os.path.join(dirpath, fname), 'r')
                 dico[MPTCP][fname] = pickle.load(ack_file)
                 ack_file.close()
-                conn_ids = dico[MPTCP][fname][co.D2S].keys()
+                conn_ids = dico[MPTCP][fname][co.S2C].keys()
                 for conn_id in conn_ids:
                     if conn_id not in valid[fname]:
-                        del dico[MPTCP][fname][co.D2S][conn_id]
-                        del dico[MPTCP][fname][co.S2D][conn_id]
+                        del dico[MPTCP][fname][co.S2C][conn_id]
+                        del dico[MPTCP][fname][co.C2S][conn_id]
             except IOError as e:
                 print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
 
@@ -89,11 +89,11 @@ def fetch_data(dir_exp, dir_exp_two):
                 ack_file = open(os.path.join(dirpath, fname), 'r')
                 dico[TCP][fname] = pickle.load(ack_file)
                 ack_file.close()
-                conn_ids = dico[TCP][fname][co.D2S].keys()
+                conn_ids = dico[TCP][fname][co.S2C].keys()
                 for conn_id in conn_ids:
                     if conn_id not in valid[fname]:
-                        del dico[TCP][fname][co.D2S][conn_id]
-                        del dico[TCP][fname][co.S2D][conn_id]
+                        del dico[TCP][fname][co.S2C][conn_id]
+                        del dico[TCP][fname][co.C2S][conn_id]
             except IOError as e:
                 print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
 
@@ -101,8 +101,8 @@ def fetch_data(dir_exp, dir_exp_two):
 
 acks = fetch_data(mptcp_dir_exp, tcp_dir_exp)
 
-sums_acks = {MPTCP: {co.S2D: {}, co.D2S: {}}, TCP: {co.S2D: {}, co.D2S: {}}}
-totot_fname = {MPTCP: {co.S2D: {}, co.D2S: {}}, TCP: {co.S2D: {}, co.D2S: {}}}
+sums_acks = {MPTCP: {co.C2S: {}, co.S2C: {}}, TCP: {co.C2S: {}, co.S2C: {}}}
+totot_fname = {MPTCP: {co.C2S: {}, co.S2C: {}}, TCP: {co.C2S: {}, co.S2C: {}}}
 
 multiflow_conn = set()
 
@@ -142,9 +142,9 @@ for fname, acks_fname in acks[MPTCP].iteritems():
                     totot_fname[MPTCP][direction][fname] += int(value_ack) * int(nb_ack)
 
 
-to_plot = {MPTCP: {co.S2D: [], co.D2S: []}, TCP: {co.S2D: [], co.D2S: []}}
-count = {MPTCP: {co.S2D: 0, co.D2S: 0}, TCP: {co.S2D: 0, co.D2S: 0}}
-totot = {MPTCP: {co.S2D: 0, co.D2S: 0}, TCP: {co.S2D: 0, co.D2S: 0}}
+to_plot = {MPTCP: {co.C2S: [], co.S2C: []}, TCP: {co.C2S: [], co.S2C: []}}
+count = {MPTCP: {co.C2S: 0, co.S2C: 0}, TCP: {co.C2S: 0, co.S2C: 0}}
+totot = {MPTCP: {co.C2S: 0, co.S2C: 0}, TCP: {co.C2S: 0, co.S2C: 0}}
 
 for protocol, acks_protocol in sums_acks.iteritems():
     for direction, acks_direction in acks_protocol.iteritems():

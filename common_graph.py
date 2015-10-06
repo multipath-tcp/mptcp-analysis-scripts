@@ -102,7 +102,7 @@ def fetch_valid_data(dir_exp, args):
         connections['dump_20150308_21403706'].pop(19983, None)
     if 'dump_20150408_14121302' in connections:
         connections['dump_20150408_14121302'].pop(7004, None)
-        
+
     return connections
 
 
@@ -113,7 +113,7 @@ def filter_connections(connections, min_bytes=None, max_bytes=None):
         filtered[fname] = {}
         for conn_id, conn in data.iteritems():
             if isinstance(conn, mptcp.MPTCPConnection):
-                mptcp_bytes = conn.attr[co.S2D].get(co.BYTES_MPTCPTRACE, 0) + conn.attr[co.D2S].get(co.BYTES_MPTCPTRACE, 0)
+                mptcp_bytes = conn.attr[co.C2S].get(co.BYTES_MPTCPTRACE, 0) + conn.attr[co.S2C].get(co.BYTES_MPTCPTRACE, 0)
                 if (min_bytes and mptcp_bytes >= min_bytes) or (max_bytes and mptcp_bytes <= max_bytes):
                     filtered[fname][conn_id] = conn
 

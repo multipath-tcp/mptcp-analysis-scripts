@@ -65,9 +65,9 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-# results_duration_bytes = {co.S2D: {'0B-10KB': [], '10KB-100KB': [], '100KB-1MB': [], '>=1MB': []}, co.D2S: {'0B-10KB': [], '10KB-100KB': [], '100KB-1MB': [], '>=1MB': []}}
-bursts_size = {co.S2D: [], co.D2S: []}
-bursts_pkt_size = {co.S2D: [], co.D2S: []}
+# results_duration_bytes = {co.C2S: {'0B-10KB': [], '10KB-100KB': [], '100KB-1MB': [], '>=1MB': []}, co.S2C: {'0B-10KB': [], '10KB-100KB': [], '100KB-1MB': [], '>=1MB': []}}
+bursts_size = {co.C2S: [], co.S2C: []}
+bursts_pkt_size = {co.C2S: [], co.S2C: []}
 min_duration = 0.001
 for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():

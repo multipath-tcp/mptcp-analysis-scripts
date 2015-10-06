@@ -70,7 +70,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     RETRANS = 'Retransmission'
     REINJ = 'Reinjection'
 
-    results = {co.S2D: {REINJ: [], RETRANS: []}, co.D2S: {REINJ: [], RETRANS: []}}
+    results = {co.C2S: {REINJ: [], RETRANS: []}, co.S2C: {REINJ: [], RETRANS: []}}
     graph_fname = "overhead_retrans_reinj_multiflow.pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
     log_filename = "overhead_logging"
@@ -82,11 +82,11 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     total_reinj_mptcp = {co.S2D: 0, co.D2S: 0}
     for fname, data in multiflow_connections.iteritems():
         for conn_id, conn in data.iteritems():
-            retrans_bytes = {co.S2D: 0, co.D2S: 0}
-            reinj_bytes = {co.S2D: 0, co.D2S: 0}
-            total_bytes = {co.S2D: 0, co.D2S: 0}
-            total_data_bytes = {co.S2D: 0, co.D2S: 0}
-            reinj_data_bytes = {co.S2D: 0, co.D2S: 0}
+            retrans_bytes = {co.C2S: 0, co.S2C: 0}
+            reinj_bytes = {co.C2S: 0, co.S2C: 0}
+            total_bytes = {co.C2S: 0, co.S2C: 0}
+            total_data_bytes = {co.C2S: 0, co.S2C: 0}
+            reinj_data_bytes = {co.C2S: 0, co.S2C: 0}
 
             for direction in co.DIRECTIONS:
                 # Avoid taking into account connections that do not use at least two subflows

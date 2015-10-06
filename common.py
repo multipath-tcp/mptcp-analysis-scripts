@@ -211,8 +211,12 @@ RTT_MED = 'rtt_median'
 RTT_25P = 'rtt_25p'
 
 # For aggregation
-S2D = 'source2destination'
-D2S = 'destination2source'
+C2S = 'client2server'
+S2C = 'server2client'
+
+# Kept for compatibility reasons
+S2D = C2S
+D2S = S2C
 
 NB_SYN = 'nb_syn'
 NB_FIN = 'nb_fin'
@@ -244,7 +248,7 @@ NB_UNNECE_RTX_FR = 'nb_unnecessary_rtx_fr'
 REINJ_BYTES = 'reinj_bytes'
 REINJ_PC = 'reinj_pc'
 
-DIRECTIONS = [S2D, D2S]
+DIRECTIONS = [C2S, S2C]
 
 IPv4 = 'IPv4'
 IPv6 = 'IPv6'
@@ -289,10 +293,10 @@ if os.path.isfile('config.py'):
 class BasicFlow(object):
 
     """ Represent a flow between two hosts at transport layer """
-    attr = {S2D: {}, D2S: {}}
+    attr = {C2S: {}, S2C: {}}
 
     def __init__(self):
-        self.attr = {S2D: {}, D2S: {}}
+        self.attr = {C2S: {}, S2C: {}}
 
     def indicates_wifi_or_cell(self):
         """ Given data of a mptcp connection subflow, indicates if comes from wifi or cell """
@@ -319,11 +323,11 @@ class BasicConnection(object):
 
     """ Represent a connection between two hosts at high level """
     conn_id = ""
-    attr = {S2D: {}, D2S: {}}
+    attr = {C2S: {}, S2C: {}}
 
     def __init__(self, cid):
         self.conn_id = cid
-        self.attr = {S2D: {}, D2S: {}}
+        self.attr = {C2S: {}, S2C: {}}
 
 
 ##################################################
