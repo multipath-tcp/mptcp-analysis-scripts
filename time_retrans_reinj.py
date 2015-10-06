@@ -61,7 +61,7 @@ co.check_directory_exists(sums_dir_exp)
 ##################################################
 
 connections = cog.fetch_valid_data(stat_dir_exp, args)
-# multiflow_connections, singleflow_connections = cog.get_multiflow_connections(connections)
+multiflow_connections, singleflow_connections = cog.get_multiflow_connections(connections)
 
 ##################################################
 ##               PLOTTING RESULTS               ##
@@ -78,7 +78,7 @@ graph_fname = "merge_time_reinjection_retranmission"
 base_graph_path = os.path.join(sums_dir_exp, graph_fname)
 count_duration = {co.S2D: 0, co.D2S: 0}
 count_low_duration = {co.S2D: 0, co.D2S: 0}
-for fname, conns in connections.iteritems():
+for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():
         # We never know, still check
         if isinstance(conn, mptcp.MPTCPConnection):
@@ -88,6 +88,15 @@ for fname, conns in connections.iteritems():
 
             start_time = conn.attr.get(co.START, float('inf'))
             if start_time == float('inf'):
+                continue
+
+            # Avoid taking into account connections that do not use at least two subflows
+            nb_flows = 0
+            for flow_id, flow in conn.flows.iteritems():
+                if flow.attr[co.D2S].get(co.BYTES, 0) > 0:
+                    nb_flows += 1
+
+            if nb_flows < 2:
                 continue
 
             min_start_time = start_time
