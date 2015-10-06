@@ -71,7 +71,9 @@ nb_unused = 0
 nb_addi_sf = 0
 nb_unused_addi_sf = 0
 nb_unused_rst = 0
+nb_unused_addi_rst = 0
 nb_after_duration = 0
+nb_after_duration_bursts = 0
 
 for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():
@@ -88,9 +90,14 @@ for fname, conns in multiflow_connections.iteritems():
 
                 if not flow.attr[co.S2D].get(co.NB_RST, 0) == 0 or not flow.attr[co.D2S].get(co.NB_RST, 0) == 0:
                     nb_unused_rst += 1
+                    if not flow_id == 0:
+                        nb_unused_addi_rst += 1
 
-                if co.START in flow.attr and flow.attr[co.START] >= conn.attr[co.START] + conn.attr[co.DURATION]:
+                if co.TIME_FIRST_ACK in flow.attr[co.S2D] and flow.attr[co.S2D][co.TIME_FIRST_ACK] >= conn.attr[co.START] + conn.attr[co.DURATION]:
                     nb_after_duration += 1
+
+                if co.TIME_FIRST_ACK in flow.attr[co.S2D] and co.BURSTS in conn.attr[co.D2S] and flow.attr[co.S2D][co.TIME_FIRST_ACK] >= conn.attr[co.D2S][co.BURSTS][-1][4] + conn.attr[co.D2S][co.BURSTS][-1][3]:
+                    nb_after_duration_bursts += 1
 
 print("NB CONNS", nb_conns)
 print("NB SUBFLOWS", nb_subflows)
@@ -99,3 +106,4 @@ print("NB ADDI SF", nb_addi_sf)
 print("NB UNUSED ADDI SF", nb_unused_addi_sf)
 print("NB UNUSED RST", nb_unused_rst)
 print("NB AFTER DURATION", nb_after_duration)
+print("NB AFTER DURATION BURSTS", nb_after_duration_bursts)
