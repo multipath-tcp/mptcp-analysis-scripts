@@ -131,6 +131,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                     else:
                         index += 1
                 min_y = min(min_y, yvals[index])
+                print("YMIN", dataset, yvals[index])
                 # Log plot
 
                 ax.plot(sorted_array, yvals, color=color[dataset], linewidth=2, linestyle=ls[dataset], label=dataset)
@@ -141,8 +142,9 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         plt.xlabel('Fraction of unique bytes', fontsize=24)
         plt.ylabel("CDF", fontsize=24)
         plt.ylim(ymin=min_y - 0.01)
+        print("YMIN:", min_y)
         # Show most interesting part
-        plt.xlim(xmin=0.00001)
+        plt.xlim(xmin=0.00001, xmax=30.)
         plt.savefig(os.path.splitext(graph_full_path)[0] + '_' + direction + '.pdf')
         plt.close('all')
 
