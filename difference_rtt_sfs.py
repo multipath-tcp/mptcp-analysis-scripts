@@ -101,6 +101,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     sample = np.array(sorted(diff_rtt))
     sorted_array = np.sort(sample)
     print("LESS THAN 10ms", len([x for x in sorted_array if x <= 10.0]) * 100.0 / len(sorted_array))
+    print("LESS THAN 100ms", len([x for x in sorted_array if x <= 100.0]) * 100.0 / len(sorted_array))
     print("MORE THAN 1s", len([x for x in sorted_array if x >= 1000.0]) * 100.0 / len(sorted_array))
     yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
     if len(sorted_array) > 0:
