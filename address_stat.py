@@ -77,5 +77,6 @@ for fname, conns in connections.iteritems():
                 ip_addrs[ip_addr] = 1
             else:
                 ip_addrs[ip_addr] += 1
+            print(fname, conn_id)
 
 print("IP ADDRS", ip_addrs)
