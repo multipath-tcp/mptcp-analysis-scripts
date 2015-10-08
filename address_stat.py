@@ -66,6 +66,7 @@ connections = cog.fetch_valid_data(stat_dir_exp, args)
 ##################################################
 
 ip_addrs = {}
+saddrs = {}
 
 for fname, conns in connections.iteritems():
     for conn_id, conn in conns.iteritems():
@@ -77,6 +78,12 @@ for fname, conns in connections.iteritems():
                 ip_addrs[ip_addr] = 1
             else:
                 ip_addrs[ip_addr] += 1
-            print(fname, conn_id)
+            saddr = conn.flows[0].attr.get(co.SADDR, conn.attr.get(co.SADDR, None))
+            if saddr not in saddrs:
+                saddrs[saddr] = 1
+            else:
+                saddrs[saddr] += 1
+            print(fname, conn_id, ip_addr, saddr)
 
 print("IP ADDRS", ip_addrs)
+print("SOURCE IP ADDRS", saddrs)
