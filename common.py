@@ -481,7 +481,7 @@ def copy_remain_pcap_file(pcap_filepath, print_out=sys.stdout):
 def save_data(filepath, dir_exp, data):
     """ Using the name pcap_fname, save data in a file with filename fname in dir dir_exp """
     path_name = os.path.join(
-        dir_exp, os.path.basename(filepath)[:-5])
+        dir_exp, os.path.splitext(filepath)[0])
     try:
         data_file = open(path_name, 'w')
         pickle.dump(data, data_file)

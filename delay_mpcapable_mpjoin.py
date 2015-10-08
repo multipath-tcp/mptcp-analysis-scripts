@@ -72,6 +72,8 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     threshold_handover = 1.0
     syn_first_additional_sf = []
     syn_additional_sfs = []
+    time_handover = []
+    react_handover = []
     handover_conns = {}
     log_file = sys.stdout
     less_200ms = 0
@@ -88,11 +90,14 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         for conn_id, conn in conns.iteritems():
             # First find initial subflow timestamp
             initial_sf_ts = float('inf')
+            min_time_last_ack = float('inf')
             for flow_id, flow in conn.flows.iteritems():
                 if co.START not in flow.attr or flow.attr[co.SADDR] == co.IP_PROXY:
                     continue
                 if flow.attr[co.START] < initial_sf_ts:
                     initial_sf_ts = flow.attr[co.START]
+                if flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] > 0.0:
+                    min_time_last_ack = min(min_time_last_ack, flow.attr[co.S2C][co.TIME_LAST_ACK_TCP])
 
             if initial_sf_ts == float('inf'):
                 continue
@@ -106,15 +111,20 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                 if co.START not in flow.attr:
                     continue
                 delta = flow.attr[co.START] - initial_sf_ts
+                handover_delta = flow.attr[co.START] - min_time_last_ack
                 if delta > 0.0:
                     min_delta = min(min_delta, delta)
                     if min_delta == delta:
                         flow_id_min_delta = flow_id
                     syn_additional_sfs.append(delta)
-                    count_flows += 1
-                    if count_flows > 1 and not handover_detected:
-                        handover_detected = True
-                        handover_conns[fname][conn_id] = conn
+
+                    if handover_delta >= 0.0:
+                        # A subflow is established after the last ack of the client seen --> Handover
+                        time_handover.append(delta)
+                        react_handover.append(handover_delta)
+                        if not handover_detected:
+                            handover_detected = True
+                            handover_conns[fname][conn_id] = conn
                     if delta >= 50000:
                         print("HUGE DELTA", fname, conn_id, flow_id, delta, file=log_file)
 
@@ -239,6 +249,10 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                             bytes_init_sf += flow.attr[direction].get(co.BYTES, 0)
 
     # Log those values in the log file
+    print("DELTA HANDOVER IN FILE time_handover")
+    co.save_data("delta_handover", sums_dir_exp, time_handover)
+    print("REACT HANDOVER IN FILE react_handover")
+    co.save_data("react_handover", sums_dir_exp, react_handover)
     print("QUANTIFY HANDOVER", file=log_file)
     print(bytes_init_sf, "BYTES ON INIT SF", bytes_init_sf * 100 / bytes_total, "%", file=log_file)
     print(bytes_init_sfs, "BYTES ON INIT SFS", bytes_init_sfs * 100 / bytes_total, "%", file=log_file)
