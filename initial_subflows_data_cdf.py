@@ -67,6 +67,8 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 
 INITIAL_SF = 'Initial SF'
 INITIAL_SFS = '2 Initial SFs'
+nb_conns = 0
+nb_bytes = {co.C2S: 0, co.S2C: 0}
 
 results = {co.C2S: {INITIAL_SF: [], INITIAL_SFS: []}, co.S2C: {INITIAL_SF: [], INITIAL_SFS: []}}
 for fname, conns in multiflow_connections.iteritems():
@@ -95,6 +97,8 @@ for fname, conns in multiflow_connections.iteritems():
             if not isinstance(flow_id_second_sf, int):
                 continue
 
+            nb_conns += 1
+
             for direction in co.DIRECTIONS:
                 # First count number of total data bytes
                 conn_bytes_tcp = 0
@@ -103,6 +107,8 @@ for fname, conns in multiflow_connections.iteritems():
 
                 if conn_bytes_tcp <= 0:
                     break
+
+                nb_bytes[direction] += conn_bytes_tcp
 
                 bytes_initial_sf = conn.flows[flow_id_initial_sf].attr[direction].get(co.BYTES_DATA, 0) + 0.0
                 bytes_initial_sfs = bytes_initial_sf + conn.flows[flow_id_second_sf].attr[direction].get(co.BYTES_DATA, 0) + 0.0
@@ -143,3 +149,6 @@ for direction in co.DIRECTIONS:
     plt.ylabel("CDF", fontsize=24)
     plt.savefig(graph_full_path)
     plt.close('all')
+
+print("NB CONNS: ", nb_conns)
+print("NB BYTES: ", nb_bytes)
