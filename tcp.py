@@ -207,6 +207,9 @@ def extract_tstat_data_tcp_complete(filename, connections, conn_id):
             connection.flow.attr[co.C2S][co.TIMESTAMP_RETRANS] = []
             connection.flow.attr[co.S2C][co.TIMESTAMP_RETRANS] = []
 
+            connection.flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = 0.0
+            connection.flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = 0.0
+
             connections[conn_id] = connection
 
     log_file.close()
@@ -273,6 +276,9 @@ def extract_tstat_data_tcp_nocomplete(filename, connections, conn_id):
 
             connection.flow.attr[co.C2S][co.TIMESTAMP_RETRANS] = []
             connection.flow.attr[co.S2C][co.TIMESTAMP_RETRANS] = []
+
+            connection.flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = 0.0
+            connection.flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = 0.0
 
             connections[conn_id] = connection
 
@@ -660,8 +666,8 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
         It also compute the timestamps of retransmissions and put them
     """
     print("Computing TCP ack sizes for", pcap_filepath)
-    SEQ_S2D= 'seq_s2d'
-    SEQ_D2S= 'seq_d2s'
+    SEQ_S2D = 'seq_s2d'
+    SEQ_D2S = 'seq_d2s'
     nb_acks = {co.C2S: {}, co.S2C: {}}
     acks = {co.C2S: {}, co.S2C: {}}
     # Avoid processing packets that do not belong to any analyzed TCP connection
@@ -741,11 +747,12 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                 elif not syn_flag and not rst_flag and ack_flag:
                     if (saddr, sport, daddr, dport) in acks:
                         if acks[saddr, sport, daddr, dport][co.S2C] >= 0:
+                            conn_id = acks[saddr, sport, daddr, dport][co.CONN_ID]
+                            connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = ts
                             bytes_acked = (tcp.ack - acks[saddr, sport, daddr, dport][co.S2C]) % 4294967296
                             if bytes_acked >= 2000000000:
                                 # Ack of 2GB or more is just not possible here
                                 continue
-                            conn_id = acks[saddr, sport, daddr, dport][co.CONN_ID]
                             increment_value_dict(nb_acks[co.S2C][conn_id], bytes_acked)
                             # If SOCKS command
                             if len(tcp.data) == 7 and connections[conn_id].attr.get(co.SOCKS_PORT, None) is None:
@@ -766,11 +773,12 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                         acks[saddr, sport, daddr, dport][co.S2C] = tcp.ack
                     elif (daddr, dport, saddr, sport) in acks:
                         if acks[daddr, dport, saddr, sport][co.C2S] >= 0:
+                            conn_id = acks[daddr, dport, saddr, sport][co.CONN_ID]
+                            connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = ts
                             bytes_acked = (tcp.ack - acks[daddr, dport, saddr, sport][co.C2S]) % 4294967296
                             if bytes_acked >= 2000000000:
                                 # Ack of 2GB or more is just not possible here
                                 continue
-                            conn_id = acks[daddr, dport, saddr, sport][co.CONN_ID]
                             increment_value_dict(nb_acks[co.C2S][conn_id], bytes_acked)
                             if len(tcp.data) > 0 and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_D2S]:
                                 # This is a retransmission!
