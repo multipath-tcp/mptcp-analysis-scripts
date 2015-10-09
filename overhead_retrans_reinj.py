@@ -88,16 +88,21 @@ def plot(connections, multiflow_connections, sums_dir_exp):
             total_data_bytes = {co.C2S: 0, co.S2C: 0}
             reinj_data_bytes = {co.C2S: 0, co.S2C: 0}
 
+            # Restrict to connections using at least 2 SFs
+            ok = False
+
+            nb_flows = 0
+            for flow_id, flow in conn.flows.iteritems():
+                if flow.attr[co.C2S].get(co.BYTES, 0) > 0 or flow.attr[co.S2C].get(co.BYTES, 0) > 0:
+                    nb_flows += 1
+
+            if nb_flows >= 2:
+                ok = True
+
+            if not ok:
+                continue
+
             for direction in co.DIRECTIONS:
-                # Avoid taking into account connections that do not use at least two subflows
-                nb_flows = 0
-                for flow_id, flow in conn.flows.iteritems():
-                    if flow.attr[direction].get(co.BYTES, 0) > 0:
-                        nb_flows += 1
-
-                if nb_flows < 2:
-                    continue
-
                 total_unique[direction] += conn.attr[direction].get(co.BYTES_MPTCPTRACE, 0)
 
                 for flow_id, flow in conn.flows.iteritems():

@@ -157,19 +157,18 @@ nb_bytes_port = {}
 
 for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():
-        take = False
-        for direction in co.DIRECTIONS:
+        nb_flows = 0
+        for flow_id, flow in conn.flows.iteritems():
             # Avoid taking into account connections that do not use at least two subflows
-            nb_flows = 0
-            for flow_id, flow in conn.flows.iteritems():
-                if flow.attr[direction].get(co.BYTES, 0) > 0:
+                if flow.attr[co.C2S].get(co.BYTES, 0) > 0 or flow.attr[co.S2C].get(co.BYTES, 0) > 0:
                     nb_flows += 1
 
-            if nb_flows < 2:
-                continue
+        if nb_flows < 2:
+            continue
 
-            take = True
+        nb_conns += 1
 
+        for direction in co.DIRECTIONS:
             if conn.attr[direction][co.BYTES_MPTCPTRACE] > 1000000000:
                 print("MPTCP", fname, conn_id, direction, conn.attr[direction][co.BYTES_MPTCPTRACE])
             nb_bytes += conn.attr[direction][co.BYTES_MPTCPTRACE]
@@ -179,18 +178,6 @@ for fname, conns in multiflow_connections.iteritems():
                     print("TCP", fname, conn_id, flow_id, direction, flow.attr[direction].get(co.BYTES_DATA, 0))
                 nb_bytes_tcp += flow.attr[direction].get(co.BYTES_DATA, 0)
                 nb_bytes_tcp_dir[direction] += flow.attr[direction].get(co.BYTES_DATA, 0)
-                if port is not None:
-                    nb_bytes_port[port] += flow.attr[direction].get(co.BYTES_DATA, 0)
-
-        if take:
-            nb_conns += 1
-        port = conn.flows[0].attr.get(co.SOCKS_PORT, conn.attr.get(co.SOCKS_PORT, None))
-        if port and port not in nb_conns_port:
-            nb_conns_port[port] = 1
-            nb_bytes_port[port] = 0
-        elif port:
-            nb_conns_port[port] += 1
-
 
 print("TRACE 3")
 print("NB CONNS", nb_conns)
@@ -198,5 +185,3 @@ print("NB PACKETS", nb_packets)
 print("NB BYTES MPTCP", nb_bytes)
 print("NB BYTES", nb_bytes_tcp)
 print("NB BYTES DIR", nb_bytes_tcp_dir)
-print("PORT CONN", nb_conns_port)
-print("PORT BYTES", nb_bytes_port)

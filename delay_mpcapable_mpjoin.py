@@ -73,6 +73,8 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     syn_first_additional_sf = []
     syn_additional_sfs = []
     time_handover = []
+    time_handover_conn = []
+    time_handover_conn_info = []
     react_handover = []
     handover_conns = {}
     log_file = sys.stdout
@@ -90,13 +92,18 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         for conn_id, conn in conns.iteritems():
             # First find initial subflow timestamp
             initial_sf_ts = float('inf')
+            last_acks = []
             min_time_last_ack = float('inf')
             for flow_id, flow in conn.flows.iteritems():
                 if co.START not in flow.attr or flow.attr[co.SADDR] == co.IP_PROXY:
                     continue
                 if flow.attr[co.START] < initial_sf_ts:
                     initial_sf_ts = flow.attr[co.START]
-                if flow.attr[co.S2C].get(co.TIME_LAST_ACK_TCP, 0.0) > 0.0:
+                flow_bytes = 0
+                for direction in co.DIRECTIONS:
+                    flow_bytes += flow.attr[direction].get(co.BYTES_DATA, 0)
+                if flow_bytes > 0 and flow.attr[co.S2C].get(co.TIME_LAST_ACK_TCP, 0.0) > 0.0:
+                    last_acks.append(flow.attr[co.S2C][co.TIME_LAST_ACK_TCP])
                     min_time_last_ack = min(min_time_last_ack, flow.attr[co.S2C][co.TIME_LAST_ACK_TCP])
 
             if initial_sf_ts == float('inf'):
@@ -108,22 +115,32 @@ def plot(connections, multiflow_connections, sums_dir_exp):
             min_delta = float('inf')
             flow_id_min_delta = None
             for flow_id, flow in conn.flows.iteritems():
-                if co.START not in flow.attr:
+                if co.START not in flow.attr or flow.attr[co.SADDR] == co.IP_PROXY:
                     continue
                 delta = flow.attr[co.START] - initial_sf_ts
-                handover_delta = flow.attr[co.START] - min_time_last_ack
+                min_last_acks = float('inf')
+                if len(last_acks) >= 1:
+                    min_last_acks = min(last_acks)
+
+                max_last_payload = 0 - float('inf')
+                if flow.attr[co.C2S].get(co.BYTES, 0) > 0 or flow.attr[co.S2C].get(co.BYTES, 0) > 0:
+                    max_last_payload = max([flow.attr[direction][co.TIME_LAST_PAYLD] for direction in co.DIRECTIONS])
+                handover_delta = flow.attr[co.START] + max_last_payload - min_last_acks
                 if delta > 0.0:
                     min_delta = min(min_delta, delta)
                     if min_delta == delta:
                         flow_id_min_delta = flow_id
                     syn_additional_sfs.append(delta)
 
-                    if handover_delta >= 0.0:
+                    if handover_delta > 0.0:
                         # A subflow is established after the last ack of the client seen --> Handover
-                        time_handover.append(delta)
+                        time_handover.append(min_last_acks - initial_sf_ts)
                         react_handover.append(handover_delta)
+                        last_acks.remove(min_last_acks)
                         if not handover_detected:
                             handover_detected = True
+                            time_handover_conn.append(delta)
+                            time_handover_conn_info.append((min_last_acks - initial_sf_ts, delta, fname, conn_id))
                             handover_conns[fname][conn_id] = conn
                     if delta >= 50000:
                         print("HUGE DELTA", fname, conn_id, flow_id, delta, file=log_file)
@@ -249,10 +266,14 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                             bytes_init_sf += flow.attr[direction].get(co.BYTES, 0)
 
     # Log those values in the log file
-    print("DELTA HANDOVER IN FILE time_handover")
+    print("DELTA HANDOVER IN FILE delta_handover")
     co.save_data("delta_handover", sums_dir_exp, time_handover)
     print("REACT HANDOVER IN FILE react_handover")
     co.save_data("react_handover", sums_dir_exp, react_handover)
+    print("REACT HANDOVER IN FILE time_handover_conn")
+    co.save_data("time_handover_conn", sums_dir_exp, time_handover_conn)
+    print("REACT HANDOVER IN FILE time_handover_conn_info")
+    co.save_data("time_handover_conn_info", sums_dir_exp, time_handover_conn_info)
     print("QUANTIFY HANDOVER", file=log_file)
     print(bytes_init_sf, "BYTES ON INIT SF", bytes_init_sf * 100 / bytes_total, "%", file=log_file)
     print(bytes_init_sfs, "BYTES ON INIT SFS", bytes_init_sfs * 100 / bytes_total, "%", file=log_file)

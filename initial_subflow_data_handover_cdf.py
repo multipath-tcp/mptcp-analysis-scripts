@@ -69,53 +69,105 @@ INITIAL_SF = 'Initial SF'
 INITIAL_SFS = '2 Initial SFs'
 nb_conns = 0
 nb_bytes = {co.C2S: 0, co.S2C: 0}
+count_handover = 0
 
 results = {co.C2S: {INITIAL_SF: [], INITIAL_SFS: []}, co.S2C: {INITIAL_SF: [], INITIAL_SFS: []}}
 for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():
-        # Restrict to connections with more than 2 SFs (at least 3); if needed, can take 2SFs too
-        if len(conn.flows) > 2:
-            conn_bytes_tcp = 0
-            time_initial_sf = float('inf')
-            flow_id_initial_sf = None
-            for flow_id, flow in conn.flows.iteritems():
-                if flow.attr.get(co.START, float('inf')) < time_initial_sf:
-                    time_initial_sf = flow.attr[co.START]
-                    flow_id_initial_sf = flow_id
+        # Restrict to connections using at least 2 SFs
+        take = False
 
-            if not isinstance(flow_id_initial_sf, int):
+        nb_flows = 0
+        for flow_id, flow in conn.flows.iteritems():
+            if flow.attr[co.C2S].get(co.BYTES, 0) > 0 or flow.attr[co.S2C].get(co.BYTES, 0) > 0:
+                nb_flows += 1
+
+        if nb_flows >= 2:
+            take = True
+
+        if take:
+            # Detect now if there is handover
+            initial_sf_ts = float('inf')
+            last_acks = []
+            min_time_last_ack = float('inf')
+            for flow_id, flow in conn.flows.iteritems():
+                if co.START not in flow.attr or flow.attr[co.SADDR] == co.IP_PROXY:
+                    continue
+                if flow.attr[co.START] < initial_sf_ts:
+                    initial_sf_ts = flow.attr[co.START]
+                flow_bytes = 0
+                for direction in co.DIRECTIONS:
+                    flow_bytes += flow.attr[direction].get(co.BYTES_DATA, 0)
+                if flow_bytes > 0 and flow.attr[co.S2C].get(co.TIME_LAST_ACK_TCP, 0.0) > 0.0:
+                    last_acks.append(flow.attr[co.S2C][co.TIME_LAST_ACK_TCP])
+                    min_time_last_ack = min(min_time_last_ack, flow.attr[co.S2C][co.TIME_LAST_ACK_TCP])
+
+            if initial_sf_ts == float('inf'):
                 continue
 
-            time_second_sf = float('inf')
-            flow_id_second_sf = None
+            # Now store the delta and record connections with handover
+            handover_detected = False
+            min_delta = float('inf')
             for flow_id, flow in conn.flows.iteritems():
-                if not flow_id == flow_id_initial_sf:
-                    if flow.attr.get(co.START, float('inf')) < time_second_sf:
-                        time_second_sf = flow.attr[co.START]
-                        flow_id_second_sf = flow_id
+                if handover_detected or co.START not in flow.attr or flow.attr[co.SADDR] == co.IP_PROXY:
+                    continue
+                delta = flow.attr[co.START] - initial_sf_ts
+                min_last_acks = float('inf')
+                if len(last_acks) >= 1:
+                    min_last_acks = min(last_acks)
 
-            if not isinstance(flow_id_second_sf, int):
-                continue
+                max_last_payload = 0 - float('inf')
+                if flow.attr[co.C2S].get(co.BYTES, 0) > 0 or flow.attr[co.S2C].get(co.BYTES, 0) > 0:
+                    max_last_payload = max([flow.attr[direction][co.TIME_LAST_PAYLD] for direction in co.DIRECTIONS])
 
-            nb_conns += 1
+                handover_delta = flow.attr[co.START] + max_last_payload - min_last_acks
+                if delta > 0.0 and handover_delta > 0.0:
+                    # A subflow is established after the last ack of the client seen --> Handover
+                    count_handover += 1
+                    handover_detected = True
 
-            for direction in co.DIRECTIONS:
-                # First count number of total data bytes
+            if handover_detected:
                 conn_bytes_tcp = 0
+                time_initial_sf = float('inf')
+                flow_id_initial_sf = None
                 for flow_id, flow in conn.flows.iteritems():
-                    conn_bytes_tcp += flow.attr[direction].get(co.BYTES, 0)
+                    if flow.attr.get(co.START, float('inf')) < time_initial_sf:
+                        time_initial_sf = flow.attr[co.START]
+                        flow_id_initial_sf = flow_id
 
-                if conn_bytes_tcp <= 0:
-                    break
+                if not isinstance(flow_id_initial_sf, int):
+                    continue
 
-                nb_bytes[direction] += conn_bytes_tcp
+                # time_second_sf = float('inf')
+                # flow_id_second_sf = None
+                # for flow_id, flow in conn.flows.iteritems():
+                #     if not flow_id == flow_id_initial_sf:
+                #         if flow.attr.get(co.START, float('inf')) < time_second_sf:
+                #             time_second_sf = flow.attr[co.START]
+                #             flow_id_second_sf = flow_id
+                #
+                # if not isinstance(flow_id_second_sf, int):
+                #     continue
 
-                bytes_initial_sf = conn.flows[flow_id_initial_sf].attr[direction].get(co.BYTES, 0) + 0.0
-                bytes_initial_sfs = bytes_initial_sf + conn.flows[flow_id_second_sf].attr[direction].get(co.BYTES, 0) + 0.0
-                results[direction][INITIAL_SF].append((bytes_initial_sf + 0.0) / conn_bytes_tcp)
-                results[direction][INITIAL_SFS].append((bytes_initial_sfs + 0.0) / conn_bytes_tcp)
+                nb_conns += 1
 
-base_graph_name = 'initial_sf_bytes_'
+                for direction in co.DIRECTIONS:
+                    # First count number of total data bytes
+                    conn_bytes_tcp = 0
+                    for flow_id, flow in conn.flows.iteritems():
+                        conn_bytes_tcp += flow.attr[direction].get(co.BYTES, 0)
+
+                    if conn_bytes_tcp <= 0:
+                        break
+
+                    nb_bytes[direction] += conn_bytes_tcp
+
+                    bytes_initial_sf = conn.flows[flow_id_initial_sf].attr[direction].get(co.BYTES, 0) + 0.0
+                    # bytes_initial_sfs = bytes_initial_sf + conn.flows[flow_id_second_sf].attr[direction].get(co.BYTES_DATA, 0) + 0.0
+                    results[direction][INITIAL_SF].append((bytes_initial_sf + 0.0) / conn_bytes_tcp)
+                    # results[direction][INITIAL_SFS].append((bytes_initial_sfs + 0.0) / conn_bytes_tcp)
+
+base_graph_name = 'initial_sf_bytes_handover_'
 color = {INITIAL_SF: 'red', INITIAL_SFS: 'blue'}
 ls = {INITIAL_SFS: '--', INITIAL_SF: '-'}
 for direction in co.DIRECTIONS:
@@ -125,7 +177,7 @@ for direction in co.DIRECTIONS:
     graph_fname = os.path.splitext(base_graph_name)[0] + "cdf_" + direction + ".pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
-    for label in [INITIAL_SF, INITIAL_SFS]:
+    for label in [INITIAL_SF]:
         sample = np.array(sorted(results[direction][label]))
         sorted_array = np.sort(sample)
         yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
@@ -145,10 +197,11 @@ for direction in co.DIRECTIONS:
             # Put a legend above current axis
             # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
     ax.legend(loc='best')
-    plt.xlabel('Fraction of total data bytes', fontsize=24)
+    plt.xlabel('Fraction of total unique bytes', fontsize=24)
     plt.ylabel("CDF", fontsize=24)
     plt.savefig(graph_full_path)
     plt.close('all')
 
 print("NB CONNS: ", nb_conns)
 print("NB BYTES: ", nb_bytes)
+print(count_handover)
