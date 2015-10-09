@@ -96,7 +96,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                     continue
                 if flow.attr[co.START] < initial_sf_ts:
                     initial_sf_ts = flow.attr[co.START]
-                if flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] > 0.0:
+                if flow.attr[co.S2C].get(co.TIME_LAST_ACK_TCP, 0.0) > 0.0:
                     min_time_last_ack = min(min_time_last_ack, flow.attr[co.S2C][co.TIME_LAST_ACK_TCP])
 
             if initial_sf_ts == float('inf'):
