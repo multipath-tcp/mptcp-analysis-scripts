@@ -228,6 +228,7 @@ TIME_LAST_PAYLD = 'time_last_payload'
 TIME_FIRST_ACK = 'time_first_ack'
 
 TIME_LAST_ACK_TCP = 'time_last_ack_tcp'
+TIME_LAST_PAYLD_TCP = 'time_last_payload_tcp'
 
 TTL_MIN = 'time_to_live_min'
 TTL_MAX = 'time_to_live_max'
@@ -481,7 +482,7 @@ def copy_remain_pcap_file(pcap_filepath, print_out=sys.stdout):
 def save_data(filepath, dir_exp, data):
     """ Using the name pcap_fname, save data in a file with filename fname in dir dir_exp """
     path_name = os.path.join(
-        dir_exp, os.path.splitext(filepath)[0])
+        dir_exp, os.path.splitext(os.path.basename(filepath))[0])
     try:
         data_file = open(path_name, 'w')
         pickle.dump(data, data_file)

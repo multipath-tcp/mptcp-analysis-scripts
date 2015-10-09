@@ -210,6 +210,9 @@ def extract_tstat_data_tcp_complete(filename, connections, conn_id):
             connection.flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = 0.0
             connection.flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = 0.0
 
+            connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD_TCP] = 0.0
+            connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD_TCP] = 0.0
+
             connections[conn_id] = connection
 
     log_file.close()
@@ -279,6 +282,9 @@ def extract_tstat_data_tcp_nocomplete(filename, connections, conn_id):
 
             connection.flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = 0.0
             connection.flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = 0.0
+
+            connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD_TCP] = 0.0
+            connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD_TCP] = 0.0
 
             connections[conn_id] = connection
 
@@ -766,6 +772,7 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                                 connections[conn_id].flow.attr[co.C2S][co.TIMESTAMP_RETRANS].append(ts)
                             elif len(tcp.data) > 0:
                                 acks[saddr, sport, daddr, dport][SEQ_S2D].add(tcp.seq)
+                                connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_TCP] = ts
                                 # Don't think will face this issue
 #                                 if len(acks[saddr, sport, daddr, dport][SEQ][co.C2S]) >= 3000000:
 #                                     for x in range(50000):
@@ -785,6 +792,7 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                                 connections[conn_id].flow.attr[co.S2C][co.TIMESTAMP_RETRANS].append(ts)
                             elif len(tcp.data) > 0:
                                 acks[daddr, dport, saddr, sport][SEQ_D2S].add(tcp.seq)
+                                connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_TCP] = ts
                                 # Don't think will face this issue
 #                                 if len(acks[daddr, dport, saddr, sport][SEQ][co.S2C]) >= 3000000:
 #                                     for x in range(50000):
