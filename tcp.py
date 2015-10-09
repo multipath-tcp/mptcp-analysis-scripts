@@ -213,6 +213,9 @@ def extract_tstat_data_tcp_complete(filename, connections, conn_id):
             connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD_TCP] = 0.0
             connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD_TCP] = 0.0
 
+            connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = 0.0
+            connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = 0.0
+
             connections[conn_id] = connection
 
     log_file.close()
@@ -285,6 +288,9 @@ def extract_tstat_data_tcp_nocomplete(filename, connections, conn_id):
 
             connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD_TCP] = 0.0
             connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD_TCP] = 0.0
+
+            connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = 0.0
+            connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = 0.0
 
             connections[conn_id] = connection
 
@@ -769,9 +775,11 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                                     connections[conn_id].attr[co.SOCKS_PORT] = socks_parser.get_port_number(decrypted_socks_cmd)
                             if len(tcp.data) > 0 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_S2D]:
                                 # This is a retransmission! (take into account the seq overflow)
+                                connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts
                                 connections[conn_id].flow.attr[co.C2S][co.TIMESTAMP_RETRANS].append(ts)
                             elif len(tcp.data) > 0:
                                 acks[saddr, sport, daddr, dport][SEQ_S2D].add(tcp.seq)
+                                connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts
                                 connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_TCP] = ts
                                 # Don't think will face this issue
 #                                 if len(acks[saddr, sport, daddr, dport][SEQ][co.C2S]) >= 3000000:
@@ -789,9 +797,11 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                             increment_value_dict(nb_acks[co.C2S][conn_id], bytes_acked)
                             if len(tcp.data) > 0 and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_D2S]:
                                 # This is a retransmission!
+                                connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts
                                 connections[conn_id].flow.attr[co.S2C][co.TIMESTAMP_RETRANS].append(ts)
                             elif len(tcp.data) > 0:
                                 acks[daddr, dport, saddr, sport][SEQ_D2S].add(tcp.seq)
+                                connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts
                                 connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_TCP] = ts
                                 # Don't think will face this issue
 #                                 if len(acks[daddr, dport, saddr, sport][SEQ][co.S2C]) >= 3000000:

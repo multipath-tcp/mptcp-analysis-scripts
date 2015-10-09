@@ -229,6 +229,7 @@ TIME_FIRST_ACK = 'time_first_ack'
 
 TIME_LAST_ACK_TCP = 'time_last_ack_tcp'
 TIME_LAST_PAYLD_TCP = 'time_last_payload_tcp'
+TIME_LAST_PAYLD_WITH_RETRANS_TCP = 'time_last_payload_with_retrans_tcp'
 
 TTL_MIN = 'time_to_live_min'
 TTL_MAX = 'time_to_live_max'
