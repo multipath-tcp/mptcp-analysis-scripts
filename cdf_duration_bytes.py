@@ -74,6 +74,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     data_bytes = []
     subflows_bytes = []
     data_packets = []
+    ports_11_bytes = {}
     color = 'red'
     base_graph_name_duration = "summary_cdf_duration"
     base_graph_path_duration = os.path.join(sums_dir_exp, base_graph_name_duration)
@@ -95,8 +96,16 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                 for direction in co.DIRECTIONS:
                     bytes += conn.attr[direction][co.BYTES_MPTCPTRACE]
                     if co.BURSTS in conn.attr[direction]:
-                        for flow_id, seq_burst, pkt_burst, duration, time in conn.attr[direction][co.BURSTS]:
+                        for flow_id, seq_burst, pkt_burst, seq_duration, time in conn.attr[direction][co.BURSTS]:
                             data_pkts += pkt_burst
+
+                if bytes == 11:
+                    if co.SOCKS_PORT in conn.attr:
+                        socks_port = conn.attr[co.SOCKS_PORT]
+                        if socks_port not in ports_11_bytes:
+                            ports_11_bytes[socks_port] = 1
+                        else:
+                            ports_11_bytes[socks_port] += 1
 
                 if duration >= ALERT_DURATION:
                     print("DURATION", fname, conn_id, duration)
@@ -140,6 +149,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     print("PERCENTAGE <= 5KB", len([x for x in data_bytes if x <= 5000]) * 100.0 / len(data_bytes))
     print("PERCENTAGE <= 10KB", len([x for x in data_bytes if x <= 10000]) * 100.0 / len(data_bytes))
     print("PERCENTAGE [9;11] B", len([x for x in data_bytes if x <= 11 and x >= 9]) * 100.0 / len(data_bytes))
+    print("PORTS 11 B", ports_11_bytes)
 
     print("PERCENTAGE <= 2 packs", len([x for x in data_packets if x <= 2]) * 100.0 / len(data_packets))
     print("PERCENTAGE <= 3 packs", len([x for x in data_packets if x <= 3]) * 100.0 / len(data_packets))

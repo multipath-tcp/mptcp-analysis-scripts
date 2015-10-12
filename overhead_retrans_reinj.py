@@ -157,6 +157,8 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                         index += 1
                 min_y = min(min_y, yvals[index])
                 print("YMIN", dataset, yvals[index])
+                print("1%", dataset, (len([x for x in sorted_array if x <= 0.01]) + 0.0) / len(sorted_array))
+                print("10%", dataset, (len([x for x in sorted_array if x <= 0.1]) + 0.0) / len(sorted_array))
                 # Log plot
 
                 ax.plot(sorted_array, yvals, color=color[dataset], linewidth=2, linestyle=ls[dataset], label=dataset)
