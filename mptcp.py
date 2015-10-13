@@ -52,6 +52,11 @@ MPTCP_STATS_PREFIX = 'stats_'
 MPTCP_GPUT_FNAME = 'gput'
 # mptcptrace file identifier in csv filename for acksize information
 MPTCP_ACKSIZE_FNAME = '_acksize_'
+# mptcptrace file identifier in csv filename for addaddr information
+MPTCP_ADDADDR_FNAME = 'add_addr_'
+# mptcptrace file identifier in csv filename for rmaddr information
+MPTCP_RMADDR_FNAME = 'rm_addr_'
+
 
 
 ##################################################
@@ -744,6 +749,29 @@ def collect_acksize_csv(csv_fname, connections, acksize_dict):
         print("No acksize info for " + csv_fname, file=sys.stderr)
 
 
+def process_add_addr_csv(csv_fname, connections, conn_id):
+    add_addrs = []
+    csv_file = open(csv_fname)
+    csv_data = csv_file.readlines()
+
+    for line in csv_data:
+        add_addrs.append(line.split(','))
+
+    connections[conn_id].attr[co.ADD_ADDRS] = add_addrs
+    csv_file.close()
+
+
+def process_rm_addr_csv(csv_fname, connections, conn_id):
+    rm_addrs = []
+    csv_file = open(csv_fname)
+    csv_data = csv_file.readlines()
+
+    for line in csv_data:
+        rm_addrs.append(line.split(','))
+
+    connections[conn_id].attr[co.RM_ADDRS] = rm_addrs
+    csv_file.close()
+
 # We can't change dir per thread, we should use processes
 def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, plot_cwin, tcpcsm, min_bytes=0, light=False):
     """ Process a mptcp pcap file and generate graphs of its subflows """
@@ -777,7 +805,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
             #     raise MPTCPTraceError("Error of mptcptrace with " + pcap_filepath)
             # devnull.close()
 
-            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-S', '-a', '-r', '2', '-t', '5000', '-w', '2']
+            cmd = ['mptcptrace', '-f', pcap_filepath, '-s', '-S', '-a', '-A', '-R', '-r', '2', '-t', '5000', '-w', '2']
             # if not light:
             #     cmd += ['-G', '250', '-r', '2', '-F', '3', '-a']
             connections = process_mptcptrace_cmd(cmd, pcap_filepath)
@@ -808,7 +836,25 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
                     if MPTCP_GPUT_FNAME in os.path.basename(csv_fname):
                         process_gput_csv(csv_fname, connections)
                 try:
-                    if MPTCP_RTT_FNAME in os.path.basename(csv_fname):
+                    if os.path.basename(csv_fname).startswith(MPTCP_ADDADDR_FNAME):
+                        conn_id = get_connection_id(os.path.basename(csv_fname))
+                        if conn_id not in connections:
+                            # Not a real connection; skip it
+                            continue
+
+                        process_add_addr_csv(csv_fname, connections, conn_id)
+                        os.remove(csv_fname)
+
+                    elif os.path.basename(csv_fname).startswith(MPTCP_RMADDR_FNAME):
+                        conn_id = get_connection_id(os.path.basename(csv_fname))
+                        if conn_id not in connections:
+                            # Not a real connection; skip it
+                            continue
+
+                        process_rm_addr_csv(csv_fname, connections, conn_id)
+                        os.remove(csv_fname)
+
+                    elif MPTCP_RTT_FNAME in os.path.basename(csv_fname):
                         conn_id = get_connection_id(os.path.basename(csv_fname))
                         if conn_id not in connections:
                             # Not a real connection; skip it
