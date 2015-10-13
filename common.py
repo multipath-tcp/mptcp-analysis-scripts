@@ -282,6 +282,11 @@ CONN_ID = 'conn_id'
 SOCKS_PORT = 'socks_port'
 SOCKS_DADDR = 'socks_daddr'
 
+ADD_ADDRS = 'add_addrs'
+RM_ADDRS = 'rm_addrs'
+
+BACKUP = 'backup'
+
 if os.path.isfile('config.py'):
     import config as conf
     IP_PROXY = conf.IP_PROXY

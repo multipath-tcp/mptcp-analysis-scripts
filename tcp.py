@@ -587,6 +587,8 @@ def copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns,
         mptcp_connections[conn_id].flows[flow_id].subflow_id = flow_name
         mptcp_connections[conn_id].flows[flow_id].attr[co.START] = connection.flow.attr[co.START]
         mptcp_connections[conn_id].flows[flow_id].attr[co.DURATION] = connection.flow.attr[co.DURATION]
+        if co.BACKUP in connection.attr:
+            mptcp_connections[conn_id].flows[flow_id].attr[co.BACKUP] = connection.attr[co.BACKUP]
         if co.SOCKS_PORT in connection.attr:
             mptcp_connections[conn_id].flows[flow_id].attr[co.SOCKS_PORT] = connection.attr[co.SOCKS_PORT]
             mptcp_connections[conn_id].flows[flow_id].attr[co.SOCKS_DADDR] = connection.attr[co.SOCKS_DADDR]
@@ -733,6 +735,16 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                         for direction in co.DIRECTIONS:
                             nb_acks[direction][conn_id] = {}
 
+                    backup = False
+                    # Detect if backup subflow
+                    opt_list = dpkt.tcp.parse_opts(tcp.opts)
+                    for option_num, option_content in opt_list:
+                        # Only interested in MPTCP with JOIN (len of 10 because join has len of 12 with 1 of option num and 1 of length)
+                        if option_num == 30 and len(option_content):
+                            # Join + backup bit
+                            if ord(option_content[0]) == 17:
+                                backup = True
+
                     # Don't take to much time to print...
                     # if (saddr, sport, daddr, dport) in acks:
                         # Already taken, but maybe old, such that we can overwrite it (show on screen the TS difference)
@@ -742,6 +754,7 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                         connections[conn_id].flow.attr[co.C2S][co.TIMESTAMP_RETRANS].append(ts)
                     else:
                         acks[saddr, sport, daddr, dport] = {co.C2S: -1, co.S2C: -1, co.TIMESTAMP: ts, co.CONN_ID: conn_id, SEQ_S2D: set([tcp.seq]), SEQ_D2S: set([])}
+                        connections[conn_id].attr[co.BACKUP] = backup
 
                 elif (saddr, sport, daddr, dport) in black_list:
                     continue
