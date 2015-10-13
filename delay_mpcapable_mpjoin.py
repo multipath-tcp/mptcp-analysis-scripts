@@ -77,6 +77,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     time_handover_conn_info = []
     react_handover = []
     handover_conns = {}
+    second_sf_handover = []
     log_file = sys.stdout
     less_200ms = 0
     less_1s = 0
@@ -92,6 +93,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         for conn_id, conn in conns.iteritems():
             # First find initial subflow timestamp
             initial_sf_ts = float('inf')
+            initial_sf_id = None
             last_acks = []
             min_time_last_ack = float('inf')
             for flow_id, flow in conn.flows.iteritems():
@@ -99,6 +101,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                     continue
                 if flow.attr[co.START] < initial_sf_ts:
                     initial_sf_ts = flow.attr[co.START]
+                    initial_sf_id = flow_id
                 flow_bytes = 0
                 for direction in co.DIRECTIONS:
                     flow_bytes += flow.attr[direction].get(co.BYTES_DATA, 0)
@@ -158,6 +161,9 @@ def plot(connections, multiflow_connections, sums_dir_exp):
 
             if flow_id_min_delta:
                 syn_first_additional_sf.append(min_delta)
+                if conn.flows[initial_sf_id].attr[co.S2C][co.TIME_LAST_ACK_TCP] < conn.flows[flow_id_min_delta].attr[co.START]:
+                    # Handover between initial and second subflow
+                    second_sf_handover.append(min_delta)
                 if delta <= 0.2:
                     less_200ms_second += 1
                 if delta <= 1:
@@ -277,6 +283,8 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     co.save_data("time_handover_conn", sums_dir_exp, time_handover_conn)
     print("REACT HANDOVER IN FILE time_handover_conn_info")
     co.save_data("time_handover_conn_info", sums_dir_exp, time_handover_conn_info)
+    print("SECOND SF HANDOVER IN FILE second_sf_handover")
+    co.save_data("second_sf_handover", sums_dir_exp, second_sf_handover)
     print("QUANTIFY HANDOVER", file=log_file)
     print(bytes_init_sf, "BYTES ON INIT SF", bytes_init_sf * 100 / bytes_total, "%", file=log_file)
     print(bytes_init_sfs, "BYTES ON INIT SFS", bytes_init_sfs * 100 / bytes_total, "%", file=log_file)
