@@ -130,6 +130,8 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                     min_delta = min(min_delta, delta)
                     if min_delta == delta:
                         flow_id_min_delta = flow_id
+                    if delta < 0.01:
+                        print(fname, conn_id, flow_id, delta)
                     syn_additional_sfs.append(delta)
 
                     if handover_delta > 0.0:
@@ -201,6 +203,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
         ax.legend(loc='lower right')
 
+        plt.xlim(xmin=0.01)
         plt.xlabel('Time between MP_JOIN and MP_CAP [s]', fontsize=24)
         plt.ylabel("CDF", fontsize=24)
         plt.savefig(graph_fname_log)

@@ -164,9 +164,17 @@ for protocol, acks_protocol in sums_acks.iteritems():
             to_plot[protocol][direction][i][1] = (to_plot[protocol][direction][i][1] + 0.0) / total_bytes
 
 for protocol, tot_prot in totot.iteritems():
-    for direction, tot_dir  in tot_prot.iteritems():
+    for direction, tot_dir in tot_prot.iteritems():
         print(protocol, direction, tot_dir)
         print(totot_fname[protocol][direction])
+        for elem in sorted(to_plot[protocol][direction], key=lambda elem: elem[0]):
+            if elem[1] >= 2856:
+                print("2856B", protocol, direction, elem[0], elem[1])
+                break
+        for elem in sorted(to_plot[protocol][direction], key=lambda elem: elem[0]):
+            if elem[1] >= 20000:
+                print("20K", protocol, direction, elem[0], elem[1])
+                break
 
 for direction in co.DIRECTIONS:
     graph_filepath = os.path.join(sums_dir_exp, "acks_size_" + direction + ".pdf")
