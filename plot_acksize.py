@@ -156,8 +156,6 @@ for protocol, acks_protocol in sums_acks.iteritems():
                 continue
             total_bytes += value_ack * nb_ack
             to_plot[protocol][direction].append([value_ack, total_bytes])
-            if value_ack >= 1000 and value_ack <= 2000:
-                print(value_ack, total_bytes)
             totot[protocol][direction] += value_ack * nb_ack
 
         for i in range(0, len(to_plot[protocol][direction])):
@@ -168,11 +166,11 @@ for protocol, tot_prot in totot.iteritems():
         print(protocol, direction, tot_dir)
         print(totot_fname[protocol][direction])
         for elem in sorted(to_plot[protocol][direction], key=lambda elem: elem[0]):
-            if elem[1] >= 2856:
+            if elem[0] >= 2856:
                 print("2856B", protocol, direction, elem[0], elem[1])
                 break
         for elem in sorted(to_plot[protocol][direction], key=lambda elem: elem[0]):
-            if elem[1] >= 20000:
+            if elem[0] >= 20000:
                 print("20K", protocol, direction, elem[0], elem[1])
                 break
 
