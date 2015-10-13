@@ -166,6 +166,10 @@ for protocol, tot_prot in totot.iteritems():
         print(protocol, direction, tot_dir)
         print(totot_fname[protocol][direction])
         for elem in sorted(to_plot[protocol][direction], key=lambda elem: elem[0]):
+            if elem[0] >= 1428:
+                print("1428B", protocol, direction, elem[0], elem[1])
+                break
+        for elem in sorted(to_plot[protocol][direction], key=lambda elem: elem[0]):
             if elem[0] >= 2856:
                 print("2856B", protocol, direction, elem[0], elem[1])
                 break
