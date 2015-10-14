@@ -255,7 +255,7 @@ for direction in co.DIRECTIONS:
 
     ax.legend(loc='best')
     plt.xlim(0.0, 1.0)
-    plt.xlabel('Fraction of connection packets', fontsize=24)
+    plt.xlabel('Fraction of connection packets', fontsize=24, labelpad=-1)
     plt.ylabel("Weighted CDF", fontsize=24)
     plt.savefig(graph_full_path)
     plt.close('all')
