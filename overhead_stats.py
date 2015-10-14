@@ -72,6 +72,7 @@ nb_addi_sf = 0
 nb_unused_addi_sf = 0
 nb_unused_rst = 0
 nb_unused_addi_rst = 0
+nb_unused_addi_bak = 0
 nb_after_duration = 0
 nb_after_duration_bursts = 0
 better_rtt = 0
@@ -91,6 +92,9 @@ for fname, conns in multiflow_connections.iteritems():
                 nb_unused += 1
                 if not flow_id == 0:
                     nb_unused_addi_sf += 1
+
+                if flow.attr.get(co.BACKUP, False):
+                    nb_unused_addi_bak += 1
 
                 if not flow.attr[co.S2D].get(co.NB_RST, 0) == 0 or not flow.attr[co.D2S].get(co.NB_RST, 0) == 0:
                     nb_unused_rst += 1
@@ -149,6 +153,7 @@ print("NB ADDI SF", nb_addi_sf)
 print("NB UNUSED ADDI SF", nb_unused_addi_sf)
 print("NB UNUSED RST", nb_unused_rst)
 print("NB UNUSED ADDI RST", nb_unused_addi_rst)
+print("NB UNUSED ADDI BAK", nb_unused_addi_bak)
 print("NB AFTER DURATION", nb_after_duration)
 print("NB AFTER DURATION BURSTS", nb_after_duration_bursts)
 print("BETTER RTT", better_rtt)
