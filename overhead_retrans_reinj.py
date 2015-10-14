@@ -166,7 +166,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
         ax.set_xscale('log')
         ax.legend(loc='lower right')
 
-        plt.xlabel('Fraction of unique bytes', fontsize=24)
+        plt.xlabel('Fraction of unique bytes', fontsize=24, labelpad=-1)
         plt.ylabel("CDF", fontsize=24)
         plt.ylim(ymin=min_y - 0.01)
         print("YMIN:", min_y)
