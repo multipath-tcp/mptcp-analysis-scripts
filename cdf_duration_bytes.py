@@ -143,6 +143,8 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     print("PERCENTAGE 0 s", len([x for x in data_duration if x <= 0.00001]) * 100.0 / len(data_duration))
     print("PERCENTAGE <=10 s", len([x for x in data_duration if x <= 10.0]) * 100.0 / len(data_duration))
     print("PERCENTAGE >=100 s", len([x for x in data_duration if x >= 100.0]) * 100.0 / len(data_duration))
+    print("PERCENTAGE >=1 day", len([x for x in data_duration if x >= 86400.0]) * 100.0 / len(data_duration))
+    print("NUMBER >=1 day", len([x for x in data_duration if x >= 86400.0]))
 
     print("PERCENTAGE <= 1KB", len([x for x in data_bytes if x <= 1000]) * 100.0 / len(data_bytes))
     print("PERCENTAGE <= 2KB", len([x for x in data_bytes if x <= 2000]) * 100.0 / len(data_bytes))
