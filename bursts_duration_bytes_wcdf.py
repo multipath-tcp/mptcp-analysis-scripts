@@ -237,6 +237,7 @@ for direction in co.DIRECTIONS:
             yvals.append(tot)
 
         yvals = [x / tot for x in yvals]
+        print("PERCENTAGE 1 BLOCK", direction, label, len([x for x in sorted_array if x >= 0.99]) * 100. / tot)
         if len(sorted_array) > 0:
             # Add a last point
             sorted_array = np.append(sorted_array, sorted_array[-1])
