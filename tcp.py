@@ -207,6 +207,9 @@ def extract_tstat_data_tcp_complete(filename, connections, conn_id):
             connection.flow.attr[co.C2S][co.TIMESTAMP_RETRANS] = []
             connection.flow.attr[co.S2C][co.TIMESTAMP_RETRANS] = []
 
+            connection.flow.attr[co.C2S][co.TIME_FIN_ACK_TCP] = 0.0
+            connection.flow.attr[co.S2C][co.TIME_FIN_ACK_TCP] = 0.0
+
             connection.flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = 0.0
             connection.flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = 0.0
 
@@ -282,6 +285,9 @@ def extract_tstat_data_tcp_nocomplete(filename, connections, conn_id):
 
             connection.flow.attr[co.C2S][co.TIMESTAMP_RETRANS] = []
             connection.flow.attr[co.S2C][co.TIMESTAMP_RETRANS] = []
+
+            connection.flow.attr[co.C2S][co.TIME_FIN_ACK_TCP] = 0.0
+            connection.flow.attr[co.S2C][co.TIME_FIN_ACK_TCP] = 0.0
 
             connection.flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = 0.0
             connection.flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = 0.0
@@ -774,6 +780,9 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                         if acks[saddr, sport, daddr, dport][co.S2C] >= 0:
                             conn_id = acks[saddr, sport, daddr, dport][co.CONN_ID]
                             connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = ts
+                            if fin_flag:
+                                connections[conn_id].flow.attr[co.S2C][co.TIME_FIN_ACK_TCP] = ts
+
                             bytes_acked = (tcp.ack - acks[saddr, sport, daddr, dport][co.S2C]) % 4294967296
                             if bytes_acked >= 2000000000:
                                 # Ack of 2GB or more is just not possible here
@@ -803,6 +812,9 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                         if acks[daddr, dport, saddr, sport][co.C2S] >= 0:
                             conn_id = acks[daddr, dport, saddr, sport][co.CONN_ID]
                             connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = ts
+                            if fin_flag:
+                                connections[conn_id].flow.attr[co.C2S][co.TIME_FIN_ACK_TCP] = ts
+
                             bytes_acked = (tcp.ack - acks[daddr, dport, saddr, sport][co.C2S]) % 4294967296
                             if bytes_acked >= 2000000000:
                                 # Ack of 2GB or more is just not possible here
