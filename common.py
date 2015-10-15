@@ -20,7 +20,7 @@
 from __future__ import print_function
 
 ##################################################
-##                   IMPORTS                    ##
+#                    IMPORTS                     #
 ##################################################
 
 import os
@@ -34,7 +34,6 @@ import numpy as np
 import pickle
 from scipy.stats import gaussian_kde
 import shutil
-import statsmodels.api as sm
 import subprocess
 import sys
 import tempfile
@@ -43,29 +42,14 @@ import traceback
 
 from multiprocessing import Process
 
-
-# # This import must be done here, because of the internals of matplotlib
-# from matplotlib.backends.backend_pgf import FigureCanvasPgf
-# matplotlib.backend_bases.register_backend('pdf', FigureCanvasPgf)
-#
-# pgf_with_pdflatex = {
-#     "pgf.texsystem": "pdflatex",
-#     ##"pgf.preamble": [
-#     ##    r'\usepackage{amsmath}',
-#     ##    r'\usepackage[scientific-notation=true]{siunitx}',
-#     ##      r"\usepackage[utf8x]{inputenc}",
-#     ##      r"\usepackage[T1]{fontenc}",
-#     ##    ]
-# }
-# matplotlib.rcParams.update(pgf_with_pdflatex)
-
 ##################################################
-##               COMMON CLASSES                 ##
+#                COMMON CLASSES                  #
 ##################################################
+
 
 class cd:
 
-    """Context manager for changing the current working directory"""
+    """ Context manager to change the current working directory """
 
     def __init__(self, newPath):
         self.newPath = newPath
@@ -77,18 +61,16 @@ class cd:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
 
-
 ##################################################
-##              COMMON EXCEPTIONS               ##
+#               COMMON EXCEPTIONS                #
 ##################################################
 
 
 class TSharkError(Exception):
     pass
 
-
 ##################################################
-##               COMMON CONSTANTS               ##
+#                COMMON CONSTANTS                #
 ##################################################
 # Lines in xpl files that starts with one of the words in XPL_ONE_POINT have one point
 XPL_ONE_POINT = ['darrow', 'uarrow', 'diamond', 'dot', 'atext', 'dtick', 'utick', 'atext', 'box', 'htick']
@@ -218,29 +200,36 @@ S2C = 'server2client'
 S2D = C2S
 D2S = S2C
 
+# Number of SYN, FIN, RST and ACK seen on a subflow
 NB_SYN = 'nb_syn'
 NB_FIN = 'nb_fin'
 NB_RST = 'nb_rst'
 NB_ACK = 'nb_ack'
 
+# Relative time to the beginning of the connection
 TIME_FIRST_PAYLD = 'time_first_payload'
 TIME_LAST_PAYLD = 'time_last_payload'
 TIME_FIRST_ACK = 'time_first_ack'
 
+# Timestamp (absolute values)
 TIME_FIN_ACK_TCP = 'time_fin_ack_tcp'
 TIME_LAST_ACK_TCP = 'time_last_ack_tcp'
 TIME_LAST_PAYLD_TCP = 'time_last_payload_tcp'
 TIME_LAST_PAYLD_WITH_RETRANS_TCP = 'time_last_payload_with_retrans_tcp'
 
+# Time to live
 TTL_MIN = 'time_to_live_min'
 TTL_MAX = 'time_to_live_max'
 
+# Segment size
 SS_MIN = 'segment_size_min'
 SS_MAX = 'segment_size_max'
 
+# Congestion window
 CWIN_MIN = 'minimum_in_flight_size'
 CWIN_MAX = 'maximum_in_flight_size'
 
+# Subflow inefficiencies
 NB_RTX_RTO = 'nb_rtx_rto'
 NB_RTX_FR = 'nb_rtx_fr'
 NB_REORDERING = 'nb_reordering'
@@ -250,9 +239,11 @@ NB_FLOW_CONTROL = 'nb_flow_control'
 NB_UNNECE_RTX_RTO = 'nb_unnecessary_rtx_rto'
 NB_UNNECE_RTX_FR = 'nb_unnecessary_rtx_fr'
 
+# Multipath TCP inefficiencies
 REINJ_BYTES = 'reinj_bytes'
 REINJ_PC = 'reinj_pc'
 
+# To process both directions
 DIRECTIONS = [C2S, S2C]
 
 IPv4 = 'IPv4'
@@ -266,11 +257,12 @@ PORT_RSOCKS = '8123'
 PREFIX_WIFI_IF = '192.168.'
 # Size of Latin alphabet
 SIZE_LAT_ALPH = 26
-# IP address of the proxy
+# IP address of the proxy (has to be overriden)
 IP_PROXY = False
 # Size of the header of frame of a MPTCP packet with data (16 + 20 + 52)
 FRAME_MPTCP_OVERHEAD = 88
 
+# Those values have to be overriden
 PREFIX_IP_WIFI = False
 PREFIX_IP_PROXY = False
 
@@ -280,12 +272,15 @@ IP_CELL = False
 TIMESTAMP = 'timestamp'
 CONN_ID = 'conn_id'
 
+# Info from the SOCKS command
 SOCKS_PORT = 'socks_port'
 SOCKS_DADDR = 'socks_daddr'
 
+# ADD_ADDRs and REMOVE_ADDRs
 ADD_ADDRS = 'add_addrs'
 RM_ADDRS = 'rm_addrs'
 
+# Backup bit of a subflow
 BACKUP = 'backup'
 
 if os.path.isfile('config.py'):
@@ -294,9 +289,8 @@ if os.path.isfile('config.py'):
     PREFIX_IP_PROXY = conf.PREFIX_IP_PROXY
     PREFIX_IP_WIFI = conf.PREFIX_IP_WIFI
 
-
 ##################################################
-##             CONNECTION RELATED               ##
+#              CONNECTION RELATED                #
 ##################################################
 
 
@@ -310,10 +304,13 @@ class BasicFlow(object):
 
     def indicates_wifi_or_cell(self):
         """ Given data of a mptcp connection subflow, indicates if comes from wifi or cell """
-        if self.attr[SADDR].startswith(PREFIX_WIFI_IF) or self.attr[DADDR].startswith(PREFIX_WIFI_IF) or self.attr[SADDR].startswith(PREFIX_IP_WIFI) or self.attr[DADDR].startswith(PREFIX_IP_WIFI) or (IP_WIFI and (self.attr[SADDR] in IP_WIFI)):
+        if self.attr[SADDR].startswith(PREFIX_WIFI_IF) or self.attr[DADDR].startswith(PREFIX_WIFI_IF) or self.attr[SADDR].startswith(PREFIX_IP_WIFI) \
+                or self.attr[DADDR].startswith(PREFIX_IP_WIFI) or (IP_WIFI and (self.attr[SADDR] in IP_WIFI)):
             self.attr[IF] = WIFI
+
         elif not IP_CELL or (self.attr[SADDR] in IP_CELL):
             self.attr[IF] = CELL
+
         else:
             self.attr[IF] = "?"
 
@@ -325,6 +322,7 @@ class BasicFlow(object):
         num_daddr = daddr.split('.')
         if len(num_saddr) == 4 and len(num_daddr) == 4:
             self.attr[TYPE] = IPv4
+
         elif ":" in saddr and ":" in daddr:
             self.attr[TYPE] = IPv6
 
@@ -341,7 +339,7 @@ class BasicConnection(object):
 
 
 ##################################################
-##         (DE)SERIALIZATION OF OBJECTS         ##
+#          (DE)SERIALIZATION OF OBJECTS          #
 ##################################################
 
 
@@ -360,7 +358,7 @@ def load_object(fname):
     return obj
 
 ##################################################
-##               COMMON FUNCTIONS               ##
+#                COMMON FUNCTIONS                #
 ##################################################
 
 
@@ -372,6 +370,7 @@ def check_directory_exists(directory):
         if not os.path.isdir(directory):
             print(directory + " is a file: stop", file=sys.stderr)
             sys.exit(1)
+
     else:
         os.makedirs(directory)
 
@@ -380,8 +379,10 @@ def get_dir_from_arg(directory, end=''):
     """ Get the abspath of the dir given by the user and append 'end' """
     if end.endswith('.'):
         end = end[:-1]
+
     if directory.endswith('/'):
         directory = directory[:-1]
+
     return os.path.abspath(os.path.expanduser(directory)) + end
 
 
@@ -394,35 +395,14 @@ def is_number(s):
         return False
 
 
-def count_mptcp_subflows(data):
-    """ Count the number of subflows of a MPTCP connection """
-    count = 0
-    for key, value in data.iteritems():
-        # There could have "pure" data in the connection
-        if isinstance(value, dict):
-            count += 1
-
-    return count
-
-
 def move_file(from_path, to_path, print_out=sys.stderr):
     """ Move a file, overwrite if needed """
     try:
         shutil.move(from_path, to_path)
-    except Exception as e:
+    except Exception:
         # Destination already exists; remove it
         os.remove(os.path.join(to_path, os.path.basename(from_path)))
         shutil.move(from_path, to_path)
-
-
-def tshark_filter(condition, src_path, dst_path, print_out=sys.stderr):
-    """ Filter src_path using the condition and write the result to dst_path
-        Raise a TSharkError in case of failure
-    """
-    cmd = ['tshark', '-n', '-r', src_path, '-Y', condition, '-w', dst_path]
-    if subprocess.call(cmd, stdout=print_out) != 0:
-        raise TSharkError("Error with condition " + condition + " for source " + src_path + " and destination "
-                             + dst_path)
 
 
 def tshark_stats(filtering, src_path, print_out=sys.stderr):
@@ -470,20 +450,9 @@ def long_ipv6_address(ip):
     # Remove the last :
     return long_ip[:-1]
 
-
 ##################################################
-##                   PCAP                       ##
+#                    PCAP                        #
 ##################################################
-
-
-def copy_remain_pcap_file(pcap_filepath, print_out=sys.stdout):
-    """ Given a pcap file path, return the file path of a copy, used for correction of traces """
-    remain_pcap_filepath = pcap_filepath[:-5] + "__rem.pcap"
-    cmd = ['cp', pcap_filepath, remain_pcap_filepath]
-    if subprocess.call(cmd, stdout=print_out) != 0:
-        print("Error when copying " + pcap_filepath + ": skip tcp correction", file=sys.stderr)
-        return None
-    return remain_pcap_filepath
 
 
 def save_data(filepath, dir_exp, data):
@@ -511,26 +480,6 @@ def clean_loopback_pcap(pcap_filepath, print_out=sys.stdout):
         print("Error in moving " + tmp_pcap + " to " + pcap_filepath, file=sys.stderr)
 
 
-def indicates_wifi_or_cell(data):
-    """ Given data of a mptcp connection subflow, indicates if comes from wifi or cell """
-    if data[SADDR].startswith(PREFIX_WIFI_IF) or data[DADDR].startswith(PREFIX_WIFI_IF):
-        data[IF] = WIFI
-    else:
-        data[IF] = CELL
-
-
-def detect_ipv4(data):
-    """ Given the dictionary of a TCP connection, add the type IPv4 if it is an IPv4 connection """
-    saddr = data[SADDR]
-    daddr = data[DADDR]
-    num_saddr = saddr.split('.')
-    num_daddr = daddr.split('.')
-    if len(num_saddr) == 4 and len(num_daddr) == 4:
-        data[TYPE] = IPv4
-    elif ":" in saddr and ":" in daddr:
-        data[TYPE] = IPv6
-
-
 def get_date_as_int(pcap_fname):
     """ Return the date of the pcap trace in int (like 20141230)
         If there is no date, return None
@@ -543,9 +492,8 @@ def get_date_as_int(pcap_fname):
         print(str(e) + ": get date as int for " + pcap_fname, file=sys.stderr)
         return None
 
-
 ##################################################
-##                    GRAPHS                    ##
+#                     GRAPHS                     #
 ##################################################
 
 
@@ -602,6 +550,7 @@ def sort_and_aggregate(aggr_list):
 plt_lock = threading.Lock()
 TIMEOUT = 60
 
+
 def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, title, graph_filepath, ymin=None, titlesize=20, y_log=False):
     """ Critical part to plot a line graph """
     count = 0
@@ -616,7 +565,7 @@ def critical_plot_line_graph(data, label_names, formatting, xlabel, ylabel, titl
             ax.plot(x_val, y_val, formatting[count], linewidth=2, label=label_names[count])
             count += 1
 
-        legend = ax.legend(loc='best', shadow=True, fontsize='x-large')
+        ax.legend(loc='best', shadow=True, fontsize='x-large')
     except ValueError as e:
         print(str(e) + ": create plots: skip " + graph_filepath, file=sys.stderr)
         return

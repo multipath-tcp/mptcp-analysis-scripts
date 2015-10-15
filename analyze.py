@@ -34,7 +34,6 @@ import common as co
 import mptcp
 import os
 import os.path
-from pymongo import MongoClient
 import subprocess
 import sys
 import tcp
@@ -219,6 +218,7 @@ pcap_list_len = len(pcap_list)
 ##################################################
 
 if args.use_db:
+    from pymongo import MongoClient
     connection = MongoClient('localhost', 27017)
     db = connection.mpctrl
     collection = db.handover
