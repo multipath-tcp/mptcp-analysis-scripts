@@ -73,6 +73,8 @@ count_handover = 0
 count_0 = {co.C2S: 0, co.S2C: 0}
 missing_add_addrs = []
 missing_rm_addrs = []
+no_add_addrs = []
+no_rm_addrs = []
 
 results = {co.C2S: {INITIAL_SF: [], INITIAL_SFS: []}, co.S2C: {INITIAL_SF: [], INITIAL_SFS: []}}
 for fname, conns in multiflow_connections.iteritems():
@@ -101,7 +103,7 @@ for fname, conns in multiflow_connections.iteritems():
                 flow_bytes = 0
                 for direction in co.DIRECTIONS:
                     flow_bytes += flow.attr[direction].get(co.BYTES_DATA, 0)
-                if flow_bytes > 0 and flow.attr[co.S2C].get(co.TIME_LAST_ACK_TCP, 0.0) > 0.0:
+                if flow_bytes > 0 and flow.attr[co.S2C].get(co.TIME_LAST_ACK_TCP, 0.0) > 0.0 and flow.attr[co.S2C].get(co.TIME_FIN_ACK_TCP, 0.0) == 0.0:
                     last_acks.append(flow.attr[co.S2C][co.TIME_LAST_ACK_TCP])
                     min_time_last_ack = min(min_time_last_ack, flow.attr[co.S2C][co.TIME_LAST_ACK_TCP])
 
@@ -121,7 +123,8 @@ for fname, conns in multiflow_connections.iteritems():
 
                 max_last_payload = 0 - float('inf')
                 if flow.attr[co.C2S].get(co.BYTES, 0) > 0 or flow.attr[co.S2C].get(co.BYTES, 0) > 0:
-                    max_last_payload = max([flow.attr[direction][co.TIME_LAST_PAYLD_TCP] for direction in co.DIRECTIONS])
+                    if flow.attr[co.S2C].get(co.TIME_LAST_ACK_TCP, 0.0) > min_last_acks:
+                        max_last_payload = max([flow.attr[direction][co.TIME_LAST_PAYLD_TCP] for direction in co.DIRECTIONS])
 
                 # handover_delta = flow.attr[co.START] + max_last_payload - min_last_acks
                 handover_delta = max_last_payload - min_last_acks
@@ -139,11 +142,24 @@ for fname, conns in multiflow_connections.iteritems():
                         time_initial_sf = flow.attr[co.START]
                         flow_id_initial_sf = flow_id
 
-                if len(conn.attr.get(co.ADD_ADDRS, [])) < len(conn.flows) - 2:
+                count_actual_lost_subflows = 0
+                for flow_id, flow in conn.flows.iteritems():
+                    if flow.attr.get(co.START, 0.0) > 0.0 and flow.attr.get(co.DURATION, 0.0) > 0.0 and flow.attr[co.S2C].get(co.TIME_FIN_ACK_TCP, 0.0) == 0.0:
+                        # Only if flow is used
+                        if flow.attr[co.C2S].get(co.BYTES, 0) > 0 or flow.attr[co.S2C].get(co.BYTES, 0) > 0:
+                            count_actual_lost_subflows += 1
+
+                if len(conn.attr.get(co.ADD_ADDRS, [])) < count_actual_lost_subflows:
                     missing_add_addrs.append((fname, conn_id))
 
-                if len(conn.attr.get(co.RM_ADDRS, [])) < len(conn.flows) - 2:
+                if len(conn.attr.get(co.RM_ADDRS, [])) < count_actual_lost_subflows:
                     missing_rm_addrs.append((fname, conn_id))
+
+                if len(conn.attr.get(co.ADD_ADDRS, [])) == 0:
+                    no_add_addrs.append((fname, conn_id))
+
+                if len(conn.attr.get(co.RM_ADDRS, [])) == 0:
+                    no_rm_addrs.append((fname, conn_id))
 
                 if not isinstance(flow_id_initial_sf, int):
                     continue
@@ -224,3 +240,7 @@ print("COUNT 0", count_0)
 print(count_handover)
 print("MISSING ADD ADDRS", missing_add_addrs)
 print("MISSING RM ADDRS", missing_rm_addrs)
+print("MISSING ADD ADDRS", len(missing_add_addrs))
+print("MISSING RM ADDRS", len(missing_rm_addrs))
+print("NO ADD ADDRS", len(no_add_addrs))
+print("NO RM ADDRS", len(no_rm_addrs))
