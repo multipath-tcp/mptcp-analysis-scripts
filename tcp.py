@@ -24,7 +24,7 @@ from __future__ import print_function
 # from collections import deque
 
 ##################################################
-##                   IMPORTS                    ##
+#                    IMPORTS                     #
 ##################################################
 
 import common as co
@@ -38,7 +38,7 @@ import subprocess
 import sys
 
 ##################################################
-##                  EXCEPTIONS                  ##
+#                   EXCEPTIONS                   #
 ##################################################
 
 
@@ -58,7 +58,7 @@ class TCPRewriteError(Exception):
     pass
 
 ##################################################
-##           CONNECTION DATA RELATED            ##
+#            CONNECTION DATA RELATED             #
 ##################################################
 
 
@@ -70,37 +70,6 @@ class TCPConnection(co.BasicConnection):
     def __init__(self, conn_id):
         super(TCPConnection, self).__init__(conn_id)
         self.flow = co.BasicFlow()
-
-
-def fix_tcptrace_time_bug(tcptrace_time):
-    """ Given a string representing a time, correct the bug of TCPTrace (0 are skipped if just next to the dot)
-        Return a string representing the correct time
-    """
-    [sec, usec] = tcptrace_time.split('.')
-    if len(usec) < 6:
-        for i in range(6 - len(usec)):
-            usec = '0' + usec
-
-    return sec + '.' + usec
-
-
-def compute_duration(info):
-    """ Given the output of tcptrace as an array, compute the duration of a tcp connection
-        The computation done (in term of tcptrace's attributes) is last_packet - first_packet
-    """
-    first_packet = float(fix_tcptrace_time_bug(info[5]))
-    last_packet = float(fix_tcptrace_time_bug(info[6]))
-    return last_packet - first_packet
-
-
-def get_relative_start_time(connections):
-    """ Given a dictionary of TCPConnection, return the smallest start time (0 of relative scale) """
-    relative_start = float("inf")
-    for conn_id, conn in connections.iteritems():
-        start_time = conn.flow.attr[co.START]
-        if start_time < relative_start:
-            relative_start = start_time
-    return relative_start
 
 
 def extract_tstat_data_tcp_complete(filename, connections, conn_id):
@@ -318,35 +287,8 @@ def extract_tstat_data(pcap_filepath):
     return connections
 
 ##################################################
-##        CONNECTION IDENTIFIER RELATED         ##
+#         CONNECTION IDENTIFIER RELATED          #
 ##################################################
-
-
-def convert_number_to_letter(nb_conn):
-    """ Given an integer, return the (nb_conn)th letter of the alphabet (zero-based index) """
-    return chr(ord('a') + nb_conn)
-
-
-def get_prefix_name(nb_conn):
-    """ Given an integer, return the (nb_conn)th prefix, based on the alphabet (zero-based index)"""
-    if nb_conn >= co.SIZE_LAT_ALPH:
-        mod_nb = nb_conn % co.SIZE_LAT_ALPH
-        div_nb = nb_conn / co.SIZE_LAT_ALPH
-        return get_prefix_name(div_nb - 1) + convert_number_to_letter(mod_nb)
-    else:
-        return convert_number_to_letter(nb_conn)
-
-
-def convert_number_to_name(nb_conn):
-    """ Given an integer, return a name of type 'a2b', 'aa2ab',... """
-    if nb_conn >= (co.SIZE_LAT_ALPH / 2):
-        mod_nb = nb_conn % (co.SIZE_LAT_ALPH / 2)
-        div_nb = nb_conn / (co.SIZE_LAT_ALPH / 2)
-        prefix = get_prefix_name(div_nb - 1)
-        return prefix + convert_number_to_letter(2 * mod_nb) + '2' + prefix \
-            + convert_number_to_letter(2 * mod_nb + 1)
-    else:
-        return convert_number_to_letter(2 * nb_conn) + '2' + convert_number_to_letter(2 * nb_conn + 1)
 
 
 def get_flow_name(xpl_filepath):
@@ -369,12 +311,13 @@ def get_flow_name(xpl_filepath):
         chars[two_index - 1] = right_letter
         chars[-1] = left_letter
         return ''.join(chars), True
+
     else:
         return flow_name, False
 
 
 ##################################################
-##                   TCPTRACE                   ##
+#                    TCPTRACE                    #
 ##################################################
 
 
@@ -399,15 +342,18 @@ def process_tstat_cmd(cmd, pcap_filepath, keep_log=False, graph_dir_exp=None):
         try:
             shutil.move(pcap_flow_data_path, os.path.join(
                 graph_dir_exp, co.CSV_DIR, os.path.basename(pcap_flow_data_path)))
+
         except IOError as e:
             print(str(e), file=sys.stderr)
+
     else:
         os.remove(pcap_flow_data_path)
+
     return connections
 
 
 ##################################################
-##                RETRANSMISSION                ##
+#                 RETRANSMISSION                 #
 ##################################################
 
 def get_ip_port_tshark(str_data):
@@ -452,6 +398,7 @@ def get_total_and_retrans_frames(pcap_filepath, connections):
                     connections[conn_id].flow.attr[co.C2S][co.FRAMES_TOTAL] = int(split_line[5])
                     connections[conn_id].flow.attr[co.C2S][co.BYTES_FRAMES_TOTAL] = int(split_line[6])
                     break
+
     stats_file.close()
     os.remove(stats_filename)
 
@@ -476,90 +423,13 @@ def get_total_and_retrans_frames(pcap_filepath, connections):
                     connections[conn_id].flow.attr[co.C2S][co.FRAMES_RETRANS] = int(split_line[5])
                     connections[conn_id].flow.attr[co.C2S][co.BYTES_FRAMES_RETRANS] = int(split_line[6])
                     break
+
     stats_file.close()
     os.remove(stats_filename)
 
-
 ##################################################
-##               CLEANING RELATED               ##
+#                   PROCESSING                   #
 ##################################################
-
-
-def get_connection_data_with_ip_port(connections, ip, port, dst=True):
-    """ Get data for TCP connection with destination IP ip and port port in connections
-        If no connection found, return None
-        Support for dst=False will be provided if needed
-    """
-    for conn_id, conn in connections.iteritems():
-        if conn.flow.attr[co.DADDR] == ip and conn.flow.attr[co.DPORT] == port:
-            return conn
-
-    # If reach this, no matching connection found
-    return None
-
-
-def merge_and_clean_sub_pcap(pcap_filepath, print_out=sys.stdout):
-    """ Merge pcap files with name beginning with pcap_filepath (without extension) followed by two
-        underscores and delete them
-    """
-    cmd = ['mergecap', '-w', pcap_filepath]
-    for subpcap_filepath in glob.glob(pcap_filepath[:-5] + '__*.pcap'):
-        cmd.append(subpcap_filepath)
-
-    if subprocess.call(cmd, stdout=print_out) != 0:
-        raise MergecapError("Error with mergecap " + pcap_filepath)
-
-    for subpcap_filepath in cmd[3:]:
-        os.remove(subpcap_filepath)
-
-
-def split_and_replace(pcap_filepath, remain_pcap_filepath, conn, other_conn, num, print_out=sys.stdout):
-    """ Split remain_pcap_filepath and replace DADDR and DPORT of conn by SADDR and DADDR of other_conn
-        num will be the numerotation of the splitted file
-        Can raise TSharkError, IOError or TCPRewriteError
-    """
-    # Split on the port criterion
-    condition = '(tcp.srcport==' + \
-        conn.flow.attr[co.SPORT] + \
-        ')or(tcp.dstport==' + conn.flow.attr[co.SPORT] + ')'
-    tmp_split_filepath = pcap_filepath[:-5] + "__tmp.pcap"
-    co.tshark_filter(condition, remain_pcap_filepath, tmp_split_filepath, print_out=print_out)
-
-    tmp_remain_filepath = pcap_filepath[:-5] + "__tmprem.pcap"
-    condition = "!(" + condition + ")"
-    co.tshark_filter(condition, remain_pcap_filepath, tmp_remain_filepath, print_out=print_out)
-
-    shutil.move(tmp_remain_filepath, remain_pcap_filepath, print_out=print_out)
-
-    # Replace meaningless IP and port with the "real" values
-    split_filepath = pcap_filepath[:-5] + "__" + str(num) + ".pcap"
-    cmd = ['tcprewrite',
-           "--portmap=" +
-           conn.flow.attr[co.DPORT] + ":" + other_conn.flow.attr[co.SPORT],
-           "--pnat=" + conn.flow.attr[co.DADDR] +
-           ":" + other_conn.flow.attr[co.SADDR],
-           "--infile=" + tmp_split_filepath,
-           "--outfile=" + split_filepath]
-    if subprocess.call(cmd, stdout=print_out) != 0:
-        raise TCPRewriteError("Error with tcprewrite " + conn.flow.attr[co.SPORT])
-
-    os.remove(tmp_split_filepath)
-
-##################################################
-##                  PROCESSING                  ##
-##################################################
-
-
-def interesting_graph(flow_name, is_reversed, connections):
-    """ Return True if the MPTCP graph is worthy, else False
-        This function assumes that a graph is interesting if it has at least one connection that
-        is not 127.0.0.1 -> 127.0.0.1 and if there are data packets sent
-    """
-    if (not connections[flow_name].flow.attr[co.TYPE] == co.IPv4 or connections[flow_name].flow.attr[co.IF]):
-        direction = co.S2C if is_reversed else co.C2S
-        return (connections[flow_name].flow.attr[direction][co.PACKS] > 0)
-
-    return False
 
 
 def get_flow_name_connection(connection, connections):
@@ -601,6 +471,7 @@ def copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns,
             if co.SOCKS_PORT not in mptcp_connections[conn_id].attr:
                 mptcp_connections[conn_id].attr[co.SOCKS_PORT] = connection.attr[co.SOCKS_PORT]
                 mptcp_connections[conn_id].attr[co.SOCKS_DADDR] = connection.attr[co.SOCKS_DADDR]
+
             elif not mptcp_connections[conn_id].attr[co.SOCKS_PORT] == connection.attr[co.SOCKS_PORT] or not mptcp_connections[conn_id].attr[co.SOCKS_DADDR] == connection.attr[co.SOCKS_DADDR]:
                 print("DIFFERENT SOCKS PORT...", mptcp_connections[conn_id].attr[co.SOCKS_PORT], connection.attr[co.SOCKS_PORT], mptcp_connections[conn_id].attr[co.SOCKS_DADDR], connection.attr[co.SOCKS_DADDR], conn_id, flow_id)
 
@@ -611,6 +482,7 @@ def copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns,
             if flow_name in acksize_all[direction]:
                 if conn_id not in acksize_all_mptcp[direction]:
                     acksize_all_mptcp[direction][conn_id] = {}
+
                 acksize_all_mptcp[direction][conn_id][flow_id] = acksize_all[direction][flow_name]
 
     else:
@@ -620,21 +492,12 @@ def copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns,
     return conn_id, flow_id
 
 
-def append_as_third_to_all_elements(lst, element):
-    """ Append element at index 2 to all lists in the list lst
-        Lists are assumed to have at least 2 elements, and output will have 3
-    """
-    return_list = []
-    for elem in lst:
-        return_list.append([elem[0], elem[1], element])
-    return return_list
-
-
 def retransmissions_tcpcsm(pcap_filepath, connections):
     cmd = ['tcpcsm', '-o', pcap_filepath[:-5] + '_tcpcsm', '-R', pcap_filepath]
     try:
         if subprocess.call(cmd) != 0:
             return
+
     except Exception as e:
         print(str(e), file=sys.stderr)
         return
@@ -683,7 +546,8 @@ def increment_value_dict(dico, key):
 
 def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_timeout=6.0, ts_timeout=3600.0):
     """ Process a tcp pcap file and returns a dictionary of the number of cases an acknowledgement of x bytes is received
-        It also compute the timestamps of retransmissions and put them
+        It also compute the timestamps of retransmissions and put them in the connection
+        It computes the timestamp of the last ACK, FIN and payload sent in both directions
     """
     print("Computing TCP ack sizes for", pcap_filepath)
     SEQ_S2D = 'seq_s2d'
@@ -716,6 +580,7 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                 else:  # dpkt.ip6.IP6
                     daddr = socket.inet_ntop(socket.AF_INET6, ip.dst)
                     saddr = socket.inet_ntop(socket.AF_INET6, ip.src)
+
                 # Ports encoded as strings in connections, so let convert those integers
                 dport = str(tcp.dport)
                 sport = str(tcp.sport)
@@ -787,14 +652,16 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                             if bytes_acked >= 2000000000:
                                 # Ack of 2GB or more is just not possible here
                                 continue
+
                             increment_value_dict(nb_acks[co.S2C][conn_id], bytes_acked)
                             # If SOCKS command
                             if len(tcp.data) == 7 and connections[conn_id].attr.get(co.SOCKS_PORT, None) is None:
                                 crypted_socks_cmd = tcp.data
                                 decrypted_socks_cmd = socks_parser.decode(crypted_socks_cmd)
-                                if decrypted_socks_cmd[0] == b'\x01': # Connect
+                                if decrypted_socks_cmd[0] == b'\x01':  # Connect
                                     connections[conn_id].attr[co.SOCKS_DADDR] = socks_parser.get_ip_address(decrypted_socks_cmd)
                                     connections[conn_id].attr[co.SOCKS_PORT] = socks_parser.get_port_number(decrypted_socks_cmd)
+
                             if len(tcp.data) > 0 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_S2D]:
                                 # This is a retransmission! (take into account the seq overflow)
                                 connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts
@@ -807,6 +674,7 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
 #                                 if len(acks[saddr, sport, daddr, dport][SEQ][co.C2S]) >= 3000000:
 #                                     for x in range(50000):
 #                                         acks[saddr, sport, daddr, dport][SEQ][co.C2S].popleft()
+
                         acks[saddr, sport, daddr, dport][co.S2C] = tcp.ack
                     elif (daddr, dport, saddr, sport) in acks:
                         if acks[daddr, dport, saddr, sport][co.C2S] >= 0:
@@ -819,6 +687,7 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                             if bytes_acked >= 2000000000:
                                 # Ack of 2GB or more is just not possible here
                                 continue
+
                             increment_value_dict(nb_acks[co.C2S][conn_id], bytes_acked)
                             if len(tcp.data) > 0 and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_D2S]:
                                 # This is a retransmission!
@@ -832,6 +701,7 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
 #                                 if len(acks[daddr, dport, saddr, sport][SEQ][co.S2C]) >= 3000000:
 #                                     for x in range(50000):
 #                                         acks[daddr, dport, saddr, sport][SEQ][co.S2C].popleft()
+
                         acks[daddr, dport, saddr, sport][co.C2S] = tcp.ack
                     else:
                         # Silently ignore those packets
