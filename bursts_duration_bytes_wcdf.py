@@ -238,6 +238,14 @@ for direction in co.DIRECTIONS:
 
         yvals = [x / tot for x in yvals]
         print("PERCENTAGE 1 BLOCK", direction, label, len([x for x in sorted_array if x >= 0.99]) * 100. / tot)
+        i = 0
+        for elem in sorted_array:
+            if elem >= 0.2:
+                break
+            else:
+                i += 1
+
+        print("PERCENTAGE 0.2 block conn", direction, label, yvals[i])
         if len(sorted_array) > 0:
             # Add a last point
             sorted_array = np.append(sorted_array, sorted_array[-1])
