@@ -23,17 +23,24 @@
 from __future__ import print_function
 
 import argparse
-import common as co
-import common_graph as cog
 import matplotlib
 # Do not use any X11 backend
 matplotlib.use('Agg')
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 import matplotlib.pyplot as plt
-import mptcp
 import numpy as np
 import os
+import sys
+
+# Add root directory in Python path and be at the root
+ROOT_DIR = os.path.abspath(os.path.join(".", os.pardir))
+os.chdir(ROOT_DIR)
+sys.path.append(ROOT_DIR)
+
+import common as co
+import common_graph as cog
+import mptcp
 import tcp
 
 ##################################################

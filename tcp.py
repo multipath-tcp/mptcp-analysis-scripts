@@ -42,19 +42,7 @@ import sys
 ##################################################
 
 
-class TCPTraceError(Exception):
-    pass
-
-
 class TstatError(Exception):
-    pass
-
-
-class MergecapError(Exception):
-    pass
-
-
-class TCPRewriteError(Exception):
     pass
 
 ##################################################

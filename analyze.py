@@ -21,7 +21,7 @@
 # analyze.py [-h] [-input INPUT] [-trace TRACE] [-graph GRAPH] [--pcap PCAP]
 # Details when running analyze.py -h
 #
-# To install on this machine: numpy, mptcptrace, tcptrace, tshark, tcpreplay
+# To install on this machine: numpy, mptcptrace, tcptrace, tshark
 
 from __future__ import print_function
 

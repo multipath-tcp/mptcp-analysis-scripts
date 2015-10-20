@@ -23,17 +23,24 @@
 from __future__ import print_function
 
 import argparse
-import common as co
-import common_graph as cog
 import matplotlib
 # Do not use any X11 backend
 matplotlib.use('Agg')
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 import matplotlib.pyplot as plt
-import mptcp
 import numpy as np
 import os
+import sys
+
+# Add root directory in Python path and be at the root
+ROOT_DIR = os.path.abspath(os.path.join(".", os.pardir))
+os.chdir(ROOT_DIR)
+sys.path.append(ROOT_DIR)
+
+import common as co
+import common_graph as cog
+import mptcp
 import tcp
 
 ##################################################
@@ -142,7 +149,7 @@ for direction in co.DIRECTIONS:
     plt.figure()
     plt.clf()
     fig, ax = plt.subplots()
-    graph_fname = os.path.splitext(base_graph_name)[0] + "duration_cdf_" + direction + ".pdf"
+    graph_fname = os.path.splitext(base_graph_name)[0] + "duration_wcdf_" + direction + ".pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     for label in [TINY, SMALL, MEDIUM, LARGE]:
@@ -150,7 +157,13 @@ for direction in co.DIRECTIONS:
 
         sample = np.array(sorted(x_val))
         sorted_array = np.sort(sample)
-        yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+        tot = 0.0
+        yvals = []
+        for elem in sorted_array:
+            tot += elem
+            yvals.append(tot)
+
+        yvals = [x / tot for x in yvals]
         if len(sorted_array) > 0:
             # Add a last point
             sorted_array = np.append(sorted_array, sorted_array[-1])
@@ -166,16 +179,16 @@ for direction in co.DIRECTIONS:
 
             # Put a legend above current axis
             # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
-    ax.legend(loc='lower right')
+    ax.legend(loc='best')
     plt.xlabel('Fraction of connection duration', fontsize=24)
-    plt.ylabel("CDF", fontsize=24)
+    plt.ylabel("Weighted CDF", fontsize=24)
     plt.savefig(graph_full_path)
     plt.close('all')
 
     plt.figure()
     plt.clf()
     fig, ax = plt.subplots()
-    graph_fname = os.path.splitext(base_graph_name)[0] + "bytes_cdf_" + direction + ".pdf"
+    graph_fname = os.path.splitext(base_graph_name)[0] + "bytes_wcdf_" + direction + ".pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     for label in [TINY, SMALL, MEDIUM, LARGE]:
@@ -183,7 +196,14 @@ for direction in co.DIRECTIONS:
 
         sample = np.array(sorted(y_val))
         sorted_array = np.sort(sample)
-        yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+
+        tot = 0.0
+        yvals = []
+        for elem in sorted_array:
+            tot += elem
+            yvals.append(tot)
+
+        yvals = [x / tot for x in yvals]
         if len(sorted_array) > 0:
             # Add a last point
             sorted_array = np.append(sorted_array, sorted_array[-1])
@@ -200,10 +220,10 @@ for direction in co.DIRECTIONS:
             # Put a legend above current axis
             # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
 
-    ax.legend(loc='lower right')
+    ax.legend(loc='best')
     plt.xlim(0.0, 1.0)
     plt.xlabel('Fraction of connection bytes', fontsize=24)
-    plt.ylabel("CDF", fontsize=24)
+    plt.ylabel("Weighted CDF", fontsize=24)
     plt.savefig(graph_full_path)
     plt.close('all')
 
@@ -211,13 +231,28 @@ for direction in co.DIRECTIONS:
     plt.figure()
     plt.clf()
     fig, ax = plt.subplots()
-    graph_fname = os.path.splitext(base_graph_name)[0] + "pkts_cdf_" + direction + ".pdf"
+    graph_fname = os.path.splitext(base_graph_name)[0] + "pkts_wcdf_" + direction + ".pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
 
     for label in [TINY, SMALL, MEDIUM, LARGE]:
         sample = np.array(sorted(results_pkts[direction][label]))
         sorted_array = np.sort(sample)
-        yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+        tot = 0.0
+        yvals = []
+        for elem in sorted_array:
+            tot += elem
+            yvals.append(tot)
+
+        yvals = [x / tot for x in yvals]
+        print("PERCENTAGE 1 BLOCK", direction, label, len([x for x in sorted_array if x >= 0.99]) * 100. / tot)
+        i = 0
+        for elem in sorted_array:
+            if elem >= 0.2:
+                break
+            else:
+                i += 1
+
+        print("PERCENTAGE 0.2 block conn", direction, label, yvals[i])
         if len(sorted_array) > 0:
             # Add a last point
             sorted_array = np.append(sorted_array, sorted_array[-1])
@@ -234,9 +269,9 @@ for direction in co.DIRECTIONS:
             # Put a legend above current axis
             # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
 
-    ax.legend(loc='lower right')
+    ax.legend(loc='best')
     plt.xlim(0.0, 1.0)
-    plt.xlabel('Fraction of connection packets', fontsize=24)
-    plt.ylabel("CDF", fontsize=24)
+    plt.xlabel('Fraction of connection packets', fontsize=24, labelpad=-1)
+    plt.ylabel("Weighted CDF", fontsize=24)
     plt.savefig(graph_full_path)
     plt.close('all')

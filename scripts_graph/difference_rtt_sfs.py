@@ -23,17 +23,24 @@
 from __future__ import print_function
 
 import argparse
-import common as co
-import common_graph as cog
 import matplotlib
 # Do not use any X11 backend
 matplotlib.use('Agg')
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 import matplotlib.pyplot as plt
-import mptcp
 import numpy as np
 import os
+import sys
+
+# Add root directory in Python path and be at the root
+ROOT_DIR = os.path.abspath(os.path.join(".", os.pardir))
+os.chdir(ROOT_DIR)
+sys.path.append(ROOT_DIR)
+
+import common as co
+import common_graph as cog
+import mptcp
 import tcp
 
 ##################################################
@@ -65,80 +72,70 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-# results_duration_bytes = {co.C2S: {'0B-10KB': [], '10KB-100KB': [], '100KB-1MB': [], '>=1MB': []}, co.S2C: {'0B-10KB': [], '10KB-100KB': [], '100KB-1MB': [], '>=1MB': []}}
-bursts_size = {co.C2S: [], co.S2C: []}
-bursts_pkt_size = {co.C2S: [], co.S2C: []}
-min_duration = 0.001
-for fname, conns in multiflow_connections.iteritems():
-    for conn_id, conn in conns.iteritems():
-        for direction in co.DIRECTIONS:
-            if co.BURSTS in conn.attr[direction]:
-                for flow_id, count_seq_burst, count_pkt_burst, duration, begin_time_burst_on_flow in conn.attr[direction][co.BURSTS]:
-                    bursts_size[direction].append(count_seq_burst)
-                    bursts_pkt_size[direction].append(count_pkt_burst)
 
-base_graph_name = 'bursts_size'
-color = {'0B-10KB': 'red', '10KB-100KB': 'blue', '100KB-1MB': 'green', '>=1MB': 'orange'}
-ls = {'0B-10KB': ':', '10KB-100KB': '-.', '100KB-1MB': '--', '>=1MB': '-'}
-for direction in co.DIRECTIONS:
-    plt.figure()
-    plt.clf()
-    fig, ax = plt.subplots()
-    graph_fname = os.path.splitext(base_graph_name)[0] + "_cdf_" + direction + ".pdf"
+def plot(connections, multiflow_connections, sums_dir_exp):
+    # Compute here traffic from server to smartphone; the reverse may be done
+    log_file = sys.stdout
+    min_bytes = 1000000
+    min_samples = 3
+    # Computed only on MPTCP connections with at least 2 subflows and at least 3 samples on each considered SF
+    diff_rtt = []
+    color = 'red'
+    graph_fname = "rtt_avg_diff_2sf.pdf"
     graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+    for fname, data in multiflow_connections.iteritems():
+        for conn_id, conn in data.iteritems():
+            if isinstance(conn, mptcp.MPTCPConnection):
+                count_usable = 0
+                for flow_id, flow in conn.flows.iteritems():
+                    if flow.attr[co.S2C].get(co.RTT_SAMPLES, 0) >= min_samples:
+                        count_usable += 1
 
-    sample = np.array(sorted(bursts_size[direction]))
+                if count_usable < 2:
+                    continue
+
+                rtt_best_sf = float('inf')
+                rtt_worst_sf = -1.0
+                for flow_id, flow in conn.flows.iteritems():
+                    if flow.attr[co.S2C].get(co.RTT_SAMPLES, 0) >= min_samples:
+                        rtt_best_sf = min(rtt_best_sf, flow.attr[co.S2C][co.RTT_AVG])
+                        rtt_worst_sf = max(rtt_worst_sf, flow.attr[co.S2C][co.RTT_AVG])
+                if rtt_worst_sf - rtt_best_sf <= 1.0:
+                    print(conn_id, rtt_worst_sf - rtt_best_sf)
+                diff_rtt.append(rtt_worst_sf - rtt_best_sf)
+
+    sample = np.array(sorted(diff_rtt))
     sorted_array = np.sort(sample)
+    print("LESS THAN 10ms", len([x for x in sorted_array if x <= 10.0]) * 100.0 / len(sorted_array))
+    print("LESS THAN 100ms", len([x for x in sorted_array if x <= 100.0]) * 100.0 / len(sorted_array))
+    print("MORE THAN 1s", len([x for x in sorted_array if x >= 1000.0]) * 100.0 / len(sorted_array))
     yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
     if len(sorted_array) > 0:
         # Add a last point
         sorted_array = np.append(sorted_array, sorted_array[-1])
         yvals = np.append(yvals, 1.0)
-        ax.plot(sorted_array, yvals, color='red', linestyle='-', linewidth=2, label='Bursts')
+
+        # Log plot
+        plt.figure()
+        plt.clf()
+        fig, ax = plt.subplots()
+        ax.plot(sorted_array, yvals, color=color, linewidth=2, label="Worst - Best")
 
         # Shrink current axis's height by 10% on the top
         # box = ax.get_position()
         # ax.set_position([box.x0, box.y0,
         #                  box.width, box.height * 0.9])
-
-        # ax.set_xscale('log')
-
-        # Put a legend above current axis
-        # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
-    ax.legend(loc='lower right')
-    ax.set_xscale('log')
-    plt.xlabel('Burst size [Byte]', fontsize=24)
-    plt.ylabel("CDF", fontsize=24)
-    plt.savefig(graph_full_path)
-    plt.close('all')
-
-    plt.figure()
-    plt.clf()
-    fig, ax = plt.subplots()
-    graph_fname = os.path.splitext(base_graph_name)[0] + "_cdf_pkt_" + direction + ".pdf"
-    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
-
-    sample = np.array(sorted(bursts_pkt_size[direction]))
-    sorted_array = np.sort(sample)
-    yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
-    if len(sorted_array) > 0:
-        # Add a last point
-        sorted_array = np.append(sorted_array, sorted_array[-1])
-        yvals = np.append(yvals, 1.0)
-        ax.plot(sorted_array, yvals, color='red', linestyle='-', linewidth=2, label='Bursts')
-
-        # Shrink current axis's height by 10% on the top
-        # box = ax.get_position()
-        # ax.set_position([box.x0, box.y0,
-        #                  box.width, box.height * 0.9])
-
-        # ax.set_xscale('log')
+        ax.set_xscale('log')
 
         # Put a legend above current axis
         # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
-    ax.legend(loc='lower right')
-    ax.set_xscale('log')
-    plt.xlabel('Burst size [# Packets]', fontsize=24)
-    plt.ylabel("CDF", fontsize=24)
-    plt.savefig(graph_full_path)
-    plt.close('all')
+        ax.legend(loc='lower right')
+        plt.xlim(xmin=0.1)
+
+        plt.xlabel('RTT [ms]', fontsize=24, labelpad=-1)
+        plt.ylabel("CDF", fontsize=24)
+        plt.savefig(graph_full_path)
+        plt.close('all')
+
+# co.plot_cdfs_natural(results, ['red', 'blue', 'green', 'black'], 'Initial SF AVG RTT - Second SF AVG RTT', os.path.splitext(graph_full_path)[0] + '.pdf')
+plot(connections, multiflow_connections, sums_dir_exp)

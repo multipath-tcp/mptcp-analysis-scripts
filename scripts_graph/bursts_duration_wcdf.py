@@ -23,17 +23,24 @@
 from __future__ import print_function
 
 import argparse
-import common as co
-import common_graph as cog
 import matplotlib
 # Do not use any X11 backend
 matplotlib.use('Agg')
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 import matplotlib.pyplot as plt
-import mptcp
 import numpy as np
 import os
+import sys
+
+# Add root directory in Python path and be at the root
+ROOT_DIR = os.path.abspath(os.path.join(".", os.pardir))
+os.chdir(ROOT_DIR)
+sys.path.append(ROOT_DIR)
+
+import common as co
+import common_graph as cog
+import mptcp
 import tcp
 
 ##################################################
@@ -65,10 +72,10 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-TINY = '0B-10KB'
-SMALL = '10KB-100KB'
-MEDIUM = '100KB-1MB'
-LARGE = '>=1MB'
+TINY = '<1s'
+SMALL = '1-10s'
+MEDIUM = '10-100s'
+LARGE = '>=100s'
 
 results_duration_bytes = {co.C2S: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}, co.S2C: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}}
 results_pkts = {co.C2S: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}, co.S2C: {TINY: [], SMALL: [], MEDIUM: [], LARGE: []}}
@@ -93,6 +100,7 @@ for fname, conns in multiflow_connections.iteritems():
                 tcp_conn_bytes = 0
                 for flow_id, flow in conn.flows.iteritems():
                     tcp_conn_bytes += flow.attr[direction].get(co.BYTES_DATA, 0)
+
                 # To cope with unseen TCP connections
                 conn_bytes = max(conn.attr[direction][co.BYTES_MPTCPTRACE], tcp_conn_bytes)
                 for flow_id, bytes, pkts, burst_duration, burst_start_time in conn.attr[direction][co.BURSTS]:
@@ -110,11 +118,11 @@ for fname, conns in multiflow_connections.iteritems():
                     relative_time = relative_time_int + relative_time_dec
                     frac_duration = relative_time / conn_duration
                     if frac_duration >= 0.0 and frac_duration <= 2.0:
-                        if conn_bytes < 10000:
+                        if conn_duration < 2.0:
                             label = TINY
-                        elif conn_bytes < 100000:
+                        elif conn_duration < 10.0:
                             label = SMALL
-                        elif conn_bytes < 1000000:
+                        elif conn_duration < 100.0:
                             label = MEDIUM
                         else:
                             label = LARGE
@@ -122,11 +130,11 @@ for fname, conns in multiflow_connections.iteritems():
                         to_add_pkts.append(pkts)
                         tot_packs += pkts
 
-                if conn_bytes < 10000:
+                if conn_bytes < 1.0:
                     label = TINY
-                elif conn_bytes < 100000:
+                elif conn_bytes < 10.0:
                     label = SMALL
-                elif conn_bytes < 1000000:
+                elif conn_bytes < 100.0:
                     label = MEDIUM
                 else:
                     label = LARGE
@@ -155,6 +163,9 @@ for direction in co.DIRECTIONS:
         for elem in sorted_array:
             tot += elem
             yvals.append(tot)
+
+        if tot == 0:
+            continue
 
         yvals = [x / tot for x in yvals]
         if len(sorted_array) > 0:
@@ -235,6 +246,9 @@ for direction in co.DIRECTIONS:
         for elem in sorted_array:
             tot += elem
             yvals.append(tot)
+
+        if tot == 0:
+            continue
 
         yvals = [x / tot for x in yvals]
         print("PERCENTAGE 1 BLOCK", direction, label, len([x for x in sorted_array if x >= 0.99]) * 100. / tot)

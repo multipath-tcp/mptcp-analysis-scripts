@@ -23,17 +23,24 @@
 from __future__ import print_function
 
 import argparse
-import common as co
-import common_graph as cog
 import matplotlib
 # Do not use any X11 backend
 matplotlib.use('Agg')
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 import matplotlib.pyplot as plt
-import mptcp
 import numpy as np
 import os
+import sys
+
+# Add root directory in Python path and be at the root
+ROOT_DIR = os.path.abspath(os.path.join(".", os.pardir))
+os.chdir(ROOT_DIR)
+sys.path.append(ROOT_DIR)
+
+import common as co
+import common_graph as cog
+import mptcp
 import tcp
 
 ##################################################
@@ -65,8 +72,57 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-data = {co.C2S: {'all': {'Connections': [1, 2, 3]}}, co.S2C: {'all': {'Connections': [4, 5, 6]}}}
-color = {'Connections': 'orange'}
-base_graph_name = "fog_bytes"
+results_duration = {co.C2S: [], co.S2C: []}
+min_duration = 0.001
+for fname, conns in multiflow_connections.iteritems():
+    for conn_id, conn in conns.iteritems():
+        # Restrict to only 2SFs, but we can also see with more than 2
+        if co.START in conn.attr and len(conn.flows) >= 2:
+            # Rely here on MPTCP duration, maybe should be duration at TCP level?
+            conn_duration = conn.attr[co.DURATION]
+            if conn_duration < min_duration:
+                continue
+            for direction in co.DIRECTIONS:
+                if co.BURSTS in conn.attr[direction]:
+                    results_duration[direction].append((conn_duration, len(conn.attr[direction][co.BURSTS])))
 
-co.scatter_plot_with_direction(data, "Bytes on Wi-Fi", "Bytes on cellular", color, sums_dir_exp, base_graph_name)
+base_graph_name = 'bursts_conn_duration'
+for direction in co.DIRECTIONS:
+    plt.figure()
+    plt.clf()
+    fig, ax = plt.subplots()
+
+    x_val = [x[0] for x in results_duration[direction]]
+    y_val = [x[1] for x in results_duration[direction]]
+
+    ax.scatter(x_val, y_val, label='Connections', color='blue', alpha=.5)
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    plt.ylim(1, plt.ylim()[1])
+
+    # Put a legend to the right of the current axis
+    ax.legend(loc='best', fontsize='large', scatterpoints=1)
+    plt.xlabel('Duration [s]', fontsize=24)
+    plt.ylabel('# of bursts', fontsize=24)
+    plt.grid()
+
+    # plt.annotate('1', xy=(0.57, 0.96),  xycoords="axes fraction",
+    #         xytext=(0.85, 0.85), textcoords='axes fraction',
+    #         arrowprops=dict(facecolor='black', shrink=0.05),
+    #         horizontalalignment='right', verticalalignment='bottom', size='large'
+    #         )
+    #
+    # plt.annotate('2', xy=(0.38, 0.04),  xycoords="axes fraction",
+    #         xytext=(0.125, 0.2), textcoords='axes fraction',
+    #         arrowprops=dict(facecolor='black', shrink=0.05),
+    #         horizontalalignment='left', verticalalignment='top', size='large'
+    #         )
+
+    graph_fname = base_graph_name + "_" + direction + ".pdf"
+    graph_full_path = os.path.join(sums_dir_exp, graph_fname)
+
+    plt.savefig(graph_full_path)
+
+    plt.clf()
+    plt.close('all')
