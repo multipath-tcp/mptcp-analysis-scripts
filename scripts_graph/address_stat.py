@@ -23,17 +23,24 @@
 from __future__ import print_function
 
 import argparse
-import common as co
-import common_graph as cog
 import matplotlib
 # Do not use any X11 backend
 matplotlib.use('Agg')
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 import matplotlib.pyplot as plt
-import mptcp
 import numpy as np
 import os
+import sys
+
+# Add root directory in Python path and be at the root
+ROOT_DIR = os.path.abspath(os.path.join(".", os.pardir))
+os.chdir(ROOT_DIR)
+sys.path.append(ROOT_DIR)
+
+import common as co
+import common_graph as cog
+import mptcp
 import tcp
 
 ##################################################
@@ -59,19 +66,31 @@ co.check_directory_exists(sums_dir_exp)
 ##################################################
 
 connections = cog.fetch_valid_data(stat_dir_exp, args)
-multiflow_connections, singleflow_connections = cog.get_multiflow_connections(connections)
+# multiflow_connections, singleflow_connections = cog.get_multiflow_connections(connections)
 
 ##################################################
 ##               PLOTTING RESULTS               ##
 ##################################################
 
-import cdf_duration_bytes
-cdf_duration_bytes.plot(connections, multiflow_connections, sums_dir_exp)
-import difference_rtt_sfs
-difference_rtt_sfs.plot(connections, multiflow_connections, sums_dir_exp)
-import delay_mpcapable_mpjoin
-delay_mpcapable_mpjoin.plot(connections, multiflow_connections, sums_dir_exp)
-import overhead_retrans_reinj
-overhead_retrans_reinj.plot(connections, multiflow_connections, sums_dir_exp)
-import subflow_switching_freq
-subflow_switching_freq.plot(connections, multiflow_connections, sums_dir_exp)
+ip_addrs = {}
+saddrs = {}
+
+for fname, conns in connections.iteritems():
+    for conn_id, conn in conns.iteritems():
+        port = conn.flows[0].attr.get(co.SOCKS_PORT, conn.attr.get(co.SOCKS_PORT, None))
+        # Apache JServ Port
+        if port and port == 8009:
+            ip_addr = conn.flows[0].attr.get(co.SOCKS_DADDR, conn.attr.get(co.SOCKS_DADDR, None))
+            if ip_addr not in ip_addrs:
+                ip_addrs[ip_addr] = 1
+            else:
+                ip_addrs[ip_addr] += 1
+            saddr = conn.flows[0].attr.get(co.SADDR, conn.attr.get(co.SADDR, None))
+            if saddr not in saddrs:
+                saddrs[saddr] = 1
+            else:
+                saddrs[saddr] += 1
+            print(fname, conn_id, ip_addr, saddr)
+
+print("IP ADDRS", ip_addrs)
+print("SOURCE IP ADDRS", saddrs)
