@@ -102,7 +102,7 @@ for fname, conns in connections.iteritems():
                 if port is not None:
                     nb_bytes_port[port] += flow.attr[direction].get(co.BYTES_DATA, 0)
 
-print("TRACE 1")
+print("TRACE 0")
 print("NB CONNS", nb_conns)
 print("NB PACKETS", nb_packets)
 print("NB BYTES MPTCP", nb_bytes)
@@ -144,7 +144,7 @@ for fname, conns in multiflow_connections.iteritems():
                 if port is not None:
                     nb_bytes_port[port] += flow.attr[direction].get(co.BYTES_DATA, 0)
 
-print("TRACE 2")
+print("TRACE 1")
 print("NB CONNS", nb_conns)
 print("NB PACKETS", nb_packets)
 print("NB BYTES MPTCP", nb_bytes)
@@ -186,7 +186,7 @@ for fname, conns in multiflow_connections.iteritems():
                 nb_bytes_tcp += flow.attr[direction].get(co.BYTES_DATA, 0)
                 nb_bytes_tcp_dir[direction] += flow.attr[direction].get(co.BYTES_DATA, 0)
 
-print("TRACE 3")
+print("TRACE 2")
 print("NB CONNS", nb_conns)
 print("NB PACKETS", nb_packets)
 print("NB BYTES MPTCP", nb_bytes)
