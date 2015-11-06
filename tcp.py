@@ -731,9 +731,9 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                     elif (daddr, dport, saddr, sport) in acks and (ts_delta - acks[daddr, dport, saddr, sport][co.TIMESTAMP][CLIENT]).total_seconds() < ts_timeout and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_S2C]:
                         # SYN/ACK retransmission!
                         connections[acks[daddr, dport, saddr, sport][co.CONN_ID]].flow.attr[co.S2C][co.TIMESTAMP_RETRANS].append((ts_delta,
-                                                                                                                                  ts_delta - acks[saddr, sport, daddr, dport][HSEQ_S2C][tcp.seq][0],
-                                                                                                                                  ts_delta - acks[saddr, sport, daddr, dport][HSEQ_S2C][tcp.seq][1],
-                                                                                                                                  ts_delta - acks[saddr, sport, daddr, dport][co.TIMESTAMP][CLIENT]))
+                                                                                                                                  ts_delta - acks[daddr, dport, saddr, sport][HSEQ_S2C][tcp.seq][0],
+                                                                                                                                  ts_delta - acks[daddr, dport, saddr, sport][HSEQ_S2C][tcp.seq][1],
+                                                                                                                                  ts_delta - acks[daddr, dport, saddr, sport][co.TIMESTAMP][CLIENT]))
                         acks[daddr, dport, saddr, sport][HSEQ_S2C][tcp.seq][1] = ts_delta
                         acks[daddr, dport, saddr, sport][co.TIMESTAMP][SERVER] = ts_delta
 
@@ -796,15 +796,15 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                                 # This is a retransmission!
                                 connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts_delta
                                 connections[conn_id].flow.attr[co.S2C][co.TIMESTAMP_RETRANS].append((ts_delta,
-                                                                                                     ts_delta - acks[saddr, sport, daddr, dport][HSEQ_S2C][tcp.seq][0],
-                                                                                                     ts_delta - acks[saddr, sport, daddr, dport][HSEQ_S2C][tcp.seq][1],
-                                                                                                     ts_delta - acks[saddr, sport, daddr, dport][co.TIMESTAMP][SERVER]))
-                                acks[saddr, sport, daddr, dport][HSEQ_S2C][tcp.seq][1] = ts_delta
+                                                                                                     ts_delta - acks[daddr, dport, saddr, sport][HSEQ_S2C][tcp.seq][0],
+                                                                                                     ts_delta - acks[daddr, dport, saddr, sport][HSEQ_S2C][tcp.seq][1],
+                                                                                                     ts_delta - acks[daddr, dport, saddr, sport][co.TIMESTAMP][SERVER]))
+                                acks[daddr, dport, saddr, sport][HSEQ_S2C][tcp.seq][1] = ts_delta
                             elif len(tcp.data) > 0:
                                 acks[daddr, dport, saddr, sport][SEQ_S2C].add(tcp.seq)
                                 connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts_delta
                                 connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_TCP] = ts_delta
-                                acks[saddr, sport, daddr, dport][HSEQ_S2C][tcp.seq] = [ts_delta, ts_delta]
+                                acks[daddr, dport, saddr, sport][HSEQ_S2C][tcp.seq] = [ts_delta, ts_delta]
                                 # Don't think will face this issue
 #                                 if len(acks[daddr, dport, saddr, sport][SEQ][co.S2C]) >= 3000000:
 #                                     for x in range(50000):
