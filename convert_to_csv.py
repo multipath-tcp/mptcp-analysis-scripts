@@ -106,7 +106,7 @@ MPTCP_SUBFLOWS_ONE2ONE_DIRECTION_FIELDS = [co.BYTES, co.BYTES_DATA, co.BYTES_RET
                                            co.NB_UNKNOWN, co.NB_UNNECE_RTX_FR, co.NB_UNNECE_RTX_RTO, co.PACKS, co.PACKS_OOO, co.PACKS_RETRANS,
                                            co.REINJ_ORIG_BYTES, co.REINJ_ORIG_PACKS, co.RTT_AVG, co.RTT_MAX, co.RTT_MIN, co.RTT_SAMPLES,
                                            co.RTT_STDEV, co.SS_MIN, co.SS_MAX, co.TIME_FIRST_ACK, co.TIME_FIRST_PAYLD, co.TIME_LAST_ACK_TCP,
-                                           co.TIME_LAST_PAYLD, co.TIME_LAST_PAYLD_TCP, co.TIME_LAST_PAYLD_WITH_RETRANS_TCP, co.TTL_MAX, co.TTL_MIN]
+                                           co.TIME_LAST_PAYLD, co.TIME_LAST_PAYLD_TCP, co.TIME_LAST_PAYLD_WITH_RETRANS_TCP, co.TIME_FIN_ACK_TCP, co.TTL_MAX, co.TTL_MIN]
 MPTCP_SUBFLOWS_MANY2ONE_DIRECTION_FIELDS = [co.IS_REINJ, co.REINJ_ORIG, co.REINJ_ORIG_TIMESTAMP, co.TIMESTAMP_RETRANS]
 MPTCP_SUBFLOWS_MANY2ONE_DIRECTION_SUBFIELDS = {co.IS_REINJ: {'timestamp': 'bytes'}, co.REINJ_ORIG: {'range_bytes': 'nb_reinjected'},
                                                co.REINJ_ORIG_TIMESTAMP: 'reinjection_orig_timestamp',
@@ -210,7 +210,7 @@ def make_data_lines_mptcp_subflows_one2one_fields(fbasename, connections, sfs_o2
         for flow_id in sorted_flow_ids:
             sfs_o2o_file.write(fbasename + ";" + str(conn_id) + ";" + str(flow_id))
             for field_name in MPTCP_SUBFLOWS_ONE2ONE_SINGLE_FIELDS:
-                if field_name == co.START:
+                if field_name in [co.START, co.TIME_LAST_ACK_TCP, co.TIME_LAST_PAYLD_TCP, co.TIME_LAST_PAYLD_WITH_RETRANS_TCP, co.TIME_FIN_ACK_TCP]:
                     sfs_o2o_file.write(";" + str(conn.flows[flow_id].attr.get(field_name, timedelta()).total_seconds()))
                 else:
                     sfs_o2o_file.write(";" + str(conn.flows[flow_id].attr.get(field_name, "NULL")))

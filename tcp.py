@@ -193,17 +193,17 @@ def extract_tstat_data_tcp_complete(filename, connections, conn_id):
             connection.flow.attr[co.C2S][co.TIMESTAMP_RETRANS] = []
             connection.flow.attr[co.S2C][co.TIMESTAMP_RETRANS] = []
 
-            connection.flow.attr[co.C2S][co.TIME_FIN_ACK_TCP] = 0.0
-            connection.flow.attr[co.S2C][co.TIME_FIN_ACK_TCP] = 0.0
+            connection.flow.attr[co.C2S][co.TIME_FIN_ACK_TCP] = timedelta(0)
+            connection.flow.attr[co.S2C][co.TIME_FIN_ACK_TCP] = timedelta(0)
 
-            connection.flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = 0.0
-            connection.flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = 0.0
+            connection.flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = timedelta(0)
+            connection.flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = timedelta(0)
 
-            connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD_TCP] = 0.0
-            connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD_TCP] = 0.0
+            connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD_TCP] = timedelta(0)
+            connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD_TCP] = timedelta(0)
 
-            connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = 0.0
-            connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = 0.0
+            connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = timedelta(0)
+            connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = timedelta(0)
 
             connections[conn_id] = connection
 
@@ -273,17 +273,17 @@ def extract_tstat_data_tcp_nocomplete(filename, connections, conn_id):
             connection.flow.attr[co.C2S][co.TIMESTAMP_RETRANS] = []
             connection.flow.attr[co.S2C][co.TIMESTAMP_RETRANS] = []
 
-            connection.flow.attr[co.C2S][co.TIME_FIN_ACK_TCP] = 0.0
-            connection.flow.attr[co.S2C][co.TIME_FIN_ACK_TCP] = 0.0
+            connection.flow.attr[co.C2S][co.TIME_FIN_ACK_TCP] = timedelta(0)
+            connection.flow.attr[co.S2C][co.TIME_FIN_ACK_TCP] = timedelta(0)
 
-            connection.flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = 0.0
-            connection.flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = 0.0
+            connection.flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = timedelta(0)
+            connection.flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = timedelta(0)
 
-            connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD_TCP] = 0.0
-            connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD_TCP] = 0.0
+            connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD_TCP] = timedelta(0)
+            connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD_TCP] = timedelta(0)
 
-            connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = 0.0
-            connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = 0.0
+            connection.flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = timedelta(0)
+            connection.flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = timedelta(0)
 
             connections[conn_id] = connection
 
@@ -635,6 +635,7 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
     pcap = dpkt.pcap.Reader(pcap_file)
     count = 0
     for ts, buf in pcap:
+        ts_delta = timedelta(seconds=ts[0], microseconds=ts[1])
         count += 1
         if count % 100000 == 0:
             print(count)
@@ -642,7 +643,6 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
         if type(eth.data) == dpkt.ip.IP or type(eth.data) == dpkt.ip6.IP6:
             ip = eth.data
             if type(ip.data) == dpkt.tcp.TCP:
-                str_ts = str(ts[0]) + '.' + str(ts[1])
                 tcp = ip.data
                 fin_flag = (tcp.flags & dpkt.tcp.TH_FIN) != 0
                 syn_flag = (tcp.flags & dpkt.tcp.TH_SYN) != 0
@@ -668,9 +668,9 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                     conn_candidates = inverse_conns.get((saddr, sport, daddr, dport), [])
                     min_delta = ts_syn_timeout
                     for cid in conn_candidates:
-                        if abs(ts - connections[cid].flow.attr[co.START].total_seconds()) < min_delta:
+                        if abs((ts_delta - connections[cid].flow.attr[co.START]).total_seconds()) < min_delta:
                             conn_id = cid
-                            min_delta = abs(ts - connections[cid].flow.attr[co.START].total_seconds())
+                            min_delta = abs((ts_delta - connections[cid].flow.attr[co.START]).total_seconds())
 
                     if not conn_id:
                         black_list.add((saddr, sport, daddr, dport))
@@ -696,11 +696,11 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                     # if (saddr, sport, daddr, dport) in acks:
                         # Already taken, but maybe old, such that we can overwrite it (show on screen the TS difference)
                         # print(saddr, sport, daddr, dport, "already used; it was (in seconds)", ts - acks[saddr, sport, daddr, dport][co.TIMESTAMP])
-                    if (saddr, sport, daddr, dport) in acks and ts - acks[saddr, sport, daddr, dport][co.TIMESTAMP] <= ts_syn_timeout and acks[saddr, sport, daddr, dport][co.S2C] == -1 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_S2D]:
+                    if (saddr, sport, daddr, dport) in acks and (ts_delta - acks[saddr, sport, daddr, dport][co.TIMESTAMP]).total_seconds() <= ts_syn_timeout and acks[saddr, sport, daddr, dport][co.S2C] == -1 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_S2D]:
                         # SYN retransmission!
-                        connections[conn_id].flow.attr[co.C2S][co.TIMESTAMP_RETRANS].append(ts)
+                        connections[conn_id].flow.attr[co.C2S][co.TIMESTAMP_RETRANS].append(str(ts_delta.total_seconds()))
                     else:
-                        acks[saddr, sport, daddr, dport] = {co.C2S: -1, co.S2C: -1, co.TIMESTAMP: ts, co.CONN_ID: conn_id, SEQ_S2D: set([tcp.seq]), SEQ_D2S: set([])}
+                        acks[saddr, sport, daddr, dport] = {co.C2S: -1, co.S2C: -1, co.TIMESTAMP: ts_delta, co.CONN_ID: conn_id, SEQ_S2D: set([tcp.seq]), SEQ_D2S: set([])}
                         connections[conn_id].attr[co.BACKUP] = backup
 
                 elif (saddr, sport, daddr, dport) in black_list:
@@ -708,21 +708,21 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
 
                 elif syn_flag and ack_flag and not fin_flag and not rst_flag:
                     # The sender of the SYN/ACK is the server
-                    if (daddr, dport, saddr, sport) in acks and ts - acks[daddr, dport, saddr, sport][co.TIMESTAMP] < ts_timeout and acks[daddr, dport, saddr, sport][co.C2S] == -1:
+                    if (daddr, dport, saddr, sport) in acks and (ts_delta - acks[daddr, dport, saddr, sport][co.TIMESTAMP]).total_seconds() < ts_timeout and acks[daddr, dport, saddr, sport][co.C2S] == -1:
                         # Better to check, if not seen, maybe uncomplete TCP connection
                         acks[daddr, dport, saddr, sport][co.C2S] = tcp.ack
                         acks[daddr, dport, saddr, sport][SEQ_D2S].add(tcp.seq)
-                    elif (daddr, dport, saddr, sport) in acks and ts - acks[daddr, dport, saddr, sport][co.TIMESTAMP] < ts_timeout and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_D2S]:
+                    elif (daddr, dport, saddr, sport) in acks and (ts_delta - acks[daddr, dport, saddr, sport][co.TIMESTAMP]).total_seconds() < ts_timeout and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_D2S]:
                         # SYN/ACK retransmission!
-                        connections[acks[daddr, dport, saddr, sport][co.CONN_ID]].flow.attr[co.S2C][co.TIMESTAMP_RETRANS].append(ts)
+                        connections[acks[daddr, dport, saddr, sport][co.CONN_ID]].flow.attr[co.S2C][co.TIMESTAMP_RETRANS].append(str(ts_delta.total_seconds()))
 
                 elif not syn_flag and not rst_flag and ack_flag:
                     if (saddr, sport, daddr, dport) in acks:
                         if acks[saddr, sport, daddr, dport][co.S2C] >= 0:
                             conn_id = acks[saddr, sport, daddr, dport][co.CONN_ID]
-                            connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = ts
+                            connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = ts_delta
                             if fin_flag:
-                                connections[conn_id].flow.attr[co.S2C][co.TIME_FIN_ACK_TCP] = ts
+                                connections[conn_id].flow.attr[co.S2C][co.TIME_FIN_ACK_TCP] = ts_delta
 
                             bytes_acked = (tcp.ack - acks[saddr, sport, daddr, dport][co.S2C]) % 4294967296
                             if bytes_acked >= 2000000000:
@@ -740,12 +740,12 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
 
                             if len(tcp.data) > 0 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_S2D]:
                                 # This is a retransmission! (take into account the seq overflow)
-                                connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts
-                                connections[conn_id].flow.attr[co.C2S][co.TIMESTAMP_RETRANS].append(ts)
+                                connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts_delta
+                                connections[conn_id].flow.attr[co.C2S][co.TIMESTAMP_RETRANS].append(str(ts_delta.total_seconds()))
                             elif len(tcp.data) > 0:
                                 acks[saddr, sport, daddr, dport][SEQ_S2D].add(tcp.seq)
-                                connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts
-                                connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_TCP] = ts
+                                connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts_delta
+                                connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_TCP] = ts_delta
                                 # Don't think will face this issue
 #                                 if len(acks[saddr, sport, daddr, dport][SEQ][co.C2S]) >= 3000000:
 #                                     for x in range(50000):
@@ -755,9 +755,9 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                     elif (daddr, dport, saddr, sport) in acks:
                         if acks[daddr, dport, saddr, sport][co.C2S] >= 0:
                             conn_id = acks[daddr, dport, saddr, sport][co.CONN_ID]
-                            connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = ts
+                            connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = ts_delta
                             if fin_flag:
-                                connections[conn_id].flow.attr[co.C2S][co.TIME_FIN_ACK_TCP] = ts
+                                connections[conn_id].flow.attr[co.C2S][co.TIME_FIN_ACK_TCP] = ts_delta
 
                             bytes_acked = (tcp.ack - acks[daddr, dport, saddr, sport][co.C2S]) % 4294967296
                             if bytes_acked >= 2000000000:
@@ -767,12 +767,12 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                             increment_value_dict(nb_acks[co.C2S][conn_id], bytes_acked)
                             if len(tcp.data) > 0 and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_D2S]:
                                 # This is a retransmission!
-                                connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts
-                                connections[conn_id].flow.attr[co.S2C][co.TIMESTAMP_RETRANS].append(ts)
+                                connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts_delta
+                                connections[conn_id].flow.attr[co.S2C][co.TIMESTAMP_RETRANS].append(str(ts_delta.total_seconds()))
                             elif len(tcp.data) > 0:
                                 acks[daddr, dport, saddr, sport][SEQ_D2S].add(tcp.seq)
-                                connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts
-                                connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_TCP] = ts
+                                connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts_delta
+                                connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_TCP] = ts_delta
                                 # Don't think will face this issue
 #                                 if len(acks[daddr, dport, saddr, sport][SEQ][co.S2C]) >= 3000000:
 #                                     for x in range(50000):

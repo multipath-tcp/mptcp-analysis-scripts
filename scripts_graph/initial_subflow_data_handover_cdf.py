@@ -105,9 +105,9 @@ for fname, conns in multiflow_connections.iteritems():
                 flow_bytes = 0
                 for direction in co.DIRECTIONS:
                     flow_bytes += flow.attr[direction].get(co.BYTES_DATA, 0)
-                if flow_bytes > 0 and flow.attr[co.S2C].get(co.TIME_LAST_ACK_TCP, 0.0) > 0.0:
-                    last_acks.append(flow.attr[co.S2C][co.TIME_LAST_ACK_TCP])
-                    min_time_last_ack = min(min_time_last_ack, flow.attr[co.S2C][co.TIME_LAST_ACK_TCP])
+                if flow_bytes > 0 and co.TIME_LAST_ACK_TCP in flow.attr[co.S2C] and flow.attr[co.S2C][co.TIME_LAST_ACK_TCP].total_seconds() > 0.0:
+                    last_acks.append(flow.attr[co.S2C][co.TIME_LAST_ACK_TCP].total_seconds())
+                    min_time_last_ack = min(min_time_last_ack, flow.attr[co.S2C][co.TIME_LAST_ACK_TCP].total_seconds())
 
             if initial_sf_ts == float('inf'):
                 continue
@@ -125,7 +125,7 @@ for fname, conns in multiflow_connections.iteritems():
 
                 max_last_payload = 0 - float('inf')
                 if flow.attr[co.C2S].get(co.BYTES, 0) > 0 or flow.attr[co.S2C].get(co.BYTES, 0) > 0:
-                    max_last_payload = max([flow.attr[direction][co.TIME_LAST_PAYLD_TCP] for direction in co.DIRECTIONS])
+                    max_last_payload = max([flow.attr[direction][co.TIME_LAST_PAYLD_TCP].total_seconds() for direction in co.DIRECTIONS])
 
                 # handover_delta = float(flow.attr[co.START]) + max_last_payload - min_last_acks
                 handover_delta = max_last_payload - min_last_acks
