@@ -432,8 +432,8 @@ def get_preprocessed_connections(connections):
                 if (flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT]) not in fast_dico:
                     fast_dico[(flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT])] = []
 
-                fast_dico[(flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT])] += [(conn.attr[co.START],
-                                                                                                                     conn.attr[co.DURATION],
+                fast_dico[(flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT])] += [(float(conn.attr[co.START]),
+                                                                                                                     float(conn.attr[co.DURATION]),
                                                                                                                      conn_id, flow_id)]
 
     # Sort them for faster processing
@@ -452,7 +452,7 @@ def get_flow_name_connection(connection, connections):
         # Let a little margin, but don't think it's needed
         if conn.attr.get(co.START, None) and (connection.flow.attr[co.START] >= conn.attr[co.START] - 8.0 and
                                               connection.flow.attr[co.START] <=
-                                              conn.attr[co.START] + conn.attr[co.DURATION]):
+                                              float(conn.attr[co.START]) + float(conn.attr[co.DURATION])):
             for flow_id, flow in conn.flows.iteritems():
                 if (connection.flow.attr[co.SADDR] == flow.attr[co.SADDR] and
                         connection.flow.attr[co.DADDR] == flow.attr[co.DADDR] and

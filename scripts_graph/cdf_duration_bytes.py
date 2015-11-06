@@ -97,7 +97,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
     for fname, conns in connections.iteritems():
         for conn_id, conn in conns.iteritems():
             if isinstance(conn, mptcp.MPTCPConnection) and co.DURATION in conn.attr:
-                duration = conn.attr[co.DURATION]
+                duration = float(conn.attr[co.DURATION])
                 bytes = 0
                 data_pkts = 0
                 for direction in co.DIRECTIONS:

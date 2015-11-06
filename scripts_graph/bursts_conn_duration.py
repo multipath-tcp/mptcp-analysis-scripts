@@ -79,7 +79,7 @@ for fname, conns in multiflow_connections.iteritems():
         # Restrict to only 2SFs, but we can also see with more than 2
         if co.START in conn.attr and len(conn.flows) >= 2:
             # Rely here on MPTCP duration, maybe should be duration at TCP level?
-            conn_duration = conn.attr[co.DURATION]
+            conn_duration = float(conn.attr[co.DURATION])
             if conn_duration < min_duration:
                 continue
             for direction in co.DIRECTIONS:

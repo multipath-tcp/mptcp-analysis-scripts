@@ -412,13 +412,13 @@ def process_stats_csv(csv_fname, connections):
             connections[conn_id].attr[co.C2S][co.BYTES_MPTCPTRACE] = 0
             connections[conn_id].attr[co.S2C][co.BYTES_MPTCPTRACE] = 0
         if con_time:
-            connections[conn_id].attr[co.DURATION] = float(con_time)
+            connections[conn_id].attr[co.DURATION] = con_time
         else:
-            connections[conn_id].attr[co.DURATION] = 0.0
+            connections[conn_id].attr[co.DURATION] = '0.0'
         if begin_time:
-            connections[conn_id].attr[co.START] = float(begin_time)
+            connections[conn_id].attr[co.START] = begin_time
         else:
-            connections[conn_id].attr[co.START] = 0.0
+            connections[conn_id].attr[co.START] = '0.0'
         if bytes_reinjected:
             connections[conn_id].attr[co.C2S][co.REINJ_BYTES] = int(bytes_reinjected[0])
             connections[conn_id].attr[co.S2C][co.REINJ_BYTES] = int(bytes_reinjected[1])
@@ -426,8 +426,8 @@ def process_stats_csv(csv_fname, connections):
             connections[conn_id].attr[co.C2S][co.REINJ_BYTES] = 0
             connections[conn_id].attr[co.S2C][co.REINJ_BYTES] = 0
         if pc_reinjected:
-            connections[conn_id].attr[co.C2S][co.REINJ_PC] = float(pc_reinjected[0])
-            connections[conn_id].attr[co.S2C][co.REINJ_PC] = float(pc_reinjected[1])
+            connections[conn_id].attr[co.C2S][co.REINJ_PC] = pc_reinjected[0]
+            connections[conn_id].attr[co.S2C][co.REINJ_PC] = pc_reinjected[1]
         else:
             connections[conn_id].attr[co.C2S][co.REINJ_PC] = 0.0
             connections[conn_id].attr[co.S2C][co.REINJ_PC] = 0.0

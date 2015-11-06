@@ -162,9 +162,9 @@ def seq_d2s_all_connections(time_loss=1.5):
                     continue
 
                 # Now process the file
-                start_connections.append(conn.attr[co.START] - min_start)
+                start_connections.append(float(conn.attr[co.START]) - min_start)
                 interface = conn.flows[flow_id].attr[co.IF]
-                conn_event[interface].append((conn.attr[co.START] - min_start, 'start'))
+                conn_event[interface].append((float(conn.attr[co.START]) - min_start, 'start'))
                 start_subflows[interface].append(conn.flows[flow_id].attr[co.START] - min_start)
 
                 if offset_duration[conn_id][flow_id] == float('inf'):
@@ -190,7 +190,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                     conn_event[interface].append((last_time + offset_duration[conn_id][flow_id], 'end'))
                 else:
                     # Opened too shortly
-                    conn_event[interface].append((conn.attr[co.START] - min_start + 0.010000, 'end'))
+                    conn_event[interface].append((float(conn.attr[co.START]) - min_start + 0.010000, 'end'))
 
                 for reinject_time, reinject_type in conn.flows[flow_id].attr[co.D2S][co.TCPCSM_RETRANS]:
                     ts_int = int(reinject_time.split('.')[0])

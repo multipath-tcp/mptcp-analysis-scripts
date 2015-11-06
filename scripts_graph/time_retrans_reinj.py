@@ -88,11 +88,11 @@ for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():
         # We never know, still check
         if isinstance(conn, mptcp.MPTCPConnection):
-            duration = conn.attr.get(co.DURATION, 0.0)
+            duration = float(conn.attr.get(co.DURATION, '0.0'))
             if duration <= min_duration:
                 continue
 
-            start_time = conn.attr.get(co.START, float('inf'))
+            start_time = float(conn.attr.get(co.START, 'inf'))
             if start_time == float('inf'):
                 continue
 

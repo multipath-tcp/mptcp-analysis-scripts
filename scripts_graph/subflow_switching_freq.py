@@ -94,10 +94,10 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                     continue
 
                 for direction in co.DIRECTIONS:
-                    if conn.attr[direction].get(co.BYTES_MPTCPTRACE, 0) < min_bytes or conn.attr.get(co.DURATION, 0.0) <= min_duration:
+                    if conn.attr[direction].get(co.BYTES_MPTCPTRACE, 0) < min_bytes or float(conn.attr.get(co.DURATION, '0.0')) <= min_duration:
                         continue
                     if co.BURSTS in conn.attr[direction] and len(conn.attr[direction][co.BURSTS]) > 0:
-                        bursts_sec[direction].append((len(conn.attr[direction][co.BURSTS]) - 1.0) / conn.attr[co.DURATION])
+                        bursts_sec[direction].append((len(conn.attr[direction][co.BURSTS]) - 1.0) / float(conn.attr[co.DURATION]))
 
     # Plot
     for direction in co.DIRECTIONS:

@@ -109,7 +109,7 @@ for fname, conns in multiflow_connections.iteritems():
                     if not flow_id == 0 and flow.attr[co.DURATION] < 1.0:
                         nb_unused_addi_rst += 1
 
-                if co.TIME_FIRST_ACK in flow.attr[co.S2D] and flow.attr[co.S2D][co.TIME_FIRST_ACK] + flow.attr[co.START] >= conn.attr[co.START] + conn.attr[co.DURATION]:
+                if co.TIME_FIRST_ACK in flow.attr[co.S2D] and flow.attr[co.S2D][co.TIME_FIRST_ACK] + flow.attr[co.START] >= conn.attr[co.START] + float(conn.attr[co.DURATION]):
                     nb_after_duration += 1
 
                 after_duration_burst = False
