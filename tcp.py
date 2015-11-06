@@ -635,7 +635,12 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
     pcap = dpkt.pcap.Reader(pcap_file)
     count = 0
     for ts, buf in pcap:
-        ts_delta = timedelta(seconds=ts[0], microseconds=ts[1])
+        if len(ts) == 2:
+            ts_delta = timedelta(seconds=ts[0], microseconds=ts[1])
+        else:
+            # Kept for compatibility reasons
+            ts_delta = timedelta(seconds=ts)
+
         count += 1
         if count % 100000 == 0:
             print(count)
