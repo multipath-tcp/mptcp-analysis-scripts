@@ -105,8 +105,8 @@ for fname, conns in multiflow_connections.iteritems():
             for flow_id, flow in conn.flows.iteritems():
                 if co.START not in flow.attr or flow.attr[co.SADDR] == co.IP_PROXY:
                     continue
-                if flow.attr[co.START] < initial_sf_ts:
-                    initial_sf_ts = flow.attr[co.START]
+                if float(flow.attr[co.START]) < initial_sf_ts:
+                    initial_sf_ts = float(flow.attr[co.START])
                 flow_bytes = 0
                 for direction in co.DIRECTIONS:
                     flow_bytes += flow.attr[direction].get(co.BYTES_DATA, 0)
@@ -123,7 +123,7 @@ for fname, conns in multiflow_connections.iteritems():
             for flow_id, flow in conn.flows.iteritems():
                 if handover_detected or co.START not in flow.attr or flow.attr[co.SADDR] == co.IP_PROXY:
                     continue
-                delta = flow.attr[co.START] - initial_sf_ts
+                delta = float(flow.attr[co.START]) - initial_sf_ts
                 min_last_acks = float('inf')
                 if len(last_acks) >= 1:
                     min_last_acks = min(last_acks)
@@ -133,7 +133,7 @@ for fname, conns in multiflow_connections.iteritems():
                     if flow.attr[co.S2C].get(co.TIME_LAST_ACK_TCP, 0.0) > min_last_acks:
                         max_last_payload = max([flow.attr[direction][co.TIME_LAST_PAYLD_TCP] for direction in co.DIRECTIONS])
 
-                # handover_delta = flow.attr[co.START] + max_last_payload - min_last_acks
+                # handover_delta = float(flow.attr[co.START]) + max_last_payload - min_last_acks
                 handover_delta = max_last_payload - min_last_acks
                 if delta > 0.0 and handover_delta > 0.0:
                     # A subflow is established after the last ack of the client seen --> Handover
@@ -145,13 +145,13 @@ for fname, conns in multiflow_connections.iteritems():
                 time_initial_sf = float('inf')
                 flow_id_initial_sf = None
                 for flow_id, flow in conn.flows.iteritems():
-                    if flow.attr.get(co.START, float('inf')) < time_initial_sf:
-                        time_initial_sf = flow.attr[co.START]
+                    if float(flow.attr.get(co.START, 'inf')) < time_initial_sf:
+                        time_initial_sf = float(flow.attr[co.START])
                         flow_id_initial_sf = flow_id
 
                 count_actual_lost_subflows = 0
                 for flow_id, flow in conn.flows.iteritems():
-                    if flow.attr.get(co.START, 0.0) > 0.0 and flow.attr.get(co.DURATION, 0.0) > 0.0 and flow.attr[co.S2C].get(co.TIME_FIN_ACK_TCP, 0.0) == 0.0:
+                    if float(flow.attr.get(co.START, '0.0')) > 0.0 and flow.attr.get(co.DURATION, 0.0) > 0.0 and flow.attr[co.S2C].get(co.TIME_FIN_ACK_TCP, 0.0) == 0.0:
                         # Only if flow is used
                         if flow.attr[co.C2S].get(co.BYTES, 0) > 0 or flow.attr[co.S2C].get(co.BYTES, 0) > 0:
                             count_actual_lost_subflows += 1
@@ -175,8 +175,8 @@ for fname, conns in multiflow_connections.iteritems():
                 # flow_id_second_sf = None
                 # for flow_id, flow in conn.flows.iteritems():
                 #     if not flow_id == flow_id_initial_sf:
-                #         if flow.attr.get(co.START, float('inf')) < time_second_sf:
-                #             time_second_sf = flow.attr[co.START]
+                #         if float(flow.attr.get(co.START, float('inf'))) < time_second_sf:
+                #             time_second_sf = float(flow.attr[co.START])
                 #             flow_id_second_sf = flow_id
                 #
                 # if not isinstance(flow_id_second_sf, int):

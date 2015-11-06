@@ -117,13 +117,13 @@ def seq_d2s_all_connections(time_loss=1.5):
             min_start = float('inf')
             for conn_id, conn in conns.iteritems():
                 for flow_id, flow in conn.flows.iteritems():
-                    min_start = min(min_start, flow.attr.get(co.START, float('inf')))
+                    min_start = min(min_start, float(flow.attr.get(co.START, 'inf')))
 
             offset_duration = {}
             for conn_id, conn in conns.iteritems():
                 offset_duration[conn_id] = {}
                 for flow_id, flow in conn.flows.iteritems():
-                    offset_duration[conn_id][flow_id] = flow.attr.get(co.START, float('inf')) - min_start
+                    offset_duration[conn_id][flow_id] = float(flow.attr.get(co.START, 'inf')) - min_start
 
             for xpl_path in glob.glob(os.path.join(csv_dir_exp, fname + '_*.xpl')):
                 xpl_fname = os.path.basename(xpl_path)
@@ -165,7 +165,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                 start_connections.append(float(conn.attr[co.START]) - min_start)
                 interface = conn.flows[flow_id].attr[co.IF]
                 conn_event[interface].append((float(conn.attr[co.START]) - min_start, 'start'))
-                start_subflows[interface].append(conn.flows[flow_id].attr[co.START] - min_start)
+                start_subflows[interface].append(float(conn.flows[flow_id].attr[co.START]) - min_start)
 
                 if offset_duration[conn_id][flow_id] == float('inf'):
                     print('Skipped', fname, conn_id, flow_id, flow_name, conn.attr)
@@ -339,7 +339,7 @@ def seq_d2s_all_connections(time_loss=1.5):
         elif fname.startswith('tcp'):
             min_start = float('inf')
             for conn_id, conn in conns.iteritems():
-                min_start = min(min_start, conn.flow.attr.get(co.START, float('inf')))
+                min_start = min(min_start, float(conn.flow.attr.get(co.START, 'inf')))
 
             for xpl_path in glob.glob(os.path.join(csv_dir_exp, fname + '_*.xpl')):
                 xpl_fname = os.path.basename(xpl_path)
@@ -359,10 +359,10 @@ def seq_d2s_all_connections(time_loss=1.5):
 
                 # Now process the file
                 conn = connections[fname][conn_id]
-                start_connections.append(conn.flow.attr[co.START] - min_start)
-                offset = conn.flow.attr[co.START] - min_start
+                start_connections.append(float(conn.flow.attr[co.START]) - min_start)
+                offset = float(conn.flow.attr[co.START]) - min_start
                 interface = conn.flow.attr[co.IF]
-                conn_event[interface].append((conn.flow.attr[co.START] - min_start, 'start'))
+                conn_event[interface].append((float(conn.flow.attr[co.START]) - min_start, 'start'))
                 last_time = None
                 is_white = False
                 for line in data:
@@ -382,7 +382,7 @@ def seq_d2s_all_connections(time_loss=1.5):
                     conn_event[interface].append((last_time + offset, 'end'))
                 else:
                     # Opened too shortly
-                    conn_event[interface].append((conn.flow.attr[co.START] - min_start + 0.010000, 'end'))
+                    conn_event[interface].append((float(conn.flow.attr[co.START]) - min_start + 0.010000, 'end'))
 
                 for reinject_time, reinject_type in conn.flow.attr[co.D2S].get(co.TCPCSM_RETRANS, []):
                     ts_int = int(reinject_time.split('.')[0])

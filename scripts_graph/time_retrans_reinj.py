@@ -108,7 +108,7 @@ for fname, conns in multiflow_connections.iteritems():
             min_start_time = start_time
             max_end_time = 0.0
             for flow_id, flow in conn.flows.iteritems():
-                flow_start_time = flow.attr.get(co.START, float('inf'))
+                flow_start_time = float(flow.attr.get(co.START, 'inf'))
                 min_start_time = min(min_start_time, flow_start_time)
                 if flow_start_time == float('inf'):
                     continue
@@ -162,7 +162,7 @@ for fname, conns in multiflow_connections.iteritems():
             for direction in co.DIRECTIONS:
                 for flow_id, flow in conn.flows.iteritems():
                     if co.TIMESTAMP_RETRANS in flow.attr[direction] and co.START in flow.attr:
-                        # start_flow_time = flow.attr[co.START]
+                        # start_flow_time = float(flow.attr[co.START])
                         # time_diff = start_flow_time - start_time
                         for ts in flow.attr[direction][co.TIMESTAMP_RETRANS]:
                             # Some tricks to avoid floating errors

@@ -109,16 +109,16 @@ for fname, conns in multiflow_connections.iteritems():
                     if not flow_id == 0 and flow.attr[co.DURATION] < 1.0:
                         nb_unused_addi_rst += 1
 
-                if co.TIME_FIRST_ACK in flow.attr[co.S2D] and flow.attr[co.S2D][co.TIME_FIRST_ACK] + flow.attr[co.START] >= conn.attr[co.START] + float(conn.attr[co.DURATION]):
+                if co.TIME_FIRST_ACK in flow.attr[co.S2D] and flow.attr[co.S2D][co.TIME_FIRST_ACK] + float(flow.attr[co.START]) >= float(conn.attr[co.START]) + float(conn.attr[co.DURATION]):
                     nb_after_duration += 1
 
                 after_duration_burst = False
                 if not flow_id == 0 and co.TIME_FIRST_ACK in flow.attr[co.S2D] and co.BURSTS in conn.attr[co.D2S] and co.BURSTS in conn.attr[co.S2D]:
                     if len(conn.attr[co.D2S][co.BURSTS]) > 0:
-                        if flow.attr[co.S2D][co.TIME_FIRST_ACK] + flow.attr[co.START] >= conn.attr[co.D2S][co.BURSTS][-1][4] + conn.attr[co.D2S][co.BURSTS][-1][3]:
+                        if flow.attr[co.S2D][co.TIME_FIRST_ACK] + float(flow.attr[co.START]) >= conn.attr[co.D2S][co.BURSTS][-1][4] + conn.attr[co.D2S][co.BURSTS][-1][3]:
                             after_duration_burst = True
                     if len(conn.attr[co.S2D][co.BURSTS]) > 0:
-                        if flow.attr[co.S2D][co.TIME_FIRST_ACK] + flow.attr[co.START] >= conn.attr[co.S2D][co.BURSTS][-1][4] + conn.attr[co.S2D][co.BURSTS][-1][3]:
+                        if flow.attr[co.S2D][co.TIME_FIRST_ACK] + float(flow.attr[co.START]) >= conn.attr[co.S2D][co.BURSTS][-1][4] + conn.attr[co.S2D][co.BURSTS][-1][3]:
                             after_duration_burst = True
 
                     if len(conn.attr[co.D2S][co.BURSTS]) == 0 and len(conn.attr[co.S2D][co.BURSTS]) == 0:
@@ -133,8 +133,8 @@ for fname, conns in multiflow_connections.iteritems():
                     best = True
                     for other_flow_id, other_flow_cand in conn.flows.iteritems():
                         if not other_flow_id == flow_id and co.TIME_FIRST_ACK in flow.attr[co.S2D]:
-                            if flow.attr[co.S2D][co.TIME_FIRST_ACK] + flow.attr[co.START] >= other_flow_cand.attr.get(co.START, float('inf')):
-                                if flow.attr[co.S2D][co.TIME_FIRST_ACK] + flow.attr[co.START] <= other_flow_cand.attr.get(co.START, 0) + other_flow_cand.attr.get(co.DURATION, 0):
+                            if flow.attr[co.S2D][co.TIME_FIRST_ACK] + float(flow.attr[co.START]) >= float(other_flow_cand.attr.get(co.START, 'inf')):
+                                if flow.attr[co.S2D][co.TIME_FIRST_ACK] + float(flow.attr[co.START]) <= float(other_flow_cand.attr.get(co.START, 0)) + other_flow_cand.attr.get(co.DURATION, 0):
                                     other_flows.append(other_flow_cand)
                                     if co.RTT_AVG in other_flow_cand.attr[co.D2S] and other_flow_cand.attr[co.D2S][co.RTT_AVG] < flow.attr[co.D2S][co.RTT_AVG]:
                                         best = False

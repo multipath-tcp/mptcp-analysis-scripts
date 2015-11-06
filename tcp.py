@@ -81,7 +81,25 @@ def extract_tstat_data_tcp_complete(filename, connections, conn_id):
             connection.flow.detect_ipv4()
             connection.flow.indicates_wifi_or_cell()
             # Except RTT, all time (in ms in tstat) shoud be converted into seconds
-            connection.flow.attr[co.START] = float(info[28]) / 1000.0
+            try:
+                index_dot = info[28].index('.')
+                mut_str = list(info[28])
+                # Divide by 1000
+                for i in range(3):
+                    mut_str[index_dot - i] = mut_str[index_dot - i - 1]
+
+                mut_str[index_dot - 3] = '.'
+                connection.flow.attr[co.START] = "".join(mut_str)
+            except ValueError:
+                # No dot, so put three numbers after dot
+                mut_str = list(info[28])
+                mut_str.append(mut_str[-1])
+                for i in range(3):
+                    mut_str[-i - 1] = mut_str[-i - 2]
+
+                mut_str[-4] = '.'
+                connection.flow.attr[co.START] = "".join(mut_str)
+
             connection.flow.attr[co.DURATION] = float(info[30]) / 1000.0
             connection.flow.attr[co.C2S][co.PACKS] = int(info[2])
             connection.flow.attr[co.S2C][co.PACKS] = int(info[16])
@@ -202,7 +220,25 @@ def extract_tstat_data_tcp_nocomplete(filename, connections, conn_id):
             connection.flow.detect_ipv4()
             connection.flow.indicates_wifi_or_cell()
             # Except RTT, all time (in ms in tstat) shoud be converted into seconds
-            connection.flow.attr[co.START] = float(info[28]) / 1000.0
+            try:
+                index_dot = info[28].index('.')
+                mut_str = list(info[28])
+                # Divide by 1000
+                for i in range(3):
+                    mut_str[index_dot - i] = mut_str[index_dot - i - 1]
+
+                mut_str[index_dot - 3] = '.'
+                connection.flow.attr[co.START] = "".join(mut_str)
+            except ValueError:
+                # No dot, so put three numbers after dot
+                mut_str = list(info[28])
+                mut_str.append(mut_str[-1])
+                for i in range(3):
+                    mut_str[-i - 1] = mut_str[-i - 2]
+
+                mut_str[-4] = '.'
+                connection.flow.attr[co.START] = "".join(mut_str)
+
             connection.flow.attr[co.DURATION] = float(info[30]) / 1000.0
             connection.flow.attr[co.C2S][co.PACKS] = int(info[2])
             connection.flow.attr[co.S2C][co.PACKS] = int(info[16])
@@ -450,8 +486,8 @@ def get_flow_name_connection(connection, connections):
     """
     for conn_id, conn in connections.iteritems():
         # Let a little margin, but don't think it's needed
-        if conn.attr.get(co.START, None) and (connection.flow.attr[co.START] >= conn.attr[co.START] - 8.0 and
-                                              connection.flow.attr[co.START] <=
+        if conn.attr.get(co.START, None) and (float(connection.flow.attr[co.START]) >= float(conn.attr[co.START]) - 8.0 and
+                                              float(connection.flow.attr[co.START]) <=
                                               float(conn.attr[co.START]) + float(conn.attr[co.DURATION])):
             for flow_id, flow in conn.flows.iteritems():
                 if (connection.flow.attr[co.SADDR] == flow.attr[co.SADDR] and
@@ -480,10 +516,10 @@ def get_flow_name_connection_optimized(connection, connections, fast_conns=None)
 
         # Binary search on sorted list
         start_list = [x[0] for x in potential_list]
-        potential_match_index = max(bisect.bisect_left(start_list, connection.flow.attr[co.START]) - 1, 0)
+        potential_match_index = max(bisect.bisect_left(start_list, float(connection.flow.attr[co.START])) - 1, 0)
         match_indexes = []
-        while potential_match_index < len(potential_list) and potential_list[potential_match_index][0] <= connection.flow.attr[co.START] + 8.0:
-            if connection.flow.attr[co.START] <= potential_list[potential_match_index][0] + potential_list[potential_match_index][1]:
+        while potential_match_index < len(potential_list) and potential_list[potential_match_index][0] <= float(connection.flow.attr[co.START]) + 8.0:
+            if float(connection.flow.attr[co.START]) <= potential_list[potential_match_index][0] + potential_list[potential_match_index][1]:
                 match_indexes += [potential_match_index]
 
             potential_match_index += 1
@@ -638,9 +674,9 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                     conn_candidates = inverse_conns.get((saddr, sport, daddr, dport), [])
                     min_delta = ts_syn_timeout
                     for cid in conn_candidates:
-                        if abs(ts - connections[cid].flow.attr[co.START]) < min_delta:
+                        if abs(ts - float(connections[cid].flow.attr[co.START])) < min_delta:
                             conn_id = cid
-                            min_delta = abs(ts - connections[cid].flow.attr[co.START])
+                            min_delta = abs(ts - float(connections[cid].flow.attr[co.START]))
 
                     if not conn_id:
                         black_list.add((saddr, sport, daddr, dport))
