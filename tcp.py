@@ -27,6 +27,7 @@ from __future__ import print_function
 #                    IMPORTS                     #
 ##################################################
 
+import bisect
 import common as co
 import dpkt
 import glob
@@ -420,6 +421,28 @@ def get_total_and_retrans_frames(pcap_filepath, connections):
 ##################################################
 
 
+def get_preprocessed_connections(connections):
+    """ Prepare a dictionary for fast association of a TCP connection with a MPTCP flow """
+    fast_dico = {}
+
+    # Collect all potential subflows
+    for conn_id, conn in connections.iteritems():
+        if conn.attr.get(co.START, None):
+            for flow_id, flow in conn.flows.iteritems():
+                if (flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT]) not in fast_dico:
+                    fast_dico[(flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT])] = []
+
+                fast_dico[(flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT])] += [(conn.attr[co.START],
+                                                                                                                     conn.attr[co.DURATION],
+                                                                                                                     conn_id, flow_id)]
+
+    # Sort them for faster processing
+    for quadruplet in fast_dico.keys():
+        fast_dico[quadruplet] = sorted(fast_dico[quadruplet], key=lambda x: x[0])
+
+    return fast_dico
+
+
 def get_flow_name_connection(connection, connections):
     """ Return the connection id and flow id in MPTCP connections of the TCP connection
         Same if same source/dest ip/port
@@ -440,13 +463,48 @@ def get_flow_name_connection(connection, connections):
     return None, None
 
 
-def copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns, acksize_all, acksize_all_mptcp, flow_name):
+def get_flow_name_connection_optimized(connection, connections, fast_conns=None):
+    """ Return the connection id and flow id in MPTCP connections of the TCP connection
+        Same if same source/dest ip/port
+        If not found, return None, None
+    """
+    if not fast_conns:
+        return get_flow_name_connection(connection, connections)
+
+    if (connection.flow.attr[co.SADDR], connection.flow.attr[co.DADDR], connection.flow.attr[co.SPORT], connection.flow.attr[co.DPORT]) in fast_conns:
+        potential_list = fast_conns[(connection.flow.attr[co.SADDR], connection.flow.attr[co.DADDR], connection.flow.attr[co.SPORT],
+                                    connection.flow.attr[co.DPORT])]
+
+        if len(potential_list) == 1:
+            return potential_list[0][2], potential_list[0][3]
+
+        # Binary search on sorted list
+        start_list = [x[0] for x in potential_list]
+        potential_match_index = max(bisect.bisect_left(start_list, connection.flow.attr[co.START]) - 1, 0)
+        match_indexes = []
+        while potential_match_index < len(potential_list) and potential_list[potential_match_index][0] <= connection.flow.attr[co.START] + 8.0:
+            if connection.flow.attr[co.START] <= potential_list[potential_match_index][0] + potential_list[potential_match_index][1]:
+                match_indexes += [potential_match_index]
+
+            potential_match_index += 1
+
+        if len(match_indexes) == 1:
+            return potential_list[match_indexes[0]][2], potential_list[match_indexes[0]][3]
+        elif len(match_indexes) > 1:
+            print("More than one possible match...")
+            # By default, return the first match
+            return potential_list[match_indexes[0]][2], potential_list[match_indexes[0]][3]
+
+    return None, None
+
+
+def copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns, acksize_all, acksize_all_mptcp, flow_name, fast_conns=None):
     """ Given a tcp connection, copy its start and duration to the corresponding mptcp connection
         If connection is a failed subflow of a MPTCPConnection, add it in failed_conns
         Return the corresponding connection and flow ids of the mptcp connection
     """
     connection = connections[flow_name]
-    conn_id, flow_id = get_flow_name_connection(connection, mptcp_connections)
+    conn_id, flow_id = get_flow_name_connection_optimized(connection, mptcp_connections, fast_conns=fast_conns)
     if isinstance(conn_id, (int, long)):
         mptcp_connections[conn_id].flows[flow_id].subflow_id = flow_name
         mptcp_connections[conn_id].flows[flow_id].attr[co.START] = connection.flow.attr[co.START]
@@ -721,9 +779,11 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_e
     acksize_all_mptcp = {co.C2S: {}, co.S2C: {}}
 
     if mptcp_connections:
+        fast_conns = get_preprocessed_connections(mptcp_connections)
         for flow_id in connections:
             # Copy info to mptcp connections
-            copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns, acksize_all, acksize_all_mptcp, flow_id)
+            copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns, acksize_all, acksize_all_mptcp, flow_id,
+                                           fast_conns=fast_conns)
 
     # Save connections info
     if mptcp_connections:
