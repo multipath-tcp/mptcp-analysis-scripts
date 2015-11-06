@@ -164,10 +164,10 @@ for fname, conns in multiflow_connections.iteritems():
                     if co.TIMESTAMP_RETRANS in flow.attr[direction] and co.START in flow.attr:
                         # start_flow_time = float(flow.attr[co.START])
                         # time_diff = start_flow_time - start_time
-                        for ts in flow.attr[direction][co.TIMESTAMP_RETRANS]:
+                        for ts, _, _, _ in flow.attr[direction][co.TIMESTAMP_RETRANS]:
                             # Some tricks to avoid floating errors
-                            ts_int = long(ts)
-                            ts_dec = float('0.' + str(ts - ts_int).split('.')[1])
+                            ts_int = long(ts.total_seconds())
+                            ts_dec = float('0.' + str(ts.total_seconds - ts_int).split('.')[1])
                             ts_dec = ceil(ts_dec * 1000000) / 1000000.0
                             ts_dec_delta = ts_dec - start_time_dec
                             ts_fix_int = ts_int - start_time_int

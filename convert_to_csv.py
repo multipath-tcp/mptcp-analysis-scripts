@@ -110,7 +110,7 @@ MPTCP_SUBFLOWS_ONE2ONE_DIRECTION_FIELDS = [co.BYTES, co.BYTES_DATA, co.BYTES_RET
 MPTCP_SUBFLOWS_MANY2ONE_DIRECTION_FIELDS = [co.IS_REINJ, co.REINJ_ORIG, co.REINJ_ORIG_TIMESTAMP, co.TIMESTAMP_RETRANS]
 MPTCP_SUBFLOWS_MANY2ONE_DIRECTION_SUBFIELDS = {co.IS_REINJ: {'timestamp': 'bytes'}, co.REINJ_ORIG: {'range_bytes': 'nb_reinjected'},
                                                co.REINJ_ORIG_TIMESTAMP: 'reinjection_orig_timestamp',
-                                               co.TIMESTAMP_RETRANS: 'timestamp_retransmission'}
+                                               co.TIMESTAMP_RETRANS: ['timestamp_retransmission', 'delta_with_first_time_sent', 'delta_with_last_time_sent', 'delta_with_last_sent']}
 
 
 def make_header_line_mptcp_connections_one2one_fields(conns_o2o_file):
@@ -256,8 +256,12 @@ def make_data_lines_mptcp_subflows_many2one_direction_fields(fbasename, connecti
                     for elem in data:
                         sfs_m2o_file.write(fbasename + ";" + str(conn_id) + ";" + str(is_c2s) + ";" + str(pos))
                         if isinstance(MPTCP_SUBFLOWS_MANY2ONE_DIRECTION_SUBFIELDS[field_name], list):
-                            for subelem in elem:
-                                sfs_m2o_file.write(";" + str(subelem))
+                            if field_name == co.TIMESTAMP_RETRANS:
+                                for subelem in elem:
+                                    sfs_m2o_file.write(";" + str(subelem.total_seconds()))
+                            else:
+                                for subelem in elem:
+                                    sfs_m2o_file.write(";" + str(subelem))
 
                         elif isinstance(MPTCP_SUBFLOWS_MANY2ONE_DIRECTION_SUBFIELDS[field_name], dict):
                             sfs_m2o_file.write(";" + str(elem) + ";" + str(data[elem]))

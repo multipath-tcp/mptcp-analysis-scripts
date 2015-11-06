@@ -625,8 +625,12 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
         It computes the timestamp of the last ACK, FIN and payload sent in both directions
     """
     print("Computing TCP ack sizes for", pcap_filepath)
-    SEQ_S2D = 'seq_s2d'
-    SEQ_D2S = 'seq_d2s'
+    SEQ_C2S = 'seq_c2s'
+    SEQ_S2C = 'seq_s2c'
+    HSEQ_C2S = 'hseq_c2s'
+    HSEQ_S2C = 'hseq_s2c'
+    CLIENT = 'client'
+    SERVER = 'server'
     nb_acks = {co.C2S: {}, co.S2C: {}}
     acks = {co.C2S: {}, co.S2C: {}}
     # Avoid processing packets that do not belong to any analyzed TCP connection
@@ -701,11 +705,15 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                     # if (saddr, sport, daddr, dport) in acks:
                         # Already taken, but maybe old, such that we can overwrite it (show on screen the TS difference)
                         # print(saddr, sport, daddr, dport, "already used; it was (in seconds)", ts - acks[saddr, sport, daddr, dport][co.TIMESTAMP])
-                    if (saddr, sport, daddr, dport) in acks and (ts_delta - acks[saddr, sport, daddr, dport][co.TIMESTAMP]).total_seconds() <= ts_syn_timeout and acks[saddr, sport, daddr, dport][co.S2C] == -1 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_S2D]:
+                    if (saddr, sport, daddr, dport) in acks and (ts_delta - acks[saddr, sport, daddr, dport][co.TIMESTAMP][CLIENT]).total_seconds() <= ts_syn_timeout and acks[saddr, sport, daddr, dport][co.S2C] == -1 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_C2S]:
                         # SYN retransmission!
-                        connections[conn_id].flow.attr[co.C2S][co.TIMESTAMP_RETRANS].append(str(ts_delta.total_seconds()))
+                        connections[conn_id].flow.attr[co.C2S][co.TIMESTAMP_RETRANS].append((ts_delta,
+                                                                                             ts_delta - acks[saddr, sport, daddr, dport][HSEQ_C2S][tcp.seq][0],
+                                                                                             ts_delta - acks[saddr, sport, daddr, dport][HSEQ_C2S][tcp.seq][1],
+                                                                                             ts_delta - acks[saddr, sport, daddr, dport][co.TIMESTAMP][CLIENT]))
+                        acks[saddr, sport, daddr, dport][HSEQ_C2S][tcp.seq][1] = ts_delta
                     else:
-                        acks[saddr, sport, daddr, dport] = {co.C2S: -1, co.S2C: -1, co.TIMESTAMP: ts_delta, co.CONN_ID: conn_id, SEQ_S2D: set([tcp.seq]), SEQ_D2S: set([])}
+                        acks[saddr, sport, daddr, dport] = {co.C2S: -1, co.S2C: -1, co.TIMESTAMP: {CLIENT: ts_delta, SERVER: None}, co.CONN_ID: conn_id, SEQ_C2S: set([tcp.seq]), SEQ_S2C: set([]), HSEQ_C2S: {tcp.seq: [ts_delta, ts_delta]}, HSEQ_S2C: {}}
                         connections[conn_id].attr[co.BACKUP] = backup
 
                 elif (saddr, sport, daddr, dport) in black_list:
@@ -713,13 +721,21 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
 
                 elif syn_flag and ack_flag and not fin_flag and not rst_flag:
                     # The sender of the SYN/ACK is the server
-                    if (daddr, dport, saddr, sport) in acks and (ts_delta - acks[daddr, dport, saddr, sport][co.TIMESTAMP]).total_seconds() < ts_timeout and acks[daddr, dport, saddr, sport][co.C2S] == -1:
+                    if (daddr, dport, saddr, sport) in acks and (ts_delta - acks[daddr, dport, saddr, sport][co.TIMESTAMP][CLIENT]).total_seconds() < ts_timeout and acks[daddr, dport, saddr, sport][co.C2S] == -1:
                         # Better to check, if not seen, maybe uncomplete TCP connection
                         acks[daddr, dport, saddr, sport][co.C2S] = tcp.ack
-                        acks[daddr, dport, saddr, sport][SEQ_D2S].add(tcp.seq)
-                    elif (daddr, dport, saddr, sport) in acks and (ts_delta - acks[daddr, dport, saddr, sport][co.TIMESTAMP]).total_seconds() < ts_timeout and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_D2S]:
+                        acks[daddr, dport, saddr, sport][SEQ_S2C].add(tcp.seq)
+                        acks[daddr, dport, saddr, sport][HSEQ_S2C][tcp.seq] = [ts_delta, ts_delta]
+                        acks[daddr, dport, saddr, sport][co.TIMESTAMP][SERVER] = ts_delta
+
+                    elif (daddr, dport, saddr, sport) in acks and (ts_delta - acks[daddr, dport, saddr, sport][co.TIMESTAMP][CLIENT]).total_seconds() < ts_timeout and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_S2C]:
                         # SYN/ACK retransmission!
-                        connections[acks[daddr, dport, saddr, sport][co.CONN_ID]].flow.attr[co.S2C][co.TIMESTAMP_RETRANS].append(str(ts_delta.total_seconds()))
+                        connections[acks[daddr, dport, saddr, sport][co.CONN_ID]].flow.attr[co.S2C][co.TIMESTAMP_RETRANS].append((ts_delta,
+                                                                                                                                  ts_delta - acks[saddr, sport, daddr, dport][HSEQ_S2C][tcp.seq][0],
+                                                                                                                                  ts_delta - acks[saddr, sport, daddr, dport][HSEQ_S2C][tcp.seq][1],
+                                                                                                                                  ts_delta - acks[saddr, sport, daddr, dport][co.TIMESTAMP][CLIENT]))
+                        acks[daddr, dport, saddr, sport][HSEQ_S2C][tcp.seq][1] = ts_delta
+                        acks[daddr, dport, saddr, sport][co.TIMESTAMP][SERVER] = ts_delta
 
                 elif not syn_flag and not rst_flag and ack_flag:
                     if (saddr, sport, daddr, dport) in acks:
@@ -743,20 +759,26 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                                     connections[conn_id].attr[co.SOCKS_DADDR] = socks_parser.get_ip_address(decrypted_socks_cmd)
                                     connections[conn_id].attr[co.SOCKS_PORT] = socks_parser.get_port_number(decrypted_socks_cmd)
 
-                            if len(tcp.data) > 0 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_S2D]:
+                            if len(tcp.data) > 0 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_C2S]:
                                 # This is a retransmission! (take into account the seq overflow)
                                 connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts_delta
-                                connections[conn_id].flow.attr[co.C2S][co.TIMESTAMP_RETRANS].append(str(ts_delta.total_seconds()))
+                                connections[conn_id].flow.attr[co.C2S][co.TIMESTAMP_RETRANS].append((ts_delta,
+                                                                                                     ts_delta - acks[saddr, sport, daddr, dport][HSEQ_C2S][tcp.seq][0],
+                                                                                                     ts_delta - acks[saddr, sport, daddr, dport][HSEQ_C2S][tcp.seq][1],
+                                                                                                     ts_delta - acks[saddr, sport, daddr, dport][co.TIMESTAMP][CLIENT]))
+                                acks[saddr, sport, daddr, dport][HSEQ_C2S][tcp.seq][1] = ts_delta
                             elif len(tcp.data) > 0:
-                                acks[saddr, sport, daddr, dport][SEQ_S2D].add(tcp.seq)
+                                acks[saddr, sport, daddr, dport][SEQ_C2S].add(tcp.seq)
                                 connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts_delta
                                 connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_TCP] = ts_delta
+                                acks[saddr, sport, daddr, dport][HSEQ_C2S][tcp.seq] = [ts_delta, ts_delta]
                                 # Don't think will face this issue
 #                                 if len(acks[saddr, sport, daddr, dport][SEQ][co.C2S]) >= 3000000:
 #                                     for x in range(50000):
 #                                         acks[saddr, sport, daddr, dport][SEQ][co.C2S].popleft()
 
                         acks[saddr, sport, daddr, dport][co.S2C] = tcp.ack
+                        acks[saddr, sport, daddr, dport][co.TIMESTAMP][CLIENT] = ts_delta
                     elif (daddr, dport, saddr, sport) in acks:
                         if acks[daddr, dport, saddr, sport][co.C2S] >= 0:
                             conn_id = acks[daddr, dport, saddr, sport][co.CONN_ID]
@@ -770,20 +792,26 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                                 continue
 
                             increment_value_dict(nb_acks[co.C2S][conn_id], bytes_acked)
-                            if len(tcp.data) > 0 and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_D2S]:
+                            if len(tcp.data) > 0 and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_S2C]:
                                 # This is a retransmission!
                                 connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts_delta
-                                connections[conn_id].flow.attr[co.S2C][co.TIMESTAMP_RETRANS].append(str(ts_delta.total_seconds()))
+                                connections[conn_id].flow.attr[co.S2C][co.TIMESTAMP_RETRANS].append((ts_delta,
+                                                                                                     ts_delta - acks[saddr, sport, daddr, dport][HSEQ_S2C][tcp.seq][0],
+                                                                                                     ts_delta - acks[saddr, sport, daddr, dport][HSEQ_S2C][tcp.seq][1],
+                                                                                                     ts_delta - acks[saddr, sport, daddr, dport][co.TIMESTAMP][SERVER]))
+                                acks[saddr, sport, daddr, dport][HSEQ_S2C][tcp.seq][1] = ts_delta
                             elif len(tcp.data) > 0:
-                                acks[daddr, dport, saddr, sport][SEQ_D2S].add(tcp.seq)
+                                acks[daddr, dport, saddr, sport][SEQ_S2C].add(tcp.seq)
                                 connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts_delta
                                 connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_TCP] = ts_delta
+                                acks[saddr, sport, daddr, dport][HSEQ_S2C][tcp.seq] = [ts_delta, ts_delta]
                                 # Don't think will face this issue
 #                                 if len(acks[daddr, dport, saddr, sport][SEQ][co.S2C]) >= 3000000:
 #                                     for x in range(50000):
 #                                         acks[daddr, dport, saddr, sport][SEQ][co.S2C].popleft()
 
                         acks[daddr, dport, saddr, sport][co.C2S] = tcp.ack
+                        acks[daddr, dport, saddr, sport][co.TIMESTAMP][SERVER] = ts_delta
                     else:
                         # Silently ignore those packets
                         # print(saddr, sport, daddr, dport, "haven't seen beginning...")
