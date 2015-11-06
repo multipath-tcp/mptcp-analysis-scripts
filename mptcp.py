@@ -412,9 +412,9 @@ def process_stats_csv(csv_fname, connections):
             connections[conn_id].attr[co.C2S][co.BYTES_MPTCPTRACE] = 0
             connections[conn_id].attr[co.S2C][co.BYTES_MPTCPTRACE] = 0
         if con_time:
-            connections[conn_id].attr[co.DURATION] = con_time
+            connections[conn_id].attr[co.DURATION] = float(con_time)
         else:
-            connections[conn_id].attr[co.DURATION] = '0.0'
+            connections[conn_id].attr[co.DURATION] = 0.0
         if begin_time:
             connections[conn_id].attr[co.START] = begin_time
         else:
