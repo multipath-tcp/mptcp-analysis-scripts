@@ -92,10 +92,10 @@ for fname, conns in multiflow_connections.iteritems():
             if duration <= min_duration:
                 continue
 
-            start_time = float(conn.attr.get(co.START, 'inf'))
-            if start_time == float('inf'):
+            if co.START not in conn.attr:
                 continue
 
+            start_time = conn.attr[co.START].total_seconds()
             # Avoid taking into account connections that do not use at least two subflows
             nb_flows = 0
             for flow_id, flow in conn.flows.iteritems():
@@ -108,10 +108,10 @@ for fname, conns in multiflow_connections.iteritems():
             min_start_time = start_time
             max_end_time = 0.0
             for flow_id, flow in conn.flows.iteritems():
-                flow_start_time = float(flow.attr.get(co.START, 'inf'))
-                min_start_time = min(min_start_time, flow_start_time)
-                if flow_start_time == float('inf'):
+                if co.START not in flow.attr:
                     continue
+                flow_start_time = flow.attr[co.START].total_seconds()
+                min_start_time = min(min_start_time, flow_start_time)
                 flow_start_time_int = long(flow_start_time)
                 flow_start_time_dec = float('0.' + str(flow_start_time - flow_start_time_int).split('.')[1])
                 flow_start_time_dec = ceil(flow_start_time_dec * 1000000) / 1000000.0

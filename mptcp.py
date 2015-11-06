@@ -26,6 +26,8 @@ from __future__ import print_function
 #                    IMPORTS                     #
 ##################################################
 
+from datetime import timedelta
+
 import common as co
 import glob
 import numpy as np
@@ -416,9 +418,10 @@ def process_stats_csv(csv_fname, connections):
         else:
             connections[conn_id].attr[co.DURATION] = 0.0
         if begin_time:
-            connections[conn_id].attr[co.START] = begin_time
+            str_begin = begin_time.split('.')
+            connections[conn_id].attr[co.START] = timedelta(seconds=int(str_begin[0]), microseconds=int(str_begin[1]))
         else:
-            connections[conn_id].attr[co.START] = '0.0'
+            connections[conn_id].attr[co.START] = timedelta(0)
         if bytes_reinjected:
             connections[conn_id].attr[co.C2S][co.REINJ_BYTES] = int(bytes_reinjected[0])
             connections[conn_id].attr[co.S2C][co.REINJ_BYTES] = int(bytes_reinjected[1])

@@ -86,7 +86,7 @@ for fname, conns in multiflow_connections.iteritems():
         if co.START in conn.attr and len(conn.flows) >= 2:
             # Rely here on MPTCP duration, maybe should be duration at TCP level?
             # Also rely on the start time of MPTCP; again, should it be the TCP one?
-            conn_start_time = float(conn.attr[co.START])
+            conn_start_time = conn.attr[co.START].total_seconds()
             conn_start_time_int = long(conn_start_time)
             conn_start_time_dec = float('0.' + str(conn_start_time - conn_start_time_int).split('.')[1])
             conn_duration = flaot(conn.attr[co.DURATION])

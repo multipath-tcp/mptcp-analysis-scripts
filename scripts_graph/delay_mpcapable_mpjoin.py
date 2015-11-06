@@ -105,8 +105,8 @@ def plot(connections, multiflow_connections, sums_dir_exp):
             for flow_id, flow in conn.flows.iteritems():
                 if co.START not in flow.attr or flow.attr[co.SADDR] == co.IP_PROXY:
                     continue
-                if float(flow.attr[co.START]) < initial_sf_ts:
-                    initial_sf_ts = float(flow.attr[co.START])
+                if flow.attr[co.START].total_seconds() < initial_sf_ts:
+                    initial_sf_ts = flow.attr[co.START].total_seconds()
                     initial_sf_id = flow_id
                 flow_bytes = 0
                 for direction in co.DIRECTIONS:
@@ -126,7 +126,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
             for flow_id, flow in conn.flows.iteritems():
                 if co.START not in flow.attr or flow.attr[co.SADDR] == co.IP_PROXY:
                     continue
-                delta = float(flow.attr[co.START]) - initial_sf_ts
+                delta = flow.attr[co.START].total_seconds() - initial_sf_ts
                 min_last_acks = float('inf')
                 if len(last_acks) >= 1:
                     min_last_acks = min(last_acks)
@@ -134,7 +134,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
                 max_last_payload = 0 - float('inf')
                 if flow.attr[co.C2S].get(co.BYTES, 0) > 0 or flow.attr[co.S2C].get(co.BYTES, 0) > 0:
                     max_last_payload = max([flow.attr[direction][co.TIME_LAST_PAYLD] for direction in co.DIRECTIONS])
-                handover_delta = float(flow.attr[co.START]) + max_last_payload - min_last_acks
+                handover_delta = flow.attr[co.START].total_seconds() + max_last_payload - min_last_acks
                 if delta > 0.0:
                     min_delta = min(min_delta, delta)
                     if min_delta == delta:
@@ -167,7 +167,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
 
             if flow_id_min_delta:
                 syn_first_additional_sf.append(min_delta)
-                if conn.flows[initial_sf_id].attr[co.S2C][co.TIME_LAST_ACK_TCP] < float(conn.flows[flow_id_min_delta].attr[co.START]):
+                if conn.flows[initial_sf_id].attr[co.S2C][co.TIME_LAST_ACK_TCP] < conn.flows[flow_id_min_delta].attr[co.START].total_seconds():
                     # Handover between initial and second subflow
                     second_sf_handover.append(min_delta)
                 if delta <= 0.2:
@@ -253,14 +253,14 @@ def plot(connections, multiflow_connections, sums_dir_exp):
             for flow_id, flow in conn.flows.iteritems():
                 if co.START not in flow.attr:
                     continue
-                if flow.attr[co.START] < initial_sf_ts:
-                    initial_sf_ts = float(flow.attr[co.START])
+                if flow.attr[co.START].total_seconds() < initial_sf_ts:
+                    initial_sf_ts = flow.attr[co.START].total_seconds()
 
             min_delta = float('inf')
             for flow_id, flow in conn.flows.iteritems():
                 if co.START not in flow.attr:
                     continue
-                delta = float(flow.attr[co.START]) - initial_sf_ts
+                delta = flow.attr[co.START].total_seconds() - initial_sf_ts
                 if delta > 0.0:
                     min_delta = min(min_delta, delta)
 
@@ -268,7 +268,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
             for flow_id, flow in conn.flows.iteritems():
                 if co.START not in flow.attr:
                     continue
-                delta = float(flow.attr[co.START]) - initial_sf_ts
+                delta = flow.attr[co.START].total_seconds() - initial_sf_ts
                 for direction in co.DIRECTIONS:
                     bytes_total += flow.attr[direction].get(co.BYTES, 0)
                     if flow.attr[direction].get(co.BYTES, 0) >= 1000000000:

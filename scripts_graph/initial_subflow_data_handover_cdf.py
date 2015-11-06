@@ -100,8 +100,8 @@ for fname, conns in multiflow_connections.iteritems():
             for flow_id, flow in conn.flows.iteritems():
                 if co.START not in flow.attr or flow.attr[co.SADDR] == co.IP_PROXY:
                     continue
-                if float(flow.attr[co.START]) < initial_sf_ts:
-                    initial_sf_ts = float(flow.attr[co.START])
+                if flow.attr[co.START].total_seconds() < initial_sf_ts:
+                    initial_sf_ts = flow.attr[co.START].total_seconds()
                 flow_bytes = 0
                 for direction in co.DIRECTIONS:
                     flow_bytes += flow.attr[direction].get(co.BYTES_DATA, 0)
@@ -118,7 +118,7 @@ for fname, conns in multiflow_connections.iteritems():
             for flow_id, flow in conn.flows.iteritems():
                 if handover_detected or co.START not in flow.attr or flow.attr[co.SADDR] == co.IP_PROXY:
                     continue
-                delta = float(flow.attr[co.START]) - initial_sf_ts
+                delta = flow.attr[co.START].total_seconds() - initial_sf_ts
                 min_last_acks = float('inf')
                 if len(last_acks) >= 1:
                     min_last_acks = min(last_acks)
@@ -139,8 +139,8 @@ for fname, conns in multiflow_connections.iteritems():
                 time_initial_sf = float('inf')
                 flow_id_initial_sf = None
                 for flow_id, flow in conn.flows.iteritems():
-                    if float(flow.attr.get(co.START, 'inf')) < time_initial_sf:
-                        time_initial_sf = float(flow.attr[co.START])
+                    if co.START in flow.attr and flow.attr[co.START].total_seconds() < time_initial_sf:
+                        time_initial_sf = flow.attr[co.START].total_seconds()
                         flow_id_initial_sf = flow_id
 
                 if not isinstance(flow_id_initial_sf, int):

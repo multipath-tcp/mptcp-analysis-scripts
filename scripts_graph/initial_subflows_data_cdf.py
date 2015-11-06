@@ -86,8 +86,8 @@ for fname, conns in multiflow_connections.iteritems():
             time_initial_sf = float('inf')
             flow_id_initial_sf = None
             for flow_id, flow in conn.flows.iteritems():
-                if float(flow.attr.get(co.START, 'inf')) < time_initial_sf:
-                    time_initial_sf = float(flow.attr[co.START])
+                if co.START in flow.attr and flow.attr[co.START].total_seconds() < time_initial_sf:
+                    time_initial_sf = flow.attr[co.START].total_seconds()
                     flow_id_initial_sf = flow_id
 
             if not isinstance(flow_id_initial_sf, int):
@@ -97,8 +97,8 @@ for fname, conns in multiflow_connections.iteritems():
             flow_id_second_sf = None
             for flow_id, flow in conn.flows.iteritems():
                 if not flow_id == flow_id_initial_sf:
-                    if float(flow.attr.get(co.START, 'inf')) < time_second_sf:
-                        time_second_sf = float(flow.attr[co.START])
+                    if co.START in flow.attr and flow.attr[co.START].total_seconds() < time_second_sf:
+                        time_second_sf = flow.attr[co.START].total_seconds()
                         flow_id_second_sf = flow_id
 
             if not isinstance(flow_id_second_sf, int):

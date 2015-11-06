@@ -27,6 +27,8 @@ from __future__ import print_function
 #                    IMPORTS                     #
 ##################################################
 
+from datetime import timedelta
+
 import bisect
 import common as co
 import dpkt
@@ -61,6 +63,31 @@ class TCPConnection(co.BasicConnection):
         self.flow = co.BasicFlow()
 
 
+def divide_by_power_ten(str_number, power):
+    """ Given a float in string, return its division by 10**power in string """
+    try:
+        index_dot = str_number.index('.')
+        mut_str = list(str_number)
+        # Divide by 1000
+        for i in range(3):
+            mut_str[index_dot - i] = mut_str[index_dot - i - 1]
+
+        mut_str[index_dot - 3] = '.'
+        return "".join(mut_str)
+    except ValueError:
+        # No dot, so put three numbers after dot
+        mut_str = list(str_number)
+        mut_str.append(mut_str[-1])
+        for i in range(3):
+            mut_str[-i - 1] = mut_str[-i - 2]
+
+        mut_str[-4] = '.'
+        return "".join(mut_str)
+
+
+
+
+
 def extract_tstat_data_tcp_complete(filename, connections, conn_id):
     """ Subpart of extract_tstat_data dedicated to the processing of the log_tcp_complete file
         Returns the connections seen and the conn_id reached
@@ -81,25 +108,8 @@ def extract_tstat_data_tcp_complete(filename, connections, conn_id):
             connection.flow.detect_ipv4()
             connection.flow.indicates_wifi_or_cell()
             # Except RTT, all time (in ms in tstat) shoud be converted into seconds
-            try:
-                index_dot = info[28].index('.')
-                mut_str = list(info[28])
-                # Divide by 1000
-                for i in range(3):
-                    mut_str[index_dot - i] = mut_str[index_dot - i - 1]
-
-                mut_str[index_dot - 3] = '.'
-                connection.flow.attr[co.START] = "".join(mut_str)
-            except ValueError:
-                # No dot, so put three numbers after dot
-                mut_str = list(info[28])
-                mut_str.append(mut_str[-1])
-                for i in range(3):
-                    mut_str[-i - 1] = mut_str[-i - 2]
-
-                mut_str[-4] = '.'
-                connection.flow.attr[co.START] = "".join(mut_str)
-
+            str_start = divide_by_power_ten(info[28], 3).split('.')
+            connection.flow.attr[co.START] = timedelta(seconds=int(str_start[0]), microseconds=int(str_start[1]))
             connection.flow.attr[co.DURATION] = float(info[30]) / 1000.0
             connection.flow.attr[co.C2S][co.PACKS] = int(info[2])
             connection.flow.attr[co.S2C][co.PACKS] = int(info[16])
@@ -220,25 +230,8 @@ def extract_tstat_data_tcp_nocomplete(filename, connections, conn_id):
             connection.flow.detect_ipv4()
             connection.flow.indicates_wifi_or_cell()
             # Except RTT, all time (in ms in tstat) shoud be converted into seconds
-            try:
-                index_dot = info[28].index('.')
-                mut_str = list(info[28])
-                # Divide by 1000
-                for i in range(3):
-                    mut_str[index_dot - i] = mut_str[index_dot - i - 1]
-
-                mut_str[index_dot - 3] = '.'
-                connection.flow.attr[co.START] = "".join(mut_str)
-            except ValueError:
-                # No dot, so put three numbers after dot
-                mut_str = list(info[28])
-                mut_str.append(mut_str[-1])
-                for i in range(3):
-                    mut_str[-i - 1] = mut_str[-i - 2]
-
-                mut_str[-4] = '.'
-                connection.flow.attr[co.START] = "".join(mut_str)
-
+            str_start = divide_by_power_ten(info[28], 3).split('.')
+            connection.flow.attr[co.START] = timedelta(seconds=int(str_start[0]), microseconds=int(str_start[1]))
             connection.flow.attr[co.DURATION] = float(info[30]) / 1000.0
             connection.flow.attr[co.C2S][co.PACKS] = int(info[2])
             connection.flow.attr[co.S2C][co.PACKS] = int(info[16])
@@ -468,7 +461,7 @@ def get_preprocessed_connections(connections):
                 if (flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT]) not in fast_dico:
                     fast_dico[(flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT])] = []
 
-                fast_dico[(flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT])] += [(float(conn.attr[co.START]),
+                fast_dico[(flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT])] += [(conn.attr[co.START].total_seconds(),
                                                                                                                      float(conn.attr[co.DURATION]),
                                                                                                                      conn_id, flow_id)]
 
@@ -486,9 +479,9 @@ def get_flow_name_connection(connection, connections):
     """
     for conn_id, conn in connections.iteritems():
         # Let a little margin, but don't think it's needed
-        if conn.attr.get(co.START, None) and (float(connection.flow.attr[co.START]) >= float(conn.attr[co.START]) - 8.0 and
-                                              float(connection.flow.attr[co.START]) <=
-                                              float(conn.attr[co.START]) + float(conn.attr[co.DURATION])):
+        if conn.attr.get(co.START, None) and (connection.flow.attr[co.START].total_seconds() >= conn.attr[co.START].total_seconds() - 8.0 and
+                                              connection.flow.attr[co.START].total_seconds() <=
+                                              conn.attr[co.START].total_seconds() + float(conn.attr[co.DURATION])):
             for flow_id, flow in conn.flows.iteritems():
                 if (connection.flow.attr[co.SADDR] == flow.attr[co.SADDR] and
                         connection.flow.attr[co.DADDR] == flow.attr[co.DADDR] and
@@ -516,10 +509,10 @@ def get_flow_name_connection_optimized(connection, connections, fast_conns=None)
 
         # Binary search on sorted list
         start_list = [x[0] for x in potential_list]
-        potential_match_index = max(bisect.bisect_left(start_list, float(connection.flow.attr[co.START])) - 1, 0)
+        potential_match_index = max(bisect.bisect_left(start_list, connection.flow.attr[co.START].total_seconds()) - 1, 0)
         match_indexes = []
-        while potential_match_index < len(potential_list) and potential_list[potential_match_index][0] <= float(connection.flow.attr[co.START]) + 8.0:
-            if float(connection.flow.attr[co.START]) <= potential_list[potential_match_index][0] + potential_list[potential_match_index][1]:
+        while potential_match_index < len(potential_list) and potential_list[potential_match_index][0] <= connection.flow.attr[co.START].total_seconds() + 8.0:
+            if connection.flow.attr[co.START].total_seconds() <= potential_list[potential_match_index][0] + potential_list[potential_match_index][1]:
                 match_indexes += [potential_match_index]
 
             potential_match_index += 1
@@ -649,6 +642,7 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
         if type(eth.data) == dpkt.ip.IP or type(eth.data) == dpkt.ip6.IP6:
             ip = eth.data
             if type(ip.data) == dpkt.tcp.TCP:
+                str_ts = str(ts[0]) + '.' + str(ts[1])
                 tcp = ip.data
                 fin_flag = (tcp.flags & dpkt.tcp.TH_FIN) != 0
                 syn_flag = (tcp.flags & dpkt.tcp.TH_SYN) != 0
@@ -674,9 +668,9 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                     conn_candidates = inverse_conns.get((saddr, sport, daddr, dport), [])
                     min_delta = ts_syn_timeout
                     for cid in conn_candidates:
-                        if abs(ts - float(connections[cid].flow.attr[co.START])) < min_delta:
+                        if abs(ts - connections[cid].flow.attr[co.START].total_seconds()) < min_delta:
                             conn_id = cid
-                            min_delta = abs(ts - float(connections[cid].flow.attr[co.START]))
+                            min_delta = abs(ts - connections[cid].flow.attr[co.START].total_seconds())
 
                     if not conn_id:
                         black_list.add((saddr, sport, daddr, dport))

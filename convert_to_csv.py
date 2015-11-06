@@ -22,6 +22,8 @@
 
 from __future__ import print_function
 
+from datetime import timedelta
+
 import argparse
 import matplotlib
 # Do not use any X11 backend
@@ -130,7 +132,10 @@ def make_data_lines_mptcp_connections_one2one_fields(fbasename, connections, con
         conn = connections[conn_id]
         conns_o2o_file.write(fbasename + ";" + str(conn_id))
         for field_name in MPTCP_CONNECTIONS_ONE2ONE_SINGLE_FIELDS:
-            conns_o2o_file.write(";" + str(conn.attr.get(field_name, "NULL")))
+            if field_name == co.START:
+                conns_o2o_file.write(";" + str(conn.attr.get(field_name, timedelta()).total_seconds()))
+            else:
+                conns_o2o_file.write(";" + str(conn.attr.get(field_name, "NULL")))
 
         for direction in co.DIRECTIONS:
             for field_name in MPTCP_CONNECTIONS_ONE2ONE_DIRECTION_FIELDS:
@@ -205,7 +210,10 @@ def make_data_lines_mptcp_subflows_one2one_fields(fbasename, connections, sfs_o2
         for flow_id in sorted_flow_ids:
             sfs_o2o_file.write(fbasename + ";" + str(conn_id) + ";" + str(flow_id))
             for field_name in MPTCP_SUBFLOWS_ONE2ONE_SINGLE_FIELDS:
-                sfs_o2o_file.write(";" + str(conn.flows[flow_id].attr.get(field_name, "NULL")))
+                if field_name == co.START:
+                    sfs_o2o_file.write(";" + str(conn.flows[flow_id].attr.get(field_name, timedelta()).total_seconds()))
+                else:
+                    sfs_o2o_file.write(";" + str(conn.flows[flow_id].attr.get(field_name, "NULL")))
 
             for direction in co.DIRECTIONS:
                 for field_name in MPTCP_SUBFLOWS_ONE2ONE_DIRECTION_FIELDS:
