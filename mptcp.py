@@ -139,6 +139,9 @@ def extract_flow_data(out_file):
             connections[current_connection].attr[co.C2S][co.BYTES] = {}
             connections[current_connection].attr[co.S2C][co.BYTES] = {}
 
+            connections[current_connection].attr[co.C2S][co.RETRANS_DSS] = []
+            connections[current_connection].attr[co.S2C][co.RETRANS_DSS] = []
+
         # Case 3: skip the line (no more current connection)
         else:
             current_connection = False

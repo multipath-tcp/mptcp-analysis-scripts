@@ -271,6 +271,7 @@ IP_CELL = False
 
 TIMESTAMP = 'timestamp'
 CONN_ID = 'conn_id'
+FLOW_ID = 'flow_id'
 
 # Info from the SOCKS command
 SOCKS_PORT = 'socks_port'
@@ -282,6 +283,9 @@ RM_ADDRS = 'rm_addrs'
 
 # Backup bit of a subflow
 BACKUP = 'backup'
+
+# Retransmission of DSS
+RETRANS_DSS = 'retrans_dss'
 
 if os.path.isfile('config.py'):
     import config as conf

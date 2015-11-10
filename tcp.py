@@ -706,43 +706,6 @@ def process_syn_ack(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, spo
         acks[daddr, dport, saddr, sport][co.TIMESTAMP][SERVER] = ts_delta
 
 
-def get_dss_and_data_ack(tcp):
-    """ Return the DSS and Data ACK of the current packet or False if there is no DSS """
-    dss, dack = False, False
-    opt_list = dpkt.tcp.parse_opts(tcp.opts)
-    for option_num, option_content in opt_list:
-        # Only interested in MPTCP with subtype 2
-        if option_num == 30 and len(option_content):
-            if ord(option_content[0]) == 32:
-                flags = ord(option_content[1])
-                dss_is_8_bytes = (flags & 0x08) != 0
-                dss_is_present = (flags & 0x04) != 0
-                dack_is_8_bytes = (flags & 0x02) != 0
-                dack_is_present = (flags & 0x01) != 0
-                if dack_is_present and not dss_is_present:
-                    range_max = 8 if dack_is_8_bytes else 4
-                    dack = 0
-                    for i in range(range_max):
-                        dack = dack * 256 + ord(option_content[2 + i])
-
-                elif dss_is_present and dack_is_present:
-                    range_max_dack = 8 if dack_is_8_bytes else 4
-                    dack = 0
-                    for i in range(range_max_dack):
-                        dack = dack * 256 + ord(option_content[2 + i])
-
-                    start_dss = 2 + range_max_dack
-                    range_max_dss = 8 if dss_is_8_bytes else 4
-                    dss = 0
-                    for i in range(range_max_dss):
-                        dss = dss * 256 + ord(option_content[start_dss + i])
-
-                elif dss_is_present and not dack_is_present:
-                    raise Exception("Case where dss_is_present and dack is not present")
-
-    return dss, dack
-
-
 def process_pkt_from_client(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, sport, dport, fin_flag):
     """ Process a packet with ACK set from the client """
     if acks[saddr, sport, daddr, dport][co.S2C] >= 0:
@@ -831,7 +794,7 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
     """
     print("Computing TCP ack sizes for", pcap_filepath)
     nb_acks = {co.C2S: {}, co.S2C: {}}
-    acks = {co.C2S: {}, co.S2C: {}}
+    acks = {}
     # Avoid processing packets that do not belong to any analyzed TCP connection
     black_list = set()
     pcap_file = open(pcap_filepath)
@@ -879,6 +842,196 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
     return nb_acks
 
 
+def get_dss_and_data_ack(tcp):
+    """ Return the DSS and Data ACK of the current packet or False if there is no DSS """
+    dss, dack, dss_is_8_bytes = False, False, False
+    opt_list = dpkt.tcp.parse_opts(tcp.opts)
+    for option_num, option_content in opt_list:
+        # Only interested in MPTCP with subtype 2
+        if option_num == 30 and len(option_content):
+            if ord(option_content[0]) == 32:
+                flags = ord(option_content[1])
+                dss_is_8_bytes = (flags & 0x08) != 0
+                dss_is_present = (flags & 0x04) != 0
+                dack_is_8_bytes = (flags & 0x02) != 0
+                dack_is_present = (flags & 0x01) != 0
+                if dack_is_present and not dss_is_present:
+                    range_max = 8 if dack_is_8_bytes else 4
+                    dack = 0
+                    for i in range(range_max):
+                        dack = dack * 256 + ord(option_content[2 + i])
+
+                elif dss_is_present and dack_is_present:
+                    range_max_dack = 8 if dack_is_8_bytes else 4
+                    dack = 0
+                    for i in range(range_max_dack):
+                        dack = dack * 256 + ord(option_content[2 + i])
+
+                    start_dss = 2 + range_max_dack
+                    range_max_dss = 8 if dss_is_8_bytes else 4
+                    dss = 0
+                    for i in range(range_max_dss):
+                        dss = dss * 256 + ord(option_content[start_dss + i])
+
+                elif dss_is_present and not dack_is_present:
+                    raise Exception("Case where dss_is_present and dack is not present")
+
+    return dss, dack, dss_is_8_bytes
+
+
+def process_mptcp_first_syn(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport, black_list, fast_conns, ts_syn_timeout, ts_timeout):
+    """ Processing of the first SYNs seen on a connection for the MPTCP DSS retransmissions """
+    # The sender of the first SYN is the client
+    # Check if the connection is black listed or not
+    conn_id = False
+    conn_candidates = fast_conns.get((saddr, daddr, sport, dport), [])
+    min_delta = ts_syn_timeout
+    for start, duration, cid, fid in conn_candidates:
+        if (co.START in mptcp_connections[cid].flows[fid].attr
+                and abs((ts_delta - mptcp_connections[cid].flows[fid].attr[co.START]).total_seconds()) < min_delta):
+            conn_id = cid
+            flow_id = fid
+            min_delta = abs((ts_delta - mptcp_connections[cid].flows[fid].attr[co.START]).total_seconds())
+
+    if not conn_id:
+        black_list.add((saddr, sport, daddr, dport))
+        return
+    elif conn_id and (saddr, sport, daddr, dport) in black_list:
+        black_list.remove((saddr, sport, daddr, dport))
+
+    if ((saddr, sport, daddr, dport) in acks and (ts_delta - acks[saddr, sport, daddr, dport][co.TIMESTAMP][CLIENT]).total_seconds() <= ts_syn_timeout
+            and acks[saddr, sport, daddr, dport][co.S2C] == -1) and conn_id in conn_acks:
+        # SYN retransmission! But do nothing particular
+        acks[saddr, sport, daddr, dport][co.TIMESTAMP][CLIENT] = ts_delta
+        conn_acks[conn_id][co.TIMESTAMP][CLIENT] = ts_delta
+    else:
+        acks[saddr, sport, daddr, dport] = {co.C2S: -1, co.S2C: -1, co.TIMESTAMP: {CLIENT: ts_delta, SERVER: None}, co.CONN_ID: conn_id,
+                                            co.FLOW_ID: flow_id}
+        conn_acks[conn_id] = {co.C2S: -1, co.S2C: -1, co.TIMESTAMP: {CLIENT: ts_delta, SERVER: None}, SEQ_C2S: set(), SEQ_S2C: set(), HSEQ_C2S: {},
+                              HSEQ_S2C: {}}
+
+
+def process_mptcp_syn_ack(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport, black_list, fast_conns, ts_syn_timeout, ts_timeout):
+    """ Processing of SYN/ACKs seen on the connection for the MPTCP DSS retransmissions """
+    # The sender of the SYN/ACK is the server
+    if (daddr, dport, saddr, sport) in acks and ((ts_delta - acks[daddr, dport, saddr, sport][co.TIMESTAMP][CLIENT]).total_seconds() < ts_timeout
+                                                 and acks[daddr, dport, saddr, sport][co.C2S] == -1):
+        # Better to check, if not seen, maybe uncomplete TCP connection
+        acks[daddr, dport, saddr, sport][co.C2S] = tcp.ack
+        acks[daddr, dport, saddr, sport][co.TIMESTAMP][SERVER] = ts_delta
+        conn_acks[acks[daddr, dport, saddr, sport][co.CONN_ID]][co.TIMESTAMP][SERVER] = ts_delta
+
+    elif (daddr, dport, saddr, sport) in acks and ((ts_delta - acks[daddr, dport, saddr, sport][co.TIMESTAMP][CLIENT]).total_seconds() < ts_timeout
+                                                   and tcp.ack == acks[daddr, dport, saddr, sport][co.C2S]):
+        # SYN/ACK retransmission! But don't do anything special
+        acks[daddr, dport, saddr, sport][co.TIMESTAMP][SERVER] = ts_delta
+        conn_acks[acks[daddr, dport, saddr, sport][co.CONN_ID]][co.TIMESTAMP][SERVER] = ts_delta
+
+
+def process_mptcp_pkt_from_client(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport):
+    """ Process a packet with ACK set from the client for the MPTCP DSS retransmissions """
+    dss, dack, dss_is_8_bytes = get_dss_and_data_ack(tcp)
+    conn_id = acks[saddr, sport, daddr, dport][co.CONN_ID]
+    if conn_acks[conn_id][co.S2C] >= 0:
+        max_val = 2**64 if dss_is_8_bytes else 2**32
+        bytes_acked = (dack - conn_acks[conn_id][co.S2C]) % max_val
+        if bytes_acked >= 2000000000:
+            # Ack of 2GB or more is just not possible here
+            return
+
+        if len(tcp.data) > 0 and dss in conn_acks[conn_id][SEQ_C2S] and (dss - conn_acks[conn_id][co.C2S]) % max_val < 2000000000:
+            # This is a DSS retransmission! (take into account the seq overflow)
+            mptcp_connections[conn_id].attr[co.C2S][co.RETRANS_DSS].append((ts_delta,
+                                                                            ts_delta - conn_acks[conn_id][HSEQ_C2S][dss][0],
+                                                                            ts_delta - conn_acks[conn_id][HSEQ_C2S][dss][1],
+                                                                            ts_delta - conn_acks[conn_id][co.TIMESTAMP][CLIENT]))
+            conn_acks[conn_id][HSEQ_C2S][dss][1] = ts_delta
+        elif len(tcp.data) > 0:
+            conn_acks[conn_id][SEQ_C2S].add(dss)
+            conn_acks[conn_id][HSEQ_C2S][dss] = [ts_delta, ts_delta]
+
+    conn_acks[conn_id][co.S2C] = dack
+    acks[saddr, sport, daddr, dport][co.TIMESTAMP][CLIENT] = ts_delta
+    conn_acks[conn_id][co.TIMESTAMP][CLIENT] = ts_delta
+
+
+def process_mptcp_pkt_from_server(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport):
+    """ Process a packet with ACK set from the server for the MPTCP DSS retransmissions """
+    dss, dack, dss_is_8_bytes = get_dss_and_data_ack(tcp)
+    conn_id = acks[daddr, dport, saddr, sport][co.CONN_ID]
+    if conn_acks[conn_id][co.C2S] >= 0:
+        max_val = 2**64 if dss_is_8_bytes else 2**32
+        bytes_acked = (dack - conn_acks[conn_id][co.C2S]) % max_val
+        if bytes_acked >= 2000000000:
+            # Ack of 2GB or more is just not possible here
+            return
+
+        if len(tcp.data) > 0 and dss in conn_acks[conn_id][SEQ_S2C] and (dss - conn_acks[conn_id][co.S2C]) % max_val < 2000000000:
+            # This is a DSS retransmission!
+            mptcp_connections[conn_id].attr[co.S2C][co.RETRANS_DSS].append((ts_delta,
+                                                                            ts_delta - conn_acks[conn_id][HSEQ_S2C][dss][0],
+                                                                            ts_delta - conn_acks[conn_id][HSEQ_S2C][dss][1],
+                                                                            ts_delta - conn_acks[conn_id][co.TIMESTAMP][SERVER]))
+            conn_acks[conn_id][HSEQ_S2C][dss][1] = ts_delta
+        elif len(tcp.data) > 0:
+            conn_acks[conn_id][SEQ_S2C].add(dss)
+            conn_acks[conn_id][HSEQ_S2C][dss] = [ts_delta, ts_delta]
+
+    conn_acks[conn_id][co.C2S] = dack
+    acks[daddr, dport, saddr, sport][co.TIMESTAMP][SERVER] = ts_delta
+    conn_acks[conn_id][co.TIMESTAMP][SERVER] = ts_delta
+
+
+def compute_mptcp_dss_retransmissions(pcap_filepath, mptcp_connections, fast_conns, ts_syn_timeout=6.0, ts_timeout=3600.0):
+    """ Compute MPTCP DSS retransmissions (avoid taking into account spurious ones) """
+    print("Computing MPTCP DSS retransmissions for", pcap_filepath)
+    acks = {}
+    conn_acks = {}
+    # Avoid processing packets that do not belong to any analyzed TCP connection
+    black_list = set()
+    pcap_file = open(pcap_filepath)
+    pcap = dpkt.pcap.Reader(pcap_file)
+    count = 0
+    for ts, buf in pcap:
+        ts_delta = get_ts_delta(ts)
+        count += 1
+        if count % 100000 == 0:
+            print(count)
+        eth = dpkt.ethernet.Ethernet(buf)
+        if type(eth.data) == dpkt.ip.IP or type(eth.data) == dpkt.ip6.IP6:
+            ip = eth.data
+            if type(ip.data) == dpkt.tcp.TCP:
+                tcp = ip.data
+                fin_flag = (tcp.flags & dpkt.tcp.TH_FIN) != 0
+                syn_flag = (tcp.flags & dpkt.tcp.TH_SYN) != 0
+                rst_flag = (tcp.flags & dpkt.tcp.TH_RST) != 0
+                ack_flag = (tcp.flags & dpkt.tcp.TH_ACK) != 0
+
+                saddr, daddr, sport, dport = get_ips_and_ports(eth, ip, tcp)
+
+                if syn_flag and not ack_flag and not fin_flag and not rst_flag:
+                    process_mptcp_first_syn(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport, black_list, fast_conns,
+                                            ts_syn_timeout, ts_timeout)
+
+                elif (saddr, sport, daddr, dport) in black_list:
+                    continue
+
+                elif syn_flag and ack_flag and not fin_flag and not rst_flag:
+                    process_mptcp_syn_ack(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport, black_list, fast_conns,
+                                          ts_syn_timeout, ts_timeout)
+
+                elif not syn_flag and not rst_flag and ack_flag:
+                    if (saddr, sport, daddr, dport) in acks:
+                        process_mptcp_pkt_from_client(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport)
+
+                    elif (daddr, dport, saddr, sport) in acks:
+                        process_mptcp_pkt_from_server(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport)
+                    else:
+                        # Silently ignore those packets
+                        # print(saddr, sport, daddr, dport, "haven't seen beginning...")
+                        continue
+
+
 def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, tcpcsm, mptcp_connections=None, print_out=sys.stdout):
     """ Process a tcp pcap file and generate stats of its connections """
     cmd = ['tstat', '-s', os.path.basename(pcap_filepath[:-5]), pcap_filepath]
@@ -906,6 +1059,8 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_e
             # Copy info to mptcp connections
             copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns, acksize_all, acksize_all_mptcp, flow_id,
                                            fast_conns=fast_conns)
+
+        compute_mptcp_dss_retransmissions(pcap_filepath, mptcp_connections, fast_conns)
 
     # Save connections info
     if mptcp_connections:
