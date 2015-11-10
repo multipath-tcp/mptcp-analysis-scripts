@@ -932,6 +932,7 @@ def process_mptcp_pkt_from_client(ts_delta, acks, conn_acks, mptcp_connections, 
     """ Process a packet with ACK set from the client for the MPTCP DSS retransmissions """
     dss, dack, dss_is_8_bytes = get_dss_and_data_ack(tcp)
     conn_id = acks[saddr, sport, daddr, dport][co.CONN_ID]
+    flow_id = acks[saddr, sport, daddr, dport][co.FLOW_ID]
     if conn_acks[conn_id][co.S2C] >= 0:
         max_val = 2**64 if dss_is_8_bytes else 2**32
         bytes_acked = (dack - conn_acks[conn_id][co.S2C]) % max_val
@@ -941,7 +942,7 @@ def process_mptcp_pkt_from_client(ts_delta, acks, conn_acks, mptcp_connections, 
 
         if len(tcp.data) > 0 and dss in conn_acks[conn_id][SEQ_C2S] and (dss - conn_acks[conn_id][co.C2S]) % max_val < 2000000000:
             # This is a DSS retransmission! (take into account the seq overflow)
-            mptcp_connections[conn_id].attr[co.C2S][co.RETRANS_DSS].append((ts_delta,
+            mptcp_connections[conn_id].attr[co.C2S][co.RETRANS_DSS].append((ts_delta, flow_id,
                                                                             ts_delta - conn_acks[conn_id][HSEQ_C2S][dss][0],
                                                                             ts_delta - conn_acks[conn_id][HSEQ_C2S][dss][1],
                                                                             ts_delta - conn_acks[conn_id][co.TIMESTAMP][CLIENT]))
@@ -959,6 +960,7 @@ def process_mptcp_pkt_from_server(ts_delta, acks, conn_acks, mptcp_connections, 
     """ Process a packet with ACK set from the server for the MPTCP DSS retransmissions """
     dss, dack, dss_is_8_bytes = get_dss_and_data_ack(tcp)
     conn_id = acks[daddr, dport, saddr, sport][co.CONN_ID]
+    flow_id = acks[daddr, dport, saddr, sport][co.FLOW_ID]
     if conn_acks[conn_id][co.C2S] >= 0:
         max_val = 2**64 if dss_is_8_bytes else 2**32
         bytes_acked = (dack - conn_acks[conn_id][co.C2S]) % max_val
@@ -968,7 +970,7 @@ def process_mptcp_pkt_from_server(ts_delta, acks, conn_acks, mptcp_connections, 
 
         if len(tcp.data) > 0 and dss in conn_acks[conn_id][SEQ_S2C] and (dss - conn_acks[conn_id][co.S2C]) % max_val < 2000000000:
             # This is a DSS retransmission!
-            mptcp_connections[conn_id].attr[co.S2C][co.RETRANS_DSS].append((ts_delta,
+            mptcp_connections[conn_id].attr[co.S2C][co.RETRANS_DSS].append((ts_delta, flow_id,
                                                                             ts_delta - conn_acks[conn_id][HSEQ_S2C][dss][0],
                                                                             ts_delta - conn_acks[conn_id][HSEQ_S2C][dss][1],
                                                                             ts_delta - conn_acks[conn_id][co.TIMESTAMP][SERVER]))
