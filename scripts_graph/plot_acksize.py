@@ -40,8 +40,8 @@ parser = argparse.ArgumentParser(
 parser.add_argument("stats", help="directory where the stat files are stored")
 parser.add_argument("mptcp_ack", help="directory where the MPTCP acksizes are stored")
 parser.add_argument("tcp_ack", help="directory where the TCP acksizes are stored")
-parser.add_argument('-g',
-                    "--graph", help="directory where the graphs will be stored", default=co.DEF_SUMS_DIR + '_acksize')
+parser.add_argument('-S',
+                    "--sums", help="directory where the graphs will be stored", default=co.DEF_SUMS_DIR + '_acksize')
 parser.add_argument("-d",
                     "--dirs", help="list of directories to aggregate", nargs="+")
 
@@ -50,12 +50,13 @@ args = parser.parse_args()
 MPTCP = 'mptcp'
 TCP = 'tcp'
 
-co.check_directory_exists(args.graph)
 
-stats_dir_exp = os.path.abspath(os.path.expanduser(args.stats))
-mptcp_dir_exp = os.path.abspath(os.path.expanduser(args.mptcp_ack))
-tcp_dir_exp = os.path.abspath(os.path.expanduser(args.tcp_ack))
-sums_dir_exp = os.path.abspath(os.path.expanduser(args.graph))
+stats_dir_exp = os.path.abspath(os.path.join(ROOT_DIR, args.stat))
+mptcp_dir_exp = os.path.abspath(os.path.join(ROOT_DIR, args.mptcp_ack))
+tcp_dir_exp = os.path.abspath(os.path.join(ROOT_DIR, args.tcp_ack))
+sums_dir_exp = os.path.abspath(os.path.join(ROOT_DIR, args.sums))
+
+co.check_directory_exists(sums_dir_exp)
 
 connections = cog.fetch_valid_data(stats_dir_exp, args)
 

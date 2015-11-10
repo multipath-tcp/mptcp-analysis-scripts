@@ -57,8 +57,8 @@ parser.add_argument("-d",
                     "--dirs", help="list of directories to aggregate", nargs="+")
 
 args = parser.parse_args()
-stat_dir_exp = os.path.abspath(os.path.expanduser(args.stat))
-sums_dir_exp = os.path.abspath(os.path.expanduser(args.sums))
+stat_dir_exp = os.path.abspath(os.path.join(ROOT_DIR, args.stat))
+sums_dir_exp = os.path.abspath(os.path.join(ROOT_DIR, args.sums))
 co.check_directory_exists(sums_dir_exp)
 
 ##################################################
