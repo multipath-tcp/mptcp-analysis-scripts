@@ -74,31 +74,6 @@ class TCPConnection(co.BasicConnection):
         self.flow = co.BasicFlow()
 
 
-def divide_by_power_ten(str_number, power):
-    """ Given a float in string, return its division by 10**power in string """
-    try:
-        index_dot = str_number.index('.')
-        mut_str = list(str_number)
-        # Divide by 1000
-        for i in range(3):
-            mut_str[index_dot - i] = mut_str[index_dot - i - 1]
-
-        mut_str[index_dot - 3] = '.'
-        return "".join(mut_str)
-    except ValueError:
-        # No dot, so put three numbers after dot
-        mut_str = list(str_number)
-        mut_str.append(mut_str[-1])
-        for i in range(3):
-            mut_str[-i - 1] = mut_str[-i - 2]
-
-        mut_str[-4] = '.'
-        return "".join(mut_str)
-
-
-
-
-
 def extract_tstat_data_tcp_complete(filename, connections, conn_id):
     """ Subpart of extract_tstat_data dedicated to the processing of the log_tcp_complete file
         Returns the connections seen and the conn_id reached
@@ -119,8 +94,7 @@ def extract_tstat_data_tcp_complete(filename, connections, conn_id):
             connection.flow.detect_ipv4()
             connection.flow.indicates_wifi_or_cell()
             # Except RTT, all time (in ms in tstat) shoud be converted into seconds
-            str_start = divide_by_power_ten(info[28], 3).split('.')
-            connection.flow.attr[co.START] = timedelta(seconds=int(str_start[0]), microseconds=int(str_start[1]))
+            connection.flow.attr[co.START] = timedelta(seconds=float(info[28])/1000)
             connection.flow.attr[co.DURATION] = float(info[30]) / 1000.0
             connection.flow.attr[co.C2S][co.PACKS] = int(info[2])
             connection.flow.attr[co.S2C][co.PACKS] = int(info[16])
@@ -241,8 +215,7 @@ def extract_tstat_data_tcp_nocomplete(filename, connections, conn_id):
             connection.flow.detect_ipv4()
             connection.flow.indicates_wifi_or_cell()
             # Except RTT, all time (in ms in tstat) shoud be converted into seconds
-            str_start = divide_by_power_ten(info[28], 3).split('.')
-            connection.flow.attr[co.START] = timedelta(seconds=int(str_start[0]), microseconds=int(str_start[1]))
+            connection.flow.attr[co.START] = timedelta(seconds=float(info[28])/1000)
             connection.flow.attr[co.DURATION] = float(info[30]) / 1000.0
             connection.flow.attr[co.C2S][co.PACKS] = int(info[2])
             connection.flow.attr[co.S2C][co.PACKS] = int(info[16])
@@ -658,6 +631,20 @@ def get_ips_and_ports(eth, ip, tcp):
     return saddr, daddr, sport, dport
 
 
+def detect_backup_subflow(tcp):
+    """ Return True if this subflow is established with the backup bit """
+    backup = False
+    opt_list = dpkt.tcp.parse_opts(tcp.opts)
+    for option_num, option_content in opt_list:
+        # Only interested in MPTCP with JOIN (len of 10 because join has len of 12 with 1 of option num and 1 of length)
+        if option_num == 30 and len(option_content):
+            # Join + backup bit
+            if ord(option_content[0]) == 17:
+                backup = True
+
+    return backup
+
+
 def process_first_syn(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, sport, dport, black_list, inverse_conns, ts_syn_timeout, ts_timeout):
     """ Processing of the first SYNs seen on a connection """
     # The sender of the first SYN is the client
@@ -672,7 +659,7 @@ def process_first_syn(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, s
 
     if not conn_id:
         black_list.add((saddr, sport, daddr, dport))
-        continue
+        return
     elif conn_id and (saddr, sport, daddr, dport) in black_list:
         black_list.remove((saddr, sport, daddr, dport))
 
@@ -680,15 +667,7 @@ def process_first_syn(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, s
         for direction in co.DIRECTIONS:
             nb_acks[direction][conn_id] = {}
 
-    backup = False
-    # Detect if backup subflow
-    opt_list = dpkt.tcp.parse_opts(tcp.opts)
-    for option_num, option_content in opt_list:
-        # Only interested in MPTCP with JOIN (len of 10 because join has len of 12 with 1 of option num and 1 of length)
-        if option_num == 30 and len(option_content):
-            # Join + backup bit
-            if ord(option_content[0]) == 17:
-                backup = True
+    backup = detect_backup_subflow(tcp)
 
     if ((saddr, sport, daddr, dport) in acks and (ts_delta - acks[saddr, sport, daddr, dport][co.TIMESTAMP][CLIENT]).total_seconds() <= ts_syn_timeout
             and acks[saddr, sport, daddr, dport][co.S2C] == -1 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_C2S]):
@@ -727,6 +706,43 @@ def process_syn_ack(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, spo
         acks[daddr, dport, saddr, sport][co.TIMESTAMP][SERVER] = ts_delta
 
 
+def get_dss_and_data_ack(tcp):
+    """ Return the DSS and Data ACK of the current packet or False if there is no DSS """
+    dss, dack = False, False
+    opt_list = dpkt.tcp.parse_opts(tcp.opts)
+    for option_num, option_content in opt_list:
+        # Only interested in MPTCP with subtype 2
+        if option_num == 30 and len(option_content):
+            if ord(option_content[0]) == 32:
+                flags = ord(option_content[1])
+                dss_is_8_bytes = (flags & 0x08) != 0
+                dss_is_present = (flags & 0x04) != 0
+                dack_is_8_bytes = (flags & 0x02) != 0
+                dack_is_present = (flags & 0x01) != 0
+                if dack_is_present and not dss_is_present:
+                    range_max = 8 if dack_is_8_bytes else 4
+                    dack = 0
+                    for i in range(range_max):
+                        dack = dack * 256 + ord(option_content[2 + i])
+
+                elif dss_is_present and dack_is_present:
+                    range_max_dack = 8 if dack_is_8_bytes else 4
+                    dack = 0
+                    for i in range(range_max_dack):
+                        dack = dack * 256 + ord(option_content[2 + i])
+
+                    start_dss = 2 + range_max_dack
+                    range_max_dss = 8 if dss_is_8_bytes else 4
+                    dss = 0
+                    for i in range(range_max_dss):
+                        dss = dss * 256 + ord(option_content[start_dss + i])
+
+                elif dss_is_present and not dack_is_present:
+                    raise Exception("Case where dss_is_present and dack is not present")
+
+    return dss, dack
+
+
 def process_pkt_from_client(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, sport, dport, fin_flag):
     """ Process a packet with ACK set from the client """
     if acks[saddr, sport, daddr, dport][co.S2C] >= 0:
@@ -738,7 +754,7 @@ def process_pkt_from_client(ts_delta, acks, nb_acks, connections, tcp, saddr, da
         bytes_acked = (tcp.ack - acks[saddr, sport, daddr, dport][co.S2C]) % 4294967296
         if bytes_acked >= 2000000000:
             # Ack of 2GB or more is just not possible here
-            continue
+            return
 
         increment_value_dict(nb_acks[co.S2C][conn_id], bytes_acked)
         # If SOCKS command
@@ -782,9 +798,10 @@ def process_pkt_from_server(ts_delta, acks, nb_acks, connections, tcp, saddr, da
         bytes_acked = (tcp.ack - acks[daddr, dport, saddr, sport][co.C2S]) % 4294967296
         if bytes_acked >= 2000000000:
             # Ack of 2GB or more is just not possible here
-            continue
+            return
 
         increment_value_dict(nb_acks[co.C2S][conn_id], bytes_acked)
+
         if len(tcp.data) > 0 and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_S2C]:
             # This is a retransmission!
             connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts_delta
