@@ -940,7 +940,8 @@ def process_mptcp_pkt_from_client(ts_delta, acks, conn_acks, mptcp_connections, 
             # Ack of 2GB or more is just not possible here
             return
 
-        if len(tcp.data) > 0 and dss in conn_acks[conn_id][SEQ_C2S] and (dss - conn_acks[conn_id][co.C2S]) % max_val < 2000000000:
+        if (len(tcp.data) > 0 and dss in conn_acks[conn_id][SEQ_C2S] and (dss - conn_acks[conn_id][co.C2S]) % max_val < 2000000000
+                and (ts_delta - mptcp_connections[conn_id].attr[co.S2C][co.TIME_LAST_ACK_TCP]).total_seconds() > 0.0):
             # This is a DSS retransmission! (take into account the seq overflow)
             mptcp_connections[conn_id].attr[co.C2S][co.RETRANS_DSS].append((ts_delta, flow_id,
                                                                             ts_delta - conn_acks[conn_id][HSEQ_C2S][dss][0],
@@ -968,7 +969,8 @@ def process_mptcp_pkt_from_server(ts_delta, acks, conn_acks, mptcp_connections, 
             # Ack of 2GB or more is just not possible here
             return
 
-        if len(tcp.data) > 0 and dss in conn_acks[conn_id][SEQ_S2C] and (dss - conn_acks[conn_id][co.S2C]) % max_val < 2000000000:
+        if (len(tcp.data) > 0 and dss in conn_acks[conn_id][SEQ_S2C] and (dss - conn_acks[conn_id][co.S2C]) % max_val < 2000000000
+                and (ts_delta - mptcp_connections[conn_id].attr[co.C2S][co.TIME_LAST_ACK_TCP]).total_seconds() > 0.0):
             # This is a DSS retransmission!
             mptcp_connections[conn_id].attr[co.S2C][co.RETRANS_DSS].append((ts_delta, flow_id,
                                                                             ts_delta - conn_acks[conn_id][HSEQ_S2C][dss][0],
@@ -1061,6 +1063,20 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_e
             # Copy info to mptcp connections
             copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns, acksize_all, acksize_all_mptcp, flow_id,
                                            fast_conns=fast_conns)
+
+        for conn_id, conn in mptcp_connections.iteritems():
+            for direction in co.DIRECTIONS:
+                max_ack = timedelta(0)
+                max_payload = timedelta(0)
+                for flow_id, flow in conn.flows.iteritems():
+                    if co.TIME_LAST_ACK_TCP in flow.attr[direction] and (flow.attr[direction][co.TIME_LAST_ACK_TCP] - max_ack).total_seconds() > 0.0:
+                        max_ack = flow.attr[direction][co.TIME_LAST_ACK_TCP]
+
+                    if co.TIME_LAST_PAYLD_TCP in flow.attr[direction] and (flow.attr[direction][co.TIME_LAST_PAYLD_TCP] - max_payload).total_seconds() > 0.0:
+                        max_payload = flow.attr[direction][co.TIME_LAST_PAYLD_TCP]
+
+                mptcp_connections[conn_id].attr[direction][co.TIME_LAST_ACK_TCP] = max_ack
+                mptcp_connections[conn_id].attr[direction][co.TIME_LAST_PAYLD_TCP] = max_payload
 
         compute_mptcp_dss_retransmissions(pcap_filepath, mptcp_connections, fast_conns)
 
