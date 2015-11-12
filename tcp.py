@@ -941,7 +941,8 @@ def process_mptcp_pkt_from_client(ts_delta, acks, conn_acks, mptcp_connections, 
             return
 
         if (len(tcp.data) > 0 and dss in conn_acks[conn_id][SEQ_C2S] and (dss - conn_acks[conn_id][co.C2S]) % max_val < 2000000000
-                and (ts_delta - mptcp_connections[conn_id].attr[co.S2C][co.TIME_LAST_ACK_TCP]).total_seconds() > 0.0):
+                and (ts_delta - mptcp_connections[conn_id].attr[co.S2C][co.TIME_LAST_ACK_TCP]).total_seconds() > 0.0
+                and (mptcp_connections[conn_id].flows[flow_id].attr[co.C2S][co.TIME_LAST_ACK_TCP] - ts_delta).total_seconds() > 0.0):
             # This is a DSS retransmission! (take into account the seq overflow)
             mptcp_connections[conn_id].attr[co.C2S][co.RETRANS_DSS].append((ts_delta, flow_id,
                                                                             ts_delta - conn_acks[conn_id][HSEQ_C2S][dss][0],
@@ -970,7 +971,8 @@ def process_mptcp_pkt_from_server(ts_delta, acks, conn_acks, mptcp_connections, 
             return
 
         if (len(tcp.data) > 0 and dss in conn_acks[conn_id][SEQ_S2C] and (dss - conn_acks[conn_id][co.S2C]) % max_val < 2000000000
-                and (ts_delta - mptcp_connections[conn_id].attr[co.C2S][co.TIME_LAST_ACK_TCP]).total_seconds() > 0.0):
+                and (ts_delta - mptcp_connections[conn_id].attr[co.C2S][co.TIME_LAST_ACK_TCP]).total_seconds() > 0.0
+                and (mptcp_connections[conn_id].flows[flow_id].attr[co.S2C][co.TIME_LAST_ACK_TCP] - ts_delta).total_seconds() > 0.0):
             # This is a DSS retransmission!
             mptcp_connections[conn_id].attr[co.S2C][co.RETRANS_DSS].append((ts_delta, flow_id,
                                                                             ts_delta - conn_acks[conn_id][HSEQ_S2C][dss][0],
