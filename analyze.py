@@ -252,7 +252,7 @@ def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge, cwin):
         #if correct:
         #    tcp.correct_trace(pcap_filepath, print_out=print_out)
         if graph:
-            p = Process(target=tcp.process_trace, args=(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, args.tcpcsm,), kwargs={'print_out': print_out})
+            p = Process(target=tcp.process_trace, args=(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, args.tcpcsm,), kwargs={'print_out': print_out, 'light': args.light})
             p.start()
             p.join()
     else:

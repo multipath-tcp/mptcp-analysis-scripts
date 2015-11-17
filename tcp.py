@@ -1036,7 +1036,7 @@ def compute_mptcp_dss_retransmissions(pcap_filepath, mptcp_connections, fast_con
                         continue
 
 
-def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, tcpcsm, mptcp_connections=None, print_out=sys.stdout):
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, tcpcsm, mptcp_connections=None, print_out=sys.stdout, light=False):
     """ Process a tcp pcap file and generate stats of its connections """
     cmd = ['tstat', '-s', os.path.basename(pcap_filepath[:-5]), pcap_filepath]
 
@@ -1052,9 +1052,13 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_e
     if tcpcsm:
         retransmissions_tcpcsm(pcap_filepath, connections)
 
-    inverse_conns = create_inverse_tcp_dictionary(connections)
+    acksize_all = {co.C2S: {}, co.S2C: {}}
 
-    acksize_all = compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns)
+    if not light:
+        inverse_conns = create_inverse_tcp_dictionary(connections)
+
+        acksize_all = compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns)
+
     acksize_all_mptcp = {co.C2S: {}, co.S2C: {}}
 
     if mptcp_connections:
@@ -1064,21 +1068,22 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_e
             copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns, acksize_all, acksize_all_mptcp, flow_id,
                                            fast_conns=fast_conns)
 
-        for conn_id, conn in mptcp_connections.iteritems():
-            for direction in co.DIRECTIONS:
-                max_ack = timedelta(0)
-                max_payload = timedelta(0)
-                for flow_id, flow in conn.flows.iteritems():
-                    if co.TIME_LAST_ACK_TCP in flow.attr[direction] and (flow.attr[direction][co.TIME_LAST_ACK_TCP] - max_ack).total_seconds() > 0.0:
-                        max_ack = flow.attr[direction][co.TIME_LAST_ACK_TCP]
+        if not light:
+            for conn_id, conn in mptcp_connections.iteritems():
+                for direction in co.DIRECTIONS:
+                    max_ack = timedelta(0)
+                    max_payload = timedelta(0)
+                    for flow_id, flow in conn.flows.iteritems():
+                        if co.TIME_LAST_ACK_TCP in flow.attr[direction] and (flow.attr[direction][co.TIME_LAST_ACK_TCP] - max_ack).total_seconds() > 0.0:
+                            max_ack = flow.attr[direction][co.TIME_LAST_ACK_TCP]
 
-                    if co.TIME_LAST_PAYLD_TCP in flow.attr[direction] and (flow.attr[direction][co.TIME_LAST_PAYLD_TCP] - max_payload).total_seconds() > 0.0:
-                        max_payload = flow.attr[direction][co.TIME_LAST_PAYLD_TCP]
+                        if co.TIME_LAST_PAYLD_TCP in flow.attr[direction] and (flow.attr[direction][co.TIME_LAST_PAYLD_TCP] - max_payload).total_seconds() > 0.0:
+                            max_payload = flow.attr[direction][co.TIME_LAST_PAYLD_TCP]
 
-                mptcp_connections[conn_id].attr[direction][co.TIME_LAST_ACK_TCP] = max_ack
-                mptcp_connections[conn_id].attr[direction][co.TIME_LAST_PAYLD_TCP] = max_payload
+                    mptcp_connections[conn_id].attr[direction][co.TIME_LAST_ACK_TCP] = max_ack
+                    mptcp_connections[conn_id].attr[direction][co.TIME_LAST_PAYLD_TCP] = max_payload
 
-        compute_mptcp_dss_retransmissions(pcap_filepath, mptcp_connections, fast_conns)
+            compute_mptcp_dss_retransmissions(pcap_filepath, mptcp_connections, fast_conns)
 
     # Save connections info
     if mptcp_connections:

@@ -660,7 +660,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
 
     # This will save the mptcp connections
     if connections and do_tcp_processing:
-        tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, tcpcsm, mptcp_connections=connections)
+        tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, tcpcsm, mptcp_connections=connections, light=light)
         co.save_data(pcap_filepath, acksize_dir_exp, acksize_all)
         co.save_data(pcap_filepath, rtt_dir_exp, rtt_all)
         co.save_data(pcap_filepath, stat_dir_exp, connections)
