@@ -605,7 +605,7 @@ def increment_value_dict(dico, key):
 
 def get_ts_delta(ts):
     """ Get a timedelta object for the timestamp """
-    if len(ts) == 2:
+    if isinstance(ts, tuple) and len(ts) == 2:
         return timedelta(seconds=ts[0], microseconds=ts[1])
     else:
         # Kept for compatibility reasons
