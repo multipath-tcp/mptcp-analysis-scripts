@@ -17,10 +17,10 @@ If you also use our [MultipathControl collect server](https://github.com/MPTCP-s
 
 The analysis scripts requires the creation of a new file, `config.py`. The content of this file must be the following:
 ```python
-# IP address of the proxy/server
-IP_PROXY = '1.2.3.4'
-# Prefix of the IP addres of the proxy/server
-PREFIX_IP_PROXY = '1.2.'
+# IP address of the proxy/server (either str or a list of str)
+IP_PROXY = ['1.2.3.4', '2001:db8::1']
+# Prefix of the IP addres of the proxy/server (either str or a list of str)
+PREFIX_IP_PROXY = ['1.2.', '2001:db8']
 # Prefix of IPs belonging to WiFi access points
 PREFIX_IP_WIFI = '192.168.'
 # The password of SOCKS sessions

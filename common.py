@@ -289,8 +289,17 @@ RETRANS_DSS = 'retrans_dss'
 
 if os.path.isfile('config.py'):
     import config as conf
-    IP_PROXY = conf.IP_PROXY
-    PREFIX_IP_PROXY = conf.PREFIX_IP_PROXY
+    import collections
+    if isinstance(conf.IP_PROXY, collections.Iterable) and not isinstance(conf.IP_PROXY, str):
+        IP_PROXY = list(conf.IP_PROXY)
+    else:
+        IP_PROXY = [conf.IP_PROXY]
+
+    if isinstance(conf.PREFIX_IP_PROXY, collections.Iterable) and not isinstance(conf.PREFIX_IP_PROXY, str):
+        PREFIX_IP_PROXY = list(conf.PREFIX_IP_PROXY)
+    else:
+        PREFIX_IP_PROXY = [conf.PREFIX_IP_PROXY]
+
     PREFIX_IP_WIFI = conf.PREFIX_IP_WIFI
 
 ##################################################

@@ -98,7 +98,7 @@ for fname, conns in multiflow_connections.iteritems():
             last_acks = []
             min_time_last_ack = float('inf')
             for flow_id, flow in conn.flows.iteritems():
-                if co.START not in flow.attr or flow.attr[co.SADDR] == co.IP_PROXY:
+                if co.START not in flow.attr or flow.attr[co.SADDR] in co.IP_PROXY:
                     continue
                 if flow.attr[co.START].total_seconds() < initial_sf_ts:
                     initial_sf_ts = flow.attr[co.START].total_seconds()
@@ -116,7 +116,7 @@ for fname, conns in multiflow_connections.iteritems():
             handover_detected = False
             min_delta = float('inf')
             for flow_id, flow in conn.flows.iteritems():
-                if handover_detected or co.START not in flow.attr or flow.attr[co.SADDR] == co.IP_PROXY:
+                if handover_detected or co.START not in flow.attr or flow.attr[co.SADDR] in co.IP_PROXY:
                     continue
                 delta = flow.attr[co.START].total_seconds() - initial_sf_ts
                 min_last_acks = float('inf')

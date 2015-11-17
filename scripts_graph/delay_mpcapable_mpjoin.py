@@ -103,7 +103,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
             last_acks = []
             min_time_last_ack = float('inf')
             for flow_id, flow in conn.flows.iteritems():
-                if co.START not in flow.attr or flow.attr[co.SADDR] == co.IP_PROXY:
+                if co.START not in flow.attr or flow.attr[co.SADDR] in co.IP_PROXY:
                     continue
                 if flow.attr[co.START].total_seconds() < initial_sf_ts:
                     initial_sf_ts = flow.attr[co.START].total_seconds()
@@ -124,7 +124,7 @@ def plot(connections, multiflow_connections, sums_dir_exp):
             min_delta = float('inf')
             flow_id_min_delta = None
             for flow_id, flow in conn.flows.iteritems():
-                if co.START not in flow.attr or flow.attr[co.SADDR] == co.IP_PROXY:
+                if co.START not in flow.attr or flow.attr[co.SADDR] in co.IP_PROXY:
                     continue
                 delta = flow.attr[co.START].total_seconds() - initial_sf_ts
                 min_last_acks = float('inf')
