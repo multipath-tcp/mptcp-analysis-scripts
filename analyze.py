@@ -251,8 +251,10 @@ def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge, cwin):
     elif pcap_filename.startswith('tcp'):
         #if correct:
         #    tcp.correct_trace(pcap_filepath, print_out=print_out)
-        #if graph:
-        tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, args.tcpcsm, print_out=print_out)
+        if graph:
+            p = Process(target=tcp.process_trace, args=(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, args.tcpcsm,), kwargs={'print_out': print_out})
+            p.start()
+            p.join()
     else:
         print(pcap_filepath + ": don't know the protocol used; skipped", file=sys.stderr)
 
