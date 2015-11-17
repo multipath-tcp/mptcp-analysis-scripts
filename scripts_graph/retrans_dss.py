@@ -72,16 +72,63 @@ multiflow_connections, singleflow_connections = cog.get_multiflow_connections(co
 ##               PLOTTING RESULTS               ##
 ##################################################
 
+
+def has_two_opened_sfs(ts_delta, ts_delta_first_sent, idle_time, connection, direction):
+    """ Return true if two SFs were available at ts_delta
+
+        C                                     S
+        ______________
+                      \_SYN________________
+                                           \->
+                            __________________
+           _________SYN/ACK/
+        <-/
+        ______________
+                      \ACK_________________
+                                           \->
+                           ___________________ OK FOR SERVER TO START SENDING
+                          /
+           ____________ACK
+        <-/
+    OK FOR CLIENT TO START SENDING
+    """
+    count = 0
+    for flow_id, flow in conn.flows.iteritems():
+        if direction == co.C2S:
+            # TODO should have one more attribute here...
+            if co.START in flow.attr and ((ts_delta_first_sent - flow.attr[co.START]).total_seconds() >= 0.0
+                                          and (ts_delta_first_sent - flow.attr[co.START]).total_seconds() <= flow.attr[co.DURATION]):
+                count += 1
+        else:
+            if co.START in flow.attr and (((ts_delta_first_sent - idle_time - flow.attr[co.START]).total_seconds() - flow.attr[co.S2C][co.TIME_FIRST_ACK] >= 0.0
+                                          and (ts_delta_first_sent - flow.attr[co.START]).total_seconds() <= flow.attr[co.DURATION])
+                                          or (co.TIME_LAST_ACK_TCP in flow.attr
+                                          and (flow.attr[co.TIME_LAST_ACK_TCP] - ts_delta).total_seconds() > 0.0)):
+                count += 1
+
+    return count >= 2
+
+
 retransmissions_since_first = []
 retransmissions_since_last = []
 retransmissions_since_last_active = []
+count_retrans_dss = []
 for fname, conns in multiflow_connections.iteritems():
     for conn_id, conn in conns.iteritems():
-        for ts_delta, flow_id, retrans_since_first, retrans_since_last, retrans_since_last_all in conn.attr[co.S2C][co.RETRANS_DSS]:
-            if (conn.flows[flow_id].attr[co.S2C][co.TIME_LAST_ACK_TCP] - ts_delta).total_seconds() >= 0.0 and conn.attr[co.S2C][co.RTT_SAMPLES] > 1:
+        retrans_dss = {}
+        for ts_delta, flow_id, dss, idle_time, retrans_since_first, retrans_since_last, retrans_since_last_all in conn.attr[co.S2C][co.RETRANS_DSS]:
+            if conn.attr[co.S2C][co.RTT_SAMPLES] > 1 and has_two_opened_sfs(ts_delta, ts_delta - retrans_since_first, idle_time, conn, co.S2C):
                 retransmissions_since_first.append(retrans_since_first.total_seconds() * 1000.0 / conn.attr[co.S2C][co.RTT_AVG])
                 retransmissions_since_last.append(retrans_since_last.total_seconds() * 1000.0 / conn.attr[co.S2C][co.RTT_AVG])
                 retransmissions_since_last_active.append(retrans_since_last_all.total_seconds() * 1000.0 / conn.attr[co.S2C][co.RTT_AVG])
+                if dss not in retrans_dss:
+                    retrans_dss[dss] = 0
+                retrans_dss[dss] += 1
+
+        for dss in retrans_dss.keys():
+            if retrans_dss[dss] > 100000:
+                print(fname, conn_id, dss, retrans_dss[dss])
+            count_retrans_dss.append(retrans_dss[dss])
 
 sample = np.array(sorted(retransmissions_since_first))
 sorted_array = np.sort(sample)
@@ -109,7 +156,7 @@ if len(sorted_array) > 0:
 
     plt.xlim(xmin=0.001)
 
-    plt.xlabel('Retrans DSS Time / Avg RTT [ms]', fontsize=24, labelpad=-1)
+    plt.xlabel('Retrans DSS Time / Avg RTT', fontsize=24, labelpad=-1)
     plt.ylabel("CDF", fontsize=24)
     plt.savefig(os.path.join(sums_dir_exp, 'retrans_dss.pdf'))
     plt.close('all')
@@ -138,7 +185,7 @@ if len(sorted_array) > 0:
     # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
     ax.legend(loc='lower right')
 
-    plt.xlabel('Retrans DSS Time / Avg RTT [ms]', fontsize=24, labelpad=-1)
+    plt.xlabel('Retrans DSS Time / Avg RTT', fontsize=24, labelpad=-1)
     plt.ylabel("CDF", fontsize=24)
     plt.savefig(os.path.join(sums_dir_exp, 'retrans_dss_last.pdf'))
     plt.close('all')
@@ -167,7 +214,36 @@ if len(sorted_array) > 0:
     # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
     ax.legend(loc='lower right')
 
-    plt.xlabel('Retrans DSS Time / Avg RTT [ms]', fontsize=24, labelpad=-1)
+    plt.xlabel('Retrans DSS Time / Avg RTT', fontsize=24, labelpad=-1)
     plt.ylabel("CDF", fontsize=24)
     plt.savefig(os.path.join(sums_dir_exp, 'retrans_dss_all.pdf'))
+    plt.close('all')
+
+sample = np.array(sorted(count_retrans_dss))
+sorted_array = np.sort(sample)
+yvals = np.arange(len(sorted_array)) / float(len(sorted_array))
+if len(sorted_array) > 0:
+    # Add a last point
+    sorted_array = np.append(sorted_array, sorted_array[-1])
+    yvals = np.append(yvals, 1.0)
+
+    # Log plot
+    plt.figure()
+    plt.clf()
+    fig, ax = plt.subplots()
+    ax.plot(sorted_array, yvals, color='red', linewidth=2, label="# of retrans per DSS")
+
+    # Shrink current axis's height by 10% on the top
+    # box = ax.get_position()
+    # ax.set_position([box.x0, box.y0,
+    #                  box.width, box.height * 0.9])
+    ax.set_xscale('log')
+
+    # Put a legend above current axis
+    # ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.05), fancybox=True, shadow=True, ncol=ncol)
+    ax.legend(loc='lower right')
+
+    plt.xlabel('# of retransmissions per DSS', fontsize=24, labelpad=-1)
+    plt.ylabel("CDF", fontsize=24)
+    plt.savefig(os.path.join(sums_dir_exp, 'count_retrans_dss.pdf'))
     plt.close('all')
