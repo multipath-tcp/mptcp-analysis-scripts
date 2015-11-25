@@ -108,6 +108,8 @@ parser.add_argument("-W",
                     "--cwin", help="plot congestion window graphs and aggregation graphs", action="store_true")
 parser.add_argument("-M",
                     "--is-mptcp", help="don't check on filename, always process traces as MPTCP ones", action="store_true")
+parser.add_argument("-T",
+                    "--is-tcp", help="don't check on filename, always process traces as TCP ones", action="store_true")
 parser.add_argument("-D",
                     "--use-db", help="ask IP address of each interface to the MongoDB", action="store_true")
 parser.add_argument("-L",
@@ -248,7 +250,7 @@ def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge, cwin):
                 pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, cwin, args.tcpcsm,), kwargs={'min_bytes': args.min_bytes, 'light': args.light})
             p.start()
             p.join()
-    elif pcap_filename.startswith('tcp'):
+    elif args.is_tcp or pcap_filename.startswith('tcp'):
         #if correct:
         #    tcp.correct_trace(pcap_filepath, print_out=print_out)
         if graph:
