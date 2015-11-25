@@ -711,6 +711,7 @@ def process_pkt_from_client(ts_delta, acks, nb_acks, connections, tcp, saddr, da
     if acks[saddr, sport, daddr, dport][co.S2C] >= 0:
         conn_id = acks[saddr, sport, daddr, dport][co.CONN_ID]
         connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = ts_delta
+        print(connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_ACK_TCP])
         if fin_flag:
             connections[conn_id].flow.attr[co.S2C][co.TIME_FIN_ACK_TCP] = ts_delta
 
@@ -752,9 +753,11 @@ def process_pkt_from_client(ts_delta, acks, nb_acks, connections, tcp, saddr, da
 
 def process_pkt_from_server(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, sport, dport, fin_flag):
     """ Process a packet with ACK set from the server """
+    print("Yolo", acks[daddr, dport, saddr, sport][co.C2S])
     if acks[daddr, dport, saddr, sport][co.C2S] >= 0:
         conn_id = acks[daddr, dport, saddr, sport][co.CONN_ID]
         connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = ts_delta
+        print(connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_ACK_TCP])
         if fin_flag:
             connections[conn_id].flow.attr[co.C2S][co.TIME_FIN_ACK_TCP] = ts_delta
 
@@ -805,7 +808,11 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
         count += 1
         if count % 100000 == 0:
             print(count)
-        eth = dpkt.ethernet.Ethernet(buf)
+        # Check if linux cooked capture
+        if pcap.datalink() == dpkt.pcap.DLT_LINUX_SLL:
+            eth = dpkt.sll.SLL(buf)
+        else:
+            eth = dpkt.ethernet.Ethernet(buf)
         if type(eth.data) == dpkt.ip.IP or type(eth.data) == dpkt.ip6.IP6:
             ip = eth.data
             if type(ip.data) == dpkt.tcp.TCP:
@@ -816,7 +823,6 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
                 ack_flag = (tcp.flags & dpkt.tcp.TH_ACK) != 0
 
                 saddr, daddr, sport, dport = get_ips_and_ports(eth, ip, tcp)
-
                 if syn_flag and not ack_flag and not fin_flag and not rst_flag:
                     process_first_syn(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, sport, dport, black_list, inverse_conns,
                                       ts_syn_timeout, ts_timeout)
