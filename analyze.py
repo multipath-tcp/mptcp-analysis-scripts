@@ -114,7 +114,7 @@ parser.add_argument("-D",
                     "--use-db", help="ask IP address of each interface to the MongoDB", action="store_true")
 parser.add_argument("-L",
                     "--light", help="don't process RTT or throughput in detail to save time", action="store_true")
-parser.add_argument("-T",
+parser.add_argument("-U",
                     "--tcpcsm", help="use tcpcsm to give more info about retransmissions", action="store_true")
 
 args = parser.parse_args()
