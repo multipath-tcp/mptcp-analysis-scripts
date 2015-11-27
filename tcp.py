@@ -711,7 +711,6 @@ def process_pkt_from_client(ts_delta, acks, nb_acks, connections, tcp, saddr, da
     if acks[saddr, sport, daddr, dport][co.S2C] >= 0:
         conn_id = acks[saddr, sport, daddr, dport][co.CONN_ID]
         connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_ACK_TCP] = ts_delta
-        print(connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_ACK_TCP])
         if fin_flag:
             connections[conn_id].flow.attr[co.S2C][co.TIME_FIN_ACK_TCP] = ts_delta
 
@@ -753,11 +752,9 @@ def process_pkt_from_client(ts_delta, acks, nb_acks, connections, tcp, saddr, da
 
 def process_pkt_from_server(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, sport, dport, fin_flag):
     """ Process a packet with ACK set from the server """
-    print("Yolo", acks[daddr, dport, saddr, sport][co.C2S])
     if acks[daddr, dport, saddr, sport][co.C2S] >= 0:
         conn_id = acks[daddr, dport, saddr, sport][co.CONN_ID]
         connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_ACK_TCP] = ts_delta
-        print(connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_ACK_TCP])
         if fin_flag:
             connections[conn_id].flow.attr[co.C2S][co.TIME_FIN_ACK_TCP] = ts_delta
 
