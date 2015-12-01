@@ -52,18 +52,46 @@ def check_in_list(dirpath, dirs):
     return os.path.basename(dirpath) in dirs
 
 
-def fetch_data(dir_exp, args):
+def fetch_data(dir_exp, args, filename_match=""):
     co.check_directory_exists(dir_exp)
     dico = {}
     for dirpath, dirnames, filenames in os.walk(dir_exp):
         if check_in_list(dirpath, args.dirs):
             for fname in filenames:
-                try:
-                    stat_file = open(os.path.join(dirpath, fname), 'r')
-                    dico[fname] = pickle.load(stat_file)
-                    stat_file.close()
-                except IOError as e:
-                    print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
+                if filename_match in fname:
+                    try:
+                        stat_file = open(os.path.join(dirpath, fname), 'r')
+                        dico[fname] = pickle.load(stat_file)
+                        stat_file.close()
+                    except IOError as e:
+                        print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
+    return dico
+
+
+def fetch_and_process_data(dir_exp, args, filename_match, funct, *fargs):
+    co.check_directory_exists(dir_exp)
+    dico = {}
+    for dirpath, dirnames, filenames in os.walk(dir_exp):
+        if check_in_list(dirpath, args.dirs):
+            for fname in filenames:
+                if filename_match in fname:
+                    try:
+                        stat_file = open(os.path.join(dirpath, fname), 'r')
+                        conns = pickle.load(stat_file)
+                        for conn_id in conns:
+                            if isinstance(conns[conn_id], mptcp.MPTCPConnection):
+                                for flow_id, flow in conns[conn_id].flows.iteritems():
+                                    if not [x for x in co.PREFIX_IP_PROXY if flow.attr[co.DADDR].startswith(x)] and not flow.attr[co.DADDR] in co.IP_PROXY:
+                                        conns.pop(conn_id, None)
+                                        break
+                            elif isinstance(conns[conn_id], tcp.TCPConnection):
+                                if not [x for x in co.PREFIX_IP_PROXY if conns[conn_id].flow.attr[co.DADDR].startswith(x)] and not conns[conn_id].flow.attr[co.DADDR] in co.IP_PROXY:
+                                    conns.pop(conn_id, None)
+                                    break
+                        funct(fname, conns, *fargs)
+                        stat_file.close()
+                    except IOError as e:
+                        print(str(e) + ': skip stat file ' + fname, file=sys.stderr)
     return dico
 
 
@@ -85,8 +113,8 @@ def get_multiflow_connections(connections):
     return multiflow_connections, singleflow_connections
 
 
-def fetch_valid_data(dir_exp, args):
-    connections = fetch_data(dir_exp, args)
+def fetch_valid_data(dir_exp, args, filename_match=""):
+    connections = fetch_data(dir_exp, args, filename_match=filename_match)
 
     def ensures_smartphone_to_proxy():
         for fname in connections.keys():
