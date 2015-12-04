@@ -6,6 +6,7 @@ This repository contains scripts to analyze and create graphs from PCAP files ge
 Requirements
 ------------
 If you want to use the main scripts, make sure you have installed Python >=2.6 (not Python 3) and the following dependencies:
+  * [dpkt](https://pypi.python.org/pypi/dpkt)
   * [mptcptrace](https://bitbucket.org/bhesmans/mptcptrace)
   * [Matplotlib](http://matplotlib.org/)
   * [NumPy](https://pypi.python.org/pypi/numpy/)
