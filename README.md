@@ -99,5 +99,5 @@ Keys of `attr` dictionaries are defined in `common.py`.
 
 License
 -------
-All the code in this repository is licensed under GPLv3 and is part of our Master Thesis "Multipath TCP with real Smartphone Applications".
+All the code in this repository is licensed under GPLv3 and is part of our Master Thesis [Multipath TCP with Real Smartphone Applications](http://dial.uclouvain.be/memoire/ucl/object/thesis:366).
 The contributor are [Quentin De Coninck](https://github.com/qdeconinck) and [Matthieu Baerts](https://github.com/matttbe).
