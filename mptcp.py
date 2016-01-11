@@ -249,7 +249,7 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
                 count_pkt_burst = 0
                 begin_time_burst_on_flow = float(split_line[0])
 
-            count_seq_burst += int(split_line[4]) - int(split_line[1])
+            count_seq_burst += (int(split_line[4]) - int(split_line[1])) % 2**32
             count_pkt_burst += 1
             last_time_burst_on_flow = float(split_line[0])
 
@@ -258,8 +258,8 @@ def process_csv(csv_fname, connections, conn_id, is_reversed):
             # Security
             if int(split_line[5]) - 1 not in reinject_offsets:
                 continue
-            reinject_offsets[int(split_line[5]) - 1] += int(split_line[4]) - int(split_line[1])
-            is_reinjection[int(split_line[2]) - 1][split_line[0]] = int(split_line[4]) - int(split_line[1])
+            reinject_offsets[int(split_line[5]) - 1] += (int(split_line[4]) - int(split_line[1])) % 2**32
+            is_reinjection[int(split_line[2]) - 1][split_line[0]] = (int(split_line[4]) - int(split_line[1])) % 2**32
             reinject_nb[int(split_line[5]) - 1] += 1
             reinject_ts[int(split_line[5]) - 1].append(float(split_line[0]))
             packet_seqs = (int(split_line[4]), int(split_line[1]))
