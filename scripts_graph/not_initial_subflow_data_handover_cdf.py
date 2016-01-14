@@ -100,7 +100,6 @@ for fname, conns in multiflow_connections.iteritems():
         if take:
             # Detect now if there is handover
             initial_sf_ts = float('inf')
-            last_acks = []
             min_last_ack = float('inf')
             for flow_id, flow in conn.flows.iteritems():
                 if co.START not in flow.attr or flow.attr[co.SADDR] in co.IP_PROXY:
@@ -111,7 +110,6 @@ for fname, conns in multiflow_connections.iteritems():
                 for direction in co.DIRECTIONS:
                     flow_bytes += flow.attr[direction].get(co.BYTES_DATA, 0)
                 if flow_bytes > 0 and co.TIME_LAST_ACK_TCP in flow.attr[co.S2C] and co.TIME_FIN_ACK_TCP in flow.attr[co.S2C] and flow.attr[co.S2C][co.TIME_LAST_ACK_TCP].total_seconds() > 0.0 and flow.attr[co.S2C][co.TIME_FIN_ACK_TCP].total_seconds() == 0.0:
-                    last_acks.append(flow.attr[co.S2C][co.TIME_LAST_ACK_TCP].total_seconds())
                     min_last_ack = min(min_last_ack, flow.attr[co.S2C][co.TIME_LAST_ACK_TCP].total_seconds())
 
             if initial_sf_ts == float('inf'):
@@ -128,7 +126,7 @@ for fname, conns in multiflow_connections.iteritems():
                     if co.TIME_LAST_ACK_TCP in flow.attr[co.S2C] and flow.attr[co.S2C][co.TIME_LAST_ACK_TCP].total_seconds > min_last_ack:
                         max_last_payload = max([flow.attr[direction][co.TIME_LAST_PAYLD_TCP].total_seconds() for direction in co.DIRECTIONS])
 
-                # handover_delta = float(flow.attr[co.START]) + max_last_payload - min_last_acks
+                # handover_delta = float(flow.attr[co.START]) + max_last_payload - min_last_ack
                 handover_delta = max_last_payload - min_last_ack
                 if handover_delta > 0.0:
                     # A subflow is established after the last ack of the client seen --> Handover
