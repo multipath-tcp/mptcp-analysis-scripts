@@ -119,11 +119,9 @@ for fname, conns in multiflow_connections.iteritems():
 
             # Now store the delta and record connections with handover
             handover_detected = False
-            min_delta = float('inf')
             for flow_id, flow in conn.flows.iteritems():
                 if handover_detected or co.START not in flow.attr or flow.attr[co.SADDR] in co.IP_PROXY:
                     continue
-                delta = flow.attr[co.START].total_seconds() - initial_sf_ts
                 min_last_acks = float('inf')
                 if len(last_acks) >= 1:
                     min_last_acks = min(last_acks)
@@ -135,7 +133,7 @@ for fname, conns in multiflow_connections.iteritems():
 
                 # handover_delta = float(flow.attr[co.START]) + max_last_payload - min_last_acks
                 handover_delta = max_last_payload - min_last_acks
-                if delta > 0.0 and handover_delta > 0.0:
+                if handover_delta > 0.0:
                     # A subflow is established after the last ack of the client seen --> Handover
                     count_handover += 1
                     handover_detected = True
@@ -151,7 +149,7 @@ for fname, conns in multiflow_connections.iteritems():
 
                 count_actual_lost_subflows = 0
                 for flow_id, flow in conn.flows.iteritems():
-                    if co.START in flow.attr and flow.attr[co.START].total_seconds() > 0.0 and flow.attr.get(co.DURATION, 0.0) > 0.0 and co.TIME_FIN_ACK_TCP in flow.attr[co.S2C] and flow.attr[co.S2C].[co.TIME_FIN_ACK_TCP].total_seconds() == 0.0:
+                    if co.START in flow.attr and flow.attr[co.START].total_seconds() > 0.0 and flow.attr.get(co.DURATION, 0.0) > 0.0 and co.TIME_FIN_ACK_TCP in flow.attr[co.S2C] and flow.attr[co.S2C][co.TIME_FIN_ACK_TCP].total_seconds() == 0.0:
                         # Only if flow is used
                         if flow.attr[co.C2S].get(co.BYTES, 0) > 0 or flow.attr[co.S2C].get(co.BYTES, 0) > 0:
                             count_actual_lost_subflows += 1
@@ -245,8 +243,8 @@ print("NB CONNS: ", nb_conns)
 print("NB BYTES: ", nb_bytes)
 print("COUNT 0", count_0)
 print(count_handover)
-print("MISSING ADD ADDRS", missing_add_addrs)
-print("MISSING RM ADDRS", missing_rm_addrs)
+# print("MISSING ADD ADDRS", missing_add_addrs)
+# print("MISSING RM ADDRS", missing_rm_addrs)
 print("MISSING ADD ADDRS", len(missing_add_addrs))
 print("MISSING RM ADDRS", len(missing_rm_addrs))
 print("NO ADD ADDRS", len(no_add_addrs))
