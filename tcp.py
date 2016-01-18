@@ -445,7 +445,7 @@ def get_preprocessed_connections(connections):
                 if (flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT]) not in fast_dico:
                     fast_dico[(flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT])] = []
 
-                fast_dico[(flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT])] += [(conn.attr[co.START].total_seconds(),
+                fast_dico[(flow.attr[co.SADDR], flow.attr[co.DADDR], flow.attr[co.SPORT], flow.attr[co.DPORT])] += [(conn.attr[co.START],
                                                                                                                      float(conn.attr[co.DURATION]),
                                                                                                                      conn_id, flow_id)]
 
@@ -491,12 +491,13 @@ def get_flow_name_connection_optimized(connection, connections, fast_conns=None)
         if len(potential_list) == 1:
             return potential_list[0][2], potential_list[0][3]
 
-        # Binary search on sorted list
-        start_list = [x[0] for x in potential_list]
-        potential_match_index = max(bisect.bisect_left(start_list, connection.flow.attr[co.START].total_seconds()) - 1, 0)
+        # Search on list
+        potential_match_index = 0
         match_indexes = []
-        while potential_match_index < len(potential_list) and potential_list[potential_match_index][0] <= connection.flow.attr[co.START].total_seconds() + 8.0:
-            if connection.flow.attr[co.START].total_seconds() <= potential_list[potential_match_index][0] + potential_list[potential_match_index][1]:
+        # Check with an error window of 8 seconds for both sides
+        while (potential_match_index < len(potential_list)
+               and abs((potential_list[potential_match_index][0] - connection.flow.attr[co.START]).total_seconds()) <= 8.0):
+            if connection.flow.attr[co.START].total_seconds() <= potential_list[potential_match_index][0].total_seconds() + potential_list[potential_match_index][1]:
                 match_indexes += [potential_match_index]
 
             potential_match_index += 1
@@ -507,6 +508,8 @@ def get_flow_name_connection_optimized(connection, connections, fast_conns=None)
             print("More than one possible match...")
             # By default, return the first match
             return potential_list[match_indexes[0]][2], potential_list[match_indexes[0]][3]
+        else:
+            print("No match found for MPTCP subflow...")
 
     return None, None
 
