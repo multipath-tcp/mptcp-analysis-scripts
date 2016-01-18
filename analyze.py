@@ -259,6 +259,7 @@ def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge, cwin):
             p.join()
     else:
         print(pcap_filepath + ": don't know the protocol used; skipped", file=sys.stderr)
+        print("Note: if your traces contains MPTCP, please specify the -M option", file=sys.stderr)
 
     print('End for file ' + pcap_filepath, file=print_out)
     if purge and graph:  # if we just want to correct traces, do not remove them
