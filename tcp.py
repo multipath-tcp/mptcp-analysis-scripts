@@ -463,7 +463,7 @@ def get_flow_name_connection(connection, connections):
     """
     for conn_id, conn in connections.iteritems():
         # Let a little margin, but don't think it's needed
-        if conn.attr.get(co.START, None) and (connection.flow.attr[co.START].total_seconds() >= conn.attr[co.START].total_seconds() - 8.0 and
+        if conn.attr.get(co.START, None) and (abs((connection.flow.attr[co.START] - conn.attr[co.START]).total_seconds()) <= 8.0 and
                                               connection.flow.attr[co.START].total_seconds() <=
                                               conn.attr[co.START].total_seconds() + float(conn.attr[co.DURATION])):
             for flow_id, flow in conn.flows.iteritems():
