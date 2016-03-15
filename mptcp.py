@@ -93,6 +93,17 @@ class MPTCPConnection(co.BasicConnection):
         self.flows = {}
 
 
+def convert_MPTCPConnections_to_dict(mptcp_connections):
+    mptcp_dict = {}
+    for key in mptcp_connections:
+        mptcp_dict[key] = vars(mptcp_connections[key])
+        # If we want a full dict, we need to convert the MPTCPSubFlows to dict total_seconds
+        for mptcp_subflow_key in mptcp_connections[key]["flows"]:
+            mptcp_dict[key]["flows"][mptcp_subflow_key] = vars(mptcp_connections[key]["flows"][mptcp_subflow_key])
+
+    return mptcp_dict
+
+
 def extract_flow_data(out_file):
     """ Given an (open) file, return a dictionary of as many elements as there are mptcp flows """
     # Return at the beginning of the file
