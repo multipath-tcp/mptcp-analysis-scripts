@@ -263,7 +263,7 @@ IP_PROXY = False
 FRAME_MPTCP_OVERHEAD = 88
 
 # Those values have to be overriden
-PREFIX_IP_WIFI = False
+PREFIX_IP_WIFI = ""
 PREFIX_IP_PROXY = False
 
 IP_WIFI = False
