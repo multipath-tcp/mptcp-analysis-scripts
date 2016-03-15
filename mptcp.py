@@ -687,7 +687,7 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
         dicts = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, tcpcsm, mptcp_connections=connections, light=light, return_dict=return_dict)
         if return_dict:
             tcp_connections, acksize_all_tcp = dicts
-            return connections, tcp_connections, rtt_all, acksize_all, acksize_all_tcp
+            co.save_data(pcap_filepath, stat_dir_exp, convert_MPTCPConnections_to_dict(connections))
         else:
             co.save_data(pcap_filepath, acksize_dir_exp, acksize_all)
             co.save_data(pcap_filepath, rtt_dir_exp, rtt_all)
