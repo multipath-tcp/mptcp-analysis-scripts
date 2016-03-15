@@ -98,8 +98,8 @@ def convert_MPTCPConnections_to_dict(mptcp_connections):
     for key in mptcp_connections:
         mptcp_dict[key] = vars(mptcp_connections[key])
         # If we want a full dict, we need to convert the MPTCPSubFlows to dict total_seconds
-        for mptcp_subflow_key in mptcp_connections[key]["flows"]:
-            mptcp_dict[key]["flows"][mptcp_subflow_key] = vars(mptcp_connections[key]["flows"][mptcp_subflow_key])
+        for mptcp_subflow_key in mptcp_connections[key].flows:
+            mptcp_dict[key]["flows"][mptcp_subflow_key] = vars(mptcp_connections[key].flows[mptcp_subflow_key])
 
     return mptcp_dict
 
