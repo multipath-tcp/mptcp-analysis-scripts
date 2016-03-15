@@ -48,6 +48,13 @@ import sys
 class TstatError(Exception):
     pass
 
+
+##################################################
+#          GLOBAL VARIABLES FOR WARNING          #
+##################################################
+
+dss_not_ack_warning = False
+
 ##################################################
 #                 CONSTANTS                      #
 ##################################################
@@ -880,7 +887,16 @@ def get_dss_and_data_ack(tcp):
                         dss = dss * 256 + ord(option_content[start_dss + i])
 
                 elif dss_is_present and not dack_is_present:
-                    raise Exception("Case where dss_is_present and dack is not present")
+                    global dss_not_ack_warning
+                    if not dss_not_ack_warning:
+                        print("Case where dss_is_present and dack is not present (not compliant with Linux implementation): continue", file=sys.stderr)
+                        dss_not_ack_warning = True
+
+                    start_dss = 2
+                    range_max_dss = 8 if dss_is_8_bytes else 4
+                    dss = 0
+                    for i in range(range_max_dss):
+                        dss = dss * 256 + ord(option_content[start_dss + i])
 
     return dss, dack, dss_is_8_bytes
 
