@@ -410,6 +410,8 @@ def is_number(s):
 
 def move_file(from_path, to_path, print_out=sys.stderr):
     """ Move a file, overwrite if needed """
+    if to_path is None or to_path == "" or to_path == "/dev/null":
+        os.remove(from_path)
     try:
         shutil.move(from_path, to_path)
     except Exception:
@@ -470,6 +472,9 @@ def long_ipv6_address(ip):
 
 def save_data(filepath, dir_exp, data):
     """ Using the name pcap_fname, save data in a file with filename fname in dir dir_exp """
+    if dir_exp is None or dir_exp == "" or dir_exp == "/dev/null":
+        return
+
     path_name = os.path.join(
         dir_exp, os.path.splitext(os.path.basename(filepath))[0])
     try:
