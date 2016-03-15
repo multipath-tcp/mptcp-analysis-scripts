@@ -116,6 +116,8 @@ parser.add_argument("-L",
                     "--light", help="don't process RTT or throughput in detail to save time", action="store_true")
 parser.add_argument("-U",
                     "--tcpcsm", help="use tcpcsm to give more info about retransmissions", action="store_true")
+parser.add_argument("-d",
+                    "--return_dict", help="store result as plain dictionary", action="store_true")
 
 args = parser.parse_args()
 
@@ -247,14 +249,14 @@ def launch_analyze_pcap(pcap_filepath, clean, correct, graph, purge, cwin):
         # we need to change dir, do that in a new process
         if graph:
             p = Process(target=mptcp.process_trace, args=(
-                pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, cwin, args.tcpcsm,), kwargs={'min_bytes': args.min_bytes, 'light': args.light})
+                pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, cwin, args.tcpcsm,), kwargs={'min_bytes': args.min_bytes, 'light': args.light, 'return_dict': args.return_dict})
             p.start()
             p.join()
     elif args.is_tcp or pcap_filename.startswith('tcp'):
         #if correct:
         #    tcp.correct_trace(pcap_filepath, print_out=print_out)
         if graph:
-            p = Process(target=tcp.process_trace, args=(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, args.tcpcsm,), kwargs={'print_out': print_out, 'light': args.light})
+            p = Process(target=tcp.process_trace, args=(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, args.tcpcsm,), kwargs={'print_out': print_out, 'light': args.light, 'return_dict': args.return_dict})
             p.start()
             p.join()
     else:
