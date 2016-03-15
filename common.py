@@ -379,7 +379,7 @@ def check_directory_exists(directory):
     """ Check if the directory exists, and create it if needed
         If directory is a file, exit the program
     """
-    if directory is None or directory == "" or directory == "/dev/null":
+    if directory is None or directory == "" or directory.startswith("/dev/null"):
         return
 
     if os.path.exists(directory):
@@ -413,7 +413,7 @@ def is_number(s):
 
 def move_file(from_path, to_path, print_out=sys.stderr):
     """ Move a file, overwrite if needed """
-    if to_path is None or to_path == "" or to_path == "/dev/null":
+    if to_path is None or to_path == "" or to_path.startswith("/dev/null"):
         os.remove(from_path)
     try:
         shutil.move(from_path, to_path)
@@ -475,7 +475,7 @@ def long_ipv6_address(ip):
 
 def save_data(filepath, dir_exp, data):
     """ Using the name pcap_fname, save data in a file with filename fname in dir dir_exp """
-    if dir_exp is None or dir_exp == "" or dir_exp == "/dev/null":
+    if dir_exp is None or dir_exp == "" or dir_exp.startswith("/dev/null"):
         return
 
     path_name = os.path.join(
