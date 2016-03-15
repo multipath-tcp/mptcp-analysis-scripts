@@ -105,13 +105,17 @@ def plot(connections, multiflow_connections, sums_dir_exp):
             for flow_id, flow in conn.flows.iteritems():
                 if co.START not in flow.attr or flow.attr[co.SADDR] in co.IP_PROXY:
                     continue
+
+                if (flow.attr[co.START] - conn.attr[co.START]).total_seconds() < -30:
+                    continue
+
                 if flow.attr[co.START].total_seconds() < initial_sf_ts:
                     initial_sf_ts = flow.attr[co.START].total_seconds()
                     initial_sf_id = flow_id
                 flow_bytes = 0
                 for direction in co.DIRECTIONS:
                     flow_bytes += flow.attr[direction].get(co.BYTES_DATA, 0)
-                if flow_bytes > 0 and co.TIME_LAST_ACK_TCP in flow.attr[co.S2C] and flow.attr[co.S2C][co.TIME_LAST_ACK_TCP].total_seconds() > 0.0:
+                if flow_bytes > 0 and co.TIME_LAST_ACK_TCP in flow.attr[co.S2C] and flow.attr[co.S2C][co.TIME_LAST_ACK_TCP].total_seconds() > 0.0 and co.TIME_LAST_ACK_TCP in flow.attr[co.C2S] and flow.attr[co.C2S][co.TIME_LAST_ACK_TCP].total_seconds() > 0.0:
                     last_acks.append(flow.attr[co.S2C][co.TIME_LAST_ACK_TCP].total_seconds())
                     min_time_last_ack = min(min_time_last_ack, flow.attr[co.S2C][co.TIME_LAST_ACK_TCP].total_seconds())
 
@@ -126,6 +130,18 @@ def plot(connections, multiflow_connections, sums_dir_exp):
             for flow_id, flow in conn.flows.iteritems():
                 if co.START not in flow.attr or flow.attr[co.SADDR] in co.IP_PROXY:
                     continue
+
+                if co.TIME_LAST_ACK_TCP not in flow.attr[co.S2C] or flow.attr[co.S2C][co.TIME_LAST_ACK_TCP].total_seconds() == 0 or co.TIME_LAST_ACK_TCP not in flow.attr[co.C2S] or flow.attr[co.C2S][co.TIME_LAST_ACK_TCP].total_seconds() == 0:
+                    # RST, don't consider as valid MP_JOIN
+                    continue
+
+                if (flow.attr[co.START] - conn.attr[co.START]).total_seconds() < -30:
+                    continue
+
+                if (flow.attr[co.START] - conn.attr[co.START]).total_seconds() > conn.attr[co.DURATION]:
+                    # This subflow is maybe wrongly attributed
+                    continue
+
                 delta = flow.attr[co.START].total_seconds() - initial_sf_ts
                 min_last_acks = float('inf')
                 if len(last_acks) >= 1:

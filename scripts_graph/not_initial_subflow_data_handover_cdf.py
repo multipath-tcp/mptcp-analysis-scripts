@@ -123,13 +123,13 @@ for fname, conns in multiflow_connections.iteritems():
 
                 max_last_payload = 0 - float('inf')
                 if flow.attr[co.C2S].get(co.BYTES, 0) > 0 or flow.attr[co.S2C].get(co.BYTES, 0) > 0:
-                    if co.TIME_LAST_ACK_TCP in flow.attr[co.S2C] and flow.attr[co.S2C][co.TIME_LAST_ACK_TCP].total_seconds > min_last_ack:
+                    if co.TIME_LAST_ACK_TCP in flow.attr[co.S2C] and flow.attr[co.S2C][co.TIME_LAST_ACK_TCP].total_seconds() > min_last_ack:
                         max_last_payload = max([flow.attr[direction][co.TIME_LAST_PAYLD_TCP].total_seconds() for direction in co.DIRECTIONS])
 
                 # handover_delta = float(flow.attr[co.START]) + max_last_payload - min_last_ack
                 handover_delta = max_last_payload - min_last_ack
                 if handover_delta > 0.0:
-                    # A subflow is established after the last ack of the client seen --> Handover
+                    # A subflow is used after the last ack of the client seen --> Handover
                     count_handover += 1
                     handover_detected = True
 
