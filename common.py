@@ -379,6 +379,9 @@ def check_directory_exists(directory):
     """ Check if the directory exists, and create it if needed
         If directory is a file, exit the program
     """
+    if directory is None or directory == "" or directory == "/dev/null":
+        return
+
     if os.path.exists(directory):
         if not os.path.isdir(directory):
             print(directory + " is a file: stop", file=sys.stderr)
