@@ -655,7 +655,7 @@ def detect_backup_subflow(tcp):
     return backup
 
 
-def process_first_syn(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, sport, dport, black_list, inverse_conns, ts_syn_timeout, ts_timeout):
+def process_first_syn(ts_delta, acks, nb_acks, connections, tcp, ip, saddr, daddr, sport, dport, black_list, inverse_conns, ts_syn_timeout, ts_timeout):
     """ Processing of the first SYNs seen on a connection """
     # The sender of the first SYN is the client
     # Check if the connection is black listed or not
@@ -693,7 +693,7 @@ def process_first_syn(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, s
         connections[conn_id].attr[co.BACKUP] = backup
 
 
-def process_syn_ack(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, sport, dport, black_list, inverse_conns, ts_syn_timeout, ts_timeout):
+def process_syn_ack(ts_delta, acks, nb_acks, connections, tcp, ip, saddr, daddr, sport, dport, black_list, inverse_conns, ts_syn_timeout, ts_timeout):
     """ Processing of SYN/ACKs seen on the connection """
     # The sender of the SYN/ACK is the server
     if (daddr, dport, saddr, sport) in acks and ((ts_delta - acks[daddr, dport, saddr, sport][co.TIMESTAMP][CLIENT]).total_seconds() < ts_timeout
@@ -716,7 +716,7 @@ def process_syn_ack(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, spo
         acks[daddr, dport, saddr, sport][co.TIMESTAMP][SERVER] = ts_delta
 
 
-def process_pkt_from_client(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, sport, dport, fin_flag):
+def process_pkt_from_client(ts_delta, acks, nb_acks, connections, tcp, ip, saddr, daddr, sport, dport, fin_flag):
     """ Process a packet with ACK set from the client """
     if acks[saddr, sport, daddr, dport][co.S2C] >= 0:
         conn_id = acks[saddr, sport, daddr, dport][co.CONN_ID]
@@ -730,15 +730,19 @@ def process_pkt_from_client(ts_delta, acks, nb_acks, connections, tcp, saddr, da
             return
 
         increment_value_dict(nb_acks[co.S2C][conn_id], bytes_acked)
-        # If SOCKS command
-        if len(tcp.data) == 7 and connections[conn_id].attr.get(co.SOCKS_PORT, None) is None:
-            crypted_socks_cmd = tcp.data
-            decrypted_socks_cmd = socks_parser.decode(crypted_socks_cmd)
-            if decrypted_socks_cmd[0] == b'\x01':  # Connect
-                connections[conn_id].attr[co.SOCKS_DADDR] = socks_parser.get_ip_address(decrypted_socks_cmd)
-                connections[conn_id].attr[co.SOCKS_PORT] = socks_parser.get_port_number(decrypted_socks_cmd)
+        size_payload = ip.len - ip.hl * 4 - tcp.off * 4
 
-        if len(tcp.data) > 0 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_C2S]:
+        # If SOCKS command
+        if size_payload == 7 and connections[conn_id].attr.get(co.SOCKS_PORT, None) is None:
+            crypted_socks_cmd = tcp.data
+            # This is possible because of packet stripping
+            if len(crypted_socks_cmd) == 7:
+                decrypted_socks_cmd = socks_parser.decode(crypted_socks_cmd)
+                if decrypted_socks_cmd[0] == b'\x01':  # Connect
+                    connections[conn_id].attr[co.SOCKS_DADDR] = socks_parser.get_ip_address(decrypted_socks_cmd)
+                    connections[conn_id].attr[co.SOCKS_PORT] = socks_parser.get_port_number(decrypted_socks_cmd)
+
+        if size_payload > 0 and tcp.seq in acks[saddr, sport, daddr, dport][SEQ_C2S]:
             # This is a retransmission! (take into account the seq overflow)
             connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts_delta
             connections[conn_id].flow.attr[co.C2S][co.TIMESTAMP_RETRANS].append((ts_delta,
@@ -746,7 +750,7 @@ def process_pkt_from_client(ts_delta, acks, nb_acks, connections, tcp, saddr, da
                                                                                  ts_delta - acks[saddr, sport, daddr, dport][HSEQ_C2S][tcp.seq][1],
                                                                                  ts_delta - acks[saddr, sport, daddr, dport][co.TIMESTAMP][CLIENT]))
             acks[saddr, sport, daddr, dport][HSEQ_C2S][tcp.seq][1] = ts_delta
-        elif len(tcp.data) > 0:
+        elif size_payload > 0:
             acks[saddr, sport, daddr, dport][SEQ_C2S].add(tcp.seq)
             connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts_delta
             connections[conn_id].flow.attr[co.C2S][co.TIME_LAST_PAYLD_TCP] = ts_delta
@@ -760,7 +764,7 @@ def process_pkt_from_client(ts_delta, acks, nb_acks, connections, tcp, saddr, da
     acks[saddr, sport, daddr, dport][co.TIMESTAMP][CLIENT] = ts_delta
 
 
-def process_pkt_from_server(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, sport, dport, fin_flag):
+def process_pkt_from_server(ts_delta, acks, nb_acks, connections, tcp, ip, saddr, daddr, sport, dport, fin_flag):
     """ Process a packet with ACK set from the server """
     if acks[daddr, dport, saddr, sport][co.C2S] >= 0:
         conn_id = acks[daddr, dport, saddr, sport][co.CONN_ID]
@@ -774,8 +778,9 @@ def process_pkt_from_server(ts_delta, acks, nb_acks, connections, tcp, saddr, da
             return
 
         increment_value_dict(nb_acks[co.C2S][conn_id], bytes_acked)
+        size_payload = ip.len - ip.hl * 4 - tcp.off * 4
 
-        if len(tcp.data) > 0 and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_S2C]:
+        if size_payload > 0 and tcp.seq in acks[daddr, dport, saddr, sport][SEQ_S2C]:
             # This is a retransmission!
             connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts_delta
             connections[conn_id].flow.attr[co.S2C][co.TIMESTAMP_RETRANS].append((ts_delta,
@@ -783,7 +788,7 @@ def process_pkt_from_server(ts_delta, acks, nb_acks, connections, tcp, saddr, da
                                                                                  ts_delta - acks[daddr, dport, saddr, sport][HSEQ_S2C][tcp.seq][1],
                                                                                  ts_delta - acks[daddr, dport, saddr, sport][co.TIMESTAMP][SERVER]))
             acks[daddr, dport, saddr, sport][HSEQ_S2C][tcp.seq][1] = ts_delta
-        elif len(tcp.data) > 0:
+        elif size_payload > 0:
             acks[daddr, dport, saddr, sport][SEQ_S2C].add(tcp.seq)
             connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_WITH_RETRANS_TCP] = ts_delta
             connections[conn_id].flow.attr[co.S2C][co.TIME_LAST_PAYLD_TCP] = ts_delta
@@ -832,22 +837,22 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
 
                     saddr, daddr, sport, dport = get_ips_and_ports(eth, ip, tcp)
                     if syn_flag and not ack_flag and not fin_flag and not rst_flag:
-                        process_first_syn(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, sport, dport, black_list, inverse_conns,
+                        process_first_syn(ts_delta, acks, nb_acks, connections, tcp, ip, saddr, daddr, sport, dport, black_list, inverse_conns,
                                           ts_syn_timeout, ts_timeout)
 
                     elif (saddr, sport, daddr, dport) in black_list:
                         continue
 
                     elif syn_flag and ack_flag and not fin_flag and not rst_flag:
-                        process_syn_ack(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, sport, dport, black_list, inverse_conns,
+                        process_syn_ack(ts_delta, acks, nb_acks, connections, tcp, saddr, ip, daddr, sport, dport, black_list, inverse_conns,
                                         ts_syn_timeout, ts_timeout)
 
                     elif not syn_flag and not rst_flag and ack_flag:
                         if (saddr, sport, daddr, dport) in acks:
-                            process_pkt_from_client(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, sport, dport, fin_flag)
+                            process_pkt_from_client(ts_delta, acks, nb_acks, connections, tcp, ip, saddr, daddr, sport, dport, fin_flag)
 
                         elif (daddr, dport, saddr, sport) in acks:
-                            process_pkt_from_server(ts_delta, acks, nb_acks, connections, tcp, saddr, daddr, sport, dport, fin_flag)
+                            process_pkt_from_server(ts_delta, acks, nb_acks, connections, tcp, ip, saddr, daddr, sport, dport, fin_flag)
                         else:
                             # Silently ignore those packets
                             # print(saddr, sport, daddr, dport, "haven't seen beginning...")
@@ -905,7 +910,7 @@ def get_dss_and_data_ack(tcp):
     return dss, dack, dss_is_8_bytes
 
 
-def process_mptcp_first_syn(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport, black_list, fast_conns, ts_syn_timeout, ts_timeout):
+def process_mptcp_first_syn(ts_delta, acks, conn_acks, mptcp_connections, tcp, ip, saddr, daddr, sport, dport, black_list, fast_conns, ts_syn_timeout, ts_timeout):
     """ Processing of the first SYNs seen on a connection for the MPTCP DSS retransmissions """
     # The sender of the first SYN is the client
     # Check if the connection is black listed or not
@@ -937,7 +942,7 @@ def process_mptcp_first_syn(ts_delta, acks, conn_acks, mptcp_connections, tcp, s
                               HSEQ_S2C: {}}
 
 
-def process_mptcp_syn_ack(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport, black_list, fast_conns, ts_syn_timeout, ts_timeout):
+def process_mptcp_syn_ack(ts_delta, acks, conn_acks, mptcp_connections, tcp, ip, saddr, daddr, sport, dport, black_list, fast_conns, ts_syn_timeout, ts_timeout):
     """ Processing of SYN/ACKs seen on the connection for the MPTCP DSS retransmissions """
     # The sender of the SYN/ACK is the server
     if (daddr, dport, saddr, sport) in acks and ((ts_delta - acks[daddr, dport, saddr, sport][co.TIMESTAMP][CLIENT]).total_seconds() < ts_timeout
@@ -954,7 +959,7 @@ def process_mptcp_syn_ack(ts_delta, acks, conn_acks, mptcp_connections, tcp, sad
         conn_acks[acks[daddr, dport, saddr, sport][co.CONN_ID]][co.TIMESTAMP][SERVER] = ts_delta
 
 
-def process_mptcp_pkt_from_client(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport):
+def process_mptcp_pkt_from_client(ts_delta, acks, conn_acks, mptcp_connections, tcp, ip, saddr, daddr, sport, dport):
     """ Process a packet with ACK set from the client for the MPTCP DSS retransmissions """
     dss, dack, dss_is_8_bytes = get_dss_and_data_ack(tcp)
     conn_id = acks[saddr, sport, daddr, dport][co.CONN_ID]
@@ -966,7 +971,9 @@ def process_mptcp_pkt_from_client(ts_delta, acks, conn_acks, mptcp_connections, 
             # Ack of 2GB or more is just not possible here
             return
 
-        if (len(tcp.data) > 0 and dss in conn_acks[conn_id][SEQ_C2S] and (dss - conn_acks[conn_id][co.C2S]) % max_val < 2000000000
+        size_payload = ip.len - ip.hl * 4 - tcp.off * 4
+
+        if (size_payload > 0 and dss in conn_acks[conn_id][SEQ_C2S] and (dss - conn_acks[conn_id][co.C2S]) % max_val < 2000000000
                 and (mptcp_connections[conn_id].attr[co.C2S][co.TIME_LAST_ACK_TCP] - ts_delta).total_seconds() > 0.0):
             # This is a DSS retransmission! (take into account the seq overflow)
             mptcp_connections[conn_id].attr[co.C2S][co.RETRANS_DSS].append((ts_delta, flow_id, dss, conn_acks[conn_id][HSEQ_C2S][dss][2],
@@ -974,7 +981,7 @@ def process_mptcp_pkt_from_client(ts_delta, acks, conn_acks, mptcp_connections, 
                                                                             ts_delta - conn_acks[conn_id][HSEQ_C2S][dss][1],
                                                                             ts_delta - conn_acks[conn_id][co.TIMESTAMP][CLIENT]))
             conn_acks[conn_id][HSEQ_C2S][dss][1] = ts_delta
-        elif len(tcp.data) > 0 and dss is not False:
+        elif size_payload > 0 and dss is not False:
             conn_acks[conn_id][SEQ_C2S].add(dss)
             conn_acks[conn_id][HSEQ_C2S][dss] = [ts_delta, ts_delta, ts_delta - conn_acks[conn_id][co.TIMESTAMP][CLIENT]]
 
@@ -983,7 +990,7 @@ def process_mptcp_pkt_from_client(ts_delta, acks, conn_acks, mptcp_connections, 
     conn_acks[conn_id][co.TIMESTAMP][CLIENT] = ts_delta
 
 
-def process_mptcp_pkt_from_server(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport):
+def process_mptcp_pkt_from_server(ts_delta, acks, conn_acks, mptcp_connections, tcp, ip, saddr, daddr, sport, dport):
     """ Process a packet with ACK set from the server for the MPTCP DSS retransmissions """
     dss, dack, dss_is_8_bytes = get_dss_and_data_ack(tcp)
     conn_id = acks[daddr, dport, saddr, sport][co.CONN_ID]
@@ -995,7 +1002,9 @@ def process_mptcp_pkt_from_server(ts_delta, acks, conn_acks, mptcp_connections, 
             # Ack of 2GB or more is just not possible here
             return
 
-        if (len(tcp.data) > 0 and dss in conn_acks[conn_id][SEQ_S2C] and (dss - conn_acks[conn_id][co.S2C]) % max_val < 2000000000
+        size_payload = ip.len - ip.hl * 4 - tcp.off * 4
+
+        if (size_payload > 0 and dss in conn_acks[conn_id][SEQ_S2C] and (dss - conn_acks[conn_id][co.S2C]) % max_val < 2000000000
                 and (mptcp_connections[conn_id].attr[co.S2C][co.TIME_LAST_ACK_TCP] - ts_delta).total_seconds() > 0.0):
             # This is a DSS retransmission!
             mptcp_connections[conn_id].attr[co.S2C][co.RETRANS_DSS].append((ts_delta, flow_id, dss, conn_acks[conn_id][HSEQ_S2C][dss][2],
@@ -1003,7 +1012,7 @@ def process_mptcp_pkt_from_server(ts_delta, acks, conn_acks, mptcp_connections, 
                                                                             ts_delta - conn_acks[conn_id][HSEQ_S2C][dss][1],
                                                                             ts_delta - conn_acks[conn_id][co.TIMESTAMP][SERVER]))
             conn_acks[conn_id][HSEQ_S2C][dss][1] = ts_delta
-        elif len(tcp.data) > 0 and dss is not False:
+        elif size_payload > 0 and dss is not False:
             conn_acks[conn_id][SEQ_S2C].add(dss)
             conn_acks[conn_id][HSEQ_S2C][dss] = [ts_delta, ts_delta, ts_delta - conn_acks[conn_id][co.TIMESTAMP][SERVER]]
 
@@ -1040,22 +1049,22 @@ def compute_mptcp_dss_retransmissions(pcap_filepath, mptcp_connections, fast_con
                 saddr, daddr, sport, dport = get_ips_and_ports(eth, ip, tcp)
 
                 if syn_flag and not ack_flag and not fin_flag and not rst_flag:
-                    process_mptcp_first_syn(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport, black_list, fast_conns,
+                    process_mptcp_first_syn(ts_delta, acks, conn_acks, mptcp_connections, tcp, ip, saddr, daddr, sport, dport, black_list, fast_conns,
                                             ts_syn_timeout, ts_timeout)
 
                 elif (saddr, sport, daddr, dport) in black_list:
                     continue
 
                 elif syn_flag and ack_flag and not fin_flag and not rst_flag:
-                    process_mptcp_syn_ack(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport, black_list, fast_conns,
+                    process_mptcp_syn_ack(ts_delta, acks, conn_acks, mptcp_connections, tcp, ip, saddr, daddr, sport, dport, black_list, fast_conns,
                                           ts_syn_timeout, ts_timeout)
 
                 elif not syn_flag and not rst_flag and ack_flag:
                     if (saddr, sport, daddr, dport) in acks:
-                        process_mptcp_pkt_from_client(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport)
+                        process_mptcp_pkt_from_client(ts_delta, acks, conn_acks, mptcp_connections, tcp, ip, saddr, daddr, sport, dport)
 
                     elif (daddr, dport, saddr, sport) in acks:
-                        process_mptcp_pkt_from_server(ts_delta, acks, conn_acks, mptcp_connections, tcp, saddr, daddr, sport, dport)
+                        process_mptcp_pkt_from_server(ts_delta, acks, conn_acks, mptcp_connections, tcp, ip, saddr, daddr, sport, dport)
                     else:
                         # Silently ignore those packets
                         # print(saddr, sport, daddr, dport, "haven't seen beginning...")
