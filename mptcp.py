@@ -541,7 +541,7 @@ def process_rm_addr_csv(csv_fname, connections, conn_id):
     csv_file.close()
 
 
-def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, plot_cwin, tcpcsm, min_bytes=0, light=False):
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_dir_exp, rtt_subflow_dir_exp, failed_conns_dir_exp, acksize_dir_exp, acksize_tcp_dir_exp, plot_cwin, tcpcsm, min_bytes=0, light=False, return_dict=False):
     """ Process a mptcp pcap file and generate graphs of its subflows
         Notice that we can't change dir per thread, we should use processes
     """
@@ -586,15 +586,22 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
             acksize_all = {co.C2S: {}, co.S2C: {}}
 
             # Then really process xpl files
-            for xpl_fname in glob.glob(os.path.join('*.xpl')):
-                try:
-                    directory = co.DEF_RTT_DIR if MPTCP_RTT_FNAME in xpl_fname else co.TSG_THGPT_DIR
-                    shutil.move(xpl_fname, os.path.join(
-                        graph_dir_exp, directory, os.path.basename(pcap_filepath[:-5]) + "_" + os.path.basename(xpl_fname)))
-                except IOError as e:
-                    print(str(e), file=sys.stderr)
+            if return_dict:
+                for xpl_fname in glob.glob(os.path.join('*.xpl')):
+                    try:
+                        os.remove(xpl_fname)
+                    except IOError as e:
+                        print(str(e), file=sys.stderr)
+            else:
+                for xpl_fname in glob.glob(os.path.join('*.xpl')):
+                    try:
+                        directory = co.DEF_RTT_DIR if MPTCP_RTT_FNAME in xpl_fname else co.TSG_THGPT_DIR
+                        shutil.move(xpl_fname, os.path.join(
+                            graph_dir_exp, directory, os.path.basename(pcap_filepath[:-5]) + "_" + os.path.basename(xpl_fname)))
+                    except IOError as e:
+                        print(str(e), file=sys.stderr)
 
-            # And by default, save all csv files
+            # And by default, save only seq csv files
             for csv_fname in glob.glob(os.path.join('*.csv')):
                 if not light:
                     if MPTCP_GPUT_FNAME in os.path.basename(csv_fname):
@@ -637,13 +644,19 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
 
                         is_reversed = is_reverse_connection(os.path.basename(csv_fname))
                         process_csv(csv_fname, connections, conn_id, is_reversed)
-                        co.move_file(csv_fname, os.path.join(
-                            graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + os.path.basename(csv_fname)))
+                        if return_dict:
+                            try:
+                                os.remove(csv_fname)
+                            except Exception:
+                                pass
+                        else:
+                            co.move_file(csv_fname, os.path.join(
+                                graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + os.path.basename(csv_fname)))
                     elif MPTCP_ACKSIZE_FNAME in os.path.basename(csv_fname):
                         collect_acksize_csv(csv_fname, connections, acksize_all)
                         os.remove(csv_fname)
                     else:
-                        if not light:
+                        if not light and not return_dict:
                             co.move_file(csv_fname, os.path.join(
                                 graph_dir_exp, co.TSG_THGPT_DIR, os.path.basename(pcap_filepath[:-5]) + "_" + os.path.basename(csv_fname)))
                         else:
@@ -660,7 +673,11 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, aggl_dir_exp, rtt_
 
     # This will save the mptcp connections
     if connections and do_tcp_processing:
-        tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, tcpcsm, mptcp_connections=connections, light=light)
-        co.save_data(pcap_filepath, acksize_dir_exp, acksize_all)
-        co.save_data(pcap_filepath, rtt_dir_exp, rtt_all)
-        co.save_data(pcap_filepath, stat_dir_exp, connections)
+        dicts = tcp.process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, tcpcsm, mptcp_connections=connections, light=light, return_dict=return_dict)
+        if return_dict:
+            tcp_connections, acksize_all_tcp = dicts
+            return connections, tcp_connections, rtt_all, acksize_all, acksize_all_tcp
+        else:
+            co.save_data(pcap_filepath, acksize_dir_exp, acksize_all)
+            co.save_data(pcap_filepath, rtt_dir_exp, rtt_all)
+            co.save_data(pcap_filepath, stat_dir_exp, connections)

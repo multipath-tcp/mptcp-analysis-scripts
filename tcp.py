@@ -1062,12 +1062,14 @@ def compute_mptcp_dss_retransmissions(pcap_filepath, mptcp_connections, fast_con
                         continue
 
 
-def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, tcpcsm, mptcp_connections=None, print_out=sys.stdout, light=False):
+def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, tcpcsm, mptcp_connections=None, print_out=sys.stdout, light=False, return_dict=False):
     """ Process a tcp pcap file and generate stats of its connections """
     cmd = ['tstat', '-s', os.path.basename(pcap_filepath[:-5]), pcap_filepath]
 
+    keep_tstat_log = False if return_dict else True
+
     try:
-        connections = process_tstat_cmd(cmd, pcap_filepath, keep_log=True, graph_dir_exp=graph_dir_exp)
+        connections = process_tstat_cmd(cmd, pcap_filepath, keep_log=keep_tstat_log, graph_dir_exp=graph_dir_exp)
     except TstatError as e:
         print(str(e) + ": skip process", file=sys.stderr)
         return
@@ -1109,13 +1111,22 @@ def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_e
                     mptcp_connections[conn_id].attr[direction][co.TIME_LAST_ACK_TCP] = max_ack
                     mptcp_connections[conn_id].attr[direction][co.TIME_LAST_PAYLD_TCP] = max_payload
 
-            compute_mptcp_dss_retransmissions(pcap_filepath, mptcp_connections, fast_conns)
+            try:
+                compute_mptcp_dss_retransmissions(pcap_filepath, mptcp_connections, fast_conns)
+            except dpkt.NeedData as e:
+                print(e, ": trying to continue...", file=sys.stderr)
 
-    # Save connections info
-    if mptcp_connections:
-        co.save_data(pcap_filepath, acksize_tcp_dir_exp, acksize_all_mptcp)
-        # Also save TCP connections that failed to be MPTCP subflows
-        co.save_data(pcap_filepath, failed_conns_dir_exp, failed_conns)
+    if return_dict:
+        if mptcp_connections:
+            return connections, acksize_all_mptcp
+        else:
+            return connections, acksize_all
     else:
-        co.save_data(pcap_filepath, acksize_tcp_dir_exp, acksize_all)
-        co.save_data(pcap_filepath, stat_dir_exp, connections)
+        # Save connections info
+        if mptcp_connections:
+            co.save_data(pcap_filepath, acksize_tcp_dir_exp, acksize_all_mptcp)
+            # Also save TCP connections that failed to be MPTCP subflows
+            co.save_data(pcap_filepath, failed_conns_dir_exp, failed_conns)
+        else:
+            co.save_data(pcap_filepath, acksize_tcp_dir_exp, acksize_all)
+            co.save_data(pcap_filepath, stat_dir_exp, connections)
