@@ -111,6 +111,8 @@ WIFI = 'wifi'
 TYPE = 'type'
 # Interface: CELL or WIFI
 IF = 'interface'
+# Indicate if the connection has full info or only a subset
+TCP_COMPLETE = 'tcp_complete'
 # Source IP address
 SADDR = 'saddr'
 # Destination IP address
