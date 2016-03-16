@@ -94,6 +94,7 @@ def extract_tstat_data_tcp_complete(filename, connections, conn_id):
             info = line.split()
             conn_id += 1
             connection = TCPConnection(conn_id)
+            connection.flow.attr[co.TCP_COMPLETE] = True
             connection.flow.attr[co.SADDR] = co.long_ipv6_address(info[0])
             connection.flow.attr[co.DADDR] = co.long_ipv6_address(info[14])
             connection.flow.attr[co.SPORT] = info[1]
@@ -213,6 +214,8 @@ def extract_tstat_data_tcp_nocomplete(filename, connections, conn_id):
             info = line.split()
             conn_id += 1
             connection = TCPConnection(conn_id)
+
+            connection.flow.attr[co.TCP_COMPLETE] = False
 
             connection.flow.attr[co.SADDR] = co.long_ipv6_address(info[0])
             connection.flow.attr[co.DADDR] = co.long_ipv6_address(info[14])
@@ -530,6 +533,7 @@ def copy_info_to_mptcp_connections(connections, mptcp_connections, failed_conns,
     conn_id, flow_id = get_flow_name_connection_optimized(connection, mptcp_connections, fast_conns=fast_conns)
     if isinstance(conn_id, (int, long)):
         mptcp_connections[conn_id].flows[flow_id].subflow_id = flow_name
+        mptcp_connections[conn_id].flows[flow_id].attr[co.TCP_COMPLETE] = connection.flow.attr[co.TCP_COMPLETE]
         mptcp_connections[conn_id].flows[flow_id].attr[co.START] = connection.flow.attr[co.START]
         mptcp_connections[conn_id].flows[flow_id].attr[co.DURATION] = connection.flow.attr[co.DURATION]
         if co.BACKUP in connection.attr:
