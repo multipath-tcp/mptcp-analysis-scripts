@@ -864,6 +864,8 @@ def compute_tcp_acks_retrans(pcap_filepath, connections, inverse_conns, ts_syn_t
 
     except dpkt.NeedData as e:
         print(e, ": trying to continue...", file=sys.stderr)
+    finally:
+        pcap_file.close()
 
     return nb_acks
 
@@ -1073,6 +1075,8 @@ def compute_mptcp_dss_retransmissions(pcap_filepath, mptcp_connections, fast_con
                         # Silently ignore those packets
                         # print(saddr, sport, daddr, dport, "haven't seen beginning...")
                         continue
+
+    pcap_file.close()
 
 
 def process_trace(pcap_filepath, graph_dir_exp, stat_dir_exp, failed_conns_dir_exp, acksize_tcp_dir_exp, tcpcsm, mptcp_connections=None, print_out=sys.stdout, light=False, return_dict=False):
